@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    restart: always
+    ports:
+      - '6432:6432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./configure_test_db.sh:/docker-entrypoint-initdb.d/configure_test_db.sh
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ft-ex-db
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready', '-d', 'ft-ex-db']
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

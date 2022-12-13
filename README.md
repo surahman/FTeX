@@ -152,6 +152,7 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' post
 - 
 - Username : `postgres`
 - Password : `postgres`
+- Port : `6432`
 - Database : `ft-ex-db`
 
 <br/>
