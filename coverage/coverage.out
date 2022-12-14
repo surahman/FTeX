@@ -1,0 +1,12 @@
+mode: count
+github.com/surahman/crypto-bros-bank/pkg/validator/errors.go:16.39,18.2 1 7
+github.com/surahman/crypto-bros-bank/pkg/validator/errors.go:26.44,28.34 2 3
+github.com/surahman/crypto-bros-bank/pkg/validator/errors.go:31.2,31.24 1 3
+github.com/surahman/crypto-bros-bank/pkg/validator/errors.go:28.34,30.3 1 3
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:11.13,13.2 1 1
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:16.37,18.53 2 6
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:27.2,27.33 1 6
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:30.2,30.23 1 5
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:18.53,19.58 1 5
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:19.58,25.4 5 7
+github.com/surahman/crypto-bros-bank/pkg/validator/validator.go:27.33,29.3 1 1
