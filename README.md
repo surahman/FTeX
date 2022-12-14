@@ -1,9 +1,9 @@
 
 <p align="center">
-  <img src="assets/bitcoin_64px.png" alt="FT-eX"/>
+  <img src="assets/bitcoin_64px.png" alt="FTeX"/>
 </p>
 
-# FT-eX
+# FTeX
 
 This is a demonstration project in `Golang` that provides an API for basic banking of Cryptocurrencies. There is an integration with a cyrpto exchange to get live cryptocurrency prices.
 

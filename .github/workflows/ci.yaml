@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - development
+      - production
+  pull_request:
+    branches:
+      - development
+      - production
+  workflow_dispatch:
+
+jobs:
+
+  # Place all Docker containers on the same Docker network.
+  container-job:
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.18
+      env:
+        GITHUB_ACTIONS_CI: true
+
+    # Configure Postgres Container
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USERNAME: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: "ft-ex-db-test"
+        ports:
+          - 6432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Unit Test
+        run: make test
