@@ -14,10 +14,10 @@ func init() {
 
 // ValidateStruct will validate a struct and list all deficiencies.
 func ValidateStruct(body any) error {
-	var validationErr ErrorValidation
+	var validationErr ValidationError
 	if err := structValidator.Struct(body); err != nil {
 		for _, issue := range err.(validator.ValidationErrors) {
-			var ev ErrorField
+			var ev FieldError
 			ev.Field = issue.Field()
 			ev.Tag = issue.Tag()
 			ev.Value = issue.Value()
