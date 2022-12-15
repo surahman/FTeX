@@ -6,14 +6,13 @@ const (
 	configHomeDir = "$HOME/.FTeX/"
 	configBaseDir = "./configs/"
 
-	// Environment variables
-	githubCIKey = "GITHUB_ACTIONS_CI"
-)
+	// Configuration file names
+	loggerConfigFileName = "LoggerConfig.yaml"
 
-// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
-func GetGithubCIKey() string {
-	return githubCIKey
-}
+	// Environment variables
+	githubCIKey  = "GITHUB_ACTIONS_CI"
+	loggerPrefix = "LOGGER"
+)
 
 // GetEtcDir returns the configuration directory in Etc.
 func GetEtcDir() string {
@@ -28,4 +27,19 @@ func GetHomeDir() string {
 // GetBaseDir returns the configuration base directory in the root of the application.
 func GetBaseDir() string {
 	return configBaseDir
+}
+
+// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
+func GetGithubCIKey() string {
+	return githubCIKey
+}
+
+// GetLoggerFileName returns the Zap logger configuration file name.
+func GetLoggerFileName() string {
+	return loggerConfigFileName
+}
+
+// GetLoggerPrefix returns the environment variable prefix for the Zap logger.
+func GetLoggerPrefix() string {
+	return loggerPrefix
 }
