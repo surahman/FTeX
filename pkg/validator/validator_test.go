@@ -13,28 +13,28 @@ func TestErrorField_Error(t *testing.T) {
 	const errorStr = "Field: %s, Tag: %s, Value: %s\n"
 	testCases := []struct {
 		name     string
-		input    *ErrorField
+		input    *FieldError
 		expected string
 	}{
 		// ----- test cases start ----- //
 		{
 			"Empty error",
-			&ErrorField{},
+			&FieldError{},
 			fmt.Sprintf(errorStr, "", "", "%!s(<nil>)"),
 		},
 		{
 			"Field only error",
-			&ErrorField{Field: "field"},
+			&FieldError{Field: "field"},
 			fmt.Sprintf(errorStr, "field", "", "%!s(<nil>)"),
 		},
 		{
 			"Field and Tag only error",
-			&ErrorField{Field: "field", Tag: "tag"},
+			&FieldError{Field: "field", Tag: "tag"},
 			fmt.Sprintf(errorStr, "field", "tag", "%!s(<nil>)"),
 		},
 		{
 			"Field, Tag, and Value error",
-			&ErrorField{Field: "field", Tag: "tag", Value: "value"},
+			&FieldError{Field: "field", Tag: "tag", Value: "value"},
 			fmt.Sprintf(errorStr, "field", "tag", "value"),
 		},
 		// ----- test cases end ----- //
@@ -60,25 +60,25 @@ func TestErrorValidation_Error(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		input    *ErrorValidation
+		input    *ValidationError
 		expected string
 	}{
 		// ----- test cases start ----- //
 		{
 			"Empty error",
-			&ErrorValidation{Errors: []*ErrorField{}},
+			&ValidationError{Errors: []*FieldError{}},
 			genExpected(""),
 		},
 		{
 			"Single error",
-			&ErrorValidation{Errors: []*ErrorField{
+			&ValidationError{Errors: []*FieldError{
 				{Field: "field 1", Tag: "tag 1", Value: "value 1"},
 			}},
 			genExpected(fmt.Sprintf(errorStr, "field 1", "tag 1", "value 1")),
 		},
 		{
 			"Two errors",
-			&ErrorValidation{Errors: []*ErrorField{
+			&ValidationError{Errors: []*FieldError{
 				{Field: "field 1", Tag: "tag 1", Value: "value 1"},
 				{Field: "field 2", Tag: "tag 2", Value: "value 2"},
 			}},
@@ -152,7 +152,7 @@ func TestValidateStruct(t *testing.T) {
 			err := ValidateStruct(testCase.input)
 			testCase.expectErr(t, err)
 
-			validationErr := &ErrorValidation{}
+			validationErr := &ValidationError{}
 			if errors.As(err, &validationErr) {
 				require.Equal(t, testCase.expectedLen, len(validationErr.Errors))
 			}
