@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
+	"github.com/surahman/FTeX/pkg/validator"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,6 +25,7 @@ func TestZapConfig_Load(t *testing.T) {
 		encKey    string
 		expectErr require.ErrorAssertionFunc
 		expectNil require.ValueAssertionFunc
+		expectLen int
 	}{
 		// ----- test cases start ----- //
 		{
@@ -32,6 +35,7 @@ func TestZapConfig_Load(t *testing.T) {
 			encKey:    "Production",
 			expectErr: require.Error,
 			expectNil: require.Nil,
+			expectLen: 2,
 		}, {
 			name:      "invalid - builtin",
 			input:     loggerConfigTestData["invalid_builtin"],
@@ -39,6 +43,7 @@ func TestZapConfig_Load(t *testing.T) {
 			encKey:    xid.New().String(),
 			expectErr: require.Error,
 			expectNil: require.Nil,
+			expectLen: 2,
 		}, {
 			name:      "valid - development",
 			input:     loggerConfigTestData["valid_devel"],
@@ -46,6 +51,7 @@ func TestZapConfig_Load(t *testing.T) {
 			encKey:    "Production",
 			expectErr: require.NoError,
 			expectNil: require.Nil,
+			expectLen: 0,
 		}, {
 			name:      "valid - production",
 			input:     loggerConfigTestData["valid_prod"],
@@ -53,6 +59,7 @@ func TestZapConfig_Load(t *testing.T) {
 			encKey:    "Development",
 			expectErr: require.NoError,
 			expectNil: require.Nil,
+			expectLen: 0,
 		}, {
 			name:      "valid - full constants",
 			input:     loggerConfigTestData["valid_config"],
@@ -60,6 +67,7 @@ func TestZapConfig_Load(t *testing.T) {
 			encKey:    "Production",
 			expectErr: require.NoError,
 			expectNil: require.NotNil,
+			expectLen: 0,
 		},
 		// ----- test cases end ----- //
 	}
@@ -75,7 +83,9 @@ func TestZapConfig_Load(t *testing.T) {
 			err := actual.Load(fs)
 			testCase.expectErr(t, err)
 
-			if err != nil {
+			validationError := &validator.ValidationError{}
+			if errors.As(err, &validationError) {
+				require.Equalf(t, testCase.expectLen, len(validationError.Errors), "Expected errors count is incorrect: %v", err)
 				return
 			}
 
