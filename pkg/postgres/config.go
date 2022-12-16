@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"time"
+
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/config_loader"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -10,6 +12,7 @@ import (
 type config struct {
 	Authentication *authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
 	Connection     *connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+	Pool           *poolConfig           `json:"pool,omitempty" yaml:"pool,omitempty" mapstructure:"pool"`
 }
 
 // authenticationConfig contains the Postgres session authentication information.
@@ -20,10 +23,19 @@ type authenticationConfig struct {
 
 // connectionConfig contains the Postgres session connection information.
 type connectionConfig struct {
-	Hostname   string `json:"hostname,omitempty" yaml:"hostname,omitempty" mapstructure:"hostname" validate:"required"`
-	Port       uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
-	Timeout    uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
-	SslEnabled bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled"`
+	DatabaseName string `json:"database_name,omitempty" yaml:"database_name,omitempty" mapstructure:"database_name" validate:"required"`
+	Host         string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
+	Port         uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
+	Timeout      uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
+	SslEnabled   bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
+}
+
+// poolConfig contains the Postgres session connection pool specific information.
+type poolConfig struct {
+	HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5"`
+	MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,min=4"`
+	MinConns          int32         `json:"min_conns,omitempty" yaml:"min_conns,omitempty" mapstructure:"min_conns" validate:"required,min=4"`
+	LazyConnect       bool          `json:"lazy_connect,omitempty" yaml:"lazy_connect,omitempty" mapstructure:"lazy_connect" validate:"omitempty,boolean"`
 }
 
 // newConfig creates a blank configuration struct for the Zap Logger.
