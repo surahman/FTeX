@@ -7,11 +7,13 @@ const (
 	configBaseDir = "./configs/"
 
 	// Configuration file names
-	loggerConfigFileName = "LoggerConfig.yaml"
+	loggerConfigFileName   = "LoggerConfig.yaml"
+	postgresConfigFileName = "PostgresConfig.yaml"
 
 	// Environment variables
-	githubCIKey  = "GITHUB_ACTIONS_CI"
-	loggerPrefix = "LOGGER"
+	githubCIKey    = "GITHUB_ACTIONS_CI"
+	loggerPrefix   = "LOGGER"
+	postgresPrefix = "POSTGRES"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -42,4 +44,14 @@ func GetLoggerFileName() string {
 // GetLoggerPrefix returns the environment variable prefix for the Zap logger.
 func GetLoggerPrefix() string {
 	return loggerPrefix
+}
+
+// GetPostgresFileName returns the Postgres configuration file name.
+func GetPostgresFileName() string {
+	return postgresConfigFileName
+}
+
+// GetPostgresPrefix returns the environment variable prefix for Postgres.
+func GetPostgresPrefix() string {
+	return postgresPrefix
 }

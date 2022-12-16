@@ -29,3 +29,11 @@ func TestGetLoggerFileName(t *testing.T) {
 func TestGetLoggerPrefix(t *testing.T) {
 	require.Equal(t, loggerPrefix, GetLoggerPrefix(), "Incorrect Zap logger environment prefix")
 }
+
+func TestGetPostgresFileName(t *testing.T) {
+	require.Equal(t, postgresConfigFileName, GetPostgresFileName(), "Incorrect Postgres filename")
+}
+
+func TestGetPostgresPrefix(t *testing.T) {
+	require.Equal(t, postgresPrefix, GetPostgresPrefix(), "Incorrect Postgres environment prefix")
+}
