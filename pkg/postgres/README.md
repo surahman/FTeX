@@ -60,10 +60,10 @@ connection:
   database: ft-ex-db
   host: 127.0.0.1
   port: 6432
-  Timeout: 5
+  timeout: 5
   ssl_enabled: false
 pool:
-  health_check_period: 30
+  health_check_period: 30s
   max_conns: 8
   min_conns: 4
   lazy_connect: false

@@ -5,7 +5,7 @@ func configTestData() map[string]string {
 	return map[string]string{
 		"empty": ``,
 
-		"valid_prod": `
+		"valid": `
 authentication:
   username: postgres
   password: postgres
@@ -13,15 +13,15 @@ connection:
   database: ft-ex-db
   host: 127.0.0.1
   port: 6432
-  Timeout: 5
+  timeout: 5
   ssl_enabled: false
 pool:
-  health_check_period: 30
+  health_check_period: 30s
   max_conns: 8
   min_conns: 4
   lazy_connect: false`,
 
-		"valid_prod_true_bool": `
+		"valid_true_bool": `
 authentication:
   username: postgres
   password: postgres
@@ -29,10 +29,10 @@ connection:
   database: ft-ex-db
   host: 127.0.0.1
   port: 6432
-  Timeout: 5
+  timeout: 5
   ssl_enabled: true
 pool:
-  health_check_period: 30
+  health_check_period: 30s
   max_conns: 8
   min_conns: 4
   lazy_connect: true`,
@@ -47,7 +47,7 @@ connection:
   port: 6432
   Timeout: 5
 pool:
-  health_check_period: 30
+  health_check_period: 30s
   max_conns: 8
   min_conns: 4`,
 
@@ -59,10 +59,10 @@ connection:
   database: ft-ex-db
   host: 127.0.0.1
   port: 6432
-  Timeout: 5
+  timeout: 5
   ssl_enabled: false
 pool:
-  health_check_period: 3
+  health_check_period: 3s
   max_conns: 8
   min_conns: 4
   lazy_connect: false`,
@@ -75,10 +75,10 @@ connection:
   database: ft-ex-db
   host: 127.0.0.1
   port: 6432
-  Timeout: 5
+  timeout: 5
   ssl_enabled: false
 pool:
-  health_check_period: 30
+  health_check_period: 30s
   max_conns: 2
   min_conns: 2
   lazy_connect: false`,

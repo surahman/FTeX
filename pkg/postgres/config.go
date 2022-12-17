@@ -10,9 +10,9 @@ import (
 
 // config contains the configurations loaded from the configuration file.
 type config struct {
-	Authentication *authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
-	Connection     *connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
-	Pool           *poolConfig           `json:"pool,omitempty" yaml:"pool,omitempty" mapstructure:"pool"`
+	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+	Connection     connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+	Pool           poolConfig           `json:"pool,omitempty" yaml:"pool,omitempty" mapstructure:"pool"`
 }
 
 // authenticationConfig contains the Postgres session authentication information.
@@ -23,11 +23,11 @@ type authenticationConfig struct {
 
 // connectionConfig contains the Postgres session connection information.
 type connectionConfig struct {
-	DatabaseName string `json:"database_name,omitempty" yaml:"database_name,omitempty" mapstructure:"database_name" validate:"required"`
-	Host         string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
-	Port         uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
-	Timeout      uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
-	SslEnabled   bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
+	Database   string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
+	Host       string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
+	Port       uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
+	Timeout    uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
+	SslEnabled bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
 }
 
 // poolConfig contains the Postgres session connection pool specific information.
@@ -38,7 +38,7 @@ type poolConfig struct {
 	LazyConnect       bool          `json:"lazy_connect,omitempty" yaml:"lazy_connect,omitempty" mapstructure:"lazy_connect" validate:"omitempty,boolean"`
 }
 
-// newConfig creates a blank configuration struct for the Zap Logger.
+// newConfig creates a blank configuration struct for Postgres.
 func newConfig() *config {
 	return &config{}
 }
