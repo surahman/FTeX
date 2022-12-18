@@ -32,9 +32,9 @@ type connectionConfig struct {
 
 // poolConfig contains the Postgres session connection pool specific information.
 type poolConfig struct {
-	HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5"`
-	MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,min=4"`
-	MinConns          int32         `json:"min_conns,omitempty" yaml:"min_conns,omitempty" mapstructure:"min_conns" validate:"required,min=4"`
+	HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5s"`
+	MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,gte=4"`
+	MinConns          int32         `json:"min_conns,omitempty" yaml:"min_conns,omitempty" mapstructure:"min_conns" validate:"required,gte=4"`
 	LazyConnect       bool          `json:"lazy_connect,omitempty" yaml:"lazy_connect,omitempty" mapstructure:"lazy_connect" validate:"omitempty,boolean"`
 }
 

@@ -31,25 +31,25 @@ The configuration loader will search for the configurations in the following ord
 
 ### Configuration File
 
-The expected file name is `PostgresConfig.yaml`. All the configuration items below are _required_.
+The expected file name is `PostgresConfig.yaml`. All the configuration items below are _required_ unless specified otherwise.
 
-| Name                  | Environment Variable Key  | Type   | Description                                                            |
-|-----------------------|---------------------------|--------|------------------------------------------------------------------------|
-| **_Authentication_**  | `POSTGRES_AUTHENTICATION` |        | **_Parent key for authentication information._**                       |
-| ↳ username            | ↳ `.USERNAME`             | string | Username for Postgres session login.                                   |
-| ↳ password            | ↳ `.PASSWORD`             | string | Password for Postgres session login.                                   |
-| **_Connection_**      | `POSTGRES_CONNECTION`     |        | **_Parent key for connection information._**                           |
-| ↳ database            | ↳ `.DATABASE`             | string | Database name.                                                         |
-| ↳ host                | ↳ `.HOST`                 | string | Hostname or IP address.                                                |
-| ↳ timeout             | ↳ `.TIMEOUT`              | uint16 | Connection timeout in seconds.                                         |
-| ↳ ssl_enabled         | ↳ `.SSL_ENABLED`          | bool   | Connection SSL enabled.                                                |
-| **_Pool_**            | `POSTGRES_POOL`           |        | **_Parent key for connection pool information._**                      |
-| ↳ health_check_period | ↳ `.HEALTH_CHECK_PERIOD`  | int64  | Seconds (min=5) between health checks for each connection in the pool. |
-| ↳ max_conns           | ↳ `.MAX_CONNS`            | int32  | Maximum connections (min=4) to retain in the connection pool.          |
-| ↳ min_conns           | ↳ `.MIN_CONNS`            | int32  | Minimum connections (min=4) to retain in the connection pool.          |
-| ↳ lazy_connect        | ↳ `.LAZY_CONNECT`         | bool   | Establish a connection only after an I/O request.                      |
+| Name                  | Environment Variable Key  | Type          | Description                                                            |
+|-----------------------|---------------------------|---------------|------------------------------------------------------------------------|
+| **_Authentication_**  | `POSTGRES_AUTHENTICATION` |               | **_Parent key for authentication information._**                       |
+| ↳ username            | ↳ `.USERNAME`             | string        | Username for Postgres session login.                                   |
+| ↳ password            | ↳ `.PASSWORD`             | string        | Password for Postgres session login.                                   |
+| **_Connection_**      | `POSTGRES_CONNECTION`     |               | **_Parent key for connection information._**                           |
+| ↳ database            | ↳ `.DATABASE`             | string        | Database name.                                                         |
+| ↳ host                | ↳ `.HOST`                 | string        | Hostname or IP address.                                                |
+| ↳ timeout             | ↳ `.TIMEOUT`              | uint16        | Connection timeout in seconds.                                         |
+| ↳ ssl_enabled         | ↳ `.SSL_ENABLED`          | bool          | Connection SSL enabled. _Optional_.                                    |
+| **_Pool_**            | `POSTGRES_POOL`           |               | **_Parent key for connection pool information._**                      |
+| ↳ health_check_period | ↳ `.HEALTH_CHECK_PERIOD`  | time.Duration | Seconds (min=5) between health checks for each connection in the pool. |
+| ↳ max_conns           | ↳ `.MAX_CONNS`            | int32         | Maximum connections (min=4) to retain in the connection pool.          |
+| ↳ min_conns           | ↳ `.MIN_CONNS`            | int32         | Minimum connections (min=4) to retain in the connection pool.          |
+| ↳ lazy_connect        | ↳ `.LAZY_CONNECT`         | bool          | Establish a connection only after an I/O request. _Optional_.          |
 
-
+ (min=5)
 #### Example Configuration File
 
 ```yaml
