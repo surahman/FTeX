@@ -61,9 +61,19 @@
 				
 				<option value="file2">github.com/surahman/FTeX/pkg/constants/constants.go (100.0%)</option>
 				
-				<option value="file3">github.com/surahman/FTeX/pkg/validator/errors.go (100.0%)</option>
+				<option value="file3">github.com/surahman/FTeX/pkg/logger/config.go (100.0%)</option>
 				
-				<option value="file4">github.com/surahman/FTeX/pkg/validator/validator.go (100.0%)</option>
+				<option value="file4">github.com/surahman/FTeX/pkg/logger/logger.go (70.9%)</option>
+				
+				<option value="file5">github.com/surahman/FTeX/pkg/logger/test_data.go (100.0%)</option>
+				
+				<option value="file6">github.com/surahman/FTeX/pkg/postgres/config.go (100.0%)</option>
+				
+				<option value="file7">github.com/surahman/FTeX/pkg/postgres/test_data.go (100.0%)</option>
+				
+				<option value="file8">github.com/surahman/FTeX/pkg/validator/errors.go (100.0%)</option>
+				
+				<option value="file9">github.com/surahman/FTeX/pkg/validator/validator.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -213,14 +223,15 @@ const (
         configHomeDir = "$HOME/.FTeX/"
         configBaseDir = "./configs/"
 
-        // Environment variables
-        githubCIKey = "GITHUB_ACTIONS_CI"
-)
+        // Configuration file names
+        loggerConfigFileName   = "LoggerConfig.yaml"
+        postgresConfigFileName = "PostgresConfig.yaml"
 
-// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
-func GetGithubCIKey() string <span class="cov8" title="1">{
-        return githubCIKey
-}</span>
+        // Environment variables
+        githubCIKey    = "GITHUB_ACTIONS_CI"
+        loggerPrefix   = "LOGGER"
+        postgresPrefix = "POSTGRES"
+)
 
 // GetEtcDir returns the configuration directory in Etc.
 func GetEtcDir() string <span class="cov8" title="1">{
@@ -236,9 +247,409 @@ func GetHomeDir() string <span class="cov8" title="1">{
 func GetBaseDir() string <span class="cov8" title="1">{
         return configBaseDir
 }</span>
+
+// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
+func GetGithubCIKey() string <span class="cov8" title="1">{
+        return githubCIKey
+}</span>
+
+// GetLoggerFileName returns the Zap logger configuration file name.
+func GetLoggerFileName() string <span class="cov8" title="1">{
+        return loggerConfigFileName
+}</span>
+
+// GetLoggerPrefix returns the environment variable prefix for the Zap logger.
+func GetLoggerPrefix() string <span class="cov8" title="1">{
+        return loggerPrefix
+}</span>
+
+// GetPostgresFileName returns the Postgres configuration file name.
+func GetPostgresFileName() string <span class="cov8" title="1">{
+        return postgresConfigFileName
+}</span>
+
+// GetPostgresPrefix returns the environment variable prefix for Postgres.
+func GetPostgresPrefix() string <span class="cov8" title="1">{
+        return postgresPrefix
+}</span>
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package validator
+		<pre class="file" id="file3" style="display: none">package logger
+
+import (
+        "github.com/spf13/afero"
+        "github.com/surahman/FTeX/pkg/config_loader"
+        "github.com/surahman/FTeX/pkg/constants"
+)
+
+// config contains the configurations loaded from the configuration file.
+type config struct {
+        BuiltinConfig        string         `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+        BuiltinEncoderConfig string         `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
+        GeneralConfig        *generalConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
+        EncoderConfig        *encoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
+}
+
+// generalConfig contains all the general logger configurations.
+type generalConfig struct {
+        Development       bool     `json:"development" yaml:"development" mapstructure:"development" validate:"required"`
+        DisableCaller     bool     `json:"disableCaller" yaml:"disableCaller" mapstructure:"disableCaller" validate:"required"`
+        DisableStacktrace bool     `json:"disableStacktrace" yaml:"disableStacktrace" mapstructure:"disableStacktrace" validate:"required"`
+        Encoding          string   `json:"encoding" yaml:"encoding" mapstructure:"encoding" validate:"required"`
+        OutputPaths       []string `json:"outputPaths" yaml:"outputPaths" mapstructure:"outputPaths" validate:"required"`
+        ErrorOutputPaths  []string `json:"errorOutputPaths" yaml:"errorOutputPaths" mapstructure:"errorOutputPaths" validate:"required"`
+}
+
+// encoderConfig contains all the log encoder configurations.
+type encoderConfig struct {
+        MessageKey       string `json:"messageKey" yaml:"messageKey" mapstructure:"messageKey" validate:"required"`
+        LevelKey         string `json:"levelKey" yaml:"levelKey" mapstructure:"levelKey" validate:"required"`
+        TimeKey          string `json:"timeKey" yaml:"timeKey" mapstructure:"timeKey" validate:"required"`
+        NameKey          string `json:"nameKey" yaml:"nameKey" mapstructure:"nameKey" validate:"required"`
+        CallerKey        string `json:"callerKey" yaml:"callerKey" mapstructure:"callerKey" validate:"required"`
+        FunctionKey      string `json:"functionKey" yaml:"functionKey" mapstructure:"functionKey" validate:"required"`
+        StacktraceKey    string `json:"stacktraceKey" yaml:"stacktraceKey" mapstructure:"stacktraceKey" validate:"required"`
+        SkipLineEnding   bool   `json:"skipLineEnding" yaml:"skipLineEnding" mapstructure:"skipLineEnding" validate:"required"`
+        LineEnding       string `json:"lineEnding" yaml:"lineEnding" mapstructure:"lineEnding" validate:"required"`
+        ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator" mapstructure:"consoleSeparator" validate:"required"`
+}
+
+// newConfig creates a blank configuration struct for the Zap Logger.
+func newConfig() *config <span class="cov6" title="5">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="13">{
+        return config_loader.ConfigLoader(fs, cfg, constants.GetLoggerFileName(), constants.GetLoggerPrefix(), "yaml")
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package logger
+
+import (
+        "errors"
+        "log"
+        "strings"
+
+        "github.com/spf13/afero"
+        "go.uber.org/zap"
+        "go.uber.org/zap/zapcore"
+        "gopkg.in/yaml.v3"
+)
+
+// Logger is the Zap logger object.
+type Logger struct {
+        zapLogger *zap.Logger
+}
+
+// NewLogger will create a new uninitialized logger.
+func NewLogger() *Logger <span class="cov9" title="8">{
+        return &amp;Logger{}
+}</span>
+
+// Init will initialize the logger with configurations and start it.
+func (l *Logger) Init(fs *afero.Fs) (err error) <span class="cov8" title="6">{
+        if l.zapLogger != nil </span><span class="cov1" title="1">{
+                return errors.New("logger is already initialized")
+        }</span>
+        <span class="cov7" title="5">var baseConfig zap.Config
+        var encConfig zapcore.EncoderConfig
+
+        userConfig := newConfig()
+        if err = userConfig.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                log.Printf("failed to load logger configuration file from disk: %v\n", err)
+                return
+        }</span>
+
+        // Base logger configuration.
+        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinConfig) </span>{
+        case "development":<span class="cov5" title="3">
+                baseConfig = zap.NewDevelopmentConfig()
+                break</span>
+        case "production":<span class="cov1" title="1">
+                baseConfig = zap.NewProductionConfig()
+                break</span>
+        default:<span class="cov0" title="0">
+                msg := "could not select the base configuration type"
+                log.Println(msg)
+                return errors.New(msg)</span>
+        }
+
+        // Encoder configuration.
+        <span class="cov6" title="4">switch strings.ToLower(userConfig.BuiltinEncoderConfig) </span>{
+        case "development":<span class="cov5" title="3">
+                encConfig = zap.NewDevelopmentEncoderConfig()
+                break</span>
+        case "production":<span class="cov1" title="1">
+                encConfig = zap.NewProductionEncoderConfig()
+                break</span>
+        default:<span class="cov0" title="0">
+                msg := "could not select the base encoder type"
+                log.Println(msg)
+                return errors.New(msg)</span>
+        }
+
+        // Merge configurations.
+        <span class="cov6" title="4">if err = mergeConfig[*zap.Config, *generalConfig](&amp;baseConfig, userConfig.GeneralConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
+                return
+        }</span>
+        <span class="cov6" title="4">if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&amp;encConfig, userConfig.EncoderConfig); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+                return
+        }</span>
+
+        // Init and create logger.
+        <span class="cov6" title="4">baseConfig.EncoderConfig = encConfig
+        if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failure configuring logger: %v\n", err)
+                return
+        }</span>
+        <span class="cov6" title="4">return</span>
+}
+
+// Info logs messages at the info level.
+func (l *Logger) Info(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Info(message, fields...)
+}</span>
+
+// Debug logs messages at the debug level.
+func (l *Logger) Debug(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Debug(message, fields...)
+}</span>
+
+// Warn logs messages at the warn level.
+func (l *Logger) Warn(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Warn(message, fields...)
+}</span>
+
+// Error logs messages at the error level.
+func (l *Logger) Error(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Error(message, fields...)
+}</span>
+
+// Panic logs messages at the panic level and then panics at the call site.
+func (l *Logger) Panic(message string, fields ...zap.Field) <span class="cov3" title="2">{
+        l.zapLogger.Panic(message, fields...)
+}</span>
+
+// mergeConfig will merge the configuration files by marshalling and unmarshalling.
+func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) <span class="cov10" title="10">{
+        var yamlToConv []byte
+        if yamlToConv, err = yaml.Marshal(src); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov10" title="10">if err = yaml.Unmarshal(yamlToConv, dst); err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov10" title="10">return</span>
+}
+
+// setTestLogger is a utility method that set a logger base for testing.
+func (l *Logger) setTestLogger(testLogger *zap.Logger) <span class="cov3" title="2">{
+        l.zapLogger = testLogger
+}</span>
+
+// NewTestLogger will create a new development logger to be used in test suites.
+func NewTestLogger() (logger *Logger, err error) <span class="cov1" title="1">{
+        baseConfig := zap.NewDevelopmentConfig()
+        baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+        var zapLogger *zap.Logger
+        if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil </span><span class="cov0" title="0">{
+                log.Printf("failure configuring logger: %v\n", err)
+                return nil, err
+        }</span>
+        <span class="cov1" title="1">return &amp;Logger{zapLogger: zapLogger}, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package logger
+
+// configTestData will return a map of test data containing valid and invalid logger configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+                "empty": ``,
+
+                "valid_devel": `
+builtin_config: Development
+builtin_encoder_config: Development`,
+
+                "valid_prod": `
+builtin_config: Production
+builtin_encoder_config: Production`,
+
+                "invalid_builtin": `
+builtin_config: Invalid
+builtin_encoder_config: Invalid`,
+
+                "valid_config": `
+builtin_config: Development
+builtin_encoder_config: Development
+general_config:
+  development: true
+  disableCaller: true
+  disableStacktrace: true
+  encoding: json
+  outputPaths: ["stdout", "stderr"]
+  errorOutputPaths: ["stdout", "stderr"]
+encoder_config:
+  messageKey: message key
+  levelKey: level key
+  timeKey: time key
+  nameKey: name key
+  callerKey: caller key
+  functionKey: function key
+  stacktraceKey: stacktrace key
+  skipLineEnding: true
+  lineEnding: line ending
+  consoleSeparator: console separator`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package postgres
+
+import (
+        "time"
+
+        "github.com/spf13/afero"
+        "github.com/surahman/FTeX/pkg/config_loader"
+        "github.com/surahman/FTeX/pkg/constants"
+)
+
+// config contains the configurations loaded from the configuration file.
+type config struct {
+        Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
+        Connection     connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+        Pool           poolConfig           `json:"pool,omitempty" yaml:"pool,omitempty" mapstructure:"pool"`
+}
+
+// authenticationConfig contains the Postgres session authentication information.
+type authenticationConfig struct {
+        Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
+        Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+}
+
+// connectionConfig contains the Postgres session connection information.
+type connectionConfig struct {
+        Database   string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
+        Host       string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
+        Port       uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
+        Timeout    uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
+        SslEnabled bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
+}
+
+// poolConfig contains the Postgres session connection pool specific information.
+type poolConfig struct {
+        HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5s"`
+        MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,gte=4"`
+        MinConns          int32         `json:"min_conns,omitempty" yaml:"min_conns,omitempty" mapstructure:"min_conns" validate:"required,gte=4"`
+        LazyConnect       bool          `json:"lazy_connect,omitempty" yaml:"lazy_connect,omitempty" mapstructure:"lazy_connect" validate:"omitempty,boolean"`
+}
+
+// newConfig creates a blank configuration struct for Postgres.
+func newConfig() *config <span class="cov1" title="1">{
+        return &amp;config{}
+}</span>
+
+// Load will attempt to load configurations from a file on a file system.
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="9">{
+        return config_loader.ConfigLoader(fs, cfg, constants.GetPostgresFileName(), constants.GetPostgresPrefix(), "yaml")
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package postgres
+
+// configTestData will return a map of test data containing valid and invalid logger configs.
+func configTestData() map[string]string <span class="cov8" title="1">{
+        return map[string]string{
+                "empty": ``,
+
+                "valid": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  port: 6432
+  timeout: 5
+  ssl_enabled: false
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4
+  lazy_connect: false`,
+
+                "valid_true_bool": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  port: 6432
+  timeout: 5
+  ssl_enabled: true
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4
+  lazy_connect: true`,
+
+                "valid_prod_no_bool": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  port: 6432
+  timeout: 5
+  ssl_enabled:
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4
+  lazy_connect:`,
+
+                "bad_health_check": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  port: 6432
+  timeout: 5
+  ssl_enabled: false
+pool:
+  health_check_period: 3s
+  max_conns: 8
+  min_conns: 4
+  lazy_connect: false`,
+
+                "invalid_conns": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  port: 6432
+  timeout: 5
+  ssl_enabled: false
+pool:
+  health_check_period: 30s
+  max_conns: 2
+  min_conns: 2
+  lazy_connect: false`,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package validator
 
 import (
         "bytes"
@@ -272,7 +683,7 @@ func (err *ValidationError) Error() string <span class="cov6" title="3">{
 }
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package validator
+		<pre class="file" id="file9" style="display: none">package validator
 
 import (
         "github.com/go-playground/validator/v10"
