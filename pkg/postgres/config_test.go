@@ -15,6 +15,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func TestNewConfig(t *testing.T) {
+	cfg := newConfig()
+	require.Equal(t, reflect.TypeOf(&config{}), reflect.TypeOf(cfg), "new config type mismatch")
+}
+
 func TestConfigLoader(t *testing.T) {
 	envAuthKey := constants.GetPostgresPrefix() + "_AUTHENTICATION."
 	envConnKey := constants.GetPostgresPrefix() + "_CONNECTION."
