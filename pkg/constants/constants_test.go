@@ -37,3 +37,7 @@ func TestGetPostgresFileName(t *testing.T) {
 func TestGetPostgresPrefix(t *testing.T) {
 	require.Equal(t, postgresPrefix, GetPostgresPrefix(), "Incorrect Postgres environment prefix")
 }
+
+func TestGetTestDatabaseName(t *testing.T) {
+	require.Equal(t, testDatabaseName, GetTestDatabaseName(), "Incorrect test suite database name")
+}
