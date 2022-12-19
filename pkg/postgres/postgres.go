@@ -58,3 +58,28 @@ func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err 
 	}
 	return
 }
+
+// Open will start a database connection pool and establish a connection.
+func (p *postgresImpl) Open() (err error) {
+	return
+}
+
+// Close will close the database connection pool.
+func (p *postgresImpl) Close() (err error) {
+	return
+}
+
+// Ping will ping the database using the connection pool.
+func (p *postgresImpl) Ping() (err error) {
+	return
+}
+
+// Healthcheck will run a lightweight query on the database to ascertain health.
+func (p *postgresImpl) Healthcheck() (err error) {
+	return
+}
+
+// Execute wraps the methods that create, read, update, and delete records from tables on the database.
+func (p *postgresImpl) Execute(request func(Postgres, any) (any, error), params any) (any, error) {
+	return request(p, params)
+}
