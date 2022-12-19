@@ -1,8 +1,12 @@
 package postgres
 
 import (
+	"errors"
+
 	"github.com/jackc/pgx/v5"
+	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // Mock Cassandra interface stub generation.
@@ -35,4 +39,22 @@ type postgresImpl struct {
 	conf    *config
 	session *pgx.Conn
 	logger  *logger.Logger
+}
+
+// NewPostgres will create a new Postgres configuration by loading it.
+func NewPostgres(fs *afero.Fs, logger *logger.Logger) (Postgres, error) {
+	if fs == nil || logger == nil {
+		return nil, errors.New("nil file system or logger supplied")
+	}
+	return newPostgresImpl(fs, logger)
+}
+
+// newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
+func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err error) {
+	c = &postgresImpl{conf: newConfig(), logger: logger}
+	if err = c.conf.Load(*fs); err != nil {
+		c.logger.Error("failed to load Postgres configurations from disk", zap.Error(err))
+		return nil, err
+	}
+	return
 }
