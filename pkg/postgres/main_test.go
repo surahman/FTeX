@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/spf13/afero"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -61,7 +63,26 @@ func setup() (err error) {
 		return
 	}
 
+	// If running on a GitHub Actions runner use the default credentials for Cassandra.
+	configFileKey := "test_suite"
+	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
+		configFileKey = "github-ci-runner"
+		zapLogger.Info("Integration Test running on Github CI runner.")
+	}
+
+	// Setup mock filesystem for configs.
+	fs := afero.NewMemMapFs()
+	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
+		return
+	}
+	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(), []byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
+		return
+	}
+
 	// Load Postgres configurations for test suite.
+	if connection.db, err = newPostgresImpl(&fs, zapLogger); err != nil {
+		return
+	}
 
 	return
 }
