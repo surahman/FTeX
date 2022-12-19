@@ -97,3 +97,20 @@ func TestNewPostgresImpl(t *testing.T) {
 		})
 	}
 }
+
+func TestVerifySession(t *testing.T) {
+	// Nil Session.
+	postgres := &postgresImpl{}
+	require.Error(t, postgres.verifySession(), "nil session should return error")
+
+	// Not open session.
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+		[]byte(postgresConfigTestData["test_suite"]), 0644), "Failed to write in memory file")
+	postgres, err := newPostgresImpl(&fs, zapLogger)
+	require.NoError(t, err, "failed to load configuration")
+	require.Error(t, postgres.verifySession(), "failed to return error on closed connection")
+
+	// Open connection and verify.
+}

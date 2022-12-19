@@ -83,3 +83,11 @@ func (p *postgresImpl) Healthcheck() (err error) {
 func (p *postgresImpl) Execute(request func(Postgres, any) (any, error), params any) (any, error) {
 	return request(p, params)
 }
+
+// verifySession will check to see if a session is established.
+func (p *postgresImpl) verifySession() error {
+	if p.session == nil || p.session.IsClosed() {
+		return errors.New("no session established")
+	}
+	return nil
+}
