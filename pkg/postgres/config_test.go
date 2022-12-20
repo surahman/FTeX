@@ -67,6 +67,11 @@ func TestConfigLoader(t *testing.T) {
 			input:     postgresConfigTestData["invalid_max_conn_attempts"],
 			expectErr: require.Error,
 			expectLen: 1,
+		}, {
+			name:      "invalid timeout",
+			input:     postgresConfigTestData["invalid_timeout"],
+			expectErr: require.Error,
+			expectLen: 1,
 		},
 		// ----- test cases end ----- //
 	}
@@ -102,17 +107,19 @@ func TestConfigLoader(t *testing.T) {
 			database := xid.New().String()
 			host := xid.New().String()
 			port := 5555
-			timeout := 47
+			timeout := 47 * time.Second
+			max_conn_attempts := 9
 			t.Setenv(envConnKey+"DATABASE", database)
 			t.Setenv(envConnKey+"HOST", host)
+			t.Setenv(envConnKey+"MAX_CONNECTION_ATTEMPTS", strconv.Itoa(max_conn_attempts))
 			t.Setenv(envConnKey+"PORT", strconv.Itoa(port))
-			t.Setenv(envConnKey+"TIMEOUT", strconv.Itoa(timeout))
+			t.Setenv(envConnKey+"TIMEOUT", timeout.String())
 			t.Setenv(envConnKey+"SSL_ENABLED", strconv.FormatBool(true))
 
-			health_check_period := "13s"
+			health_check_period := 13 * time.Second
 			max_conns := 60
 			min_conns := 40
-			t.Setenv(envPoolKey+"HEALTH_CHECK_PERIOD", health_check_period)
+			t.Setenv(envPoolKey+"HEALTH_CHECK_PERIOD", health_check_period.String())
 			t.Setenv(envPoolKey+"MAX_CONNS", strconv.Itoa(max_conns))
 			t.Setenv(envPoolKey+"MIN_CONNS", strconv.Itoa(min_conns))
 			t.Setenv(envPoolKey+"LAZY_CONNECT", strconv.FormatBool(true))
@@ -121,15 +128,15 @@ func TestConfigLoader(t *testing.T) {
 
 			require.Equal(t, username, actual.Authentication.Username, "failed to load username")
 			require.Equal(t, password, actual.Authentication.Password, "failed to load password")
+
 			require.Equal(t, database, actual.Connection.Database, "failed to load database")
 			require.Equal(t, host, actual.Connection.Host, "failed to load host")
+			require.Equal(t, max_conn_attempts, actual.Connection.MaxConnAttempts, "failed to max connection attempts")
 			require.Equal(t, uint16(port), actual.Connection.Port, "failed to load port")
-			require.Equal(t, uint16(timeout), actual.Connection.Timeout, "failed to load timeout")
 			require.True(t, actual.Connection.SslEnabled, "failed to load ssl enabled")
+			require.Equal(t, timeout, actual.Connection.Timeout, "failed to load timeout")
 
-			duration, err := time.ParseDuration(health_check_period)
-			require.NoError(t, err, "failed to parse duration for env var")
-			require.Equal(t, duration, actual.Pool.HealthCheckPeriod, "failed to load duration")
+			require.Equal(t, health_check_period, actual.Pool.HealthCheckPeriod, "failed to load duration")
 			require.Equal(t, int32(max_conns), actual.Pool.MaxConns, "failed to load max conns")
 			require.Equal(t, int32(min_conns), actual.Pool.MinConns, "failed to load min conns")
 			require.True(t, actual.Pool.LazyConnect, "failed to load lazy connect")
