@@ -1,9 +1,16 @@
 package postgres
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"math"
+	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
@@ -36,9 +43,9 @@ var _ Postgres = &postgresImpl{}
 
 // postgresImpl implements the Postgres interface and contains the logic to interface with the database.
 type postgresImpl struct {
-	conf    *config
-	session *pgx.Conn
-	logger  *logger.Logger
+	conf   *config
+	pool   *pgxpool.Pool
+	logger *logger.Logger
 }
 
 // NewPostgres will create a new Postgres configuration by loading it.
@@ -61,6 +68,37 @@ func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err 
 
 // Open will start a database connection pool and establish a connection.
 func (p *postgresImpl) Open() (err error) {
+	if err = p.verifySession(); err == nil {
+		return errors.New("connection is already established to Postgres")
+	}
+
+	// Manually setup Postgres configurations.
+	pgxConfig := pgxpool.Config{
+		ConnConfig: &pgx.ConnConfig{
+			Config: pgconn.Config{
+				Host:           p.conf.Connection.Host,
+				Port:           p.conf.Connection.Port,
+				Database:       p.conf.Connection.Database,
+				User:           p.conf.Authentication.Username,
+				Password:       p.conf.Authentication.Password,
+				ConnectTimeout: p.conf.Connection.Timeout,
+			},
+		},
+		MaxConns:          p.conf.Pool.MaxConns,
+		MinConns:          p.conf.Pool.MinConns,
+		HealthCheckPeriod: p.conf.Pool.HealthCheckPeriod,
+	}
+
+	if p.pool, err = pgxpool.NewWithConfig(context.Background(), &pgxConfig); err != nil {
+		p.logger.Error("failed to configure Postgres connection", zap.Error(err))
+		return
+	}
+
+	// Binary Exponential Backoff connection to Postgres. The lazy connection can be opened via a ping to the database.
+	if err = p.createSessionRetry(); err != nil {
+		return err
+	}
+
 	return
 }
 
@@ -86,8 +124,22 @@ func (p *postgresImpl) Execute(request func(Postgres, any) (any, error), params 
 
 // verifySession will check to see if a session is established.
 func (p *postgresImpl) verifySession() error {
-	if p.session == nil || p.session.IsClosed() {
+	if p.pool == nil || p.pool.Ping(context.Background()) == nil {
 		return errors.New("no session established")
 	}
 	return nil
+}
+
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
+func (p *postgresImpl) createSessionRetry() (err error) {
+	for attempt := 1; attempt <= p.conf.Connection.MaxConnAttempts; attempt++ {
+		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+		time.Sleep(waitTime)
+		if err = p.pool.Ping(context.Background()); err == nil {
+			return
+		}
+	}
+	p.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+	return
 }
