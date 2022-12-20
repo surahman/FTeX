@@ -16,6 +16,9 @@ import (
 // postgresConfigTestData is a map Postgres configuration test data.
 var postgresConfigTestData = configTestData()
 
+// configFileKey is the name of the Postgres configuration file to use in the tests.
+var configFileKey string
+
 // testConnection is the connection pool to the Postgres test database.
 type testConnection struct {
 	db Postgres     // Test database connection.
@@ -64,7 +67,7 @@ func setup() (err error) {
 	}
 
 	// If running on a GitHub Actions runner use the default credentials for Cassandra.
-	configFileKey := "test_suite"
+	configFileKey = "test_suite"
 	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
 		zapLogger.Info("Integration Test running on Github CI runner.")

@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/afero"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -72,24 +71,22 @@ func (p *postgresImpl) Open() (err error) {
 		return errors.New("connection is already established to Postgres")
 	}
 
-	// Manually setup Postgres configurations.
-	pgxConfig := pgxpool.Config{
-		ConnConfig: &pgx.ConnConfig{
-			Config: pgconn.Config{
-				Host:           p.conf.Connection.Host,
-				Port:           p.conf.Connection.Port,
-				Database:       p.conf.Connection.Database,
-				User:           p.conf.Authentication.Username,
-				Password:       p.conf.Authentication.Password,
-				ConnectTimeout: p.conf.Connection.Timeout,
-			},
-		},
-		MaxConns:          p.conf.Pool.MaxConns,
-		MinConns:          p.conf.Pool.MinConns,
-		HealthCheckPeriod: p.conf.Pool.HealthCheckPeriod,
+	var pgxConfig *pgxpool.Config
+	if pgxConfig, err = pgxpool.ParseConfig(fmt.Sprintf(constants.GetPostgresDSN(),
+		p.conf.Authentication.Username,
+		p.conf.Authentication.Password,
+		p.conf.Connection.Host,
+		p.conf.Connection.Port,
+		p.conf.Connection.Database,
+		p.conf.Connection.Timeout)); err != nil {
+		p.logger.Error("failed to parse Postgres DSN", zap.Error(err))
+		return
 	}
+	pgxConfig.MaxConns = p.conf.Pool.MaxConns
+	pgxConfig.MinConns = p.conf.Pool.MaxConns
+	pgxConfig.HealthCheckPeriod = p.conf.Pool.HealthCheckPeriod
 
-	if p.pool, err = pgxpool.NewWithConfig(context.Background(), &pgxConfig); err != nil {
+	if p.pool, err = pgxpool.NewWithConfig(context.Background(), pgxConfig); err != nil {
 		p.logger.Error("failed to configure Postgres connection", zap.Error(err))
 		return
 	}
@@ -104,6 +101,13 @@ func (p *postgresImpl) Open() (err error) {
 
 // Close will close the database connection pool.
 func (p *postgresImpl) Close() (err error) {
+	if err = p.verifySession(); err == nil {
+		msg := "no established Postgres connection to close"
+		p.logger.Error(msg)
+		return errors.New(msg)
+	}
+	p.pool.Close()
+
 	return
 }
 

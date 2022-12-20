@@ -103,14 +103,25 @@ func TestVerifySession(t *testing.T) {
 	postgres := &postgresImpl{}
 	require.Error(t, postgres.verifySession(), "nil session should return error")
 
-	// Not open session.
+	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
-		[]byte(postgresConfigTestData["test_suite"]), 0644), "Failed to write in memory file")
+		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
+
+	// Not open session.
 	postgres, err := newPostgresImpl(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.verifySession(), "failed to return error on closed connection")
 
-	// Open connection and verify.
+	//*** Skip tests below if not running integration tests ***
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Open connection, verify, close, and verify.
+	require.NoError(t, postgres.Open(), "failed to open connection to postgres")
+	require.NoError(t, postgres.verifySession(), "failed to verify Postgres connection is open")
+	require.NoError(t, postgres.Close(), "failed to close established Postgres connection")
+	require.Error(t, postgres.verifySession(), "failed to return error on closed Postgres connection")
 }
