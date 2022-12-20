@@ -42,8 +42,8 @@ The expected file name is `PostgresConfig.yaml`. All the configuration items bel
 | ↳ database                | ↳ `.DATABASE`                | string        | Database name.                                                                            |
 | ↳ host                    | ↳ `.HOST`                    | string        | Hostname or IP address.                                                                   |
 | ↳ max_connection_attempts | ↳ `.MAX_CONNECTION_ATTEMPTS` | int           | Number of times to attempt a connection to the database using Binary Exponential Backoff. |
+| ↳ timeout                 | ↳ `.TIMEOUT`                 | int           | Connection timeout in seconds.                                                            |
 | ↳ port                    | ↳ `.PORT`                    | uint16        | Host port.                                                                                |
-| ↳ timeout                 | ↳ `.TIMEOUT`                 | uint16        | Connection timeout in seconds.                                                            |
 | ↳ ssl_enabled             | ↳ `.SSL_ENABLED`             | bool          | Connection SSL enabled. _Optional_.                                                       |
 | **_Pool_**                | `POSTGRES_POOL`              |               | **_Parent key for connection pool information._**                                         |
 | ↳ health_check_period     | ↳ `.HEALTH_CHECK_PERIOD`     | time.Duration | Seconds (min=5) between health checks for each connection in the pool.                    |
@@ -63,7 +63,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 30s

@@ -107,13 +107,13 @@ func TestConfigLoader(t *testing.T) {
 			database := xid.New().String()
 			host := xid.New().String()
 			port := 5555
-			timeout := 47 * time.Second
+			timeout := 47
 			max_conn_attempts := 9
 			t.Setenv(envConnKey+"DATABASE", database)
 			t.Setenv(envConnKey+"HOST", host)
 			t.Setenv(envConnKey+"MAX_CONNECTION_ATTEMPTS", strconv.Itoa(max_conn_attempts))
 			t.Setenv(envConnKey+"PORT", strconv.Itoa(port))
-			t.Setenv(envConnKey+"TIMEOUT", timeout.String())
+			t.Setenv(envConnKey+"TIMEOUT", strconv.Itoa(timeout))
 			t.Setenv(envConnKey+"SSL_ENABLED", strconv.FormatBool(true))
 
 			health_check_period := 13 * time.Second

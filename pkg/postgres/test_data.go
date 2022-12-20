@@ -14,7 +14,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 1
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 30s
@@ -31,7 +31,7 @@ connection:
   max_connection_attempts: 5
   host: 127.0.0.1
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 30s
@@ -48,7 +48,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 30s
@@ -65,7 +65,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: true
 pool:
   health_check_period: 30s
@@ -82,7 +82,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled:
 pool:
   health_check_period: 30s
@@ -99,7 +99,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 3s
@@ -116,7 +116,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 30s
@@ -133,7 +133,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 0
   port: 6432
-  timeout: 5s
+  timeout: 5
   ssl_enabled: false
 pool:
   health_check_period: 30s
@@ -150,7 +150,7 @@ connection:
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
-  timeout: 2s
+  timeout: 2
   ssl_enabled: false
 pool:
   health_check_period: 30s
