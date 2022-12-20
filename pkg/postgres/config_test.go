@@ -36,7 +36,7 @@ func TestConfigLoader(t *testing.T) {
 			name:      "empty - etc dir",
 			input:     postgresConfigTestData["empty"],
 			expectErr: require.Error,
-			expectLen: 8,
+			expectLen: 9,
 		}, {
 			name:      "valid - etc dir",
 			input:     postgresConfigTestData["valid"],
@@ -62,6 +62,11 @@ func TestConfigLoader(t *testing.T) {
 			input:     postgresConfigTestData["invalid_conns"],
 			expectErr: require.Error,
 			expectLen: 2,
+		}, {
+			name:      "invalid max connection attempts",
+			input:     postgresConfigTestData["invalid_max_conn_attempts"],
+			expectErr: require.Error,
+			expectLen: 1,
 		},
 		// ----- test cases end ----- //
 	}

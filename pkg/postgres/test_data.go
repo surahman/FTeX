@@ -12,6 +12,7 @@ authentication:
 connection:
   database: ft-ex-db-test
   host: 127.0.0.1
+  max_connection_attempts: 1
   port: 6432
   timeout: 5
   ssl_enabled: false
@@ -27,6 +28,7 @@ authentication:
   password: postgres
 connection:
   database: ft-ex-db-test
+  max_connection_attempts: 5
   host: 127.0.0.1
   port: 6432
   timeout: 5
@@ -44,6 +46,7 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
   ssl_enabled: false
@@ -60,6 +63,7 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
   ssl_enabled: true
@@ -76,6 +80,7 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
   ssl_enabled:
@@ -92,6 +97,7 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
   ssl_enabled: false
@@ -108,6 +114,7 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
   ssl_enabled: false
@@ -115,6 +122,23 @@ pool:
   health_check_period: 30s
   max_conns: 2
   min_conns: 2
+  lazy_connect: false`,
+
+		"invalid_max_conn_attempts": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  max_connection_attempts: 0
+  port: 6432
+  timeout: 5
+  ssl_enabled: false
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4
   lazy_connect: false`,
 	}
 }

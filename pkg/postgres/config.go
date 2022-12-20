@@ -23,11 +23,12 @@ type authenticationConfig struct {
 
 // connectionConfig contains the Postgres session connection information.
 type connectionConfig struct {
-	Database   string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
-	Host       string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
-	Port       uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
-	Timeout    uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
-	SslEnabled bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
+	Database        string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
+	Host            string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
+	MaxConnAttempts int    `json:"max_connection_attempts,omitempty" yaml:"max_connection_attempts,omitempty" mapstructure:"max_connection_attempts" validate:"required,min=1"`
+	Port            uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
+	Timeout         uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
+	SslEnabled      bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
 }
 
 // poolConfig contains the Postgres session connection pool specific information.
