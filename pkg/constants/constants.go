@@ -16,7 +16,7 @@ const (
 	postgresPrefix = "POSTGRES"
 
 	// Miscellaneous.
-	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d"
+	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
 	testDatabaseName = "ft-ex-db-test"
 )
 
