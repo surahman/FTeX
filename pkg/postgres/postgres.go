@@ -135,6 +135,6 @@ func (p *postgresImpl) createSessionRetry() (err error) {
 			return
 		}
 	}
-	p.logger.Error("unable to establish connection to Cassandra cluster", zap.Error(err))
+	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
 	return
 }
