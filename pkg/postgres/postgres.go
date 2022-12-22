@@ -26,10 +26,6 @@ type Postgres interface {
 	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
 	Close() error
 
-	// Ping will pint the database. This can be used to open an initial connection support by some database drivers that operate
-	// with lazy connections.
-	Ping() error
-
 	// Healthcheck runs a lightweight healthcheck on the database backend.
 	Healthcheck() error
 
@@ -108,11 +104,6 @@ func (p *postgresImpl) Close() (err error) {
 	}
 	p.pool.Close()
 
-	return
-}
-
-// Ping will ping the database using the connection pool.
-func (p *postgresImpl) Ping() (err error) {
 	return
 }
 
