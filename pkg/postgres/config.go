@@ -28,7 +28,6 @@ type connectionConfig struct {
 	MaxConnAttempts int    `json:"max_connection_attempts,omitempty" yaml:"max_connection_attempts,omitempty" mapstructure:"max_connection_attempts" validate:"required,min=1"`
 	Timeout         int    `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,min=5"`
 	Port            uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
-	SslEnabled      bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
 }
 
 // poolConfig contains the Postgres session connection pool specific information.
@@ -36,7 +35,6 @@ type poolConfig struct {
 	HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5s"`
 	MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,gte=4"`
 	MinConns          int32         `json:"min_conns,omitempty" yaml:"min_conns,omitempty" mapstructure:"min_conns" validate:"required,gte=4"`
-	LazyConnect       bool          `json:"lazy_connect,omitempty" yaml:"lazy_connect,omitempty" mapstructure:"lazy_connect" validate:"omitempty,boolean"`
 }
 
 // newConfig creates a blank configuration struct for Postgres.
