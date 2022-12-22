@@ -101,7 +101,7 @@ func (p *postgresImpl) Open() (err error) {
 
 // Close will close the database connection pool.
 func (p *postgresImpl) Close() (err error) {
-	if err = p.verifySession(); err == nil {
+	if err = p.verifySession(); err != nil {
 		msg := "no established Postgres connection to close"
 		p.logger.Error(msg)
 		return errors.New(msg)
@@ -128,7 +128,7 @@ func (p *postgresImpl) Execute(request func(Postgres, any) (any, error), params 
 
 // verifySession will check to see if a session is established.
 func (p *postgresImpl) verifySession() error {
-	if p.pool == nil || p.pool.Ping(context.Background()) == nil {
+	if p.pool == nil || p.pool.Ping(context.Background()) != nil {
 		return errors.New("no session established")
 	}
 	return nil
