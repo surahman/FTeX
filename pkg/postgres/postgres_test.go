@@ -142,9 +142,13 @@ func TestPostgresImpl_Open(t *testing.T) {
 	// Open and close session.
 	postgres, err := newPostgresImpl(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
-	require.NoError(t, postgres.Open(), "failed to open connection.")
-	require.NoError(t, postgres.Close(), "failed to close connection.")
-	require.Error(t, postgres.Close(), "failed to return error whilst closing a closed connection.")
+	require.NoError(t, postgres.Open(), "failed to open connection")
+	require.NoError(t, postgres.Close(), "failed to close connection")
+	require.Error(t, postgres.Close(), "failed to return error whilst closing a closed connection")
+
+	// Ping failure.
+	postgres.conf.Connection.Host = "bad-host-name"
+	require.Error(t, postgres.Open(), "failed to report ping failure on bad connection")
 }
 
 func TestPostgresImpl_Close(t *testing.T) {
