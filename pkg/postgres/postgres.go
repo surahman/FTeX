@@ -109,7 +109,10 @@ func (p *postgresImpl) Close() (err error) {
 
 // Healthcheck will run a lightweight query on the database to ascertain health.
 func (p *postgresImpl) Healthcheck() (err error) {
-	return
+	if err = p.verifySession(); err != nil {
+		return
+	}
+	return p.pool.Ping(context.Background())
 }
 
 // Execute wraps the methods that create, read, update, and delete records from tables on the database.
