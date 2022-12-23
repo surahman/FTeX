@@ -8,7 +8,7 @@ const (
 
 	// Configuration file names
 	loggerConfigFileName   = "LoggerConfig.yaml"
-	postgresConfigFileName = "PostgresConfig.yaml.yaml"
+	postgresConfigFileName = "PostgresConfig.yaml"
 
 	// Environment variables
 	githubCIKey    = "GITHUB_ACTIONS_CI"
