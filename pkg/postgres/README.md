@@ -24,7 +24,7 @@ The configuration loader will search for the configurations in the following ord
 
 | Location              | Details                                                                                                |
 |-----------------------|--------------------------------------------------------------------------------------------------------|
-| `/etc/FTeXconf/`      | The `etc` directory is the canonical location for configurations.                                      |
+| `/etc/FTeX.conf/`     | The `etc` directory is the canonical location for configurations.                                      |
 | `$HOME/.FTeX/`        | Configurations can be located in the user's home directory.                                            |
 | `./configs/`          | The config folder in the root directory where the application is located.                              |
 | Environment variables | Finally, the configurations will be loaded from environment variables and override configuration files |
@@ -49,7 +49,7 @@ The expected file name is `PostgresConfig.yaml`. All the configuration items bel
 | ↳ max_conns               | ↳ `.MAX_CONNS`               | int32         | Maximum connections (min=4) to retain in the connection pool.                             |
 | ↳ min_conns               | ↳ `.MIN_CONNS`               | int32         | Minimum connections (min=4) to retain in the connection pool.                             |
 
- (min=5)
+
 #### Example Configuration File
 
 ```yaml
