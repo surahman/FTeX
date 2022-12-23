@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -185,7 +186,33 @@ func TestPostgresImpl_Healthcheck(t *testing.T) {
 
 	require.NoError(t, postgres.Open(), "failed to open connection.")
 	require.NoError(t, postgres.Healthcheck(), "failed to return good health on open connection")
-	
+
 	require.NoError(t, postgres.Close(), "failed to close connection.")
 	require.Error(t, postgres.Healthcheck(), "failed to return bad health on closed connection")
+}
+
+func TestPostgresImpl_Execute(t *testing.T) {
+	type testType struct {
+		key string
+		val string
+	}
+
+	input := &testType{key: "key", val: "value"}
+	fn := func(conn Postgres, params any) (any, error) {
+		casted := params.(*testType)
+		return casted, nil
+	}
+
+	// Configure mock filesystem.
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(), []byte(postgresConfigTestData["test_suite"]), 0644), "Failed to write in memory file")
+
+	db, err := newPostgresImpl(&fs, zapLogger)
+	require.NoError(t, err, "failed to create test db object")
+	require.NotNil(t, db, "failed to create test db connection")
+
+	result, err := db.Execute(fn, input)
+	require.NoError(t, err)
+	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType)))
 }
