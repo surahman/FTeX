@@ -79,7 +79,7 @@ func (p *postgresImpl) Open() (err error) {
 		return
 	}
 	pgxConfig.MaxConns = p.conf.Pool.MaxConns
-	pgxConfig.MinConns = p.conf.Pool.MaxConns
+	pgxConfig.MinConns = p.conf.Pool.MinConns
 	pgxConfig.HealthCheckPeriod = p.conf.Pool.HealthCheckPeriod
 
 	if p.pool, err = pgxpool.NewWithConfig(context.Background(), pgxConfig); err != nil {
