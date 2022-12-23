@@ -145,3 +145,23 @@ func TestPostgresImpl_Open(t *testing.T) {
 	require.NoError(t, postgres.Close(), "failed to close connection.")
 	require.Error(t, postgres.Close(), "failed to return error whilst closing a closed connection.")
 }
+
+func TestPostgresImpl_Close(t *testing.T) {
+	// Integration test check.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Setup mock filesystem for configs.
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
+
+	// Open and close session.
+	postgres, err := newPostgresImpl(&fs, zapLogger)
+	require.NoError(t, err, "failed to load configuration")
+	require.Error(t, postgres.Close(), "failed to return error on closing a connection not opened")
+	require.NoError(t, postgres.Open(), "failed to open connection.")
+	require.NoError(t, postgres.Close(), "failed to close connection.")
+}
