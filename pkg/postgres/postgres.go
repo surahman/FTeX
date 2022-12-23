@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Mock Cassandra interface stub generation.
+// Mock Postgres interface stub generation.
 //go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Postgres
 
 // Postgres is the interface through which the database can be accessed. Created to support mock testing.
@@ -26,10 +26,10 @@ type Postgres interface {
 	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
 	Close() error
 
-	// Healthcheck runs a lightweight healthcheck on the database backend.
+	// Healthcheck runs a ping healthcheck on the database backend.
 	Healthcheck() error
 
-	// Execute will execute statements or run a lightweight transaction on the database backend, leveraging the connection pool.
+	// Execute will execute statements or run a transaction on the database backend, leveraging the connection pool.
 	Execute(func(Postgres, any) (any, error), any) (any, error)
 }
 
@@ -51,7 +51,7 @@ func NewPostgres(fs *afero.Fs, logger *logger.Logger) (Postgres, error) {
 	return newPostgresImpl(fs, logger)
 }
 
-// newCassandraImpl will create a new CassandraImpl configuration and load it from disk.
+// newCPostgresImpl will create a new postgresImpl configuration and load it from disk.
 func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err error) {
 	c = &postgresImpl{conf: newConfig(), logger: logger}
 	if err = c.conf.Load(*fs); err != nil {
@@ -107,7 +107,7 @@ func (p *postgresImpl) Close() (err error) {
 	return
 }
 
-// Healthcheck will run a lightweight query on the database to ascertain health.
+// Healthcheck will run a ping on the database to ascertain health.
 func (p *postgresImpl) Healthcheck() (err error) {
 	if err = p.verifySession(); err != nil {
 		return
