@@ -44,7 +44,7 @@ The expected file name is `PostgresConfig.yaml`. All the configuration items bel
 | ↳ max_connection_attempts | ↳ `.MAX_CONNECTION_ATTEMPTS` | int           | Number of times to attempt a connection to the database using Binary Exponential Backoff. |
 | ↳ timeout                 | ↳ `.TIMEOUT`                 | int           | Connection timeout in seconds.                                                            |
 | ↳ port                    | ↳ `.PORT`                    | uint16        | Host port.                                                                                |
-|| **_Pool_**                | `POSTGRES_POOL`              |               | **_Parent key for connection pool information._**                                         |
+| **_Pool_**                | `POSTGRES_POOL`              |               | **_Parent key for connection pool information._**                                         |
 | ↳ health_check_period     | ↳ `.HEALTH_CHECK_PERIOD`     | time.Duration | Seconds (min=5) between health checks for each connection in the pool.                    |
 | ↳ max_conns               | ↳ `.MAX_CONNS`               | int32         | Maximum connections (min=4) to retain in the connection pool.                             |
 | ↳ min_conns               | ↳ `.MIN_CONNS`               | int32         | Minimum connections (min=4) to retain in the connection pool.                             |
