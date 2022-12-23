@@ -14,6 +14,10 @@ const (
 	githubCIKey    = "GITHUB_ACTIONS_CI"
 	loggerPrefix   = "LOGGER"
 	postgresPrefix = "POSTGRES"
+
+	// Miscellaneous.
+	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
+	testDatabaseName = "ft-ex-db-test"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -54,4 +58,14 @@ func GetPostgresFileName() string {
 // GetPostgresPrefix returns the environment variable prefix for Postgres.
 func GetPostgresPrefix() string {
 	return postgresPrefix
+}
+
+// GetPostgresDSN returns the format string for the Postgres Data Source Name used to connect to the database.
+func GetPostgresDSN() string {
+	return postgresDSN
+}
+
+// GetTestDatabaseName returns the name of the database used in test suites.
+func GetTestDatabaseName() string {
+	return testDatabaseName
 }

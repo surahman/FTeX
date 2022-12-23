@@ -69,11 +69,13 @@
 				
 				<option value="file6">github.com/surahman/FTeX/pkg/postgres/config.go (100.0%)</option>
 				
-				<option value="file7">github.com/surahman/FTeX/pkg/postgres/test_data.go (100.0%)</option>
+				<option value="file7">github.com/surahman/FTeX/pkg/postgres/postgres.go (88.6%)</option>
 				
-				<option value="file8">github.com/surahman/FTeX/pkg/validator/errors.go (100.0%)</option>
+				<option value="file8">github.com/surahman/FTeX/pkg/postgres/test_data.go (100.0%)</option>
 				
-				<option value="file9">github.com/surahman/FTeX/pkg/validator/validator.go (100.0%)</option>
+				<option value="file9">github.com/surahman/FTeX/pkg/validator/errors.go (100.0%)</option>
+				
+				<option value="file10">github.com/surahman/FTeX/pkg/validator/validator.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -225,12 +227,16 @@ const (
 
         // Configuration file names
         loggerConfigFileName   = "LoggerConfig.yaml"
-        postgresConfigFileName = "PostgresConfig.yaml"
+        postgresConfigFileName = "PostgresConfig.yaml.yaml"
 
         // Environment variables
         githubCIKey    = "GITHUB_ACTIONS_CI"
         loggerPrefix   = "LOGGER"
         postgresPrefix = "POSTGRES"
+
+        // Miscellaneous.
+        postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
+        testDatabaseName = "ft-ex-db-test"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -271,6 +277,16 @@ func GetPostgresFileName() string <span class="cov8" title="1">{
 // GetPostgresPrefix returns the environment variable prefix for Postgres.
 func GetPostgresPrefix() string <span class="cov8" title="1">{
         return postgresPrefix
+}</span>
+
+// GetPostgresDSN returns the format string for the Postgres Data Source Name used to connect to the database.
+func GetPostgresDSN() string <span class="cov8" title="1">{
+        return postgresDSN
+}</span>
+
+// GetTestDatabaseName returns the name of the database used in test suites.
+func GetTestDatabaseName() string <span class="cov8" title="1">{
+        return testDatabaseName
 }</span>
 </pre>
 		
@@ -533,11 +549,11 @@ type authenticationConfig struct {
 
 // connectionConfig contains the Postgres session connection information.
 type connectionConfig struct {
-        Database   string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
-        Host       string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
-        Port       uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
-        Timeout    uint16 `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
-        SslEnabled bool   `json:"ssl_enabled,omitempty" yaml:"ssl_enabled,omitempty" mapstructure:"ssl_enabled" validate:"omitempty,boolean"`
+        Database        string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
+        Host            string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
+        MaxConnAttempts int    `json:"max_connection_attempts,omitempty" yaml:"max_connection_attempts,omitempty" mapstructure:"max_connection_attempts" validate:"required,min=1"`
+        Timeout         int    `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required,min=5"`
+        Port            uint16 `json:"port,omitempty" yaml:"port,omitempty" mapstructure:"port" validate:"required"`
 }
 
 // poolConfig contains the Postgres session connection pool specific information.
@@ -545,26 +561,200 @@ type poolConfig struct {
         HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5s"`
         MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,gte=4"`
         MinConns          int32         `json:"min_conns,omitempty" yaml:"min_conns,omitempty" mapstructure:"min_conns" validate:"required,gte=4"`
-        LazyConnect       bool          `json:"lazy_connect,omitempty" yaml:"lazy_connect,omitempty" mapstructure:"lazy_connect" validate:"omitempty,boolean"`
 }
 
 // newConfig creates a blank configuration struct for Postgres.
-func newConfig() *config <span class="cov1" title="1">{
+func newConfig() *config <span class="cov8" title="10">{
         return &amp;config{}
 }</span>
 
 // Load will attempt to load configurations from a file on a file system.
-func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="9">{
+func (cfg *config) Load(fs afero.Fs) (err error) <span class="cov10" title="16">{
         return config_loader.ConfigLoader(fs, cfg, constants.GetPostgresFileName(), constants.GetPostgresPrefix(), "yaml")
 }</span>
 </pre>
 		
 		<pre class="file" id="file7" style="display: none">package postgres
 
+import (
+        "context"
+        "errors"
+        "fmt"
+        "math"
+        "strconv"
+        "time"
+
+        "github.com/jackc/pgx/v5/pgxpool"
+        "github.com/spf13/afero"
+        "github.com/surahman/FTeX/pkg/constants"
+        "github.com/surahman/FTeX/pkg/logger"
+        "go.uber.org/zap"
+)
+
+// Mock Postgres interface stub generation.
+//go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Postgres
+
+// Postgres is the interface through which the database can be accessed. Created to support mock testing.
+type Postgres interface {
+        // Open will create a connection pool and establish a connection to the database backend.
+        Open() error
+
+        // Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
+        Close() error
+
+        // Healthcheck runs a ping healthcheck on the database backend.
+        Healthcheck() error
+
+        // Execute will execute statements or run a transaction on the database backend, leveraging the connection pool.
+        Execute(func(Postgres, any) (any, error), any) (any, error)
+}
+
+// Check to ensure the Postgres interface has been implemented.
+var _ Postgres = &amp;postgresImpl{}
+
+// postgresImpl implements the Postgres interface and contains the logic to interface with the database.
+type postgresImpl struct {
+        conf   *config
+        pool   *pgxpool.Pool
+        logger *logger.Logger
+}
+
+// NewPostgres will create a new Postgres configuration by loading it.
+func NewPostgres(fs *afero.Fs, logger *logger.Logger) (Postgres, error) <span class="cov5" title="4">{
+        if fs == nil || logger == nil </span><span class="cov4" title="3">{
+                return nil, errors.New("nil file system or logger supplied")
+        }</span>
+        <span class="cov1" title="1">return newPostgresImpl(fs, logger)</span>
+}
+
+// newCPostgresImpl will create a new postgresImpl configuration and load it from disk.
+func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err error) <span class="cov7" title="9">{
+        c = &amp;postgresImpl{conf: newConfig(), logger: logger}
+        if err = c.conf.Load(*fs); err != nil </span><span class="cov1" title="1">{
+                c.logger.Error("failed to load Postgres configurations from disk", zap.Error(err))
+                return nil, err
+        }</span>
+        <span class="cov7" title="8">return</span>
+}
+
+// Open will start a database connection pool and establish a connection.
+func (p *postgresImpl) Open() (err error) <span class="cov6" title="6">{
+        if err = p.verifySession(); err == nil </span><span class="cov0" title="0">{
+                return errors.New("connection is already established to Postgres")
+        }</span>
+
+        <span class="cov6" title="6">var pgxConfig *pgxpool.Config
+        if pgxConfig, err = pgxpool.ParseConfig(fmt.Sprintf(constants.GetPostgresDSN(),
+                p.conf.Authentication.Username,
+                p.conf.Authentication.Password,
+                p.conf.Connection.Host,
+                p.conf.Connection.Port,
+                p.conf.Connection.Database,
+                p.conf.Connection.Timeout)); err != nil </span><span class="cov0" title="0">{
+                p.logger.Error("failed to parse Postgres DSN", zap.Error(err))
+                return
+        }</span>
+        <span class="cov6" title="6">pgxConfig.MaxConns = p.conf.Pool.MaxConns
+        pgxConfig.MinConns = p.conf.Pool.MinConns
+        pgxConfig.HealthCheckPeriod = p.conf.Pool.HealthCheckPeriod
+
+        if p.pool, err = pgxpool.NewWithConfig(context.Background(), pgxConfig); err != nil </span><span class="cov0" title="0">{
+                p.logger.Error("failed to configure Postgres connection", zap.Error(err))
+                return
+        }</span>
+
+        // Binary Exponential Backoff connection to Postgres. The lazy connection can be opened via a ping to the database.
+        <span class="cov6" title="6">if err = p.createSessionRetry(); err != nil </span><span class="cov1" title="1">{
+                return err
+        }</span>
+
+        <span class="cov5" title="5">return</span>
+}
+
+// Close will close the database connection pool.
+func (p *postgresImpl) Close() (err error) <span class="cov6" title="6">{
+        if err = p.verifySession(); err != nil </span><span class="cov3" title="2">{
+                msg := "no established Postgres connection to close"
+                p.logger.Error(msg)
+                return errors.New(msg)
+        }</span>
+        <span class="cov5" title="4">p.pool.Close()
+
+        return</span>
+}
+
+// Healthcheck will run a ping on the database to ascertain health.
+func (p *postgresImpl) Healthcheck() (err error) <span class="cov4" title="3">{
+        if err = p.verifySession(); err != nil </span><span class="cov3" title="2">{
+                return
+        }</span>
+        <span class="cov1" title="1">return p.pool.Ping(context.Background())</span>
+}
+
+// Execute wraps the methods that create, read, update, and delete records from tables on the database.
+func (p *postgresImpl) Execute(request func(Postgres, any) (any, error), params any) (any, error) <span class="cov1" title="1">{
+        return request(p, params)
+}</span>
+
+// verifySession will check to see if a session is established.
+func (p *postgresImpl) verifySession() error <span class="cov10" title="19">{
+        if p.pool == nil || p.pool.Ping(context.Background()) != nil </span><span class="cov8" title="13">{
+                return errors.New("no session established")
+        }</span>
+        <span class="cov6" title="6">return nil</span>
+}
+
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
+func (p *postgresImpl) createSessionRetry() (err error) <span class="cov6" title="6">{
+        for attempt := 1; attempt &lt;= p.conf.Connection.MaxConnAttempts; attempt++ </span><span class="cov6" title="6">{
+                waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+                p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+                time.Sleep(waitTime)
+                if err = p.pool.Ping(context.Background()); err == nil </span><span class="cov5" title="5">{
+                        return
+                }</span>
+        }
+        <span class="cov1" title="1">p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
+        return</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package postgres
+
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string <span class="cov8" title="1">{
         return map[string]string{
                 "empty": ``,
+
+                "test_suite": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db-test
+  host: 127.0.0.1
+  max_connection_attempts: 1
+  port: 6432
+  timeout: 5
+pool:
+  health_check_period: 30s
+  max_conns: 4
+  min_conns: 4`,
+
+                "github-ci-runner": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db-test
+  max_connection_attempts: 5
+  host: 127.0.0.1
+  port: 6432
+  timeout: 5
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4`,
 
                 "valid": `
 authentication:
@@ -573,46 +763,13 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
-  ssl_enabled: false
 pool:
   health_check_period: 30s
   max_conns: 8
-  min_conns: 4
-  lazy_connect: false`,
-
-                "valid_true_bool": `
-authentication:
-  username: postgres
-  password: postgres
-connection:
-  database: ft-ex-db
-  host: 127.0.0.1
-  port: 6432
-  timeout: 5
-  ssl_enabled: true
-pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4
-  lazy_connect: true`,
-
-                "valid_prod_no_bool": `
-authentication:
-  username: postgres
-  password: postgres
-connection:
-  database: ft-ex-db
-  host: 127.0.0.1
-  port: 6432
-  timeout: 5
-  ssl_enabled:
-pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4
-  lazy_connect:`,
+  min_conns: 4`,
 
                 "bad_health_check": `
 authentication:
@@ -621,14 +778,13 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
-  ssl_enabled: false
 pool:
   health_check_period: 3s
   max_conns: 8
-  min_conns: 4
-  lazy_connect: false`,
+  min_conns: 4`,
 
                 "invalid_conns": `
 authentication:
@@ -637,19 +793,48 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
+  max_connection_attempts: 5
   port: 6432
   timeout: 5
-  ssl_enabled: false
 pool:
   health_check_period: 30s
   max_conns: 2
-  min_conns: 2
-  lazy_connect: false`,
+  min_conns: 2`,
+
+                "invalid_max_conn_attempts": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  max_connection_attempts: 0
+  port: 6432
+  timeout: 5
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4`,
+
+                "invalid_timeout": `
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ft-ex-db
+  host: 127.0.0.1
+  max_connection_attempts: 5
+  port: 6432
+  timeout: 2
+pool:
+  health_check_period: 30s
+  max_conns: 8
+  min_conns: 4`,
         }
 }</span>
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package validator
+		<pre class="file" id="file9" style="display: none">package validator
 
 import (
         "bytes"
@@ -683,7 +868,7 @@ func (err *ValidationError) Error() string <span class="cov6" title="3">{
 }
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package validator
+		<pre class="file" id="file10" style="display: none">package validator
 
 import (
         "github.com/go-playground/validator/v10"
