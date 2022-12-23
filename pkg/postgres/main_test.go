@@ -87,6 +87,10 @@ func setup() (err error) {
 		return
 	}
 
+	if err = connection.db.Open(); err != nil {
+		return
+	}
+
 	return
 }
 
