@@ -26,7 +26,7 @@ authentication:
   password: postgres
 connection:
   database: ft-ex-db-test
-  max_connection_attempts: 5
+  max_connection_attempts: 3
   host: 127.0.0.1
   port: 6432
   timeout: 5
