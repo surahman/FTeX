@@ -66,8 +66,20 @@ possible.
   2. No hold-and-wait to be handled through timeouts.
   3. No preemption to be handled through timeouts.
   4. No circular waits to be handled through a consistent ordering of lock acquisitions.
+* `Tablespace`s should be created for the `production` database's tables to allow for partition resizing
+  and performance tuning.
  
   <br/>
+
+## Tablespaces
+
+Cluster wide tablespaces will be created for each of the tables in the production environment.
+
+| Table Name | Tablespace Name | Location           |
+|------------|-----------------|--------------------|
+| users      | users_data      | `/data/users_data` |
+
+<br/>
 
 ## Users Table Schema
 
@@ -98,15 +110,15 @@ It contains the `Username`, `Password`, `FirstName`, `LastName`, and `Email` fie
 The query to generate the user table can be found [here](users.sql).
 
 <br/>
-<br>
 
 ## Schema Migration and Setup
 
 For security reasons, there are no database schema migration tools provided through the binary. This is to avoid deploying a
-payload in a production container that could potentially modify the databases' schema. As an alternative, there are three
+payload in a production container that could potentially modify the databases' schema. As an alternative, there are some
 SQL files provided that will need to be deployed either manually or through database migration tooling. The files will need
 to be deployed in the following order:
 
-1. [user table](users.sql)
-2. [accounts table](accounts.sql)
-3. [general ledger table](general_ledger_table.sql)
+1. [tablespaces](tablespaces.sql)
+2. [user table](users.sql)
+3. [accounts table](accounts.sql)
+4. [general ledger table](general_ledger_table.sql)

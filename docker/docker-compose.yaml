@@ -10,6 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./configure_test_db.sh:/docker-entrypoint-initdb.d/configure_test_db.sh
+      - ./tablespace_setup.sh:/docker-entrypoint-initdb.d/tablespace_setup.sh
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
