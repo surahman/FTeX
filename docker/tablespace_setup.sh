@@ -1,2 +1,2 @@
 # User data tablespace directory.
-mkdir -p /data/users_data
+mkdir -p /var/lib/postgresql/table_data/ftex_users

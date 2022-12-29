@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS users (
         CONSTRAINT users_pk
             PRIMARY KEY,
     is_deleted BOOLEAN DEFAULT false NOT NULL
-) TABLESPACE ftex_db;
+) TABLESPACE users_data;

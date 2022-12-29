@@ -73,11 +73,11 @@ possible.
 
 ## Tablespaces
 
-Cluster wide tablespaces will be created for each of the tables in the production environment.
+Cluster wide tablespaces will need to be created for each of the tables in the production environment.
 
-| Table Name | Tablespace Name | Location           |
-|------------|-----------------|--------------------|
-| users      | users_data      | `/data/users_data` |
+| Table Name | Tablespace Name | Location                                   |
+|------------|-----------------|--------------------------------------------|
+| users      | users_data      | `var/lib/postgresql/table_data/ftex_users` |
 
 <br/>
 
@@ -122,3 +122,5 @@ to be deployed in the following order:
 2. [user table](users.sql)
 3. [accounts table](accounts.sql)
 4. [general ledger table](general_ledger_table.sql)
+
+This project will be making use of [Flyway](https://flywaydb.org/documentation/) for database migrations in GitHub Actions.
