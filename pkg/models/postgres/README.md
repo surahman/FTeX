@@ -4,6 +4,11 @@
 
 - [Case Study and Justification](#case-study-and-justification)
 - [Design Considerations](#design-considerations)
+- [Tablespaces](#tablespaces)
+- [Users Table Schema](#users-table-schema)
+  - [User](#user)
+  - [User Account](#user-account)
+  - [SQL Query](#sql-query)
 - [Schema Migration and Setup](#schema-migration-and-setup)
 
 <br/>
@@ -79,6 +84,10 @@ Cluster wide tablespaces will need to be created for each of the tables in the p
 |------------|-----------------|--------------------------------------------|
 | users      | users_data      | `var/lib/postgresql/table_data/ftex_users` |
 
+Please update the data directories according to those that have been setup on the server in the migration
+scripts:
+1. [Production](schema_production.sql).
+
 <br/>
 
 ## Users Table Schema
@@ -123,4 +132,8 @@ to be deployed in the following order:
 3. [accounts table](accounts.sql)
 4. [general ledger table](general_ledger_table.sql)
 
-This project will be making use of [Flyway](https://flywaydb.org/documentation/) for database migrations in GitHub Actions.
+This project will be making use of [Liquibase](https://docs.liquibase.com/home.html) for database migrations.
+There will be two scripts provided:
+
+1. [GitHub Actions](schema_github_actions.sql).
+2. [Production](schema_production.sql).
