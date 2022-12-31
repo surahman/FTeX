@@ -43,7 +43,7 @@ jobs:
         with:
           operation: 'update'
           classpath: 'pkg/models/postgres'
-          changeLogFile: 'schema_github_actions.sql'
+          changeLogFile: 'schema_migration_gha.sql'
           username: postgres
           password: postgres
           url: 'jdbc:postgresql://postgres:5432/ftex_db_test'

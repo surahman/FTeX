@@ -123,24 +123,16 @@ This struct is created to be exposed for use with the HTTP handlers. This ensure
 It contains the `Username`, `Password`, `FirstName`, `LastName`, and `Email` fields.
 
 ### SQL Query
-The query to generate the user table can be found [here](users.sql).
+The query to generate the user table can be found in the migrations [script](schema_migration.sql).
 
 <br/>
 
 ## Schema Migration and Setup
 
 For security reasons, there are no database schema migration tools provided through the binary. This is to avoid deploying a
-payload in a production container that could potentially modify the databases' schema. As an alternative, there are some
-SQL files provided that will need to be deployed either manually or through database migration tooling. The files will need
-to be deployed in the following order:
-
-1. [tablespaces](tablespaces.sql)
-2. [user table](users.sql)
-3. [accounts table](accounts.sql)
-4. [general ledger table](general_ledger_table.sql)
-
-This project will be making use of [Liquibase](https://docs.liquibase.com/home.html) for database migrations.
+payload in a production container that could potentially modify the databases' schema. As an alternative, this project will
+be making use of [Liquibase](https://docs.liquibase.com/home.html) for database migrations.
 There will be two scripts provided:
 
-1. [GitHub Actions](schema_github_actions.sql).
-2. [Production](schema_migration.sql).
+1. [GitHub Actions](schema_migration_gha.sql).
+2. [Migration](schema_migration.sql).
