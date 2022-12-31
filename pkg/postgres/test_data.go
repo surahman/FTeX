@@ -28,7 +28,7 @@ connection:
   database: ftex_db_test
   max_connection_attempts: 3
   host: 127.0.0.1
-  port: 6432
+  port: 5432
   timeout: 5
 pool:
   health_check_period: 30s

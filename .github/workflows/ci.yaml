@@ -27,7 +27,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: "ftex_db_test"
         ports:
-          - 6432:5432
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -46,7 +46,7 @@ jobs:
           changeLogFile: 'schema_github_actions.sql'
           username: postgres
           password: postgres
-          url: 'jdbc:postgresql://postgres:6432/ftex_db_test'
+          url: 'jdbc:postgresql://postgres:5432/ftex_db_test'
 
       - name: Set up Go 1.18
         uses: actions/setup-go@v3
