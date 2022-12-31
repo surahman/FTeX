@@ -2,12 +2,6 @@
 
 --changeset surahman:1
 --preconditions onFail:HALT onError:HALT
---comment: The data directory that contains the files for the users table.
-CREATE TABLESPACE users_data LOCATION 'var/lib/postgresql/table_data/ftex_users';
---rollback DROP TABLESPACE users_data;
-
---changeset surahman:2
---preconditions onFail:HALT onError:HALT
 --comment: Users table contains the general user information and login credentials.
 CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(64)           NOT NULL,

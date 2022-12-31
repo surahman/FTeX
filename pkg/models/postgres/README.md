@@ -78,15 +78,22 @@ possible.
 
 ## Tablespaces
 
-Cluster wide tablespaces will need to be created for each of the tables in the production environment.
+Cluster-wide tablespaces will need to be created for each of the tables in the production environment.
+These directories will need to be created by the database administrator with the correct privileges
+for the Postgres accounts that require access.
 
 | Table Name | Tablespace Name | Location                                   |
 |------------|-----------------|--------------------------------------------|
 | users      | users_data      | `var/lib/postgresql/table_data/ftex_users` |
 
-Please update the data directories according to those that have been setup on the server in the migration
-scripts:
-1. [Production](schema_production.sql).
+The Docker containers contain [scripts](../../../docker/setup_scripts) that perform the setup of the
+directories and tablespaces on initialization of the database. It is recommended to delete the Docker
+volume associated with the Postgres container whenever the schema is updated, and to re-initialize the
+container volume to ensure that changes are applied.
+
+Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed
+within transaction blocks. The migration scripts will expect the tablespaces to be created beforehand.
+The migration scripts can be found [here](schema_migration.sql).
 
 <br/>
 
@@ -136,4 +143,4 @@ This project will be making use of [Liquibase](https://docs.liquibase.com/home.h
 There will be two scripts provided:
 
 1. [GitHub Actions](schema_github_actions.sql).
-2. [Production](schema_production.sql).
+2. [Production](schema_migration.sql).
