@@ -61,7 +61,7 @@ possible.
   _"retrieve all of my transactions from the general ledger"_.
 * Set clustering indices _(simple or compound)_ to allow related account and transaction data to be
   co-located on persistent storage. This will result in block reads of data that will retrieve all the
-  required data on consecutive pages. This will also, in turn, potentially lead to fewer instances of
+  required data on consecutive blocks. This will also, in turn, potentially lead to fewer instances of
   volatile memory page thrashing.
 * Configure primary and secondary indices based on queries and table join keys.
 * A general ledger table should contain double entries for each transaction: **_source_** and **_destination_**
