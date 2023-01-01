@@ -25,9 +25,9 @@ jobs:
         env:
           POSTGRES_USERNAME: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: "ft-ex-db-test"
+          POSTGRES_DB: "ftex_db_test"
         ports:
-          - 6432:5432
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -37,6 +37,16 @@ jobs:
     steps:
       - name: Code checkout
         uses: actions/checkout@v3
+
+      - name: Liquibase database migration
+        uses: liquibase/liquibase-github-action@v7
+        with:
+          operation: 'update'
+          classpath: 'SQL'
+          changeLogFile: 'schema_migration_gha.sql'
+          username: postgres
+          password: postgres
+          url: 'jdbc:postgresql://postgres:5432/ftex_db_test'
 
       - name: Set up Go 1.18
         uses: actions/setup-go@v3

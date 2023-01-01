@@ -10,7 +10,7 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db-test
+  database: ftex_db_test
   host: 127.0.0.1
   max_connection_attempts: 1
   port: 6432
@@ -25,10 +25,10 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db-test
+  database: ftex_db_test
   max_connection_attempts: 3
   host: 127.0.0.1
-  port: 6432
+  port: 5432
   timeout: 5
 pool:
   health_check_period: 30s
@@ -40,7 +40,7 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db
+  database: ftex_db
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
@@ -55,7 +55,7 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db
+  database: ftex_db
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
@@ -70,7 +70,7 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db
+  database: ftex_db
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432
@@ -85,7 +85,7 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db
+  database: ftex_db
   host: 127.0.0.1
   max_connection_attempts: 0
   port: 6432
@@ -100,7 +100,7 @@ authentication:
   username: postgres
   password: postgres
 connection:
-  database: ft-ex-db
+  database: ftex_db
   host: 127.0.0.1
   max_connection_attempts: 5
   port: 6432

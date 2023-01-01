@@ -76,4 +76,4 @@ export POSTGRES_AUTHENTICATION.PASSWORD=root
 ```
 
 ### Design Documentation
-The technology selection case study and table schema design documentation can be found [here](../model/postgres).
+The technology selection case study and table schema design documentation can be found [here](../../SQL).
