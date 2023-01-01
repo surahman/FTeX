@@ -86,7 +86,7 @@ for the Postgres accounts that require access.
 |------------|-----------------|--------------------------------------------|
 | users      | users_data      | `var/lib/postgresql/table_data/ftex_users` |
 
-The Docker containers contain [scripts](../../../docker/setup_scripts) that perform the setup of the
+The Docker containers contain [scripts](../docker/setup_scripts) that perform the setup of the
 directories and tablespaces on initialization of the database. It is recommended to delete the Docker
 volume associated with the Postgres container whenever the schema is updated, and to re-initialize the
 container volume to ensure that changes are applied.

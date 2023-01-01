@@ -42,7 +42,7 @@ jobs:
         uses: liquibase/liquibase-github-action@v7
         with:
           operation: 'update'
-          classpath: 'pkg/models/postgres'
+          classpath: 'SQL'
           changeLogFile: 'schema_migration_gha.sql'
           username: postgres
           password: postgres
