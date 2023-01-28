@@ -38,8 +38,8 @@ type poolConfig struct {
 }
 
 // newConfig creates a blank configuration struct for Postgres.
-func newConfig() *config {
-	return &config{}
+func newConfig() config {
+	return config{}
 }
 
 // Load will attempt to load configurations from a file on a file system.

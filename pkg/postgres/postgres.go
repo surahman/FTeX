@@ -38,7 +38,7 @@ var _ Postgres = &postgresImpl{}
 
 // postgresImpl implements the Postgres interface and contains the logic to interface with the database.
 type postgresImpl struct {
-	conf   *config
+	conf   config
 	pool   *pgxpool.Pool
 	logger *logger.Logger
 }
