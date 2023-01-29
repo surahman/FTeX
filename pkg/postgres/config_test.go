@@ -17,7 +17,7 @@ import (
 
 func TestNewConfig(t *testing.T) {
 	cfg := newConfig()
-	require.Equal(t, reflect.TypeOf(&config{}), reflect.TypeOf(cfg), "new config type mismatch")
+	require.Equal(t, reflect.TypeOf(config{}), reflect.TypeOf(cfg), "new config type mismatch")
 }
 
 func TestConfigLoader(t *testing.T) {
