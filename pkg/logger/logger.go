@@ -39,10 +39,8 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	switch strings.ToLower(userConfig.BuiltinConfig) {
 	case "development":
 		baseConfig = zap.NewDevelopmentConfig()
-		break
 	case "production":
 		baseConfig = zap.NewProductionConfig()
-		break
 	default:
 		msg := "could not select the base configuration type"
 		log.Println(msg)
@@ -53,10 +51,8 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	switch strings.ToLower(userConfig.BuiltinEncoderConfig) {
 	case "development":
 		encConfig = zap.NewDevelopmentEncoderConfig()
-		break
 	case "production":
 		encConfig = zap.NewProductionEncoderConfig()
-		break
 	default:
 		msg := "could not select the base encoder type"
 		log.Println(msg)

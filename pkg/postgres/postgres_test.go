@@ -100,6 +100,11 @@ func TestNewPostgresImpl(t *testing.T) {
 }
 
 func TestPostgresImpl_verifySession(t *testing.T) {
+	// Integration test check.
+	if testing.Short() {
+		t.Skip()
+	}
+
 	// Nil Session.
 	postgres := &postgresImpl{}
 	require.Error(t, postgres.verifySession(), "nil session should return error")

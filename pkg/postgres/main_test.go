@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"sync"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -21,8 +20,8 @@ var configFileKey string
 
 // testConnection is the connection pool to the Postgres test database.
 type testConnection struct {
-	db Postgres     // Test database connection.
-	mu sync.RWMutex // Mutex to enforce sequential test execution.
+	db Postgres // Test database connection.
+	//mu sync.RWMutex // Mutex to enforce sequential test execution.
 }
 
 // connection pool to Cassandra cluster.
