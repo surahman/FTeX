@@ -1,0 +1,11 @@
+name: 'Linter'
+description: 'Linting committed code in the PR using golangci-lint.'
+runs:
+  using: "composite"
+  steps:
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        # Only track changes in the PR that the CI is running for.
+        only-new-issues: true

@@ -1,5 +1,5 @@
 name: 'Schema Migration'
-description: 'Liquibase schema migration for Postgres'
+description: 'Liquibase schema migration for Postgres.'
 runs:
   using: "composite"
   steps:
