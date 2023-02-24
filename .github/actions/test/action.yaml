@@ -1,0 +1,8 @@
+name: 'Test Suite'
+description: 'Complete battery of tests in the test suite.'
+runs:
+  using: "composite"
+  steps:
+    - name: Test Suite
+      shell: bash
+      run: make test
