@@ -10,6 +10,7 @@ linters:
     - godox
     - golint
     - gofumpt
+    - goerr113
     - ifshort
     - interfacer
     - maligned
