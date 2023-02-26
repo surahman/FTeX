@@ -13,6 +13,7 @@ linters:
     - ifshort
     - interfacer
     - maligned
+    - nonamedreturns
     - nosnakecase
     - structcheck
     - scopelint
