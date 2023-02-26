@@ -20,6 +20,9 @@ linters:
     - testpackage
     - varcheck
 linters-settings:
+  gomnd:
+    ignored-functions:
+      - 'math.*'
   paralleltest:
     ignore-missing: true
   varnamelen:
