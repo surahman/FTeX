@@ -7,11 +7,9 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(64)           NOT NULL,
     last_name  VARCHAR(64)           NOT NULL,
     email      VARCHAR(64)           NOT NULL,
-    username   VARCHAR(32)           NOT NULL,
+    username   VARCHAR(32)           UNIQUE NOT NULL,
     password   VARCHAR(32)           NOT NULL,
-    client_id  UUID                  NOT NULL
-        CONSTRAINT users_pk
-            PRIMARY KEY,
+    client_id  UUID                  PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
     is_deleted BOOLEAN DEFAULT false NOT NULL
 );
 --rollback DROP TABLE users;
