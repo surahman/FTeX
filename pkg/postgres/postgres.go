@@ -139,7 +139,7 @@ func (p *postgresImpl) createSessionRetry() (err error) {
 		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
 		time.Sleep(waitTime)
 		if err = p.pool.Ping(context.Background()); err == nil {
-			return
+			return nil
 		}
 	}
 	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
