@@ -59,12 +59,14 @@ func TestMain(m *testing.M) {
 }
 
 // setup will configure the connection to the test database.
-func setup() (err error) {
+func setup() error {
 	if testing.Short() {
 		zapLogger.Warn("Short test: Skipping Postgres integration tests")
 
-		return
+		return nil
 	}
+
+	var err error
 
 	// If running on a GitHub Actions runner use the default credentials for Cassandra.
 	configFileKey = "test_suite"
@@ -76,22 +78,22 @@ func setup() (err error) {
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
 	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
-		return
+		return err
 	}
 	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(), []byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
-		return
+		return err
 	}
 
 	// Load Postgres configurations for test suite.
 	if connection.db, err = newPostgresImpl(&fs, zapLogger); err != nil {
-		return
+		return err
 	}
 
 	if err = connection.db.Open(); err != nil {
-		return
+		return err
 	}
 
-	return
+	return nil
 }
 
 // tearDown will delete the test clusters keyspace.

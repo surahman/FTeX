@@ -63,7 +63,8 @@ func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err 
 }
 
 // Open will start a database connection pool and establish a connection.
-func (p *postgresImpl) Open() (err error) {
+func (p *postgresImpl) Open() error {
+	var err error
 	if err = p.verifySession(); err == nil {
 		return errors.New("connection is already established to Postgres")
 	}
@@ -78,7 +79,7 @@ func (p *postgresImpl) Open() (err error) {
 		p.conf.Connection.Timeout)); err != nil {
 		p.logger.Error("failed to parse Postgres DSN", zap.Error(err))
 
-		return
+		return err
 	}
 	pgxConfig.MaxConns = p.conf.Pool.MaxConns
 	pgxConfig.MinConns = p.conf.Pool.MinConns
@@ -87,7 +88,7 @@ func (p *postgresImpl) Open() (err error) {
 	if p.pool, err = pgxpool.NewWithConfig(context.Background(), pgxConfig); err != nil {
 		p.logger.Error("failed to configure Postgres connection", zap.Error(err))
 
-		return
+		return err
 	}
 
 	// Binary Exponential Backoff connection to Postgres. The lazy connection can be opened via a ping to the database.
@@ -95,7 +96,7 @@ func (p *postgresImpl) Open() (err error) {
 		return err
 	}
 
-	return
+	return nil
 }
 
 // Close will close the database connection pool.

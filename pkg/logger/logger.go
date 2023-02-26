@@ -22,10 +22,11 @@ func NewLogger() *Logger {
 }
 
 // Init will initialize the logger with configurations and start it.
-func (l *Logger) Init(fs *afero.Fs) (err error) {
+func (l *Logger) Init(fs *afero.Fs) error {
 	if l.zapLogger != nil {
 		return errors.New("logger is already initialized")
 	}
+	var err error
 	var baseConfig zap.Config
 	var encConfig zapcore.EncoderConfig
 
@@ -33,7 +34,7 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	if err = userConfig.Load(*fs); err != nil {
 		log.Printf("failed to load logger configuration file from disk: %v\n", err)
 
-		return
+		return err
 	}
 
 	// Base logger configuration.
@@ -64,12 +65,12 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	if err = mergeConfig[*zap.Config, *generalConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
 		log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
 
-		return
+		return err
 	}
 	if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
 		log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
 
-		return
+		return err
 	}
 
 	// Init and create logger.
@@ -77,9 +78,9 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
 
-		return
+		return err
 	}
-	return
+	return nil
 }
 
 // Info logs messages at the info level.
