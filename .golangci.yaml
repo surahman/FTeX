@@ -22,6 +22,9 @@ linters:
     - testpackage
     - varcheck
 linters-settings:
+  cyclop:
+    max-complexity: 12
+    skip-tests: true
   gomnd:
     ignored-functions:
       - 'math.*'
