@@ -13,6 +13,7 @@ linters:
     - goerr113
     - ifshort
     - interfacer
+    - ireturn
     - maligned
     - nonamedreturns
     - nosnakecase
