@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -208,7 +209,10 @@ func TestPostgresImpl_Execute(t *testing.T) {
 
 	input := &testType{key: "key", val: "value"}
 	fn := func(conn Postgres, params any) (any, error) {
-		casted := params.(*testType)
+		casted, ok := params.(*testType)
+		if !ok {
+			return nil, errors.New("cast failed")
+		}
 
 		return casted, nil
 	}
@@ -224,5 +228,5 @@ func TestPostgresImpl_Execute(t *testing.T) {
 
 	result, err := db.Execute(fn, input)
 	require.NoError(t, err)
-	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType)))
+	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType))) //nolint:forcetypeassert
 }
