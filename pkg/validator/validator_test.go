@@ -47,7 +47,6 @@ func TestErrorField_Error(t *testing.T) {
 }
 
 func TestErrorValidation_Error(t *testing.T) {
-
 	genExpected := func(errs ...string) string {
 		var buffer bytes.Buffer
 		for _, item := range errs {
@@ -95,7 +94,6 @@ func TestErrorValidation_Error(t *testing.T) {
 }
 
 func TestValidateStruct(t *testing.T) {
-
 	type ValidationTestStruct struct {
 		AlphaNum string `validate:"required,alphanum,min=6"`
 		Integer  int    `validate:"required,numeric,min=1,max=10"`
