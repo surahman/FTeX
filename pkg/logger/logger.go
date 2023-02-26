@@ -68,7 +68,7 @@ func (l *Logger) Init(fs *afero.Fs) error {
 		return err
 	}
 	if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
-		log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+		log.Printf("failed to merge base and user provided encoder configurations for logger: %v\n", err)
 
 		return err
 	}
@@ -109,6 +109,8 @@ func (l *Logger) Panic(message string, fields ...zap.Field) {
 }
 
 // mergeConfig will merge the configuration files by marshalling and unmarshalling.
+//
+//nolint:lll
 func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) {
 	var yamlToConv []byte
 	if yamlToConv, err = yaml.Marshal(src); err != nil {

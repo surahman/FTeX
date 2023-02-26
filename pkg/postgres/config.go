@@ -9,6 +9,8 @@ import (
 )
 
 // config contains the configurations loaded from the configuration file.
+//
+//nolint:lll
 type config struct {
 	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
 	Connection     connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
@@ -22,6 +24,8 @@ type authenticationConfig struct {
 }
 
 // connectionConfig contains the Postgres session connection information.
+//
+//nolint:lll
 type connectionConfig struct {
 	Database        string `json:"database,omitempty" yaml:"database,omitempty" mapstructure:"database" validate:"required"`
 	Host            string `json:"host,omitempty" yaml:"host,omitempty" mapstructure:"host" validate:"required"`
@@ -31,6 +35,8 @@ type connectionConfig struct {
 }
 
 // poolConfig contains the Postgres session connection pool specific information.
+//
+//nolint:lll
 type poolConfig struct {
 	HealthCheckPeriod time.Duration `json:"health_check_period,omitempty" yaml:"health_check_period,omitempty" mapstructure:"health_check_period" validate:"omitempty,min=5s"`
 	MaxConns          int32         `json:"max_conns,omitempty" yaml:"max_conns,omitempty" mapstructure:"max_conns" validate:"required,gte=4"`

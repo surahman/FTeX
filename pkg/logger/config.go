@@ -7,6 +7,8 @@ import (
 )
 
 // config contains the configurations loaded from the configuration file.
+//
+//nolint:lll
 type config struct {
 	BuiltinConfig        string         `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
 	BuiltinEncoderConfig string         `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
@@ -15,6 +17,8 @@ type config struct {
 }
 
 // generalConfig contains all the general logger configurations.
+//
+//nolint:lll
 type generalConfig struct {
 	Development       bool     `json:"development" yaml:"development" mapstructure:"development" validate:"required"`
 	DisableCaller     bool     `json:"disableCaller" yaml:"disableCaller" mapstructure:"disableCaller" validate:"required"`
@@ -25,6 +29,8 @@ type generalConfig struct {
 }
 
 // encoderConfig contains all the log encoder configurations.
+//
+//nolint:lll
 type encoderConfig struct {
 	MessageKey       string `json:"messageKey" yaml:"messageKey" mapstructure:"messageKey" validate:"required"`
 	LevelKey         string `json:"levelKey" yaml:"levelKey" mapstructure:"levelKey" validate:"required"`

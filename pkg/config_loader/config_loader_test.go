@@ -83,7 +83,8 @@ func TestConfigLoader(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
 			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testFilename, []byte(testCase.input), 0644), "Failed to write in memory file")
+			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testFilename, []byte(testCase.input), 0644),
+				"Failed to write in memory file")
 
 			// Load from mock filesystem.
 			actual := &config{}

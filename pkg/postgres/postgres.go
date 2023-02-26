@@ -16,6 +16,7 @@ import (
 )
 
 // Mock Postgres interface stub generation.
+//nolint:lll
 //go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Postgres
 
 // Postgres is the interface through which the database can be accessed. Created to support mock testing.
@@ -23,7 +24,7 @@ type Postgres interface {
 	// Open will create a connection pool and establish a connection to the database backend.
 	Open() error
 
-	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated correctly.
+	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated.
 	Close() error
 
 	// Healthcheck runs a ping healthcheck on the database backend.
@@ -132,11 +133,13 @@ func (p *postgresImpl) verifySession() error {
 	return nil
 }
 
-// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first success or fail after the last one.
+// createSessionRetry will attempt to open the connection using binary exponential back-off.
+// Stop on the first success or fail after the last one.
 func (p *postgresImpl) createSessionRetry() (err error) {
 	for attempt := 1; attempt <= p.conf.Connection.MaxConnAttempts; attempt++ {
 		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
-		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime), zap.String("attempt", strconv.Itoa(attempt)))
+		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime),
+			zap.String("attempt", strconv.Itoa(attempt)))
 		time.Sleep(waitTime)
 		if err = p.pool.Ping(context.Background()); err == nil {
 			return nil

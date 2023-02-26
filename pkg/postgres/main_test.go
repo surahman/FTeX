@@ -80,7 +80,8 @@ func setup() error {
 	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
 		return err
 	}
-	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(), []byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
+	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+		[]byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
 		return err
 	}
 

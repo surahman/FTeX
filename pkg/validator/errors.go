@@ -19,7 +19,8 @@ func (err *FieldError) Error() string {
 
 // ValidationError contains all the validation errors found in a struct.
 type ValidationError struct {
-	Errors []*FieldError `json:"validation_errors" yaml:"validation_errors"` // A list of all data members that failed validation.
+	// A list of all data members that failed validation.
+	Errors []*FieldError `json:"validation_errors" yaml:"validation_errors"`
 }
 
 // Error will output the validation error for all struct data members.
