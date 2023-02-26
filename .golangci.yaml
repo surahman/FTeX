@@ -1,0 +1,41 @@
+linters:
+  enable-all: true
+  disable:
+    - deadcode
+    - exhaustivestruct
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - godox
+    - golint
+    - gofumpt
+    - ifshort
+    - interfacer
+    - maligned
+    - nosnakecase
+    - structcheck
+    - scopelint
+    - testpackage
+    - varcheck
+linters-settings:
+  paralleltest:
+    ignore-missing: true
+  varnamelen:
+    min-name-length: 2
+    ignore-type-assert-ok: true
+    ignore-map-index-ok: true
+    ignore-chan-recv-ok: true
+    ignore-names:
+      - err
+    ignore-decls:
+      - c echo.Context
+      - t testing.T
+      - f *foo.Bar
+      - e error
+      - i int
+      - const C
+      - T any
+      - K any
+      - V any
+      - m map[string]int
