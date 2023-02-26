@@ -1,6 +1,8 @@
 package validator
 
 import (
+	"errors"
+
 	"github.com/go-playground/validator/v10"
 )
 
@@ -15,8 +17,9 @@ func init() {
 // ValidateStruct will validate a struct and list all deficiencies.
 func ValidateStruct(body any) error {
 	var validationErr ValidationError
-	if err := structValidator.Struct(body); err != nil {
-		for _, issue := range err.(validator.ValidationErrors) {
+	var errs validator.ValidationErrors
+	if errors.As(structValidator.Struct(body), &errs) {
+		for _, issue := range errs {
 			var ev FieldError
 			ev.Field = issue.Field()
 			ev.Tag = issue.Tag()
@@ -24,6 +27,7 @@ func ValidateStruct(body any) error {
 			validationErr.Errors = append(validationErr.Errors, &ev)
 		}
 	}
+
 	if validationErr.Errors == nil {
 		return nil
 	}
