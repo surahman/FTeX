@@ -32,6 +32,7 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	userConfig := newConfig()
 	if err = userConfig.Load(*fs); err != nil {
 		log.Printf("failed to load logger configuration file from disk: %v\n", err)
+
 		return
 	}
 
@@ -62,10 +63,12 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	// Merge configurations.
 	if err = mergeConfig[*zap.Config, *generalConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
 		log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
+
 		return
 	}
 	if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
 		log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
+
 		return
 	}
 
@@ -73,6 +76,7 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	baseConfig.EncoderConfig = encConfig
 	if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
+
 		return
 	}
 	return
@@ -127,6 +131,7 @@ func NewTestLogger() (logger *Logger, err error) {
 	var zapLogger *zap.Logger
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
+
 		return nil, err
 	}
 	return &Logger{zapLogger: zapLogger}, err

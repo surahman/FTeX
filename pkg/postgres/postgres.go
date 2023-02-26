@@ -56,6 +56,7 @@ func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err 
 	c = &postgresImpl{conf: newConfig(), logger: logger}
 	if err = c.conf.Load(*fs); err != nil {
 		c.logger.Error("failed to load Postgres configurations from disk", zap.Error(err))
+
 		return nil, err
 	}
 	return
@@ -76,6 +77,7 @@ func (p *postgresImpl) Open() (err error) {
 		p.conf.Connection.Database,
 		p.conf.Connection.Timeout)); err != nil {
 		p.logger.Error("failed to parse Postgres DSN", zap.Error(err))
+
 		return
 	}
 	pgxConfig.MaxConns = p.conf.Pool.MaxConns
@@ -84,6 +86,7 @@ func (p *postgresImpl) Open() (err error) {
 
 	if p.pool, err = pgxpool.NewWithConfig(context.Background(), pgxConfig); err != nil {
 		p.logger.Error("failed to configure Postgres connection", zap.Error(err))
+
 		return
 	}
 

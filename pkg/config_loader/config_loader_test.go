@@ -93,6 +93,7 @@ func TestConfigLoader(t *testing.T) {
 			validationError := &validator.ValidationError{}
 			if errors.As(err, &validationError) {
 				require.Equalf(t, testCase.expectLen, len(validationError.Errors), "Expected errors count is incorrect: %v", err)
+
 				return
 			}
 

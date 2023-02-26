@@ -209,6 +209,7 @@ func TestPostgresImpl_Execute(t *testing.T) {
 	input := &testType{key: "key", val: "value"}
 	fn := func(conn Postgres, params any) (any, error) {
 		casted := params.(*testType)
+
 		return casted, nil
 	}
 

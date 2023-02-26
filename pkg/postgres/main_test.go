@@ -62,6 +62,7 @@ func TestMain(m *testing.M) {
 func setup() (err error) {
 	if testing.Short() {
 		zapLogger.Warn("Short test: Skipping Postgres integration tests")
+
 		return
 	}
 
