@@ -1,16 +1,16 @@
 package constants
 
 const (
-	// Configuration file directories
+	// Configuration file directories.
 	configEtcDir  = "/etc/FTeX.conf/"
 	configHomeDir = "$HOME/.FTeX/"
 	configBaseDir = "./configs/"
 
-	// Configuration file names
+	// Configuration file names.
 	loggerConfigFileName   = "LoggerConfig.yaml"
 	postgresConfigFileName = "PostgresConfig.yaml"
 
-	// Environment variables
+	// Environment variables.
 	githubCIKey    = "GITHUB_ACTIONS_CI"
 	loggerPrefix   = "LOGGER"
 	postgresPrefix = "POSTGRES"

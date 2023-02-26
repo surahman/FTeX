@@ -120,7 +120,7 @@ func TestPostgresImpl_verifySession(t *testing.T) {
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.verifySession(), "failed to return error on closed connection")
 
-	//*** Skip tests below if not running integration tests ***
+	// *** Skip tests below if not running integration tests ***
 	if testing.Short() {
 		t.Skip()
 	}

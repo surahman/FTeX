@@ -38,7 +38,6 @@ func TestGetPostgresPrefix(t *testing.T) {
 	require.Equal(t, postgresPrefix, GetPostgresPrefix(), "Incorrect Postgres environment prefix")
 }
 
-//
 func TestGetPostgresDSN(t *testing.T) {
 	require.Equal(t, postgresDSN, GetPostgresDSN(), "Incorrect Postgres DSN format string")
 }
