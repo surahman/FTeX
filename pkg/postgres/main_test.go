@@ -55,6 +55,7 @@ func TestMain(m *testing.M) {
 		zapLogger.Error("Test suite teardown failure:", zap.Error(err))
 		os.Exit(1)
 	}
+
 	os.Exit(exitCode)
 }
 
@@ -72,6 +73,7 @@ func setup() error {
 	configFileKey = "test_suite"
 	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
+
 		zapLogger.Info("Integration Test running on Github CI runner.")
 	}
 
@@ -80,6 +82,7 @@ func setup() error {
 	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
 		return err
 	}
+
 	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
 		return err
@@ -102,5 +105,6 @@ func tearDown() (err error) {
 	if !testing.Short() {
 		return connection.db.Close()
 	}
+
 	return
 }

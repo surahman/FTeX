@@ -49,6 +49,7 @@ func NewPostgres(fs *afero.Fs, logger *logger.Logger) (Postgres, error) {
 	if fs == nil || logger == nil {
 		return nil, errors.New("nil file system or logger supplied")
 	}
+
 	return newPostgresImpl(fs, logger)
 }
 
@@ -60,6 +61,7 @@ func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err 
 
 		return nil, err
 	}
+
 	return
 }
 
@@ -71,6 +73,7 @@ func (p *postgresImpl) Open() error {
 	}
 
 	var pgxConfig *pgxpool.Config
+
 	if pgxConfig, err = pgxpool.ParseConfig(fmt.Sprintf(constants.GetPostgresDSN(),
 		p.conf.Authentication.Username,
 		p.conf.Authentication.Password,
@@ -82,6 +85,7 @@ func (p *postgresImpl) Open() error {
 
 		return err
 	}
+
 	pgxConfig.MaxConns = p.conf.Pool.MaxConns
 	pgxConfig.MinConns = p.conf.Pool.MinConns
 	pgxConfig.HealthCheckPeriod = p.conf.Pool.HealthCheckPeriod
@@ -105,8 +109,10 @@ func (p *postgresImpl) Close() (err error) {
 	if err = p.verifySession(); err != nil {
 		msg := "no established Postgres connection to close"
 		p.logger.Error(msg)
+
 		return errors.New(msg)
 	}
+
 	p.pool.Close()
 
 	return
@@ -117,6 +123,7 @@ func (p *postgresImpl) Healthcheck() (err error) {
 	if err = p.verifySession(); err != nil {
 		return
 	}
+
 	return p.pool.Ping(context.Background())
 }
 
@@ -130,6 +137,7 @@ func (p *postgresImpl) verifySession() error {
 	if p.pool == nil || p.pool.Ping(context.Background()) != nil {
 		return errors.New("no session established")
 	}
+
 	return nil
 }
 
@@ -141,10 +149,12 @@ func (p *postgresImpl) createSessionRetry() (err error) {
 		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime),
 			zap.String("attempt", strconv.Itoa(attempt)))
 		time.Sleep(waitTime)
+
 		if err = p.pool.Ping(context.Background()); err == nil {
 			return nil
 		}
 	}
 	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
+
 	return
 }

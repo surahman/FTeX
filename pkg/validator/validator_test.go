@@ -39,6 +39,7 @@ func TestErrorField_Error(t *testing.T) {
 		},
 		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			require.Equal(t, testCase.expected, testCase.input.Error())
@@ -52,6 +53,7 @@ func TestErrorValidation_Error(t *testing.T) {
 		for _, item := range errs {
 			buffer.WriteString(item)
 		}
+
 		return buffer.String()
 	}
 

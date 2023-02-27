@@ -16,8 +16,11 @@ func init() {
 
 // ValidateStruct will validate a struct and list all deficiencies.
 func ValidateStruct(body any) error {
-	var validationErr ValidationError
-	var errs validator.ValidationErrors
+	var (
+		validationErr ValidationError
+		errs          validator.ValidationErrors
+	)
+
 	if errors.As(structValidator.Struct(body), &errs) {
 		for _, issue := range errs {
 			var ev FieldError
@@ -31,5 +34,6 @@ func ValidateStruct(body any) error {
 	if validationErr.Errors == nil {
 		return nil
 	}
+
 	return &validationErr
 }

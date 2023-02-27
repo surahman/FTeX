@@ -26,9 +26,12 @@ func (l *Logger) Init(fs *afero.Fs) error {
 	if l.zapLogger != nil {
 		return errors.New("logger is already initialized")
 	}
-	var err error
-	var baseConfig zap.Config
-	var encConfig zapcore.EncoderConfig
+
+	var (
+		err        error
+		baseConfig zap.Config
+		encConfig  zapcore.EncoderConfig
+	)
 
 	userConfig := newConfig()
 	if err = userConfig.Load(*fs); err != nil {
@@ -46,6 +49,7 @@ func (l *Logger) Init(fs *afero.Fs) error {
 	default:
 		msg := "could not select the base configuration type"
 		log.Println(msg)
+
 		return errors.New(msg)
 	}
 
@@ -58,6 +62,7 @@ func (l *Logger) Init(fs *afero.Fs) error {
 	default:
 		msg := "could not select the base encoder type"
 		log.Println(msg)
+
 		return errors.New(msg)
 	}
 
@@ -67,6 +72,7 @@ func (l *Logger) Init(fs *afero.Fs) error {
 
 		return err
 	}
+
 	if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
 		log.Printf("failed to merge base and user provided encoder configurations for logger: %v\n", err)
 
@@ -80,6 +86,7 @@ func (l *Logger) Init(fs *afero.Fs) error {
 
 		return err
 	}
+
 	return nil
 }
 
@@ -113,12 +120,15 @@ func (l *Logger) Panic(message string, fields ...zap.Field) {
 //nolint:lll
 func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) {
 	var yamlToConv []byte
+
 	if yamlToConv, err = yaml.Marshal(src); err != nil {
 		return
 	}
+
 	if err = yaml.Unmarshal(yamlToConv, dst); err != nil {
 		return
 	}
+
 	return
 }
 
@@ -131,11 +141,14 @@ func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 func NewTestLogger() (logger *Logger, err error) {
 	baseConfig := zap.NewDevelopmentConfig()
 	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+
 	var zapLogger *zap.Logger
+
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
 
 		return nil, err
 	}
+
 	return &Logger{zapLogger: zapLogger}, err
 }

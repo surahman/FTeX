@@ -29,5 +29,6 @@ func (err *ValidationError) Error() string {
 	for _, item := range err.Errors {
 		buffer.WriteString(item.Error())
 	}
+
 	return buffer.String()
 }
