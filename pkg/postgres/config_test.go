@@ -103,19 +103,19 @@ func TestConfigLoader(t *testing.T) {
 			host := xid.New().String()
 			port := 5555
 			timeout := 47
-			max_conn_attempts := 9
+			maxConnAttempts := 9
 			t.Setenv(envConnKey+"DATABASE", database)
 			t.Setenv(envConnKey+"HOST", host)
-			t.Setenv(envConnKey+"MAX_CONNECTION_ATTEMPTS", strconv.Itoa(max_conn_attempts))
+			t.Setenv(envConnKey+"MAX_CONNECTION_ATTEMPTS", strconv.Itoa(maxConnAttempts))
 			t.Setenv(envConnKey+"PORT", strconv.Itoa(port))
 			t.Setenv(envConnKey+"TIMEOUT", strconv.Itoa(timeout))
 
-			health_check_period := 13 * time.Second
-			max_conns := 60
-			min_conns := 40
-			t.Setenv(envPoolKey+"HEALTH_CHECK_PERIOD", health_check_period.String())
-			t.Setenv(envPoolKey+"MAX_CONNS", strconv.Itoa(max_conns))
-			t.Setenv(envPoolKey+"MIN_CONNS", strconv.Itoa(min_conns))
+			healthCheckPeriod := 13 * time.Second
+			maxConns := 60
+			minConns := 40
+			t.Setenv(envPoolKey+"HEALTH_CHECK_PERIOD", healthCheckPeriod.String())
+			t.Setenv(envPoolKey+"MAX_CONNS", strconv.Itoa(maxConns))
+			t.Setenv(envPoolKey+"MIN_CONNS", strconv.Itoa(minConns))
 
 			require.NoErrorf(t, actual.Load(fs), "Failed to load constants file: %v", err)
 
@@ -124,13 +124,13 @@ func TestConfigLoader(t *testing.T) {
 
 			require.Equal(t, database, actual.Connection.Database, "failed to load database")
 			require.Equal(t, host, actual.Connection.Host, "failed to load host")
-			require.Equal(t, max_conn_attempts, actual.Connection.MaxConnAttempts, "failed to max connection attempts")
+			require.Equal(t, maxConnAttempts, actual.Connection.MaxConnAttempts, "failed to max connection attempts")
 			require.Equal(t, uint16(port), actual.Connection.Port, "failed to load port")
 			require.Equal(t, timeout, actual.Connection.Timeout, "failed to load timeout")
 
-			require.Equal(t, health_check_period, actual.Pool.HealthCheckPeriod, "failed to load duration")
-			require.Equal(t, int32(max_conns), actual.Pool.MaxConns, "failed to load max conns")
-			require.Equal(t, int32(min_conns), actual.Pool.MinConns, "failed to load min conns")
+			require.Equal(t, healthCheckPeriod, actual.Pool.HealthCheckPeriod, "failed to load duration")
+			require.Equal(t, int32(maxConns), actual.Pool.MaxConns, "failed to load max conns")
+			require.Equal(t, int32(minConns), actual.Pool.MinConns, "failed to load min conns")
 		})
 	}
 }

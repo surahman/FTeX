@@ -1,4 +1,4 @@
-package config_loader
+package configloader
 
 import (
 	"errors"
@@ -88,7 +88,7 @@ func TestConfigLoader(t *testing.T) {
 
 			// Load from mock filesystem.
 			actual := &config{}
-			err := ConfigLoader(fs, actual, testFilename, testPrefix, "yaml")
+			err := Load(fs, actual, testFilename, testPrefix, "yaml")
 			testCase.expectErr(t, err)
 
 			validationError := &validator.ValidationError{}
@@ -114,7 +114,7 @@ func TestConfigLoader(t *testing.T) {
 			t.Setenv(keyspaceLevel2+"CHILD_ONE", strconv.Itoa(lvl2Child1))
 			t.Setenv(keyspaceLevel2+"CHILD_TWO", strconv.FormatBool(false))
 			t.Setenv(keyspaceLevel2+"CHILD_THREE", lvl2Child3)
-			err = ConfigLoader(fs, actual, testFilename, testPrefix, "yaml")
+			err = Load(fs, actual, testFilename, testPrefix, "yaml")
 			require.NoErrorf(t, err, "failed to load constants file: %v", err)
 			require.Equal(t, lvl1Child1, actual.ParentLevel1.ChildOne, "failed to load level 1 child 1")
 			require.Equal(t, lvl1Child2, actual.ParentLevel1.ChildTwo, "failed to load level 1 child 2")

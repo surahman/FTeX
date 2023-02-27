@@ -1,4 +1,4 @@
-package config_loader
+package configloader
 
 // configTestData will return a map of test data containing valid and invalid test configs.
 func configTestData() map[string]string {

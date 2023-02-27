@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"github.com/surahman/FTeX/pkg/config_loader"
+	"github.com/surahman/FTeX/pkg/configloader"
 	"github.com/surahman/FTeX/pkg/constants"
 )
 
@@ -50,5 +50,5 @@ func newConfig() config {
 
 // Load will attempt to load configurations from a file on a file system.
 func (cfg *config) Load(fs afero.Fs) (err error) {
-	return config_loader.ConfigLoader(fs, cfg, constants.GetPostgresFileName(), constants.GetPostgresPrefix(), "yaml")
+	return configloader.Load(fs, cfg, constants.GetPostgresFileName(), constants.GetPostgresPrefix(), "yaml")
 }

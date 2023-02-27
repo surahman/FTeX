@@ -138,7 +138,7 @@ func TestTestLogger(t *testing.T) {
 	logger.Info("info message received")
 	logger.Debug("debug message received")
 	logger.Warn("warn message received")
-	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me")))
 
 	require.Panics(t, func() {
 		logger.Panic("panic message received")
@@ -148,7 +148,7 @@ func TestTestLogger(t *testing.T) {
 		"INFO	info message received",
 		"DEBUG	debug message received",
 		"WARN	warn message received",
-		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
+		`ERROR	error message received	{"error": "ow no! woe is me"}`,
 		"PANIC	panic message received",
 	)
 }
@@ -175,7 +175,7 @@ func TestTestLoggerSupportsLevels(t *testing.T) {
 	logger.Info("info message received")
 	logger.Debug("debug message received")
 	logger.Warn("warn message received")
-	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me")))
 
 	require.Panics(t, func() {
 		logger.Panic("panic message received")
@@ -183,7 +183,7 @@ func TestTestLoggerSupportsLevels(t *testing.T) {
 
 	ts.AssertMessages(
 		"WARN	warn message received",
-		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
+		`ERROR	error message received	{"error": "ow no! woe is me"}`,
 		"PANIC	panic message received",
 	)
 }
