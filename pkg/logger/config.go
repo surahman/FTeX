@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"fmt"
+
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/configloader"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -50,6 +52,15 @@ func newConfig() config {
 }
 
 // Load will attempt to load configurations from a file on a file system.
-func (cfg *config) Load(fs afero.Fs) (err error) {
-	return configloader.Load(fs, cfg, constants.GetLoggerFileName(), constants.GetLoggerPrefix(), "yaml")
+func (cfg *config) Load(fs afero.Fs) error {
+	if err := configloader.Load(
+		fs,
+		cfg,
+		constants.GetLoggerFileName(),
+		constants.GetLoggerPrefix(),
+		"yaml"); err != nil {
+		return fmt.Errorf("zap logger config loading failed: %w", err)
+	}
+
+	return nil
 }

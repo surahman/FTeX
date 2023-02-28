@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/afero"
@@ -49,6 +50,15 @@ func newConfig() config {
 }
 
 // Load will attempt to load configurations from a file on a file system.
-func (cfg *config) Load(fs afero.Fs) (err error) {
-	return configloader.Load(fs, cfg, constants.GetPostgresFileName(), constants.GetPostgresPrefix(), "yaml")
+func (cfg *config) Load(fs afero.Fs) error {
+	if err := configloader.Load(
+		fs,
+		cfg,
+		constants.GetPostgresFileName(),
+		constants.GetPostgresPrefix(),
+		"yaml"); err != nil {
+		return fmt.Errorf("postgres config loading failed: %w", err)
+	}
+
+	return nil
 }

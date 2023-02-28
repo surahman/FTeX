@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -80,12 +81,12 @@ func setup() error {
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
 	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
-		return err
+		return fmt.Errorf("afero memory mapped file system setup failed: %w", err)
 	}
 
 	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
-		return err
+		return fmt.Errorf("afero memory mapped file system write failed: %w", err)
 	}
 
 	// Load Postgres configurations for test suite.
@@ -94,7 +95,7 @@ func setup() error {
 	}
 
 	if err = connection.db.Open(); err != nil {
-		return err
+		return fmt.Errorf("postgres connection opening failed: %w", err)
 	}
 
 	return nil
@@ -103,7 +104,9 @@ func setup() error {
 // tearDown will delete the test clusters keyspace.
 func tearDown() (err error) {
 	if !testing.Short() {
-		return connection.db.Close()
+		if err := connection.db.Close(); err != nil {
+			return fmt.Errorf("postgres connection termination failure in test suite: %w", err)
+		}
 	}
 
 	return

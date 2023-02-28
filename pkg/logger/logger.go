@@ -2,6 +2,7 @@ package logger
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -82,9 +83,10 @@ func (l *Logger) Init(fs *afero.Fs) error {
 	// Init and create logger.
 	baseConfig.EncoderConfig = encConfig
 	if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
-		log.Printf("failure configuring logger: %v\n", err)
+		msg := "failure configuring logger"
+		log.Printf(msg+": %v\n", err)
 
-		return err
+		return fmt.Errorf(msg+": %w", err)
 	}
 
 	return nil
@@ -138,17 +140,20 @@ func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 }
 
 // NewTestLogger will create a new development logger to be used in test suites.
-func NewTestLogger() (logger *Logger, err error) {
+func NewTestLogger() (*Logger, error) {
 	baseConfig := zap.NewDevelopmentConfig()
 	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
 
-	var zapLogger *zap.Logger
+	var (
+		err       error
+		zapLogger *zap.Logger
+	)
 
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
 
-		return nil, err
+		return nil, fmt.Errorf("zap logger base config builing failed: %w", err)
 	}
 
-	return &Logger{zapLogger: zapLogger}, err
+	return &Logger{zapLogger: zapLogger}, nil
 }

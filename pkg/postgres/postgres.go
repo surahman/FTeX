@@ -81,9 +81,10 @@ func (p *postgresImpl) Open() error {
 		p.conf.Connection.Port,
 		p.conf.Connection.Database,
 		p.conf.Connection.Timeout)); err != nil {
-		p.logger.Error("failed to parse Postgres DSN", zap.Error(err))
+		msg := "failed to parse Postgres DSN"
+		p.logger.Error(msg, zap.Error(err))
 
-		return err
+		return fmt.Errorf(msg+"%w", err)
 	}
 
 	pgxConfig.MaxConns = p.conf.Pool.MaxConns
@@ -91,9 +92,10 @@ func (p *postgresImpl) Open() error {
 	pgxConfig.HealthCheckPeriod = p.conf.Pool.HealthCheckPeriod
 
 	if p.pool, err = pgxpool.NewWithConfig(context.Background(), pgxConfig); err != nil {
-		p.logger.Error("failed to configure Postgres connection", zap.Error(err))
+		msg := "failed to configure Postgres connection"
+		p.logger.Error(msg, zap.Error(err))
 
-		return err
+		return fmt.Errorf(msg+"%w", err)
 	}
 
 	// Binary Exponential Backoff connection to Postgres. The lazy connection can be opened via a ping to the database.
@@ -119,12 +121,17 @@ func (p *postgresImpl) Close() (err error) {
 }
 
 // Healthcheck will run a ping on the database to ascertain health.
-func (p *postgresImpl) Healthcheck() (err error) {
+func (p *postgresImpl) Healthcheck() error {
+	var err error
 	if err = p.verifySession(); err != nil {
-		return
+		return err
 	}
 
-	return p.pool.Ping(context.Background())
+	if err = p.pool.Ping(context.Background()); err != nil {
+		return fmt.Errorf("postges cluste ping failed: %w", err)
+	}
+
+	return nil
 }
 
 // Execute wraps the methods that create, read, update, and delete records from tables on the database.
