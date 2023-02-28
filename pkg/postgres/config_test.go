@@ -106,16 +106,16 @@ func TestConfigLoader(t *testing.T) {
 			maxConnAttempts := 9
 			t.Setenv(envConnKey+"DATABASE", database)
 			t.Setenv(envConnKey+"HOST", host)
-			t.Setenv(envConnKey+"MAX_CONNECTION_ATTEMPTS", strconv.Itoa(maxConnAttempts))
+			t.Setenv(envConnKey+"MAXCONNECTIONATTEMPTS", strconv.Itoa(maxConnAttempts))
 			t.Setenv(envConnKey+"PORT", strconv.Itoa(port))
 			t.Setenv(envConnKey+"TIMEOUT", strconv.Itoa(timeout))
 
 			healthCheckPeriod := 13 * time.Second
 			maxConns := 60
 			minConns := 40
-			t.Setenv(envPoolKey+"HEALTH_CHECK_PERIOD", healthCheckPeriod.String())
-			t.Setenv(envPoolKey+"MAX_CONNS", strconv.Itoa(maxConns))
-			t.Setenv(envPoolKey+"MIN_CONNS", strconv.Itoa(minConns))
+			t.Setenv(envPoolKey+"HEALTHCHECKPERIOD", healthCheckPeriod.String())
+			t.Setenv(envPoolKey+"MAXCONNS", strconv.Itoa(maxConns))
+			t.Setenv(envPoolKey+"MINCONNS", strconv.Itoa(minConns))
 
 			require.NoErrorf(t, actual.Load(fs), "Failed to load constants file: %v", err)
 

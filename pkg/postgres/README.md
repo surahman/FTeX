@@ -33,21 +33,21 @@ The configuration loader will search for the configurations in the following ord
 
 The expected file name is `PostgresConfig.yaml`. All the configuration items below are _required_ unless specified otherwise.
 
-| Name                      | Environment Variable Key     | Type          | Description                                                                               |
-|---------------------------|------------------------------|---------------|-------------------------------------------------------------------------------------------|
-| **_Authentication_**      | `POSTGRES_AUTHENTICATION`    |               | **_Parent key for authentication information._**                                          |
-| ↳ username                | ↳ `.USERNAME`                | string        | Username for Postgres session login.                                                      |
-| ↳ password                | ↳ `.PASSWORD`                | string        | Password for Postgres session login.                                                      |
-| **_Connection_**          | `POSTGRES_CONNECTION`        |               | **_Parent key for connection information._**                                              |
-| ↳ database                | ↳ `.DATABASE`                | string        | Database name.                                                                            |
-| ↳ host                    | ↳ `.HOST`                    | string        | Hostname or IP address.                                                                   |
-| ↳ max_connection_attempts | ↳ `.MAX_CONNECTION_ATTEMPTS` | int           | Number of times to attempt a connection to the database using Binary Exponential Backoff. |
-| ↳ timeout                 | ↳ `.TIMEOUT`                 | int           | Connection timeout in seconds.                                                            |
-| ↳ port                    | ↳ `.PORT`                    | uint16        | Host port.                                                                                |
-| **_Pool_**                | `POSTGRES_POOL`              |               | **_Parent key for connection pool information._**                                         |
-| ↳ health_check_period     | ↳ `.HEALTH_CHECK_PERIOD`     | time.Duration | Seconds (min=5) between health checks for each connection in the pool.                    |
-| ↳ max_conns               | ↳ `.MAX_CONNS`               | int32         | Maximum connections (min=4) to retain in the connection pool.                             |
-| ↳ min_conns               | ↳ `.MIN_CONNS`               | int32         | Minimum connections (min=4) to retain in the connection pool.                             |
+| Name                    | Environment Variable Key   | Type          | Description                                                                               |
+|-------------------------|----------------------------|---------------|-------------------------------------------------------------------------------------------|
+| **_Authentication_**    | `POSTGRES_AUTHENTICATION`  |               | **_Parent key for authentication information._**                                          |
+| ↳ username              | ↳ `.USERNAME`              | string        | Username for Postgres session login.                                                      |
+| ↳ password              | ↳ `.PASSWORD`              | string        | Password for Postgres session login.                                                      |
+| **_Connection_**        | `POSTGRES_CONNECTION`      |               | **_Parent key for connection information._**                                              |
+| ↳ database              | ↳ `.DATABASE`              | string        | Database name.                                                                            |
+| ↳ host                  | ↳ `.HOST`                  | string        | Hostname or IP address.                                                                   |
+| ↳ maxConnectionAttempts | ↳ `.MAXCONNECTIONATTEMPTS` | int           | Number of times to attempt a connection to the database using Binary Exponential Backoff. |
+| ↳ timeout               | ↳ `.TIMEOUT`               | int           | Connection timeout in seconds.                                                            |
+| ↳ port                  | ↳ `.PORT`                  | uint16        | Host port.                                                                                |
+| **_Pool_**              | `POSTGRES_POOL`            |               | **_Parent key for connection pool information._**                                         |
+| ↳ healthCheckPeriod     | ↳ `.HEALTHCHECKPERIOD`     | time.Duration | Seconds (min=5) between health checks for each connection in the pool.                    |
+| ↳ maxConns              | ↳ `.MAXCONNS`              | int32         | Maximum connections (min=4) to retain in the connection pool.                             |
+| ↳ minConns              | ↳ `.MINCONNS`              | int32         | Minimum connections (min=4) to retain in the connection pool.                             |
 
 
 #### Example Configuration File
@@ -59,13 +59,13 @@ authentication:
 connection:
   database: ft-ex-db
   host: 127.0.0.1
-  max_connection_attempts: 5
+  maxConnectionAttempts: 5
   port: 6432
   timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4
 ```
 
 #### Example Environment Variables

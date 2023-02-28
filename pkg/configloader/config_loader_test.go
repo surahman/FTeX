@@ -15,8 +15,8 @@ import (
 )
 
 func TestConfigLoader(t *testing.T) {
-	keyspaceLevel1 := testPrefix + "_PARENT_LEVEL_1."
-	keyspaceLevel2 := testPrefix + "_PARENT_LEVEL_2."
+	keyspaceLevel1 := testPrefix + "_PARENTLEVEL1."
+	keyspaceLevel2 := testPrefix + "_PARENTLEVEL2."
 
 	testCases := []struct {
 		name      string
@@ -108,12 +108,12 @@ func TestConfigLoader(t *testing.T) {
 			lvl1Child2 := 49
 			lvl2Child1 := 29
 			lvl2Child3 := xid.New().String()
-			t.Setenv(keyspaceLevel1+"CHILD_ONE", lvl1Child1)
-			t.Setenv(keyspaceLevel1+"CHILD_TWO", strconv.Itoa(lvl1Child2))
-			t.Setenv(keyspaceLevel1+"CHILD_THREE", strconv.FormatBool(false))
-			t.Setenv(keyspaceLevel2+"CHILD_ONE", strconv.Itoa(lvl2Child1))
-			t.Setenv(keyspaceLevel2+"CHILD_TWO", strconv.FormatBool(false))
-			t.Setenv(keyspaceLevel2+"CHILD_THREE", lvl2Child3)
+			t.Setenv(keyspaceLevel1+"CHILDONE", lvl1Child1)
+			t.Setenv(keyspaceLevel1+"CHILDTWO", strconv.Itoa(lvl1Child2))
+			t.Setenv(keyspaceLevel1+"CHILDTHREE", strconv.FormatBool(false))
+			t.Setenv(keyspaceLevel2+"CHILDONE", strconv.Itoa(lvl2Child1))
+			t.Setenv(keyspaceLevel2+"CHILDTWO", strconv.FormatBool(false))
+			t.Setenv(keyspaceLevel2+"CHILDTHREE", lvl2Child3)
 			err = Load(fs, actual, testFilename, testPrefix, "yaml")
 			require.NoErrorf(t, err, "failed to load constants file: %v", err)
 			require.Equal(t, lvl1Child1, actual.ParentLevel1.ChildOne, "failed to load level 1 child 1")

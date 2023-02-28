@@ -15,8 +15,8 @@ import (
 )
 
 func TestZapConfig_Load(t *testing.T) {
-	envCfgKey := fmt.Sprintf("%s_BUILTIN_CONFIG", constants.GetLoggerPrefix())
-	envEncKey := fmt.Sprintf("%s_BUILTIN_ENCODER_CONFIG", constants.GetLoggerPrefix())
+	envCfgKey := fmt.Sprintf("%s_BUILTINCONFIG", constants.GetLoggerPrefix())
+	envEncKey := fmt.Sprintf("%s_BUILTINENCODERCONFIG", constants.GetLoggerPrefix())
 
 	testCases := []struct {
 		name      string

@@ -12,10 +12,10 @@ import (
 //
 //nolint:lll
 type config struct {
-	BuiltinConfig        string         `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
-	BuiltinEncoderConfig string         `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
-	GeneralConfig        *generalConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
-	EncoderConfig        *encoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
+	BuiltinConfig        string         `json:"builtinConfig,omitempty" yaml:"builtinConfig,omitempty" mapstructure:"builtinConfig" validate:"oneof='Production' 'production' 'Development' 'development'"`
+	BuiltinEncoderConfig string         `json:"builtinEncoderConfig,omitempty" yaml:"builtinEncoderConfig,omitempty" mapstructure:"builtinEncoderConfig" validate:"oneof='Production' 'production' 'Development' 'development'"`
+	GeneralConfig        *generalConfig `json:"generalConfig,omitempty" yaml:"generalConfig,omitempty" mapstructure:"generalConfig"`
+	EncoderConfig        *encoderConfig `json:"encoderConfig,omitempty" yaml:"encoderConfig,omitempty" mapstructure:"encoderConfig"`
 }
 
 // generalConfig contains all the general logger configurations.
