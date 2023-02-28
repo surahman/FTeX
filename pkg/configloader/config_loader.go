@@ -1,4 +1,4 @@
-package config_loader
+package configloader
 
 import (
 	"github.com/spf13/afero"
@@ -7,8 +7,8 @@ import (
 	"github.com/surahman/FTeX/pkg/validator"
 )
 
-// ConfigLoader will load configurations stored in a file system into a configuration container struct.
-func ConfigLoader[T any](fs afero.Fs, cfg *T, filename, prefix, format string) (err error) {
+// Load will load configurations stored in a file system into a configuration container struct.
+func Load[T any](fs afero.Fs, cfg *T, filename, prefix, format string) (err error) {
 	viper.SetFs(fs)
 	viper.SetConfigName(filename)
 	viper.SetConfigType(format)

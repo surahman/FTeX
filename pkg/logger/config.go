@@ -1,20 +1,26 @@
 package logger
 
 import (
+	"fmt"
+
 	"github.com/spf13/afero"
-	"github.com/surahman/FTeX/pkg/config_loader"
+	"github.com/surahman/FTeX/pkg/configloader"
 	"github.com/surahman/FTeX/pkg/constants"
 )
 
 // config contains the configurations loaded from the configuration file.
+//
+//nolint:lll
 type config struct {
-	BuiltinConfig        string         `json:"builtin_config,omitempty" yaml:"builtin_config,omitempty" mapstructure:"builtin_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
-	BuiltinEncoderConfig string         `json:"builtin_encoder_config,omitempty" yaml:"builtin_encoder_config,omitempty" mapstructure:"builtin_encoder_config" validate:"oneof='Production' 'production' 'Development' 'development'"`
-	GeneralConfig        *generalConfig `json:"general_config,omitempty" yaml:"general_config,omitempty" mapstructure:"general_config"`
-	EncoderConfig        *encoderConfig `json:"encoder_config,omitempty" yaml:"encoder_config,omitempty" mapstructure:"encoder_config"`
+	BuiltinConfig        string         `json:"builtinConfig,omitempty" yaml:"builtinConfig,omitempty" mapstructure:"builtinConfig" validate:"oneof='Production' 'production' 'Development' 'development'"`
+	BuiltinEncoderConfig string         `json:"builtinEncoderConfig,omitempty" yaml:"builtinEncoderConfig,omitempty" mapstructure:"builtinEncoderConfig" validate:"oneof='Production' 'production' 'Development' 'development'"`
+	GeneralConfig        *generalConfig `json:"generalConfig,omitempty" yaml:"generalConfig,omitempty" mapstructure:"generalConfig"`
+	EncoderConfig        *encoderConfig `json:"encoderConfig,omitempty" yaml:"encoderConfig,omitempty" mapstructure:"encoderConfig"`
 }
 
 // generalConfig contains all the general logger configurations.
+//
+//nolint:lll
 type generalConfig struct {
 	Development       bool     `json:"development" yaml:"development" mapstructure:"development" validate:"required"`
 	DisableCaller     bool     `json:"disableCaller" yaml:"disableCaller" mapstructure:"disableCaller" validate:"required"`
@@ -25,6 +31,8 @@ type generalConfig struct {
 }
 
 // encoderConfig contains all the log encoder configurations.
+//
+//nolint:lll
 type encoderConfig struct {
 	MessageKey       string `json:"messageKey" yaml:"messageKey" mapstructure:"messageKey" validate:"required"`
 	LevelKey         string `json:"levelKey" yaml:"levelKey" mapstructure:"levelKey" validate:"required"`
@@ -44,6 +52,15 @@ func newConfig() config {
 }
 
 // Load will attempt to load configurations from a file on a file system.
-func (cfg *config) Load(fs afero.Fs) (err error) {
-	return config_loader.ConfigLoader(fs, cfg, constants.GetLoggerFileName(), constants.GetLoggerPrefix(), "yaml")
+func (cfg *config) Load(fs afero.Fs) error {
+	if err := configloader.Load(
+		fs,
+		cfg,
+		constants.GetLoggerFileName(),
+		constants.GetLoggerPrefix(),
+		"yaml"); err != nil {
+		return fmt.Errorf("zap logger config loading failed: %w", err)
+	}
+
+	return nil
 }

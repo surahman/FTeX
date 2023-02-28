@@ -1,2 +1,2 @@
-builtin_config: Development
-builtin_encoder_config: Development
+builtinConfig: Development
+builtinEncoderConfig: Development

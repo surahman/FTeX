@@ -4,10 +4,10 @@ authentication:
 connection:
   database: ftex_db
   host: 127.0.0.1
-  max_connection_attempts: 5
+  maxConnectionAttempts: 5
   port: 6432
   Timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4

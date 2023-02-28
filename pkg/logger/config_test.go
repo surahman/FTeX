@@ -15,8 +15,8 @@ import (
 )
 
 func TestZapConfig_Load(t *testing.T) {
-	envCfgKey := fmt.Sprintf("%s_BUILTIN_CONFIG", constants.GetLoggerPrefix())
-	envEncKey := fmt.Sprintf("%s_BUILTIN_ENCODER_CONFIG", constants.GetLoggerPrefix())
+	envCfgKey := fmt.Sprintf("%s_BUILTINCONFIG", constants.GetLoggerPrefix())
+	envEncKey := fmt.Sprintf("%s_BUILTINENCODERCONFIG", constants.GetLoggerPrefix())
 
 	testCases := []struct {
 		name      string
@@ -76,7 +76,8 @@ func TestZapConfig_Load(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
 			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(), []byte(testCase.input), 0644), "Failed to write in memory file")
+			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(),
+				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.
 			actual := &config{}
@@ -86,6 +87,7 @@ func TestZapConfig_Load(t *testing.T) {
 			validationError := &validator.ValidationError{}
 			if errors.As(err, &validationError) {
 				require.Equalf(t, testCase.expectLen, len(validationError.Errors), "Expected errors count is incorrect: %v", err)
+
 				return
 			}
 

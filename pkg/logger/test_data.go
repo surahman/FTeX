@@ -6,28 +6,28 @@ func configTestData() map[string]string {
 		"empty": ``,
 
 		"valid_devel": `
-builtin_config: Development
-builtin_encoder_config: Development`,
+builtinConfig: Development
+builtinEncoderConfig: Development`,
 
 		"valid_prod": `
-builtin_config: Production
-builtin_encoder_config: Production`,
+builtinConfig: Production
+builtinEncoderConfig: Production`,
 
 		"invalid_builtin": `
-builtin_config: Invalid
-builtin_encoder_config: Invalid`,
+builtinConfig: Invalid
+builtinEncoderConfig: Invalid`,
 
 		"valid_config": `
-builtin_config: Development
-builtin_encoder_config: Development
-general_config:
+builtinConfig: Development
+builtinEncoderConfig: Development
+generalConfig:
   development: true
   disableCaller: true
   disableStacktrace: true
   encoding: json
   outputPaths: ["stdout", "stderr"]
   errorOutputPaths: ["stdout", "stderr"]
-encoder_config:
+encoderConfig:
   messageKey: message key
   levelKey: level key
   timeKey: time key

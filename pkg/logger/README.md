@@ -71,16 +71,16 @@ The expected file name is `LoggerConfig.yaml`. All the configuration items below
 #### Example Configuration File
 
 ```yaml
-builtin_config: Development | Production
-builtin_encoder_config: Development | Production
-general_config:
+builtinConfig: Development | Production
+builtinEncoderConfig: Development | Production
+generalConfig:
   development: boolean
   disableCaller: boolean
   disableStacktrace: boolean
   encoding: string
   outputPaths: [string, array]
   errorOutputPaths: [string, array]
-encoder_config:
+encoderConfig:
   messageKey: string
   levelKey: string
   timeKey: string

@@ -2,6 +2,7 @@ package logger
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -22,17 +23,22 @@ func NewLogger() *Logger {
 }
 
 // Init will initialize the logger with configurations and start it.
-func (l *Logger) Init(fs *afero.Fs) (err error) {
+func (l *Logger) Init(fs *afero.Fs) error {
 	if l.zapLogger != nil {
 		return errors.New("logger is already initialized")
 	}
-	var baseConfig zap.Config
-	var encConfig zapcore.EncoderConfig
+
+	var (
+		err        error
+		baseConfig zap.Config
+		encConfig  zapcore.EncoderConfig
+	)
 
 	userConfig := newConfig()
 	if err = userConfig.Load(*fs); err != nil {
 		log.Printf("failed to load logger configuration file from disk: %v\n", err)
-		return
+
+		return err
 	}
 
 	// Base logger configuration.
@@ -44,6 +50,7 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	default:
 		msg := "could not select the base configuration type"
 		log.Println(msg)
+
 		return errors.New(msg)
 	}
 
@@ -56,26 +63,33 @@ func (l *Logger) Init(fs *afero.Fs) (err error) {
 	default:
 		msg := "could not select the base encoder type"
 		log.Println(msg)
+
 		return errors.New(msg)
 	}
 
 	// Merge configurations.
 	if err = mergeConfig[*zap.Config, *generalConfig](&baseConfig, userConfig.GeneralConfig); err != nil {
 		log.Printf("failed to merge base configurations and user provided configurations for logger: %v\n", err)
-		return
+
+		return err
 	}
+
 	if err = mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&encConfig, userConfig.EncoderConfig); err != nil {
-		log.Printf("failed to merge base encoder configurations and user provided encoder configurations for logger: %v\n", err)
-		return
+		log.Printf("failed to merge base and user provided encoder configurations for logger: %v\n", err)
+
+		return err
 	}
 
 	// Init and create logger.
 	baseConfig.EncoderConfig = encConfig
 	if l.zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
-		log.Printf("failure configuring logger: %v\n", err)
-		return
+		msg := "failure configuring logger"
+		log.Printf(msg+": %v\n", err)
+
+		return fmt.Errorf(msg+": %w", err)
 	}
-	return
+
+	return nil
 }
 
 // Info logs messages at the info level.
@@ -104,14 +118,19 @@ func (l *Logger) Panic(message string, fields ...zap.Field) {
 }
 
 // mergeConfig will merge the configuration files by marshalling and unmarshalling.
+//
+//nolint:lll
 func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) {
 	var yamlToConv []byte
+
 	if yamlToConv, err = yaml.Marshal(src); err != nil {
 		return
 	}
+
 	if err = yaml.Unmarshal(yamlToConv, dst); err != nil {
 		return
 	}
+
 	return
 }
 
@@ -121,13 +140,20 @@ func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 }
 
 // NewTestLogger will create a new development logger to be used in test suites.
-func NewTestLogger() (logger *Logger, err error) {
+func NewTestLogger() (*Logger, error) {
 	baseConfig := zap.NewDevelopmentConfig()
 	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
-	var zapLogger *zap.Logger
+
+	var (
+		err       error
+		zapLogger *zap.Logger
+	)
+
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
-		return nil, err
+
+		return nil, fmt.Errorf("zap logger base config builing failed: %w", err)
 	}
-	return &Logger{zapLogger: zapLogger}, err
+
+	return &Logger{zapLogger: zapLogger}, nil
 }

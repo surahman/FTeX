@@ -12,13 +12,13 @@ authentication:
 connection:
   database: ftex_db_test
   host: 127.0.0.1
-  max_connection_attempts: 1
+  maxConnectionAttempts: 1
   port: 6432
   timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 4
-  min_conns: 4`,
+  healthCheckPeriod: 30s
+  maxConns: 4
+  minConns: 4`,
 
 		"github-ci-runner": `
 authentication:
@@ -26,14 +26,14 @@ authentication:
   password: postgres
 connection:
   database: ftex_db_test
-  max_connection_attempts: 3
+  maxConnectionAttempts: 3
   host: 127.0.0.1
   port: 5432
   timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4`,
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4`,
 
 		"valid": `
 authentication:
@@ -42,13 +42,13 @@ authentication:
 connection:
   database: ftex_db
   host: 127.0.0.1
-  max_connection_attempts: 5
+  maxConnectionAttempts: 5
   port: 6432
   timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4`,
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4`,
 
 		"bad_health_check": `
 authentication:
@@ -57,13 +57,13 @@ authentication:
 connection:
   database: ftex_db
   host: 127.0.0.1
-  max_connection_attempts: 5
+  maxConnectionAttempts: 5
   port: 6432
   timeout: 5
 pool:
-  health_check_period: 3s
-  max_conns: 8
-  min_conns: 4`,
+  healthCheckPeriod: 3s
+  maxConns: 8
+  minConns: 4`,
 
 		"invalid_conns": `
 authentication:
@@ -72,13 +72,13 @@ authentication:
 connection:
   database: ftex_db
   host: 127.0.0.1
-  max_connection_attempts: 5
+  maxConnectionAttempts: 5
   port: 6432
   timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 2
-  min_conns: 2`,
+  healthCheckPeriod: 30s
+  maxConns: 2
+  minConns: 2`,
 
 		"invalid_max_conn_attempts": `
 authentication:
@@ -87,13 +87,13 @@ authentication:
 connection:
   database: ftex_db
   host: 127.0.0.1
-  max_connection_attempts: 0
+  maxConnectionAttempts: 0
   port: 6432
   timeout: 5
 pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4`,
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4`,
 
 		"invalid_timeout": `
 authentication:
@@ -102,12 +102,12 @@ authentication:
 connection:
   database: ftex_db
   host: 127.0.0.1
-  max_connection_attempts: 5
+  maxConnectionAttempts: 5
   port: 6432
   timeout: 2
 pool:
-  health_check_period: 30s
-  max_conns: 8
-  min_conns: 4`,
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4`,
 	}
 }

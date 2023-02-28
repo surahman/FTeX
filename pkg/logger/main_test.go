@@ -18,8 +18,10 @@ type testLogSpy struct {
 	Messages []string
 }
 
-func newTestLogSpy(t testing.TB) *testLogSpy {
-	return &testLogSpy{TB: t}
+func newTestLogSpy(tb testing.TB) *testLogSpy {
+	tb.Helper()
+
+	return &testLogSpy{TB: tb}
 }
 
 func (t *testLogSpy) Fail() {

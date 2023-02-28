@@ -10,15 +10,24 @@ linters:
     - godox
     - golint
     - gofumpt
+    - goerr113
     - ifshort
     - interfacer
+    - ireturn
     - maligned
+    - nonamedreturns
     - nosnakecase
     - structcheck
     - scopelint
     - testpackage
     - varcheck
 linters-settings:
+  cyclop:
+    max-complexity: 12
+    skip-tests: true
+  gomnd:
+    ignored-functions:
+      - 'math.*'
   paralleltest:
     ignore-missing: true
   varnamelen:

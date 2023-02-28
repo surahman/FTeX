@@ -33,13 +33,20 @@ func TestMergeConfig_General(t *testing.T) {
 		ErrorOutputPaths:  []string{"stderr", "/etc/appname_err.log"},
 	}
 	zapCfg := zap.NewDevelopmentConfig()
-	require.NoError(t, mergeConfig[*zap.Config, *generalConfig](&zapCfg, &userGenCfg), "Failed to merge constants files.")
-	require.Equalf(t, userGenCfg.Development, zapCfg.Development, "Development value expected %v, actual %v", userGenCfg.Development, zapCfg.Development)
-	require.Equalf(t, userGenCfg.DisableCaller, zapCfg.DisableCaller, "DisableCaller value expected %v, actual %v", userGenCfg.DisableCaller, zapCfg.DisableCaller)
-	require.Equalf(t, userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace, "DisableStacktrace value expected %v, actual %v", userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace)
-	require.Equalf(t, userGenCfg.Encoding, zapCfg.Encoding, "Encoding value expected %v, actual %v", userGenCfg.Encoding, zapCfg.Encoding)
-	require.Equalf(t, userGenCfg.OutputPaths, zapCfg.OutputPaths, "OutputPaths value expected %v, actual %v", userGenCfg.OutputPaths, zapCfg.OutputPaths)
-	require.Equalf(t, userGenCfg.ErrorOutputPaths, zapCfg.ErrorOutputPaths, "ErrorOutputPaths value expected %v, actual %v", userGenCfg.ErrorOutputPaths, zapCfg.ErrorOutputPaths)
+	require.NoError(t, mergeConfig[*zap.Config, *generalConfig](&zapCfg, &userGenCfg),
+		"Failed to merge constants files.")
+	require.Equalf(t, userGenCfg.Development, zapCfg.Development,
+		"Development value expected %v, actual %v", userGenCfg.Development, zapCfg.Development)
+	require.Equalf(t, userGenCfg.DisableCaller, zapCfg.DisableCaller,
+		"DisableCaller value expected %v, actual %v", userGenCfg.DisableCaller, zapCfg.DisableCaller)
+	require.Equalf(t, userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace,
+		"DisableStacktrace value expected %v, actual %v", userGenCfg.DisableStacktrace, zapCfg.DisableStacktrace)
+	require.Equalf(t, userGenCfg.Encoding, zapCfg.Encoding,
+		"Encoding value expected %v, actual %v", userGenCfg.Encoding, zapCfg.Encoding)
+	require.Equalf(t, userGenCfg.OutputPaths, zapCfg.OutputPaths,
+		"OutputPaths value expected %v, actual %v", userGenCfg.OutputPaths, zapCfg.OutputPaths)
+	require.Equalf(t, userGenCfg.ErrorOutputPaths, zapCfg.ErrorOutputPaths,
+		"ErrorOutputPaths value expected %v, actual %v", userGenCfg.ErrorOutputPaths, zapCfg.ErrorOutputPaths)
 }
 
 func TestMergeConfig_Encoder(t *testing.T) {
@@ -56,17 +63,28 @@ func TestMergeConfig_Encoder(t *testing.T) {
 		ConsoleSeparator: "console separator",
 	}
 	zapCfg := zap.NewDevelopmentEncoderConfig()
-	require.NoError(t, mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&zapCfg, &userEncCfg), "Failed to merge constants files.")
-	require.Equalf(t, userEncCfg.MessageKey, zapCfg.MessageKey, "MessageKey value expected %v, actual %v", userEncCfg.MessageKey, zapCfg.MessageKey)
-	require.Equalf(t, userEncCfg.LevelKey, zapCfg.LevelKey, "LevelKey value expected %v, actual %v", userEncCfg.LevelKey, zapCfg.LevelKey)
-	require.Equalf(t, userEncCfg.TimeKey, zapCfg.TimeKey, "TimeKey value expected %v, actual %v", userEncCfg.TimeKey, zapCfg.TimeKey)
-	require.Equalf(t, userEncCfg.NameKey, zapCfg.NameKey, "NameKey value expected %v, actual %v", userEncCfg.NameKey, zapCfg.NameKey)
-	require.Equalf(t, userEncCfg.CallerKey, zapCfg.CallerKey, "CallerKey value expected %v, actual %v", userEncCfg.CallerKey, zapCfg.CallerKey)
-	require.Equalf(t, userEncCfg.FunctionKey, zapCfg.FunctionKey, "FunctionKey value expected %v, actual %v", userEncCfg.FunctionKey, zapCfg.FunctionKey)
-	require.Equalf(t, userEncCfg.StacktraceKey, zapCfg.StacktraceKey, "StacktraceKey value expected %v, actual %v", userEncCfg.StacktraceKey, zapCfg.StacktraceKey)
-	require.Equalf(t, userEncCfg.SkipLineEnding, zapCfg.SkipLineEnding, "SkipLineEnding value expected %v, actual %v", userEncCfg.SkipLineEnding, zapCfg.SkipLineEnding)
-	require.Equalf(t, userEncCfg.LineEnding, zapCfg.LineEnding, "LineEnding value expected %v, actual %v", userEncCfg.LineEnding, zapCfg.LineEnding)
-	require.Equalf(t, userEncCfg.ConsoleSeparator, zapCfg.ConsoleSeparator, "ConsoleSeparator value expected %v, actual %v", userEncCfg.ConsoleSeparator, zapCfg.ConsoleSeparator)
+	require.NoError(t, mergeConfig[*zapcore.EncoderConfig, *encoderConfig](&zapCfg, &userEncCfg),
+		"Failed to merge constants files.")
+	require.Equalf(t, userEncCfg.MessageKey, zapCfg.MessageKey,
+		"MessageKey value expected %v, actual %v", userEncCfg.MessageKey, zapCfg.MessageKey)
+	require.Equalf(t, userEncCfg.LevelKey, zapCfg.LevelKey,
+		"LevelKey value expected %v, actual %v", userEncCfg.LevelKey, zapCfg.LevelKey)
+	require.Equalf(t, userEncCfg.TimeKey, zapCfg.TimeKey,
+		"TimeKey value expected %v, actual %v", userEncCfg.TimeKey, zapCfg.TimeKey)
+	require.Equalf(t, userEncCfg.NameKey, zapCfg.NameKey,
+		"NameKey value expected %v, actual %v", userEncCfg.NameKey, zapCfg.NameKey)
+	require.Equalf(t, userEncCfg.CallerKey, zapCfg.CallerKey,
+		"CallerKey value expected %v, actual %v", userEncCfg.CallerKey, zapCfg.CallerKey)
+	require.Equalf(t, userEncCfg.FunctionKey, zapCfg.FunctionKey,
+		"FunctionKey value expected %v, actual %v", userEncCfg.FunctionKey, zapCfg.FunctionKey)
+	require.Equalf(t, userEncCfg.StacktraceKey, zapCfg.StacktraceKey,
+		"StacktraceKey value expected %v, actual %v", userEncCfg.StacktraceKey, zapCfg.StacktraceKey)
+	require.Equalf(t, userEncCfg.SkipLineEnding, zapCfg.SkipLineEnding,
+		"SkipLineEnding value expected %v, actual %v", userEncCfg.SkipLineEnding, zapCfg.SkipLineEnding)
+	require.Equalf(t, userEncCfg.LineEnding, zapCfg.LineEnding,
+		"LineEnding value expected %v, actual %v", userEncCfg.LineEnding, zapCfg.LineEnding)
+	require.Equalf(t, userEncCfg.ConsoleSeparator, zapCfg.ConsoleSeparator,
+		"ConsoleSeparator value expected %v, actual %v", userEncCfg.ConsoleSeparator, zapCfg.ConsoleSeparator)
 }
 
 func TestInit(t *testing.T) {
@@ -120,7 +138,7 @@ func TestTestLogger(t *testing.T) {
 	logger.Info("info message received")
 	logger.Debug("debug message received")
 	logger.Warn("warn message received")
-	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me")))
 
 	require.Panics(t, func() {
 		logger.Panic("panic message received")
@@ -130,7 +148,7 @@ func TestTestLogger(t *testing.T) {
 		"INFO	info message received",
 		"DEBUG	debug message received",
 		"WARN	warn message received",
-		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
+		`ERROR	error message received	{"error": "ow no! woe is me"}`,
 		"PANIC	panic message received",
 	)
 }
@@ -139,7 +157,8 @@ func TestInit_MultiInitialization(t *testing.T) {
 	// Init mock filesystem.
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(), []byte(loggerConfigTestData["valid_devel"]), 0644), "Failed to write in memory file")
+	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(),
+		[]byte(loggerConfigTestData["valid_devel"]), 0644), "Failed to write in memory file")
 
 	logger := NewLogger()
 	require.NoError(t, logger.Init(&fs), "First initialization of logger should pass")
@@ -156,7 +175,7 @@ func TestTestLoggerSupportsLevels(t *testing.T) {
 	logger.Info("info message received")
 	logger.Debug("debug message received")
 	logger.Warn("warn message received")
-	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me!")))
+	logger.Error("error message received", zap.Error(errors.New("ow no! woe is me")))
 
 	require.Panics(t, func() {
 		logger.Panic("panic message received")
@@ -164,7 +183,7 @@ func TestTestLoggerSupportsLevels(t *testing.T) {
 
 	ts.AssertMessages(
 		"WARN	warn message received",
-		`ERROR	error message received	{"error": "ow no! woe is me!"}`,
+		`ERROR	error message received	{"error": "ow no! woe is me"}`,
 		"PANIC	panic message received",
 	)
 }
