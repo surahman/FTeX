@@ -21,6 +21,9 @@ linters:
     - scopelint
     - testpackage
     - varcheck
+    # Disabled because of generics support. See https://github.com/golangci/golangci-lint/issues/2649.
+    - rowserrcheck
+    - wastedassign
 linters-settings:
   cyclop:
     max-complexity: 12
