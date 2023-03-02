@@ -80,18 +80,20 @@ Cluster-wide tablespaces will need to be created for each of the tables in the p
 These directories will need to be created by the database administrator with the correct privileges
 for the Postgres accounts that require access.
 
-| Table Name | Tablespace Name | Location                                   |
-|------------|-----------------|--------------------------------------------|
-| users      | users_data      | `var/lib/postgresql/table_data/ftex_users` |
+| Table Name | Tablespace Name | Location                 |
+|------------|-----------------|--------------------------|
+| users      | users_data      | `/table_data/ftex_users` |
 
-The Docker containers contain [scripts](../docker/setup_scripts) that perform the setup of the
-directories and tablespaces on initialization of the database. It is recommended to delete the Docker
-volume associated with the Postgres container whenever the schema is updated, and to re-initialize the
-container volume to ensure that changes are applied.
+Due to directory permission issues, the Postgres Docker containers will not utilize tablespaces. These issues can
+be mitigated by mounting a volume that can be `chown`ed by the Postgres account. When using a directory on the host,
+this can mean configuring permissions to allow any account to `read` and `write` to the directory.
+
+The [tablespaces](tablespaces.sql) can be configured once the data directories have been created and the requisite
+permissions have been set.
 
 Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed
 within transaction blocks. The migration scripts will expect the tablespaces to be created beforehand.
-The migration scripts can be found [here](schema_migration.sql).
+The migration scripts can be found [here](schema_migration_tablespace.sql).
 
 <br/>
 
@@ -112,7 +114,7 @@ will attach the user's account to the other tables through a foreign key referen
 be required to look up the user credentials to retrieve the `client_id`.
 
 ### SQL Query
-The query to generate the user table can be found in the migrations [script](schema_migration.sql).
+The query to generate the user table can be found in the migrations [script](schema_migration_tablespace.sql).
 
 <br/>
 
@@ -125,5 +127,7 @@ for database migrations.
 
 There are two scripts provided:
 
-1. [GitHub Actions](schema_migration_gha.sql).
-2. [Migration](schema_migration.sql).
+1. [Migration](schema_migration.sql).
+2. [Migration with Tablespace](schema_migration_tablespace.sql).
+
+The Liquibase connection information will need to be configured in the [properties](liquibase.properties) file.

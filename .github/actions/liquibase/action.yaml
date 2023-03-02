@@ -6,7 +6,7 @@ runs:
     - name: Liquibase database migration
       uses: liquibase-github-actions/update@v4.19.0
       with:
-        changelogFile: "SQL/schema_migration_gha.sql"
+        changelogFile: "SQL/schema_migration.sql"
         url: "jdbc:postgresql://postgres:5432/ftex_db_test"
         password: "postgres"
         username: "postgres"

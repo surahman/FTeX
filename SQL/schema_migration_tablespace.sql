@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS users (
     password   VARCHAR(32)          NOT NULL,
     client_id  UUID                 PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
     is_deleted BOOLEAN              DEFAULT false NOT NULL
-);
+) TABLESPACE users_data;
 --rollback DROP TABLE users;
