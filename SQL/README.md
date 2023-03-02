@@ -93,7 +93,8 @@ permissions have been set.
 
 Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed
 within transaction blocks. The migration scripts will expect the tablespaces to be created beforehand.
-The migration scripts can be found [here](schema_migration_tablespace.sql).
+The migration scripts can be found [here](schema_migration_tablespace.sql) for tablespaces, and
+[here](schema_migration.sql) for without tablespaces.
 
 <br/>
 
