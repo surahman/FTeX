@@ -15,7 +15,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=ftex_db
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready', '-d', 'ft-ex-db']
+      test: ['CMD-SHELL', 'pg_isready', '-d', 'ftex_db']
       start_period: 60s
       interval: 60s
       timeout: 10s
