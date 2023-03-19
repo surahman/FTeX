@@ -26,6 +26,9 @@ build_and_run: build run
 generate:
 	go generate ./...
 
+sqlc:
+	sqlc compile -xf SQL/sqlc.yaml && sqlc generate -xf SQL/sqlc.yaml
+
 # swagger:
 #	swag fmt
 #	swag init -d cmd/,pkg/model/cassandra,pkg/model/http,pkg/http/rest -g ../pkg/http/rest/rest.go
@@ -50,4 +53,4 @@ coverage:
 coverage_report: coverage
 	open ${COVERAGE_NAME}/${COVERAGE_NAME}.html
 
-.PHONY: dep build run build_and_run generate swagger clean test test_short test_no_cache coverage coverage_report
+.PHONY: dep build run build_and_run generate swagger clean test test_short test_no_cache coverage coverage_report sqlc
