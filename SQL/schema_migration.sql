@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     email      VARCHAR(64)          NOT NULL,
     username   VARCHAR(32)          UNIQUE NOT NULL,
     password   VARCHAR(32)          NOT NULL,
-    client_id  UUID                 PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    client_id  UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
     is_deleted BOOLEAN              DEFAULT false NOT NULL
 );
 --rollback DROP TABLE users;
@@ -27,7 +27,7 @@ CREATE TYPE currency AS ENUM (
 'QAR','RON','RSD','RUB','RWF','SAR','SBD','SCR','SDG','SEK','SGD','SHP','SLL','SOS','SPL','SRD','STN','SVC','SYP',
 'SZL','THB','TJS','TMT','TND','TOP','TRY','TTD','TVD','TWD','TZS','UAH','UGX','USD','UYU','UZS','VEF','VND','VUV',
 'WST','XAF','XCD','XDR','XOF','XPF','YER','ZAR','ZMW','ZWD',
-'DEPOSIT');
+'DEPOSIT', 'CRYPTO');
 --rollback DROP TYPE currency;
 
 --changeset surahman:3
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS fiat_accounts (
     last_tx_ts      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     created_at      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
-    account_number  UUID            PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+    account_id      UUID            PRIMARY KEY DEFAULT gen_random_uuid()
 );
 
 CREATE INDEX IF NOT EXISTS fiat_client_id_idx ON fiat_accounts USING btree (client_id);
@@ -77,3 +77,19 @@ FROM
 WHERE
     username = 'deposit-fiat';
 --rollback DELETE FROM users WHERE username='deposit-fiat';
+
+--changeset surahman:5
+--preconditions onFail:HALT onError:HALT
+--comment: Fiat currency accounts general ledger.
+CREATE TABLE IF NOT EXISTS fiat_general_ledger (
+    currency        CURRENCY        NOT NULL,
+    ammount         NUMERIC(2)      NOT NULL,
+    transacted_at   TIMESTAMPTZ     NOT NULL,
+    account_id      UUID            REFERENCES fiat_accounts(account_id) ON DELETE CASCADE,
+    tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
+    PRIMARY KEY(tx_id, account_id)
+);
+
+CREATE INDEX IF NOT EXISTS fiat_general_ledger_account_idx ON fiat_general_ledger USING btree (account_id);
+CREATE INDEX IF NOT EXISTS fiat_general_ledger_tx_idx ON fiat_general_ledger USING btree (tx_id);
+--rollback DROP TABLE fiat_general_ledger CASCADE;

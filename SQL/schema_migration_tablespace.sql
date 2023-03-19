@@ -77,3 +77,19 @@ FROM
 WHERE
     username = 'deposit-fiat';
 --rollback DELETE FROM users WHERE username='deposit-fiat';
+
+--changeset surahman:5
+--preconditions onFail:HALT onError:HALT
+--comment: Fiat currency accounts general ledger.
+CREATE TABLE IF NOT EXISTS fiat_general_ledger (
+    currency        CURRENCY        NOT NULL,
+    ammount         NUMERIC(2)      NOT NULL,
+    transacted_at   TIMESTAMPTZ     NOT NULL,
+    account_id      UUID            REFERENCES fiat_accounts(account_id) ON DELETE CASCADE,
+    tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
+    PRIMARY KEY(tx_id, account_id)
+) TABLESPACE fiat_general_ledger_data;
+
+CREATE INDEX IF NOT EXISTS fiat_general_ledger_account_idx ON fiat_general_ledger USING btree (account_id) TABLESPACE fiat_general_ledger_data;
+CREATE INDEX IF NOT EXISTS fiat_general_ledger_tx_idx ON fiat_general_ledger USING btree (tx_id) TABLESPACE fiat_general_ledger_data;
+--rollback DROP TABLE fiat_general_ledger CASCADE;
