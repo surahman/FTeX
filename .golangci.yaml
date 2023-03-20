@@ -48,3 +48,9 @@ linters-settings:
       - K any
       - V any
       - m map[string]int
+issues:
+  exclude-rules:
+    # Exclude `lll` issues for long lines with `go:generate`.
+    - linters:
+        - lll
+      source: "^//go:generate "

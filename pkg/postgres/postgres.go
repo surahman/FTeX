@@ -16,7 +16,6 @@ import (
 )
 
 // Mock Postgres interface stub generation.
-//nolint:lll
 //go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Postgres
 
 // Postgres is the interface through which the database can be accessed. Created to support mock testing.
