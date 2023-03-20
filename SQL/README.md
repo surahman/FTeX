@@ -6,7 +6,10 @@
 - [Design Considerations](#design-considerations)
 - [Tablespaces](#tablespaces)
 - [Users Table Schema](#users-table-schema)
-  - [SQL Query](#sql-query)
+- [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
+- [Fiat General Ledger Table Schema](#fiat-general-ledger-table-schema)
+- [Special Purpose Accounts](#special-purpose-accounts)
+- [SQL Queries](#sql-queries)
 - [Schema Migration and Setup](#schema-migration-and-setup)
 
 <br/>
@@ -55,12 +58,13 @@ will require allowing `NULL` data types or backfilling data. `NULL` data should 
 possible.
 
 * Schema data alignment to reduce memory consumption on persistent and volatile memory.
-* The most taxing queries are likely to be _"retrieve all of my assets from the accounts table"_ and
-  _"retrieve all of my transactions from the general ledger"_.
-* Set clustering indices _(simple or compound)_ to allow related account and transaction data to be
-  co-located on persistent storage. This will result in block reads of data that will retrieve all the
+* The most taxing queries are likely to be _"retrieve all of my assets from the accounts tables"_ and
+  _"retrieve all of my transactions from the general ledgers"_.
+* Configure indices _(simple or compound)_ for clustering. This will allow related account and transaction data
+  to be co-located on persistent storage. as a result, block reads of data that will retrieve all the related
   required data on consecutive blocks. This will also, in turn, potentially lead to fewer instances of
-  volatile memory page thrashing.
+  volatile memory page thrashing. Postgres does not support clustering indices and requires periodic execution
+  of the `CLUSTER` command.
 * Configure primary and secondary indices based on queries and table join keys.
 * A general ledger table should contain double entries for each transaction: **_source_** and **_destination_**
   accounts for audit and fault tolerance purposes.
@@ -88,13 +92,13 @@ Due to directory permission issues, the Postgres Docker containers will not util
 be mitigated by mounting a volume that can be `chown`ed by the Postgres account. When using a directory on the host,
 this can mean configuring permissions to allow any account to `read` and `write` to the directory.
 
-The [tablespaces](tablespaces.sql) can be configured once the data directories have been created and the requisite
+The [tablespaces](schema/tablespaces.sql) can be configured once the data directories have been created and the requisite
 permissions have been set.
 
 Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed
 within transaction blocks. The migration scripts will expect the tablespaces to be created beforehand.
-The migration scripts can be found [here](schema_migration_tablespace.sql) for tablespaces, and
-[here](schema_migration.sql) for without tablespaces.
+The migration scripts can be found [here](schema/migration_tablespace.sql) for tablespaces, and
+[here](schema/migration.sql) for without tablespaces.
 
 <br/>
 
@@ -112,10 +116,56 @@ The migration scripts can be found [here](schema_migration_tablespace.sql) for t
 
 The `client_id` has been selected as the primary key. The `client_id` will be the unique identifier that
 will attach the user's account to the other tables through a foreign key reference. The login operation will
-be required to look up the user credentials to retrieve the `client_id`.
+be required to look up the user credentials to retrieve the `client_id`. A B-Tree index will be automatically constructed on
+the `username` due to the unique constraint. This will facilitate username deduplication as well as efficient record lookup.
 
-### SQL Query
-The query to generate the user table can be found in the migrations [script](schema_migration_tablespace.sql).
+<br/>
+
+## Fiat Accounts Table Schema
+
+| Name (Struct) | Data Type (Struct) | Column Name | Column Type | Description                                                           |
+|---------------|--------------------|-------------|-------------|-----------------------------------------------------------------------|
+| AccountID     | pgtype.UUID        | account_id  | UUID        | Unique identifier (primary key) for the account.                      |
+| ClientID      | pgtype.UUID        | client_id   | UUID        | Unique identifier for the account holder. References the Users table. |
+| Currency      | Currency           | currency    | Currency    | A user defined enum type for the three character currency ISO code.   |
+| Balance       | pgtype.Numeric     | balance     | Numeric(2)  | Current balance of the account correct to two decimal places.         |
+| LastTx        | pgtype.Numeric     | last_tx     | Numeric(2)  | Last transaction amount correct to two decimal places.                |
+| LastTxTs      | pgtype.Timestamptz | last_tx_ts  | TIMESTAMPTZ | Last transactions UTC timestamp.                                      |
+| CreatedAt     | pgtype.Timestamptz | created_at  | TIMESTAMPTZ | UTC timestamp at which the account was created.                       |
+
+A primary key has been created on the `AccountID` to enforce uniqueness and efficient lookup of an account based on its `ID`.
+A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts.
+
+<br/>
+
+## Fiat General Ledger Table Schema
+
+| Name (Struct) | Data Type (Struct) | Column Name   | Column Type | Description                                                                                                                                            |
+|---------------|--------------------|---------------|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TxID          | pgtype.UUID        | tx_id         | UUID        | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.  |
+| AccountID     | pgtype.UUID        | account_id    | UUID        | Unique identifier for the account relating to the transaction. References the Accounts table.                                                          |
+| Currency      | Currency           | currency      | Currency    | A user defined enum type for the three character currency ISO code.                                                                                    |
+| Amount        | pgtype.Numeric     | amount        | Numeric(2)  | Amount for the transaction correct to two decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
+| TransactedAt  | pgtype.Timestamptz | transacted_at | Numeric(2)  | Last transactions UTC timestamp.                                                                                                                       |
+
+A compound primary key has been configured on the `tx_id` and `account_id` which will enforce uniqueness. Two additional
+indices have been created on the `account_id` and `tx_id` to support efficient record retrieval.
+
+<br/>
+
+## Special Purpose Accounts
+
+| Username     | Purpose                                                                        |
+|--------------|--------------------------------------------------------------------------------|
+| deposit-fiat | Inbound deposits to the fiat accounts will be associated to this user account. |
+
+Special purpose accounts will be created for the purpose of general ledger entries. These accounts will have random
+password generated at creation and will be marked as deleted so disable login capabilities.
+
+<br/>
+
+## SQL Queries
+The queries to generate the all the tables can be found in the migration [script](schema/migration.sql).
 
 <br/>
 
@@ -128,7 +178,7 @@ for database migrations.
 
 There are two scripts provided:
 
-1. [Migration](schema_migration.sql).
-2. [Migration with Tablespace](schema_migration_tablespace.sql).
+1. [Migration](schema/migration.sql).
+2. [Migration with Tablespace](schema/migration_tablespace.sql).
 
 The Liquibase connection information will need to be configured in the [properties](liquibase.properties) file.
