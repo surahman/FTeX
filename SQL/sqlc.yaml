@@ -2,7 +2,7 @@ version: "2"
 sql:
     - engine: "postgresql"
       queries: ""
-      schema: "schema_migration.sql"
+      schema: "schema/migration.sql"
       gen:
           go:
               sql_package: "pgx/v5"

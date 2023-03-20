@@ -6,7 +6,10 @@
 - [Design Considerations](#design-considerations)
 - [Tablespaces](#tablespaces)
 - [Users Table Schema](#users-table-schema)
-- [SQL Query](#sql-query)
+- [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
+- [Fiat General Ledger Table Schema](#fiat-general-ledger-table-schema)
+- [Special Purpose Accounts](#special-purpose-accounts)
+- [SQL Queries](#sql-queries)
 - [Schema Migration and Setup](#schema-migration-and-setup)
 
 <br/>
@@ -89,13 +92,13 @@ Due to directory permission issues, the Postgres Docker containers will not util
 be mitigated by mounting a volume that can be `chown`ed by the Postgres account. When using a directory on the host,
 this can mean configuring permissions to allow any account to `read` and `write` to the directory.
 
-The [tablespaces](tablespaces.sql) can be configured once the data directories have been created and the requisite
+The [tablespaces](schema/tablespaces.sql) can be configured once the data directories have been created and the requisite
 permissions have been set.
 
 Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed
 within transaction blocks. The migration scripts will expect the tablespaces to be created beforehand.
-The migration scripts can be found [here](schema_migration_tablespace.sql) for tablespaces, and
-[here](schema_migration.sql) for without tablespaces.
+The migration scripts can be found [here](schema/migration_tablespace.sql) for tablespaces, and
+[here](schema/migration.sql) for without tablespaces.
 
 <br/>
 
@@ -135,7 +138,7 @@ A B-Tree index has also been created on the `ClientID` to facilitate efficient q
 
 <br/>
 
-## Fiat Accounts Table Schema
+## Fiat General Ledger Table Schema
 
 | Name (Struct) | Data Type (Struct) | Column Name   | Column Type | Description                                                                                                                                            |
 |---------------|--------------------|---------------|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -150,8 +153,19 @@ indices have been created on the `account_id` and `tx_id` to support efficient r
 
 <br/>
 
+## Special Purpose Accounts
+
+| Username     | Purpose                                                                        |
+|--------------|--------------------------------------------------------------------------------|
+| deposit-fiat | Inbound deposits to the fiat accounts will be associated to this user account. |
+
+Special purpose accounts will be created for the purpose of general ledger entries. These accounts will have random
+password generated at creation and will be marked as deleted so disable login capabilities.
+
+<br/>
+
 ## SQL Queries
-The queries to generate the all the tables can be found in the migration [script](schema_migration.sql).
+The queries to generate the all the tables can be found in the migration [script](schema/migration.sql).
 
 <br/>
 
@@ -164,7 +178,7 @@ for database migrations.
 
 There are two scripts provided:
 
-1. [Migration](schema_migration.sql).
-2. [Migration with Tablespace](schema_migration_tablespace.sql).
+1. [Migration](schema/migration.sql).
+2. [Migration with Tablespace](schema/migration_tablespace.sql).
 
 The Liquibase connection information will need to be configured in the [properties](liquibase.properties) file.
