@@ -11,10 +11,10 @@ import (
 )
 
 type Querier interface {
-	CreateUser(ctx context.Context, arg CreateUserParams) error
+	CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.UUID, error)
 	DeleteUser(ctx context.Context, username string) error
 	GetClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
-	GetCredentialsUser(ctx context.Context, username string) (string, error)
+	GetCredentialsUser(ctx context.Context, username string) (GetCredentialsUserRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

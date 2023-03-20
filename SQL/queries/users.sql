@@ -1,6 +1,8 @@
 
--- name: CreateUser :exec
-INSERT INTO users (username, password, first_name, last_name, email) VALUES ($1, $2, $3, $4, $5);
+-- name: CreateUser :one
+INSERT INTO users (username, password, first_name, last_name, email)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING client_id;
 
 -- GetInfoUser :one
 SELECT first_name, last_name, email, client_id, is_deleted
@@ -9,7 +11,7 @@ WHERE username=$1
 LIMIT 1;
 
 -- name: GetCredentialsUser :one
-SELECT password
+SELECT client_id, password
 FROM users
 WHERE username=$1 AND is_deleted=false
 LIMIT 1;

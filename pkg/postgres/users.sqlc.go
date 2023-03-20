@@ -11,8 +11,10 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createUser = `-- name: CreateUser :exec
-INSERT INTO users (username, password, first_name, last_name, email) VALUES ($1, $2, $3, $4, $5)
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (username, password, first_name, last_name, email)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING client_id
 `
 
 type CreateUserParams struct {
@@ -23,15 +25,17 @@ type CreateUserParams struct {
 	Email     string `json:"email"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.Exec(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createUser,
 		arg.Username,
 		arg.Password,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
 	)
-	return err
+	var client_id pgtype.UUID
+	err := row.Scan(&client_id)
+	return client_id, err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -60,15 +64,20 @@ func (q *Queries) GetClientIdUser(ctx context.Context, username string) (pgtype.
 }
 
 const getCredentialsUser = `-- name: GetCredentialsUser :one
-SELECT password
+SELECT client_id, password
 FROM users
 WHERE username=$1 AND is_deleted=false
 LIMIT 1
 `
 
-func (q *Queries) GetCredentialsUser(ctx context.Context, username string) (string, error) {
+type GetCredentialsUserRow struct {
+	ClientID pgtype.UUID `json:"clientID"`
+	Password string      `json:"password"`
+}
+
+func (q *Queries) GetCredentialsUser(ctx context.Context, username string) (GetCredentialsUserRow, error) {
 	row := q.db.QueryRow(ctx, getCredentialsUser, username)
-	var password string
-	err := row.Scan(&password)
-	return password, err
+	var i GetCredentialsUserRow
+	err := row.Scan(&i.ClientID, &i.Password)
+	return i, err
 }
