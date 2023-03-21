@@ -3,6 +3,7 @@ sql:
     - engine: postgresql
       queries:
         - queries/users.sql
+        - queries/fiat.sql
       schema: schema/migration.sql
       gen:
           go:

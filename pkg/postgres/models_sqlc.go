@@ -393,14 +393,13 @@ type FiatAccount struct {
 	LastTxTs  pgtype.Timestamptz `json:"lastTxTs"`
 	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 	ClientID  pgtype.UUID        `json:"clientID"`
-	AccountID pgtype.UUID        `json:"accountID"`
 }
 
 type FiatGeneralLedger struct {
 	Currency     Currency           `json:"currency"`
 	Ammount      pgtype.Numeric     `json:"ammount"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
-	AccountID    pgtype.UUID        `json:"accountID"`
+	ClientID     pgtype.UUID        `json:"clientID"`
 	TxID         pgtype.UUID        `json:"txID"`
 }
 

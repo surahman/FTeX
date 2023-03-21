@@ -11,10 +11,14 @@ import (
 )
 
 type Querier interface {
+	CreateFiatAccount(ctx context.Context, arg CreateFiatAccountParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.UUID, error)
 	DeleteUser(ctx context.Context, username string) error
+	GeneralLedgerDepositFiatAccount(ctx context.Context, arg GeneralLedgerDepositFiatAccountParams) (pgtype.UUID, error)
+	GeneralLedgerEntryFiatAccount(ctx context.Context, arg GeneralLedgerEntryFiatAccountParams) (pgtype.UUID, error)
 	GetClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
 	GetCredentialsUser(ctx context.Context, username string) (GetCredentialsUserRow, error)
+	UpdateBalanceFiatAccount(ctx context.Context, arg UpdateBalanceFiatAccountParams) (UpdateBalanceFiatAccountRow, error)
 }
 
 var _ Querier = (*Queries)(nil)
