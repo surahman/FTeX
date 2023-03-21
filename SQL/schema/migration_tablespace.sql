@@ -35,8 +35,8 @@ CREATE TYPE currency AS ENUM (
 --comment: Fiat currency accounts.
 CREATE TABLE IF NOT EXISTS fiat_accounts (
     currency        CURRENCY        DEFAULT 'USD' NOT NULL,
-    balance         NUMERIC(2)      DEFAULT 0 NOT NULL,
-    last_tx         NUMERIC(2)      DEFAULT 0 NOT NULL,
+    balance         NUMERIC(18,2)   DEFAULT 0 NOT NULL,
+    last_tx         NUMERIC(18,2)   DEFAULT 0 NOT NULL,
     last_tx_ts      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     created_at      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
@@ -83,7 +83,7 @@ WHERE
 --comment: Fiat currency accounts general ledger.
 CREATE TABLE IF NOT EXISTS fiat_general_ledger (
     currency        CURRENCY        NOT NULL,
-    ammount         NUMERIC(2)      NOT NULL,
+    ammount         NUMERIC(18,2)   NOT NULL,
     transacted_at   TIMESTAMPTZ     NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
     tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
