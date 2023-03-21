@@ -11,14 +11,26 @@ import (
 )
 
 type Querier interface {
-	CreateFiatAccount(ctx context.Context, arg CreateFiatAccountParams) error
-	CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.UUID, error)
-	DeleteUser(ctx context.Context, username string) error
-	GeneralLedgerDepositFiatAccount(ctx context.Context, arg GeneralLedgerDepositFiatAccountParams) (pgtype.UUID, error)
-	GeneralLedgerEntryFiatAccount(ctx context.Context, arg GeneralLedgerEntryFiatAccountParams) (pgtype.UUID, error)
-	GetClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
-	GetCredentialsUser(ctx context.Context, username string) (GetCredentialsUserRow, error)
-	UpdateBalanceFiatAccount(ctx context.Context, arg UpdateBalanceFiatAccountParams) (UpdateBalanceFiatAccountRow, error)
+	// createFiatAccount inserts a fiat account record.
+	createFiatAccount(ctx context.Context, arg createFiatAccountParams) error
+	// createUser will create a new user record.
+	createUser(ctx context.Context, arg createUserParams) (pgtype.UUID, error)
+	// deleteUser will soft delete a users account.
+	deleteUser(ctx context.Context, username string) error
+	// generalLedgerEntryFiatAccount will create general ledger entries.
+	// [$1] is the Client ID. If <deposit> is specified the <deposit-fiat> Client ID will be looked up.
+	// [$5] is the TX ID. A random one will be generated if not supplied.
+	generalLedgerEntryFiatAccount(ctx context.Context, arg generalLedgerEntryFiatAccountParams) (pgtype.UUID, error)
+	// getClientIdUser will retrieve a users client id.
+	getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
+	// getCredentialsUser will retrieve a users client id and password.
+	getCredentialsUser(ctx context.Context, username string) (getCredentialsUserRow, error)
+	// getInfoUser will retrieve a single users account information.
+	getInfoUser(ctx context.Context, username string) (getInfoUserRow, error)
+	// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
+	rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) error
+	// updateBalanceFiatAccount will add an amount to a fiat accounts balance.
+	updateBalanceFiatAccount(ctx context.Context, arg updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

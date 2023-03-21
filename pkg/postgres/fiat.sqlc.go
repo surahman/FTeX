@@ -11,108 +11,117 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createFiatAccount = `-- name: CreateFiatAccount :exec
+const createFiatAccount = `-- name: createFiatAccount :exec
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2)
 `
 
-type CreateFiatAccountParams struct {
+type createFiatAccountParams struct {
 	ClientID pgtype.UUID `json:"clientID"`
 	Currency Currency    `json:"currency"`
 }
 
-func (q *Queries) CreateFiatAccount(ctx context.Context, arg CreateFiatAccountParams) error {
+// createFiatAccount inserts a fiat account record.
+func (q *Queries) createFiatAccount(ctx context.Context, arg createFiatAccountParams) error {
 	_, err := q.db.Exec(ctx, createFiatAccount, arg.ClientID, arg.Currency)
 	return err
 }
 
-const generalLedgerDepositFiatAccount = `-- name: GeneralLedgerDepositFiatAccount :one
-INSERT INTO fiat_general_ledger (
+const generalLedgerEntryFiatAccount = `-- name: generalLedgerEntryFiatAccount :one
+INSERT INTO  fiat_general_ledger (
     client_id,
     currency,
     ammount,
     transacted_at,
     tx_id)
 SELECT
-    client_id,
-    $1,
+    CASE
+      WHEN $6::text='deposit' THEN (
+        SELECT client_id
+        FROM users
+        WHERE username = 'deposit-fiat')
+      ELSE $1
+    END AS client_id,
     $2,
     $3,
-    $4
-FROM
-    users AS client_id
-WHERE
-    username = 'deposit-fiat'
-RETURNING
-    tx_id
-`
-
-type GeneralLedgerDepositFiatAccountParams struct {
-	Currency     Currency           `json:"currency"`
-	Ammount      pgtype.Numeric     `json:"ammount"`
-	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
-	TxID         pgtype.UUID        `json:"txID"`
-}
-
-func (q *Queries) GeneralLedgerDepositFiatAccount(ctx context.Context, arg GeneralLedgerDepositFiatAccountParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, generalLedgerDepositFiatAccount,
-		arg.Currency,
-		arg.Ammount,
-		arg.TransactedAt,
-		arg.TxID,
-	)
-	var tx_id pgtype.UUID
-	err := row.Scan(&tx_id)
-	return tx_id, err
-}
-
-const generalLedgerEntryFiatAccount = `-- name: GeneralLedgerEntryFiatAccount :one
-INSERT INTO  fiat_general_ledger (client_id, currency, ammount, transacted_at)
-VALUES ($1, $2, $3, $4)
+    $4,
+    CASE
+      WHEN length($7::text)=0 THEN gen_random_uuid()
+      ELSE $5
+    END AS tx_id
 RETURNING tx_id
 `
 
-type GeneralLedgerEntryFiatAccountParams struct {
+type generalLedgerEntryFiatAccountParams struct {
 	ClientID     pgtype.UUID        `json:"clientID"`
 	Currency     Currency           `json:"currency"`
 	Ammount      pgtype.Numeric     `json:"ammount"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
+	TxID         pgtype.UUID        `json:"txID"`
+	ClientIDStr  string             `json:"clientIDStr"`
+	TxIDStr      string             `json:"txIDStr"`
 }
 
-func (q *Queries) GeneralLedgerEntryFiatAccount(ctx context.Context, arg GeneralLedgerEntryFiatAccountParams) (pgtype.UUID, error) {
+// generalLedgerEntryFiatAccount will create general ledger entries.
+// [$1] is the Client ID. If <deposit> is specified the <deposit-fiat> Client ID will be looked up.
+// [$5] is the TX ID. A random one will be generated if not supplied.
+func (q *Queries) generalLedgerEntryFiatAccount(ctx context.Context, arg generalLedgerEntryFiatAccountParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, generalLedgerEntryFiatAccount,
 		arg.ClientID,
 		arg.Currency,
 		arg.Ammount,
 		arg.TransactedAt,
+		arg.TxID,
+		arg.ClientIDStr,
+		arg.TxIDStr,
 	)
 	var tx_id pgtype.UUID
 	err := row.Scan(&tx_id)
 	return tx_id, err
 }
 
-const updateBalanceFiatAccount = `-- name: UpdateBalanceFiatAccount :one
+const rowLockFiatAccount = `-- name: rowLockFiatAccount :exec
+SELECT
+FROM fiat_accounts
+WHERE client_id=$1 AND currency=$2
+LIMIT 1
+FOR NO KEY UPDATE
+`
+
+type rowLockFiatAccountParams struct {
+	ClientID pgtype.UUID `json:"clientID"`
+	Currency Currency    `json:"currency"`
+}
+
+// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
+func (q *Queries) rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) error {
+	_, err := q.db.Exec(ctx, rowLockFiatAccount, arg.ClientID, arg.Currency)
+	return err
+}
+
+const updateBalanceFiatAccount = `-- name: updateBalanceFiatAccount :one
 UPDATE fiat_accounts
 SET balance=balance + $3, last_tx=$3, last_tx_ts=now()
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts
 `
 
-type UpdateBalanceFiatAccountParams struct {
+type updateBalanceFiatAccountParams struct {
 	ClientID pgtype.UUID    `json:"clientID"`
 	Currency Currency       `json:"currency"`
 	LastTx   pgtype.Numeric `json:"lastTx"`
 }
 
-type UpdateBalanceFiatAccountRow struct {
+type updateBalanceFiatAccountRow struct {
 	Balance  pgtype.Numeric     `json:"balance"`
 	LastTx   pgtype.Numeric     `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 }
 
-func (q *Queries) UpdateBalanceFiatAccount(ctx context.Context, arg UpdateBalanceFiatAccountParams) (UpdateBalanceFiatAccountRow, error) {
+// updateBalanceFiatAccount will add an amount to a fiat accounts balance.
+func (q *Queries) updateBalanceFiatAccount(ctx context.Context, arg updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error) {
 	row := q.db.QueryRow(ctx, updateBalanceFiatAccount, arg.ClientID, arg.Currency, arg.LastTx)
-	var i UpdateBalanceFiatAccountRow
+	var i updateBalanceFiatAccountRow
 	err := row.Scan(&i.Balance, &i.LastTx, &i.LastTxTs)
 	return i, err
 }
