@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS fiat_accounts (
     last_tx_ts      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     created_at      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
-    account_id      UUID            PRIMARY KEY DEFAULT gen_random_uuid()
+    PRIMARY KEY (client_id, currency)
 );
 
 CREATE INDEX IF NOT EXISTS fiat_client_id_idx ON fiat_accounts USING btree (client_id);
@@ -85,11 +85,11 @@ CREATE TABLE IF NOT EXISTS fiat_general_ledger (
     currency        CURRENCY        NOT NULL,
     ammount         NUMERIC(2)      NOT NULL,
     transacted_at   TIMESTAMPTZ     NOT NULL,
-    account_id      UUID            REFERENCES fiat_accounts(account_id) ON DELETE CASCADE,
+    client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
     tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
-    PRIMARY KEY(tx_id, account_id)
+    PRIMARY KEY(tx_id, client_id, currency)
 );
 
-CREATE INDEX IF NOT EXISTS fiat_general_ledger_account_idx ON fiat_general_ledger USING btree (account_id);
+CREATE INDEX IF NOT EXISTS fiat_general_ledger_client_idx ON fiat_general_ledger USING btree (client_id);
 CREATE INDEX IF NOT EXISTS fiat_general_ledger_tx_idx ON fiat_general_ledger USING btree (tx_id);
 --rollback DROP TABLE fiat_general_ledger CASCADE;

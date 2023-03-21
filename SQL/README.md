@@ -125,7 +125,6 @@ the `username` due to the unique constraint. This will facilitate username dedup
 
 | Name (Struct) | Data Type (Struct) | Column Name | Column Type | Description                                                           |
 |---------------|--------------------|-------------|-------------|-----------------------------------------------------------------------|
-| AccountID     | pgtype.UUID        | account_id  | UUID        | Unique identifier (primary key) for the account.                      |
 | ClientID      | pgtype.UUID        | client_id   | UUID        | Unique identifier for the account holder. References the Users table. |
 | Currency      | Currency           | currency    | Currency    | A user defined enum type for the three character currency ISO code.   |
 | Balance       | pgtype.Numeric     | balance     | Numeric(2)  | Current balance of the account correct to two decimal places.         |
@@ -133,8 +132,8 @@ the `username` due to the unique constraint. This will facilitate username dedup
 | LastTxTs      | pgtype.Timestamptz | last_tx_ts  | TIMESTAMPTZ | Last transactions UTC timestamp.                                      |
 | CreatedAt     | pgtype.Timestamptz | created_at  | TIMESTAMPTZ | UTC timestamp at which the account was created.                       |
 
-A primary key has been created on the `AccountID` to enforce uniqueness and efficient lookup of an account based on its `ID`.
-A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts.
+A compound primary key has been created on the `ClientID` and `Currency`. Each user may only have one account in each currency.
+A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts belonging to a single user.
 
 <br/>
 
@@ -143,13 +142,13 @@ A B-Tree index has also been created on the `ClientID` to facilitate efficient q
 | Name (Struct) | Data Type (Struct) | Column Name   | Column Type | Description                                                                                                                                            |
 |---------------|--------------------|---------------|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | TxID          | pgtype.UUID        | tx_id         | UUID        | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.  |
-| AccountID     | pgtype.UUID        | account_id    | UUID        | Unique identifier for the account relating to the transaction. References the Accounts table.                                                          |
+| ClientID      | pgtype.UUID        | client_id     | UUID        | Unique identifier for the account relating to the transaction. References the Accounts table.                                                          |
 | Currency      | Currency           | currency      | Currency    | A user defined enum type for the three character currency ISO code.                                                                                    |
 | Amount        | pgtype.Numeric     | amount        | Numeric(2)  | Amount for the transaction correct to two decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
 | TransactedAt  | pgtype.Timestamptz | transacted_at | Numeric(2)  | Last transactions UTC timestamp.                                                                                                                       |
 
-A compound primary key has been configured on the `tx_id` and `account_id` which will enforce uniqueness. Two additional
-indices have been created on the `account_id` and `tx_id` to support efficient record retrieval.
+A compound primary key has been configured on the `tx_id`, `client_id`, and `currency` which will enforce uniqueness. Two
+additional indices have been created on the `client_id` and `tx_id` to support efficient record retrieval.
 
 <br/>
 
