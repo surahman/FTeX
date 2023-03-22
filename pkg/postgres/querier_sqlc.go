@@ -17,10 +17,10 @@ type Querier interface {
 	createUser(ctx context.Context, arg createUserParams) (pgtype.UUID, error)
 	// deleteUser will soft delete a users account.
 	deleteUser(ctx context.Context, username string) error
-	// generalLedgerEntryFiatAccount will create general ledger entries.
-	// [$1] is the Client ID. If <deposit> is specified the <deposit-fiat> Client ID will be looked up.
-	// [$5] is the TX ID. A random one will be generated if not supplied.
-	generalLedgerEntryFiatAccount(ctx context.Context, arg generalLedgerEntryFiatAccountParams) (pgtype.UUID, error)
+	// generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
+	generalLedgerExternalFiatAccount(ctx context.Context, arg generalLedgerExternalFiatAccountParams) (pgtype.UUID, error)
+	// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
+	generalLedgerInternalFiatAccount(ctx context.Context, arg generalLedgerInternalFiatAccountParams) (pgtype.UUID, error)
 	// getClientIdUser will retrieve a users client id.
 	getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
 	// getCredentialsUser will retrieve a users client id and password.

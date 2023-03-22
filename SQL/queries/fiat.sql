@@ -18,10 +18,25 @@ SET balance=balance + $3, last_tx=$3, last_tx_ts=now()
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts;
 
--- name: generalLedgerEntryFiatAccount :one
--- generalLedgerEntryFiatAccount will create general ledger entry.
--- [$1] is the Client ID. If <deposit> is specified the <deposit-fiat> Client ID will be looked up.
--- [$5] is the TX ID. A random one will be generated if not supplied.
+-- name: generalLedgerExternalFiatAccount :one
+-- generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
+WITH deposit AS (
+    INSERT INTO fiat_general_ledger (
+        client_id,
+        currency,
+        ammount,
+        transacted_at,
+        tx_id)
+    SELECT
+        (   SELECT client_id
+            FROM users
+            WHERE username = 'deposit-fiat'),
+        $2,
+        -1 * $3,
+        now(),
+        gen_random_uuid()
+    RETURNING tx_id, transacted_at
+)
 INSERT INTO  fiat_general_ledger (
     client_id,
     currency,
@@ -29,18 +44,44 @@ INSERT INTO  fiat_general_ledger (
     transacted_at,
     tx_id)
 SELECT
-    CASE
-      WHEN sqlc.arg(client_id_str)::text='deposit' THEN (
-        SELECT client_id
-        FROM users
-        WHERE username = 'deposit-fiat')
-      ELSE $1
-    END AS client_id,
+    $1,
     $2,
     $3,
-    $4,
-    CASE
-      WHEN length(sqlc.arg(tx_id_str)::text)=0 THEN gen_random_uuid()
-      ELSE $5
-    END AS tx_id
+    (   SELECT transacted_at
+        FROM deposit),
+    (   SELECT tx_id
+        FROM deposit)
+RETURNING tx_id;
+
+-- name: generalLedgerInternalFiatAccount :one
+-- generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
+WITH deposit AS (
+    INSERT INTO fiat_general_ledger (
+        client_id,
+        currency,
+        ammount,
+        transacted_at,
+        tx_id)
+    SELECT
+        sqlc.arg(source_account)::uuid,
+        sqlc.arg(debit_amount)::numeric,
+        $1,
+        now(),
+        gen_random_uuid()
+    RETURNING tx_id, transacted_at
+)
+INSERT INTO  fiat_general_ledger (
+    client_id,
+    currency,
+    ammount,
+    transacted_at,
+    tx_id)
+SELECT
+    sqlc.arg(destination_account)::uuid,
+    $1,
+    sqlc.arg(credit_amount)::numeric,
+    (   SELECT transacted_at
+        FROM deposit),
+    (   SELECT tx_id
+        FROM deposit)
 RETURNING tx_id;

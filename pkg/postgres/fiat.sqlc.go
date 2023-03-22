@@ -27,7 +27,24 @@ func (q *Queries) createFiatAccount(ctx context.Context, arg createFiatAccountPa
 	return err
 }
 
-const generalLedgerEntryFiatAccount = `-- name: generalLedgerEntryFiatAccount :one
+const generalLedgerExternalFiatAccount = `-- name: generalLedgerExternalFiatAccount :one
+WITH deposit AS (
+    INSERT INTO fiat_general_ledger (
+        client_id,
+        currency,
+        ammount,
+        transacted_at,
+        tx_id)
+    SELECT
+        (   SELECT client_id
+            FROM users
+            WHERE username = 'deposit-fiat'),
+        $2,
+        -1 * $3,
+        now(),
+        gen_random_uuid()
+    RETURNING tx_id, transacted_at
+)
 INSERT INTO  fiat_general_ledger (
     client_id,
     currency,
@@ -35,45 +52,79 @@ INSERT INTO  fiat_general_ledger (
     transacted_at,
     tx_id)
 SELECT
-    CASE
-      WHEN $6::text='deposit' THEN (
-        SELECT client_id
-        FROM users
-        WHERE username = 'deposit-fiat')
-      ELSE $1
-    END AS client_id,
+    $1,
     $2,
     $3,
-    $4,
-    CASE
-      WHEN length($7::text)=0 THEN gen_random_uuid()
-      ELSE $5
-    END AS tx_id
+    (   SELECT transacted_at
+        FROM deposit),
+    (   SELECT tx_id
+        FROM deposit)
 RETURNING tx_id
 `
 
-type generalLedgerEntryFiatAccountParams struct {
-	ClientID     pgtype.UUID        `json:"clientID"`
-	Currency     Currency           `json:"currency"`
-	Ammount      pgtype.Numeric     `json:"ammount"`
-	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
-	TxID         pgtype.UUID        `json:"txID"`
-	ClientIDStr  string             `json:"clientIDStr"`
-	TxIDStr      string             `json:"txIDStr"`
+type generalLedgerExternalFiatAccountParams struct {
+	ClientID pgtype.UUID    `json:"clientID"`
+	Currency Currency       `json:"currency"`
+	Ammount  pgtype.Numeric `json:"ammount"`
 }
 
-// generalLedgerEntryFiatAccount will create general ledger entries.
-// [$1] is the Client ID. If <deposit> is specified the <deposit-fiat> Client ID will be looked up.
-// [$5] is the TX ID. A random one will be generated if not supplied.
-func (q *Queries) generalLedgerEntryFiatAccount(ctx context.Context, arg generalLedgerEntryFiatAccountParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, generalLedgerEntryFiatAccount,
-		arg.ClientID,
+// generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
+func (q *Queries) generalLedgerExternalFiatAccount(ctx context.Context, arg generalLedgerExternalFiatAccountParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, generalLedgerExternalFiatAccount, arg.ClientID, arg.Currency, arg.Ammount)
+	var tx_id pgtype.UUID
+	err := row.Scan(&tx_id)
+	return tx_id, err
+}
+
+const generalLedgerInternalFiatAccount = `-- name: generalLedgerInternalFiatAccount :one
+WITH deposit AS (
+    INSERT INTO fiat_general_ledger (
+        client_id,
+        currency,
+        ammount,
+        transacted_at,
+        tx_id)
+    SELECT
+        $4::uuid,
+        $5::numeric,
+        $1,
+        now(),
+        gen_random_uuid()
+    RETURNING tx_id, transacted_at
+)
+INSERT INTO  fiat_general_ledger (
+    client_id,
+    currency,
+    ammount,
+    transacted_at,
+    tx_id)
+SELECT
+    $2::uuid,
+    $1,
+    $3::numeric,
+    (   SELECT transacted_at
+        FROM deposit),
+    (   SELECT tx_id
+        FROM deposit)
+RETURNING tx_id
+`
+
+type generalLedgerInternalFiatAccountParams struct {
+	Currency           Currency       `json:"currency"`
+	DestinationAccount pgtype.UUID    `json:"destinationAccount"`
+	CreditAmount       pgtype.Numeric `json:"creditAmount"`
+	SourceAccount      pgtype.UUID    `json:"sourceAccount"`
+	DebitAmount        pgtype.Numeric `json:"debitAmount"`
+}
+
+// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
+func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg generalLedgerInternalFiatAccountParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, generalLedgerInternalFiatAccount,
 		arg.Currency,
-		arg.Ammount,
-		arg.TransactedAt,
-		arg.TxID,
-		arg.ClientIDStr,
-		arg.TxIDStr,
+		arg.DestinationAccount,
+		arg.CreditAmount,
+		arg.SourceAccount,
+		arg.DebitAmount,
 	)
 	var tx_id pgtype.UUID
 	err := row.Scan(&tx_id)
