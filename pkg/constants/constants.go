@@ -17,7 +17,7 @@ const (
 
 	// Miscellaneous.
 	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
-	testDatabaseName = "ft-ex-db-test"
+	testDatabaseName = "ftex_db_test"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
