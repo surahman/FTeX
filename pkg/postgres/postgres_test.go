@@ -1,8 +1,6 @@
 package postgres
 
 import (
-	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -11,7 +9,7 @@ import (
 	"github.com/surahman/FTeX/pkg/logger"
 )
 
-func TestNewPostgres(t *testing.T) {
+func TestNewPostgres_Filesystem_Logger(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
@@ -62,7 +60,7 @@ func TestNewPostgres(t *testing.T) {
 	}
 }
 
-func TestNewPostgresImpl(t *testing.T) {
+func TestNewPostgres(t *testing.T) {
 	testCases := []struct {
 		name      string
 		fileName  string
@@ -94,21 +92,21 @@ func TestNewPostgresImpl(t *testing.T) {
 			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testCase.fileName,
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
-			c, err := newPostgresImpl(&fs, zapLogger)
+			c, err := NewPostgres(&fs, zapLogger)
 			testCase.expectErr(t, err)
 			testCase.expectNil(t, c)
 		})
 	}
 }
 
-func TestPostgresImpl_verifySession(t *testing.T) {
+func TestPostgres_verifySession(t *testing.T) {
 	// Integration test check.
 	if testing.Short() {
 		t.Skip()
 	}
 
 	// Nil Session.
-	postgres := &postgresImpl{}
+	postgres := &Postgres{}
 	require.Error(t, postgres.verifySession(), "nil session should return error")
 
 	// Setup mock filesystem for configs.
@@ -118,7 +116,7 @@ func TestPostgresImpl_verifySession(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Not open session.
-	postgres, err := newPostgresImpl(&fs, zapLogger)
+	postgres, err := NewPostgres(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.verifySession(), "failed to return error on closed connection")
 
@@ -134,7 +132,7 @@ func TestPostgresImpl_verifySession(t *testing.T) {
 	require.Error(t, postgres.verifySession(), "failed to return error on closed Postgres connection")
 }
 
-func TestPostgresImpl_Open(t *testing.T) {
+func TestPostgres_Open(t *testing.T) {
 	// Integration test check.
 	if testing.Short() {
 		t.Skip()
@@ -147,7 +145,7 @@ func TestPostgresImpl_Open(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
-	postgres, err := newPostgresImpl(&fs, zapLogger)
+	postgres, err := NewPostgres(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.NoError(t, postgres.Open(), "failed to open connection")
 	require.NoError(t, postgres.Close(), "failed to close connection")
@@ -158,7 +156,7 @@ func TestPostgresImpl_Open(t *testing.T) {
 	require.Error(t, postgres.Open(), "failed to report ping failure on bad connection")
 }
 
-func TestPostgresImpl_Close(t *testing.T) {
+func TestPostgres_Close(t *testing.T) {
 	// Integration test check.
 	if testing.Short() {
 		t.Skip()
@@ -171,14 +169,14 @@ func TestPostgresImpl_Close(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
-	postgres, err := newPostgresImpl(&fs, zapLogger)
+	postgres, err := NewPostgres(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.Close(), "failed to return error on closing a connection not opened")
 	require.NoError(t, postgres.Open(), "failed to open connection.")
 	require.NoError(t, postgres.Close(), "failed to close connection.")
 }
 
-func TestPostgresImpl_Healthcheck(t *testing.T) {
+func TestPostgres_Healthcheck(t *testing.T) {
 	// Integration test check.
 	if testing.Short() {
 		t.Skip()
@@ -191,7 +189,7 @@ func TestPostgresImpl_Healthcheck(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
-	postgres, err := newPostgresImpl(&fs, zapLogger)
+	postgres, err := NewPostgres(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.Healthcheck(), "failed to return bad health on uninitialized connection")
 
@@ -200,35 +198,4 @@ func TestPostgresImpl_Healthcheck(t *testing.T) {
 
 	require.NoError(t, postgres.Close(), "failed to close connection.")
 	require.Error(t, postgres.Healthcheck(), "failed to return bad health on closed connection")
-}
-
-func TestPostgresImpl_Execute(t *testing.T) {
-	type testType struct {
-		key string
-		val string
-	}
-
-	input := &testType{key: "key", val: "value"}
-	fn := func(conn Postgres, params any) (any, error) {
-		casted, ok := params.(*testType)
-		if !ok {
-			return nil, errors.New("cast failed")
-		}
-
-		return casted, nil
-	}
-
-	// Configure mock filesystem.
-	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
-		[]byte(postgresConfigTestData["test_suite"]), 0644), "Failed to write in memory file")
-
-	db, err := newPostgresImpl(&fs, zapLogger)
-	require.NoError(t, err, "failed to create test db object")
-	require.NotNil(t, db, "failed to create test db connection")
-
-	result, err := db.Execute(fn, input)
-	require.NoError(t, err)
-	require.Equal(t, reflect.TypeOf(input), reflect.TypeOf(result.(*testType))) //nolint:forcetypeassert
 }

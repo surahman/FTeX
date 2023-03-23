@@ -21,7 +21,7 @@ var configFileKey string
 
 // testConnection is the connection pool to the Postgres test database.
 type testConnection struct {
-	db Postgres // Test database connection.
+	db *Postgres // Test database connection.
 	// mu sync.RWMutex // Mutex to enforce sequential test execution.
 }
 
@@ -90,7 +90,7 @@ func setup() error {
 	}
 
 	// Load Postgres configurations for test suite.
-	if connection.db, err = newPostgresImpl(&fs, zapLogger); err != nil {
+	if connection.db, err = NewPostgres(&fs, zapLogger); err != nil {
 		return err
 	}
 
