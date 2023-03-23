@@ -1,5 +1,7 @@
 package postgres
 
+import "fmt"
+
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string {
 	return map[string]string{
@@ -110,4 +112,27 @@ pool:
   maxConns: 8
   minConns: 4`,
 	}
+}
+
+// GetTestUsers will generate a number of dummy users for testing.
+func GetTestUsers() map[string]createUserParams {
+	users := make(map[string]createUserParams)
+	username := "username%d"
+	password := "user-password-%d"
+	firstname := "firstname-%d"
+	lastname := "lastname-%d"
+	email := "user%d@email-address.com"
+
+	for idx := 1; idx < 5; idx++ {
+		uname := fmt.Sprintf(username, idx)
+		users[uname] = createUserParams{
+			Username:  fmt.Sprintf(username, idx),
+			Password:  fmt.Sprintf(password, idx),
+			FirstName: fmt.Sprintf(firstname, idx),
+			LastName:  fmt.Sprintf(lastname, idx),
+			Email:     fmt.Sprintf(email, idx),
+		}
+	}
+
+	return users
 }
