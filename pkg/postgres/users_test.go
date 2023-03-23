@@ -69,10 +69,38 @@ func TestPostgres_DeleteUser(t *testing.T) {
 
 	// Remove all inserted users.
 	for key, testCase := range getTestUsers() {
-		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Deleting User: %s", key), func(t *testing.T) {
 			result, err := connection.db.Query.deleteUser(ctx, testCase.Username)
 			require.NoError(t, err, "failed to execute delete on user.")
 			require.Equal(t, int64(1), result.RowsAffected(), "failed to execute delete on user.")
+		})
+	}
+}
+
+func TestGetClientIdUser(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert initial set of test users.
+	insertTestUsers(t)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Non-existent user.
+	result, err := connection.db.Query.getClientIdUser(ctx, "non-existent-user")
+	require.Error(t, err, "got client id for non-existent user.")
+	require.False(t, result.Valid, "client id for a non-existent user is valid.")
+
+	// Get Client IDs for all inserted users.
+	for key, testCase := range getTestUsers() {
+		t.Run(fmt.Sprintf("Getting Client ID: %s", key), func(t *testing.T) {
+			result, err = connection.db.Query.getClientIdUser(ctx, testCase.Username)
+			require.NoError(t, err, "failed to get client id for user.")
+			require.True(t, result.Valid, "invalid client id for user.")
 		})
 	}
 }

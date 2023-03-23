@@ -130,7 +130,7 @@ func insertTestUsers(t *testing.T) {
 	require.NoError(t, err, "failed to wipe users table before reinserting users.")
 
 	for key, user := range getTestUsers() {
-		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
 			clientID, err := connection.db.Query.createUser(ctx, user)
 			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 			require.True(t, clientID.Valid, "failed to retrieve client id from response")
