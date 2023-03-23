@@ -77,6 +77,7 @@ func (p *Postgres) Open() error {
 		return err
 	}
 
+	// Setup SQLC DBTX interface.
 	p.Query = New(p.pool)
 
 	return nil
