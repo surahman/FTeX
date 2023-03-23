@@ -26,7 +26,7 @@ FROM users
 WHERE username=$1
 LIMIT 1;
 
--- name: deleteUser :exec
+-- name: deleteUser :execresult
 -- deleteUser will soft delete a users account.
 UPDATE users
 SET is_deleted=true

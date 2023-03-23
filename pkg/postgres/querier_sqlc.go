@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -16,7 +17,7 @@ type Querier interface {
 	// createUser will create a new user record.
 	createUser(ctx context.Context, arg createUserParams) (pgtype.UUID, error)
 	// deleteUser will soft delete a users account.
-	deleteUser(ctx context.Context, username string) error
+	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
 	// generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
 	generalLedgerExternalFiatAccount(ctx context.Context, arg generalLedgerExternalFiatAccountParams) (pgtype.UUID, error)
 	// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.

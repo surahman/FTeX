@@ -8,6 +8,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -39,16 +40,15 @@ func (q *Queries) createUser(ctx context.Context, arg createUserParams) (pgtype.
 	return client_id, err
 }
 
-const deleteUser = `-- name: deleteUser :exec
+const deleteUser = `-- name: deleteUser :execresult
 UPDATE users
 SET is_deleted=true
 WHERE username=$1 AND is_deleted=false
 `
 
 // deleteUser will soft delete a users account.
-func (q *Queries) deleteUser(ctx context.Context, username string) error {
-	_, err := q.db.Exec(ctx, deleteUser, username)
-	return err
+func (q *Queries) deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, deleteUser, username)
 }
 
 const getClientIdUser = `-- name: getClientIdUser :one
