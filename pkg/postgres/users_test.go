@@ -104,3 +104,33 @@ func TestGetClientIdUser(t *testing.T) {
 		})
 	}
 }
+
+func TestGetCredentialsUser(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert initial set of test users.
+	insertTestUsers(t)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Non-existent user.
+	result, err := connection.db.Query.getCredentialsUser(ctx, "non-existent-user")
+	require.Error(t, err, "got credentials for non-existent user.")
+	require.False(t, result.ClientID.Valid, "client id for a non-existent user is valid.")
+	require.Equal(t, 0, len(result.Password), "got password for a non-existent user.")
+
+	// Get Client IDs for all inserted users.
+	for key, testCase := range getTestUsers() {
+		t.Run(fmt.Sprintf("Getting credentials: %s", key), func(t *testing.T) {
+			result, err = connection.db.Query.getCredentialsUser(ctx, testCase.Username)
+			require.NoError(t, err, "failed to get client id for user.")
+			require.True(t, result.ClientID.Valid, "invalid client id for user.")
+			require.Equal(t, testCase.Password, result.Password, "mismatched password for user.")
+		})
+	}
+}
