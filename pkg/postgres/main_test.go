@@ -22,14 +22,8 @@ var postgresConfigTestData = configTestData()
 // configFileKey is the name of the Postgres configuration file to use in the tests.
 var configFileKey string
 
-// testConnection is the connection pool to the Postgres test database.
-type testConnection struct {
-	db *Postgres // Test database connection.
-	// mu sync.RWMutex // Mutex to enforce sequential test execution.
-}
-
 // connection pool to Cassandra cluster.
-var connection testConnection
+var connection *Postgres
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
@@ -93,11 +87,11 @@ func setup() error {
 	}
 
 	// Load Postgres configurations for test suite.
-	if connection.db, err = NewPostgres(&fs, zapLogger); err != nil {
+	if connection, err = NewPostgres(&fs, zapLogger); err != nil {
 		return err
 	}
 
-	if err = connection.db.Open(); err != nil {
+	if err = connection.Open(); err != nil {
 		return fmt.Errorf("postgres connection opening failed: %w", err)
 	}
 
@@ -107,7 +101,7 @@ func setup() error {
 // tearDown will delete the test clusters keyspace.
 func tearDown() (err error) {
 	if !testing.Short() {
-		if err := connection.db.Close(); err != nil {
+		if err := connection.Close(); err != nil {
 			return fmt.Errorf("postgres connection termination failure in test suite: %w", err)
 		}
 	}
@@ -124,14 +118,14 @@ func insertTestUsers(t *testing.T) {
 
 	defer cancel()
 
-	rows, err := connection.db.Query.db.Query(ctx, query)
+	rows, err := connection.Query.db.Query(ctx, query)
 	rows.Close()
 
 	require.NoError(t, err, "failed to wipe users table before reinserting users.")
 
 	for key, user := range getTestUsers() {
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			clientID, err := connection.db.Query.createUser(ctx, user)
+			clientID, err := connection.Query.createUser(ctx, user)
 			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 			require.True(t, clientID.Valid, "failed to retrieve client id from response")
 		})
