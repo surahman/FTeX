@@ -28,7 +28,7 @@ type Querier interface {
 	// getInfoUser will retrieve a single users account information.
 	getInfoUser(ctx context.Context, username string) (getInfoUserRow, error)
 	// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
-	rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) error
+	rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) (pgtype.Numeric, error)
 	// updateBalanceFiatAccount will add an amount to a fiat accounts balance.
 	updateBalanceFiatAccount(ctx context.Context, arg updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error)
 }

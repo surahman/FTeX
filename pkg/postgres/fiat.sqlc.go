@@ -131,8 +131,8 @@ func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg gene
 	return tx_id, err
 }
 
-const rowLockFiatAccount = `-- name: rowLockFiatAccount :exec
-SELECT
+const rowLockFiatAccount = `-- name: rowLockFiatAccount :one
+SELECT balance
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2
 LIMIT 1
@@ -145,9 +145,11 @@ type rowLockFiatAccountParams struct {
 }
 
 // rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
-func (q *Queries) rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) error {
-	_, err := q.db.Exec(ctx, rowLockFiatAccount, arg.ClientID, arg.Currency)
-	return err
+func (q *Queries) rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) (pgtype.Numeric, error) {
+	row := q.db.QueryRow(ctx, rowLockFiatAccount, arg.ClientID, arg.Currency)
+	var balance pgtype.Numeric
+	err := row.Scan(&balance)
+	return balance, err
 }
 
 const updateBalanceFiatAccount = `-- name: updateBalanceFiatAccount :one
