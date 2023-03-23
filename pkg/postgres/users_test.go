@@ -134,3 +134,39 @@ func TestGetCredentialsUser(t *testing.T) {
 		})
 	}
 }
+
+func TestGetInfoUser(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert initial set of test users.
+	insertTestUsers(t)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Non-existent user.
+	result, err := connection.db.Query.getInfoUser(ctx, "non-existent-user")
+	require.Error(t, err, "got credentials for non-existent user.")
+	require.False(t, result.ClientID.Valid, "client id for a non-existent user is valid.")
+	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
+	require.Equal(t, 0, len(result.FirstName), "got first name for a non-existent user.")
+	require.Equal(t, 0, len(result.LastName), "got last name for a non-existent user.")
+	require.Equal(t, 0, len(result.Email), "got email address for a non-existent user.")
+
+	// Get Client IDs for all inserted users.
+	for key, testCase := range getTestUsers() {
+		t.Run(fmt.Sprintf("Getting user information: %s", key), func(t *testing.T) {
+			result, err = connection.db.Query.getInfoUser(ctx, testCase.Username)
+			require.NoError(t, err, "failed to get client id for user.")
+			require.True(t, result.ClientID.Valid, "invalid client id for user.")
+			require.False(t, result.IsDeleted, "deleted flag for user is set.")
+			require.Equal(t, testCase.FirstName, result.FirstName, "first name mismatch.")
+			require.Equal(t, testCase.LastName, result.LastName, "last name mismatch.")
+			require.Equal(t, testCase.Email, result.Email, "email address mismatch.")
+		})
+	}
+}
