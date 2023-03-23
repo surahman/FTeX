@@ -181,3 +181,26 @@ There are two scripts provided:
 2. [Migration with Tablespace](schema/migration_tablespace.sql).
 
 The Liquibase connection information will need to be configured in the [properties](liquibase.properties) file.
+
+Execute the following commands from the `SQL` directory:
+
+```bash
+# Main database setup
+liquibase update
+```
+
+```bash
+# Main database rollback. Specify number of steps.
+liquibase rollback-count 5
+```
+
+
+```bash
+# Test suite setup
+liquibase update --defaultsFile liquibase_testsuite.properties
+```
+
+```bash
+# Test suite setup
+liquibase rollback-count 5 --defaultsFile liquibase_testsuite.properties
+```
