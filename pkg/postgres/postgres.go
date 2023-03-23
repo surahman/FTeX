@@ -15,58 +15,31 @@ import (
 	"go.uber.org/zap"
 )
 
-// Mock Postgres interface stub generation.
-//nolint:lll
-//go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Postgres
-
-// Postgres is the interface through which the database can be accessed. Created to support mock testing.
-type Postgres interface {
-	// Open will create a connection pool and establish a connection to the database backend.
-	Open() error
-
-	// Close will shut down the connection pool and ensure that the connection to the database backend is terminated.
-	Close() error
-
-	// Healthcheck runs a ping healthcheck on the database backend.
-	Healthcheck() error
-
-	// Execute will execute statements or run a transaction on the database backend, leveraging the connection pool.
-	Execute(func(Postgres, any) (any, error), any) (any, error)
-}
-
-// Check to ensure the Postgres interface has been implemented.
-var _ Postgres = &postgresImpl{}
-
-// postgresImpl implements the Postgres interface and contains the logic to interface with the database.
-type postgresImpl struct {
+// Postgres contains objects required to interface with the database.
+type Postgres struct {
 	conf   config
 	pool   *pgxpool.Pool
 	logger *logger.Logger
 }
 
-// NewPostgres will create a new Postgres configuration by loading it.
-func NewPostgres(fs *afero.Fs, logger *logger.Logger) (Postgres, error) {
+// NewPostgres will create a new Postgres configuration and load it from disk.
+func NewPostgres(fs *afero.Fs, logger *logger.Logger) (*Postgres, error) {
 	if fs == nil || logger == nil {
 		return nil, errors.New("nil file system or logger supplied")
 	}
 
-	return newPostgresImpl(fs, logger)
-}
-
-// newCPostgresImpl will create a new postgresImpl configuration and load it from disk.
-func newPostgresImpl(fs *afero.Fs, logger *logger.Logger) (c *postgresImpl, err error) {
-	c = &postgresImpl{conf: newConfig(), logger: logger}
-	if err = c.conf.Load(*fs); err != nil {
-		c.logger.Error("failed to load Postgres configurations from disk", zap.Error(err))
+	postgres := &Postgres{conf: newConfig(), logger: logger}
+	if err := postgres.conf.Load(*fs); err != nil {
+		postgres.logger.Error("failed to load Postgres configurations from disk", zap.Error(err))
 
 		return nil, err
 	}
 
-	return
+	return postgres, nil
 }
 
 // Open will start a database connection pool and establish a connection.
-func (p *postgresImpl) Open() error {
+func (p *Postgres) Open() error {
 	var err error
 	if err = p.verifySession(); err == nil {
 		return errors.New("connection is already established to Postgres")
@@ -106,41 +79,8 @@ func (p *postgresImpl) Open() error {
 	return nil
 }
 
-// Close will close the database connection pool.
-func (p *postgresImpl) Close() (err error) {
-	if err = p.verifySession(); err != nil {
-		msg := "no established Postgres connection to close"
-		p.logger.Error(msg)
-
-		return errors.New(msg)
-	}
-
-	p.pool.Close()
-
-	return
-}
-
-// Healthcheck will run a ping on the database to ascertain health.
-func (p *postgresImpl) Healthcheck() error {
-	var err error
-	if err = p.verifySession(); err != nil {
-		return err
-	}
-
-	if err = p.pool.Ping(context.Background()); err != nil {
-		return fmt.Errorf("postges cluste ping failed: %w", err)
-	}
-
-	return nil
-}
-
-// Execute wraps the methods that create, read, update, and delete records from tables on the database.
-func (p *postgresImpl) Execute(request func(Postgres, any) (any, error), params any) (any, error) {
-	return request(p, params)
-}
-
 // verifySession will check to see if a session is established.
-func (p *postgresImpl) verifySession() error {
+func (p *Postgres) verifySession() error {
 	if p.pool == nil || p.pool.Ping(context.Background()) != nil {
 		return errors.New("no session established")
 	}
@@ -150,7 +90,7 @@ func (p *postgresImpl) verifySession() error {
 
 // createSessionRetry will attempt to open the connection using binary exponential back-off.
 // Stop on the first success or fail after the last one.
-func (p *postgresImpl) createSessionRetry() (err error) {
+func (p *Postgres) createSessionRetry() (err error) {
 	for attempt := 1; attempt <= p.conf.Connection.MaxConnAttempts; attempt++ {
 		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
 		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime),
@@ -164,4 +104,32 @@ func (p *postgresImpl) createSessionRetry() (err error) {
 	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
 
 	return
+}
+
+// Close will close the database connection pool.
+func (p *Postgres) Close() (err error) {
+	if err = p.verifySession(); err != nil {
+		msg := "no established Postgres connection to close"
+		p.logger.Error(msg)
+
+		return errors.New(msg)
+	}
+
+	p.pool.Close()
+
+	return
+}
+
+// Healthcheck will run a ping on the database to ascertain health.
+func (p *Postgres) Healthcheck() error {
+	var err error
+	if err = p.verifySession(); err != nil {
+		return err
+	}
+
+	if err = p.pool.Ping(context.Background()); err != nil {
+		return fmt.Errorf("postgres cluster ping failed: %w", err)
+	}
+
+	return nil
 }
