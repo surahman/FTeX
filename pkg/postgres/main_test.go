@@ -1,13 +1,16 @@
 package postgres
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
@@ -70,7 +73,7 @@ func setup() error {
 
 	var err error
 
-	// If running on a GitHub Actions runner use the default credentials for Cassandra.
+	// If running on a GitHub Actions runner use the default credentials for Postgres.
 	configFileKey = "test_suite"
 	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
@@ -110,4 +113,27 @@ func tearDown() (err error) {
 	}
 
 	return
+}
+
+// insertTestUsers will reset the users table and create some test user accounts.
+func insertTestUsers(t *testing.T) {
+	t.Helper()
+
+	query := "DELETE FROM users WHERE first_name != 'Internal';"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.db.Query.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe users table before reinserting users.")
+
+	for key, user := range getTestUsers() {
+		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
+			clientID, err := connection.db.Query.createUser(ctx, user)
+			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
+			require.True(t, clientID.Valid, "failed to retrieve client id from response")
+		})
+	}
 }

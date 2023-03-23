@@ -114,8 +114,8 @@ pool:
 	}
 }
 
-// GetTestUsers will generate a number of dummy users for testing.
-func GetTestUsers() map[string]createUserParams {
+// getTestUsers will generate a number of dummy users for testing.
+func getTestUsers() map[string]createUserParams {
 	users := make(map[string]createUserParams)
 	username := "username%d"
 	password := "user-password-%d"
