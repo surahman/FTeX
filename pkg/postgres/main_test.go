@@ -113,6 +113,7 @@ func tearDown() (err error) {
 func insertTestUsers(t *testing.T) {
 	t.Helper()
 
+	// Reset the users table.
 	query := "DELETE FROM users WHERE first_name != 'Internal';"
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
 
@@ -123,6 +124,7 @@ func insertTestUsers(t *testing.T) {
 
 	require.NoError(t, err, "failed to wipe users table before reinserting users.")
 
+	// Insert new users.
 	for key, testCase := range getTestUsers() {
 		user := testCase
 
@@ -130,6 +132,42 @@ func insertTestUsers(t *testing.T) {
 			clientID, err := connection.Query.createUser(ctx, &user)
 			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 			require.True(t, clientID.Valid, "failed to retrieve client id from response")
+		})
+	}
+}
+
+// insertTestFiatAccounts will reset the fiat accounts table and create some test accounts.
+func insertTestFiatAccounts(t *testing.T) {
+	t.Helper()
+
+	// Reset the fiat accounts table.
+	query := "TRUNCATE TABLE fiat_accounts CASCADE;"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.Query.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
+
+	// Retrieve client ids from users table.
+	clientID1, err := connection.Query.getClientIdUser(ctx, "username1")
+	require.NoError(t, err, "failed to retrieve username1 client id.")
+	clientID2, err := connection.Query.getClientIdUser(ctx, "username2")
+	require.NoError(t, err, "failed to retrieve username2 client id.")
+
+	// Insert new fiat accounts.
+	for key, testCase := range getTestFiatAccounts(clientID1, clientID2) {
+		parameters := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			for _, param := range parameters {
+				accInfo := param
+				rowCount, err := connection.Query.createFiatAccount(ctx, &accInfo)
+				require.NoError(t, err, "errored whilst trying to insert fiat account.")
+				require.NotEqual(t, 0, rowCount, "no rows were added.")
+			}
 		})
 	}
 }

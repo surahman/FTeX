@@ -1,6 +1,10 @@
 package postgres
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jackc/pgx/v5/pgtype"
+)
 
 // configTestData will return a map of test data containing valid and invalid logger configs.
 func configTestData() map[string]string {
@@ -114,7 +118,7 @@ pool:
 	}
 }
 
-// getTestUsers will generate a number of dummy users for testing.
+// getTestUsers will generate a number of test users for testing.
 func getTestUsers() map[string]createUserParams {
 	users := make(map[string]createUserParams)
 	username := "username%d"
@@ -135,4 +139,34 @@ func getTestUsers() map[string]createUserParams {
 	}
 
 	return users
+}
+
+// getTestFiatAccounts generate a number of test fiat accounts.
+func getTestFiatAccounts(username1, username2 pgtype.UUID) map[string][]createFiatAccountParams {
+	return map[string][]createFiatAccountParams{
+		"username1": {
+			{
+				ClientID: username1,
+				Currency: CurrencyAED,
+			}, {
+				ClientID: username1,
+				Currency: CurrencyUSD,
+			}, {
+				ClientID: username1,
+				Currency: CurrencyCAD,
+			},
+		},
+		"username2": {
+			{
+				ClientID: username2,
+				Currency: CurrencyAED,
+			}, {
+				ClientID: username2,
+				Currency: CurrencyUSD,
+			}, {
+				ClientID: username2,
+				Currency: CurrencyCAD,
+			},
+		},
+	}
 }
