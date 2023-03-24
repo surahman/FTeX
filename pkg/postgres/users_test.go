@@ -19,13 +19,15 @@ func TestCreateUser(t *testing.T) {
 	insertTestUsers(t)
 
 	// Username and account id collisions.
-	for key, user := range getTestUsers() {
+	for key, testCase := range getTestUsers() {
+		user := testCase
+
 		t.Run(fmt.Sprintf("Test case %s", key), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
 
 			defer cancel()
 
-			clientID, err := connection.Query.createUser(ctx, user)
+			clientID, err := connection.Query.createUser(ctx, &user)
 			require.Error(t, err, "user account creation collision did not result in an error.")
 			require.False(t, clientID.Valid, "incorrectly retrieved client id from response")
 		})
@@ -44,7 +46,7 @@ func TestCreateUser(t *testing.T) {
 
 	defer cancel()
 
-	clientID, err := connection.Query.createUser(ctx, userPass)
+	clientID, err := connection.Query.createUser(ctx, &userPass)
 	require.NoError(t, err, "user account with non-duplicate key fields should be created.")
 	require.True(t, clientID.Valid, "failed to retrieve client id from response")
 }

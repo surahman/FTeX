@@ -27,7 +27,7 @@ type createUserParams struct {
 }
 
 // createUser will create a new user record.
-func (q *Queries) createUser(ctx context.Context, arg createUserParams) (pgtype.UUID, error) {
+func (q *Queries) createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Username,
 		arg.Password,

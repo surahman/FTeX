@@ -22,7 +22,7 @@ type createFiatAccountParams struct {
 }
 
 // createFiatAccount inserts a fiat account record.
-func (q *Queries) createFiatAccount(ctx context.Context, arg createFiatAccountParams) error {
+func (q *Queries) createFiatAccount(ctx context.Context, arg *createFiatAccountParams) error {
 	_, err := q.db.Exec(ctx, createFiatAccount, arg.ClientID, arg.Currency)
 	return err
 }
@@ -69,7 +69,7 @@ type generalLedgerExternalFiatAccountParams struct {
 }
 
 // generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
-func (q *Queries) generalLedgerExternalFiatAccount(ctx context.Context, arg generalLedgerExternalFiatAccountParams) (pgtype.UUID, error) {
+func (q *Queries) generalLedgerExternalFiatAccount(ctx context.Context, arg *generalLedgerExternalFiatAccountParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, generalLedgerExternalFiatAccount, arg.ClientID, arg.Currency, arg.Ammount)
 	var tx_id pgtype.UUID
 	err := row.Scan(&tx_id)
@@ -118,7 +118,7 @@ type generalLedgerInternalFiatAccountParams struct {
 }
 
 // generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
-func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg generalLedgerInternalFiatAccountParams) (pgtype.UUID, error) {
+func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg *generalLedgerInternalFiatAccountParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, generalLedgerInternalFiatAccount,
 		arg.Currency,
 		arg.DestinationAccount,
@@ -145,7 +145,7 @@ type rowLockFiatAccountParams struct {
 }
 
 // rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
-func (q *Queries) rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) (pgtype.Numeric, error) {
+func (q *Queries) rowLockFiatAccount(ctx context.Context, arg *rowLockFiatAccountParams) (pgtype.Numeric, error) {
 	row := q.db.QueryRow(ctx, rowLockFiatAccount, arg.ClientID, arg.Currency)
 	var balance pgtype.Numeric
 	err := row.Scan(&balance)
@@ -172,7 +172,7 @@ type updateBalanceFiatAccountRow struct {
 }
 
 // updateBalanceFiatAccount will add an amount to a fiat accounts balance.
-func (q *Queries) updateBalanceFiatAccount(ctx context.Context, arg updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error) {
+func (q *Queries) updateBalanceFiatAccount(ctx context.Context, arg *updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error) {
 	row := q.db.QueryRow(ctx, updateBalanceFiatAccount, arg.ClientID, arg.Currency, arg.LastTx)
 	var i updateBalanceFiatAccountRow
 	err := row.Scan(&i.Balance, &i.LastTx, &i.LastTxTs)

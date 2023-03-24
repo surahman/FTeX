@@ -13,15 +13,15 @@ import (
 
 type Querier interface {
 	// createFiatAccount inserts a fiat account record.
-	createFiatAccount(ctx context.Context, arg createFiatAccountParams) error
+	createFiatAccount(ctx context.Context, arg *createFiatAccountParams) error
 	// createUser will create a new user record.
-	createUser(ctx context.Context, arg createUserParams) (pgtype.UUID, error)
+	createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error)
 	// deleteUser will soft delete a users account.
 	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
 	// generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
-	generalLedgerExternalFiatAccount(ctx context.Context, arg generalLedgerExternalFiatAccountParams) (pgtype.UUID, error)
+	generalLedgerExternalFiatAccount(ctx context.Context, arg *generalLedgerExternalFiatAccountParams) (pgtype.UUID, error)
 	// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
-	generalLedgerInternalFiatAccount(ctx context.Context, arg generalLedgerInternalFiatAccountParams) (pgtype.UUID, error)
+	generalLedgerInternalFiatAccount(ctx context.Context, arg *generalLedgerInternalFiatAccountParams) (pgtype.UUID, error)
 	// getClientIdUser will retrieve a users client id.
 	getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
 	// getCredentialsUser will retrieve a users client id and password.
@@ -29,9 +29,9 @@ type Querier interface {
 	// getInfoUser will retrieve a single users account information.
 	getInfoUser(ctx context.Context, username string) (getInfoUserRow, error)
 	// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
-	rowLockFiatAccount(ctx context.Context, arg rowLockFiatAccountParams) (pgtype.Numeric, error)
+	rowLockFiatAccount(ctx context.Context, arg *rowLockFiatAccountParams) (pgtype.Numeric, error)
 	// updateBalanceFiatAccount will add an amount to a fiat accounts balance.
-	updateBalanceFiatAccount(ctx context.Context, arg updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error)
+	updateBalanceFiatAccount(ctx context.Context, arg *updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error)
 }
 
 var _ Querier = (*Queries)(nil)
