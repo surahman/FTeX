@@ -1,4 +1,4 @@
--- name: createFiatAccount :exec
+-- name: createFiatAccount :execrows
 -- createFiatAccount inserts a fiat account record.
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2);

@@ -13,7 +13,7 @@ import (
 
 type Querier interface {
 	// createFiatAccount inserts a fiat account record.
-	createFiatAccount(ctx context.Context, arg *createFiatAccountParams) error
+	createFiatAccount(ctx context.Context, arg *createFiatAccountParams) (int64, error)
 	// createUser will create a new user record.
 	createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error)
 	// deleteUser will soft delete a users account.

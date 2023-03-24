@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createFiatAccount = `-- name: createFiatAccount :exec
+const createFiatAccount = `-- name: createFiatAccount :execrows
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2)
 `
@@ -22,9 +22,12 @@ type createFiatAccountParams struct {
 }
 
 // createFiatAccount inserts a fiat account record.
-func (q *Queries) createFiatAccount(ctx context.Context, arg *createFiatAccountParams) error {
-	_, err := q.db.Exec(ctx, createFiatAccount, arg.ClientID, arg.Currency)
-	return err
+func (q *Queries) createFiatAccount(ctx context.Context, arg *createFiatAccountParams) (int64, error) {
+	result, err := q.db.Exec(ctx, createFiatAccount, arg.ClientID, arg.Currency)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const generalLedgerExternalFiatAccount = `-- name: generalLedgerExternalFiatAccount :one
