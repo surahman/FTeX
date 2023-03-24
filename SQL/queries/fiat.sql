@@ -14,7 +14,7 @@ FOR NO KEY UPDATE;
 -- name: updateBalanceFiatAccount :one
 -- updateBalanceFiatAccount will add an amount to a fiat accounts balance.
 UPDATE fiat_accounts
-SET balance=balance + $3, last_tx=$3, last_tx_ts=now()
+SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts;
 
@@ -51,7 +51,7 @@ SELECT
         FROM deposit),
     (   SELECT tx_id
         FROM deposit)
-RETURNING tx_id;
+RETURNING tx_id, transacted_at;
 
 -- name: generalLedgerInternalFiatAccount :one
 -- generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
@@ -84,4 +84,39 @@ SELECT
         FROM deposit),
     (   SELECT tx_id
         FROM deposit)
-RETURNING tx_id;
+RETURNING tx_id, transacted_at;
+
+-- name: generalLedgerTxFiatAccount :many
+-- generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
+SELECT *
+FROM fiat_general_ledger
+WHERE tx_id = $1;
+
+-- name: generalLedgerAccountTxFiatAccount :many
+-- generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
+SELECT *
+FROM fiat_general_ledger
+WHERE client_id = $1 AND currency = $2;
+
+-- name: generalLedgerAccountTxDatesFiatAccount :many
+-- generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
+-- in a date range.
+SELECT *
+FROM fiat_general_ledger
+WHERE client_id = $1
+      AND currency = $2
+      AND transacted_at
+          BETWEEN sqlc.arg(start_time)::timestamptz
+              AND sqlc.arg(end_time)::timestamptz;
+
+-- name: getFiatAccount :one
+-- getFiatAccount will retrieve a specific user's account for a given currency.
+SELECT *
+FROM fiat_accounts
+WHERE client_id=$1 AND currency=$2;
+
+-- name: getAllFiatAccounts :many
+-- getAllFiatAccounts will retrieve all accounts associated with a specific user.
+SELECT *
+FROM fiat_accounts
+WHERE client_id=$1;
