@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -137,7 +138,7 @@ func insertTestUsers(t *testing.T) {
 }
 
 // insertTestFiatAccounts will reset the fiat accounts table and create some test accounts.
-func insertTestFiatAccounts(t *testing.T) {
+func insertTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 	t.Helper()
 
 	// Reset the fiat accounts table.
@@ -170,4 +171,6 @@ func insertTestFiatAccounts(t *testing.T) {
 			}
 		})
 	}
+
+	return clientID1, clientID2
 }
