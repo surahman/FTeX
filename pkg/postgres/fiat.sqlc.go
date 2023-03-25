@@ -131,7 +131,7 @@ WITH deposit AS (
             FROM users
             WHERE username = 'deposit-fiat'),
         $2,
-        -1 * $3,
+        -1 * $3::numeric(18, 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -145,7 +145,7 @@ INSERT INTO  fiat_general_ledger (
 SELECT
     $1,
     $2,
-    $3,
+    $3::numeric(18, 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
@@ -156,7 +156,7 @@ RETURNING tx_id, transacted_at
 type generalLedgerExternalFiatAccountParams struct {
 	ClientID pgtype.UUID    `json:"clientID"`
 	Currency Currency       `json:"currency"`
-	Ammount  pgtype.Numeric `json:"ammount"`
+	Amount   pgtype.Numeric `json:"amount"`
 }
 
 type generalLedgerExternalFiatAccountRow struct {
@@ -166,7 +166,7 @@ type generalLedgerExternalFiatAccountRow struct {
 
 // generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
 func (q *Queries) generalLedgerExternalFiatAccount(ctx context.Context, arg *generalLedgerExternalFiatAccountParams) (generalLedgerExternalFiatAccountRow, error) {
-	row := q.db.QueryRow(ctx, generalLedgerExternalFiatAccount, arg.ClientID, arg.Currency, arg.Ammount)
+	row := q.db.QueryRow(ctx, generalLedgerExternalFiatAccount, arg.ClientID, arg.Currency, arg.Amount)
 	var i generalLedgerExternalFiatAccountRow
 	err := row.Scan(&i.TxID, &i.TransactedAt)
 	return i, err
@@ -182,7 +182,7 @@ WITH deposit AS (
         tx_id)
     SELECT
         $4::uuid,
-        $5::numeric,
+        $5::numeric(18, 2),
         $1,
         now(),
         gen_random_uuid()
@@ -197,7 +197,7 @@ INSERT INTO  fiat_general_ledger (
 SELECT
     $2::uuid,
     $1,
-    $3::numeric,
+    $3::numeric(18, 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id

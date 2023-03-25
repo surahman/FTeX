@@ -137,8 +137,8 @@ func insertTestUsers(t *testing.T) {
 	}
 }
 
-// insertTestFiatAccounts will reset the fiat accounts table and create some test accounts.
-func insertTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
+// resetTestFiatAccounts will reset the fiat accounts table and create some test accounts.
+func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 	t.Helper()
 
 	// Reset the fiat accounts table.
@@ -173,4 +173,36 @@ func insertTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 	}
 
 	return clientID1, clientID2
+}
+
+// resetTestFiatGeneralLedger will reset the fiat general ledger with base internal and external entries.
+func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) {
+	t.Helper()
+
+	// Reset the fiat general ledger table.
+	query := "TRUNCATE TABLE fiat_general_ledger CASCADE;"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.Query.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe fiat general ledger table before reinserting entries.")
+
+	// Get general ledger entry test cases.
+	testCases, err := getTestFiatGeneralLedger(clientID1, clientID2)
+	require.NoError(t, err, "failed to generate test cases.")
+
+	// Insert new fiat accounts.
+	for key, testCase := range testCases {
+		parameters := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			result, err := connection.Query.generalLedgerExternalFiatAccount(ctx, &parameters)
+			require.NoError(t, err, "failed to insert external fiat account entry.")
+			require.True(t, result.TxID.Valid, "returned transaction id is invalid.")
+			require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
+		})
+	}
 }

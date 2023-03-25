@@ -32,7 +32,7 @@ WITH deposit AS (
             FROM users
             WHERE username = 'deposit-fiat'),
         $2,
-        -1 * $3,
+        -1 * sqlc.arg(amount)::numeric(18, 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -46,7 +46,7 @@ INSERT INTO  fiat_general_ledger (
 SELECT
     $1,
     $2,
-    $3,
+    sqlc.arg(amount)::numeric(18, 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
@@ -64,7 +64,7 @@ WITH deposit AS (
         tx_id)
     SELECT
         sqlc.arg(source_account)::uuid,
-        sqlc.arg(debit_amount)::numeric,
+        sqlc.arg(debit_amount)::numeric(18, 2),
         $1,
         now(),
         gen_random_uuid()
@@ -79,7 +79,7 @@ INSERT INTO  fiat_general_ledger (
 SELECT
     sqlc.arg(destination_account)::uuid,
     $1,
-    sqlc.arg(credit_amount)::numeric,
+    sqlc.arg(credit_amount)::numeric(18, 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id

@@ -141,32 +141,86 @@ func getTestUsers() map[string]createUserParams {
 	return users
 }
 
-// getTestFiatAccounts generate a number of test fiat accounts.
-func getTestFiatAccounts(username1, username2 pgtype.UUID) map[string][]createFiatAccountParams {
+// getTestFiatAccounts generates a number of test fiat accounts.
+func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]createFiatAccountParams {
 	return map[string][]createFiatAccountParams{
-		"username1": {
+		"clientID1": {
 			{
-				ClientID: username1,
+				ClientID: clientID1,
 				Currency: CurrencyAED,
 			}, {
-				ClientID: username1,
+				ClientID: clientID1,
 				Currency: CurrencyUSD,
 			}, {
-				ClientID: username1,
+				ClientID: clientID1,
 				Currency: CurrencyCAD,
 			},
 		},
-		"username2": {
+		"clientID2": {
 			{
-				ClientID: username2,
+				ClientID: clientID2,
 				Currency: CurrencyAED,
 			}, {
-				ClientID: username2,
+				ClientID: clientID2,
 				Currency: CurrencyUSD,
 			}, {
-				ClientID: username2,
+				ClientID: clientID2,
 				Currency: CurrencyCAD,
 			},
 		},
 	}
+}
+
+// getTestFiatGeneralLedger generates a number of test general ledger entry parameters.
+func getTestFiatGeneralLedger(clientID1, clientID2 pgtype.UUID) (
+	map[string]generalLedgerExternalFiatAccountParams, error) {
+	// Create balance amounts.
+	amount1 := pgtype.Numeric{}
+	if err := amount1.Scan("1024.55"); err != nil {
+		return nil, fmt.Errorf("failed to marshal 1024.55 to pgtype %w", err)
+	}
+
+	amount2 := pgtype.Numeric{}
+	if err := amount2.Scan("4096.89"); err != nil {
+		return nil, fmt.Errorf("failed to marshal 4096.89 to pgtype %w", err)
+	}
+
+	amount3 := pgtype.Numeric{}
+	if err := amount3.Scan("256.44"); err != nil {
+		return nil, fmt.Errorf("failed to marshal 256.44 to pgtype %w", err)
+	}
+
+	return map[string]generalLedgerExternalFiatAccountParams{
+			"Client ID 1 - USD": {
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   amount1,
+			},
+			"Client ID 1 - AED": {
+				ClientID: clientID1,
+				Currency: CurrencyAED,
+				Amount:   amount2,
+			},
+			"Client ID 1 - CAD": {
+				ClientID: clientID1,
+				Currency: CurrencyCAD,
+				Amount:   amount3,
+			},
+			"Client ID 2 - USD": {
+				ClientID: clientID2,
+				Currency: CurrencyUSD,
+				Amount:   amount2,
+			},
+			"Client ID 2 - AED": {
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amount3,
+			},
+			"Client ID 2 - CAD": {
+				ClientID: clientID2,
+				Currency: CurrencyCAD,
+				Amount:   amount1,
+			},
+		},
+		nil
 }
