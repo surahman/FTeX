@@ -40,6 +40,100 @@ func TestFiat_CreateFiatAccount(t *testing.T) {
 	}
 }
 
+func TestFiat_RowLockFiatAccount(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Get general ledger entry test cases.
+	testCases := []struct {
+		name         string
+		parameter    rowLockFiatAccountParams
+		errExpected  require.ErrorAssertionFunc
+		boolExpected require.BoolAssertionFunc
+	}{
+		{
+			name: "Client1 - USD",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+			},
+			errExpected:  require.NoError,
+			boolExpected: require.True,
+		}, {
+			name: "Client1 - AED",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID1,
+				Currency: CurrencyAED,
+			},
+			errExpected:  require.NoError,
+			boolExpected: require.True,
+		}, {
+			name: "Client1 - CAD",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID1,
+				Currency: CurrencyCAD,
+			},
+			errExpected:  require.NoError,
+			boolExpected: require.True,
+		}, {
+			name: "Client2 - USD",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID2,
+				Currency: CurrencyUSD,
+			},
+			errExpected:  require.NoError,
+			boolExpected: require.True,
+		}, {
+			name: "Client2 - AED",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+			},
+			errExpected:  require.NoError,
+			boolExpected: require.True,
+		}, {
+			name: "Client2 - CAD",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID2,
+				Currency: CurrencyCAD,
+			},
+			errExpected:  require.NoError,
+			boolExpected: require.True,
+		}, {
+			name: "Client1 - Not Found",
+			parameter: rowLockFiatAccountParams{
+				ClientID: clientID1,
+				Currency: CurrencyEUR,
+			},
+			errExpected:  require.Error,
+			boolExpected: require.False,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Insert new fiat accounts.
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
+			balance, err := connection.Query.rowLockFiatAccount(ctx, &test.parameter)
+			test.errExpected(t, err, "error expectation condition failed.")
+			test.boolExpected(t, balance.Valid, "invalid balance.")
+		})
+	}
+}
+
 func TestFiat_GeneralLedgerExternalFiatAccount(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
