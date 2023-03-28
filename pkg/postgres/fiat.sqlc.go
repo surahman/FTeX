@@ -182,8 +182,8 @@ WITH deposit AS (
         tx_id)
     SELECT
         $4::uuid,
-        $5::numeric(18, 2),
-        $1,
+        $5::currency,
+        $6::numeric(18, 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -195,8 +195,8 @@ INSERT INTO  fiat_general_ledger (
     transacted_at,
     tx_id)
 SELECT
-    $2::uuid,
-    $1,
+    $1::uuid,
+    $2::currency,
     $3::numeric(18, 2),
     (   SELECT transacted_at
         FROM deposit),
@@ -206,11 +206,12 @@ RETURNING tx_id, transacted_at
 `
 
 type generalLedgerInternalFiatAccountParams struct {
-	Currency           Currency       `json:"currency"`
-	DestinationAccount pgtype.UUID    `json:"destinationAccount"`
-	CreditAmount       pgtype.Numeric `json:"creditAmount"`
-	SourceAccount      pgtype.UUID    `json:"sourceAccount"`
-	DebitAmount        pgtype.Numeric `json:"debitAmount"`
+	DestinationAccount  pgtype.UUID    `json:"destinationAccount"`
+	DestinationCurrency Currency       `json:"destinationCurrency"`
+	CreditAmount        pgtype.Numeric `json:"creditAmount"`
+	SourceAccount       pgtype.UUID    `json:"sourceAccount"`
+	SourceCurrency      Currency       `json:"sourceCurrency"`
+	DebitAmount         pgtype.Numeric `json:"debitAmount"`
 }
 
 type generalLedgerInternalFiatAccountRow struct {
@@ -221,10 +222,11 @@ type generalLedgerInternalFiatAccountRow struct {
 // generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
 func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg *generalLedgerInternalFiatAccountParams) (generalLedgerInternalFiatAccountRow, error) {
 	row := q.db.QueryRow(ctx, generalLedgerInternalFiatAccount,
-		arg.Currency,
 		arg.DestinationAccount,
+		arg.DestinationCurrency,
 		arg.CreditAmount,
 		arg.SourceAccount,
+		arg.SourceCurrency,
 		arg.DebitAmount,
 	)
 	var i generalLedgerInternalFiatAccountRow

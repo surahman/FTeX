@@ -275,8 +275,79 @@ func TestFiat_GeneralLedgerExternalFiatAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	// Reset the test
+	// Reset the External Fiat General Ledger.
 	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+}
+
+func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the External Fiat General Ledger.
+	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+
+	// Insert internal fiat general ledger transactions.
+	_, _ = insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
+}
+
+func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the External Fiat General Ledger.
+	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+
+	// Insert internal fiat general ledger transactions.
+	testCases, txRows := insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	for key, row := range txRows {
+		param := row
+
+		t.Run(fmt.Sprintf("Retrieving %s", key), func(t *testing.T) {
+			tx := testCases[key]
+
+			result, err := connection.Query.generalLedgerTxFiatAccount(ctx, param.TxID)
+			require.NoError(t, err, "error expectation condition failed.")
+			require.Equal(t, 2, len(result), "incorrect row count returned.")
+
+			var (
+				srcRecord = result[0]
+				dstRecord = result[1]
+			)
+
+			if srcRecord.Currency != tx.SourceCurrency {
+				srcRecord = result[1]
+				dstRecord = result[0]
+			}
+
+			require.Equal(t, srcRecord.Currency, tx.SourceCurrency, "source currency mismatch.")
+			require.Equal(t, dstRecord.Currency, tx.DestinationCurrency, "destination currency mismatch.")
+			require.Equal(t, srcRecord.ClientID, tx.SourceAccount, "source client id mismatch.")
+			require.Equal(t, dstRecord.ClientID, tx.DestinationAccount, "destination client id mismatch.")
+			require.Equal(t, srcRecord.Ammount, tx.DebitAmount, "source amount mismatch.")
+			require.Equal(t, dstRecord.Ammount, tx.CreditAmount, "destination amount mismatch.")
+		})
+	}
 }
 
 func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {

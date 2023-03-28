@@ -206,3 +206,34 @@ func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) 
 		})
 	}
 }
+
+// insertTestInternalFiatGeneralLedger will not reset the general ledger and will insert some test internal transfers.
+func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) (
+	map[string]generalLedgerInternalFiatAccountParams, map[string]generalLedgerInternalFiatAccountRow) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	// Get general ledger entry test cases.
+	testCases, err := getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2)
+	require.NoError(t, err, "failed to generate test cases.")
+
+	// Mapping for transactions to parameters.
+	transactions := make(map[string]generalLedgerInternalFiatAccountRow, len(testCases))
+
+	// Insert new fiat accounts.
+	for key, testCase := range testCases {
+		parameters := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			row, err := connection.Query.generalLedgerInternalFiatAccount(ctx, &parameters)
+			require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
+			require.NotEqual(t, 0, row, "no rows were added.")
+			transactions[key] = row
+		})
+	}
+
+	return testCases, transactions
+}

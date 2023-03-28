@@ -171,6 +171,68 @@ func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]createFi
 	}
 }
 
+// getTestFiatAccounts generates a number of test fiat accounts.
+func getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
+	map[string]generalLedgerInternalFiatAccountParams, error) {
+	amount1Credit := pgtype.Numeric{}
+	if err := amount1Credit.Scan("123.45"); err != nil {
+		return nil, fmt.Errorf("failed to convert 123.45: %w", err)
+	}
+
+	amount1Debit := pgtype.Numeric{}
+	if err := amount1Debit.Scan("-123.45"); err != nil {
+		return nil, fmt.Errorf("failed to convert -123.45: %w", err)
+	}
+
+	amount2Credit := pgtype.Numeric{}
+	if err := amount2Credit.Scan("4567.89"); err != nil {
+		return nil, fmt.Errorf("failed to convert 4567.89 %w", err)
+	}
+
+	amount2Debit := pgtype.Numeric{}
+	if err := amount2Debit.Scan("-4567.89"); err != nil {
+		return nil, fmt.Errorf("failed to convert -4567.89 %w", err)
+	}
+
+	amount3Credit := pgtype.Numeric{}
+	if err := amount3Credit.Scan("9192.24"); err != nil {
+		return nil, fmt.Errorf("failed to convert 9192.24 %w", err)
+	}
+
+	amount3Debit := pgtype.Numeric{}
+	if err := amount3Debit.Scan("-9192.24"); err != nil {
+		return nil, fmt.Errorf("failed to convert -9192.24 %w", err)
+	}
+
+	return map[string]generalLedgerInternalFiatAccountParams{
+			"CAD-AED": {
+				SourceAccount:       clientID1,
+				SourceCurrency:      CurrencyCAD,
+				DestinationAccount:  clientID2,
+				DestinationCurrency: CurrencyAED,
+				CreditAmount:        amount1Credit,
+				DebitAmount:         amount1Debit,
+			},
+			"CAD-USD": {
+				SourceAccount:       clientID1,
+				SourceCurrency:      CurrencyCAD,
+				DestinationAccount:  clientID2,
+				DestinationCurrency: CurrencyUSD,
+				CreditAmount:        amount2Credit,
+				DebitAmount:         amount2Debit,
+			},
+			"USD-AED": {
+				SourceAccount:       clientID1,
+				SourceCurrency:      CurrencyUSD,
+				DestinationAccount:  clientID2,
+				DestinationCurrency: CurrencyAED,
+				CreditAmount:        amount3Credit,
+				DebitAmount:         amount3Debit,
+			},
+		},
+		nil
+}
+
 // getTestFiatGeneralLedger generates a number of test general ledger entry parameters.
 func getTestFiatGeneralLedger(clientID1, clientID2 pgtype.UUID) (
 	map[string]generalLedgerExternalFiatAccountParams, error) {

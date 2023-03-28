@@ -64,8 +64,8 @@ WITH deposit AS (
         tx_id)
     SELECT
         sqlc.arg(source_account)::uuid,
+        sqlc.arg(source_currency)::currency,
         sqlc.arg(debit_amount)::numeric(18, 2),
-        $1,
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -78,7 +78,7 @@ INSERT INTO  fiat_general_ledger (
     tx_id)
 SELECT
     sqlc.arg(destination_account)::uuid,
-    $1,
+    sqlc.arg(destination_currency)::currency,
     sqlc.arg(credit_amount)::numeric(18, 2),
     (   SELECT transacted_at
         FROM deposit),
