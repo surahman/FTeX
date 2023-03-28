@@ -445,7 +445,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	// Reset the test
 	resetTestFiatGeneralLedger(t, clientID1, clientID2)
 
-	//
+	// Test grid.
 	testCases := []struct {
 		name            string
 		parameter       getFiatAccountParams
@@ -509,6 +509,51 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 
 			require.Equal(t, testCase.parameter.Currency, results.Currency, "currency mismatch.")
 			require.Equal(t, testCase.parameter.ClientID, results.ClientID, "clientId mismatch.")
+		})
+	}
+}
+
+func TestFiat_GetAllFiatAccounts(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, _ := resetTestFiatAccounts(t)
+
+	// Testing grid.
+	testCases := []struct {
+		name           string
+		clientID       pgtype.UUID
+		expectedRowCnt int
+	}{
+		{
+			name:           "ClientID 1",
+			clientID:       clientID1,
+			expectedRowCnt: 3,
+		}, {
+			name: "Nonexistent",
+			clientID: pgtype.UUID{
+				Bytes: [16]byte{},
+				Valid: false,
+			},
+			expectedRowCnt: 0,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
+			rows, err := connection.Query.getAllFiatAccounts(ctx, testCase.clientID)
+			require.NoError(t, err, "error expectation failed.")
+			require.Equal(t, testCase.expectedRowCnt, len(rows), "expected row count mismatch.")
 		})
 	}
 }
