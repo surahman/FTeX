@@ -536,11 +536,8 @@ func TestFiat_GetAllFiatAccounts(t *testing.T) {
 			clientID:       clientID1,
 			expectedRowCnt: 3,
 		}, {
-			name: "Nonexistent",
-			clientID: pgtype.UUID{
-				Bytes: [16]byte{},
-				Valid: false,
-			},
+			name:           "Nonexistent",
+			clientID:       pgtype.UUID{},
 			expectedRowCnt: 0,
 		},
 	}
@@ -554,6 +551,118 @@ func TestFiat_GetAllFiatAccounts(t *testing.T) {
 			rows, err := connection.Query.getAllFiatAccounts(ctx, testCase.clientID)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedRowCnt, len(rows), "expected row count mismatch.")
+		})
+	}
+}
+
+func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the test
+	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+
+	// Context setup for no hold-and-wait.
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	// Insert some more fiat general ledger entries for good measure.
+	{
+		parameters, err := getTestFiatGeneralLedger(clientID1, clientID2)
+		require.NoError(t, err, "failed to get parameters to insert additional fiat general ledger entries.")
+		for _, item := range parameters {
+			parameter := item
+			t.Run(fmt.Sprintf("Inserting %v - %s", parameter.ClientID, parameter.Currency), func(t *testing.T) {
+				for idx := 0; idx < 3; idx++ {
+					_, err := connection.Query.generalLedgerExternalFiatAccount(ctx, &parameter)
+					require.NoError(t, err, "error expectation failed.")
+				}
+			})
+		}
+	}
+
+	// Setup time intervals.
+	var (
+		timePoint    = time.Now().UTC()
+		minuteAhead  = pgtype.Timestamptz{}
+		minuteBehind = pgtype.Timestamptz{}
+		hourAhead    = pgtype.Timestamptz{}
+		hourBehind   = pgtype.Timestamptz{}
+	)
+
+	require.NoError(t, minuteAhead.Scan(timePoint.Add(time.Minute)))
+	require.NoError(t, minuteBehind.Scan(timePoint.Add(-time.Minute)))
+	require.NoError(t, hourAhead.Scan(timePoint.Add(time.Hour)))
+	require.NoError(t, hourBehind.Scan(timePoint.Add(-time.Hour)))
+
+	// Test grid.
+	testCases := []struct {
+		name         string
+		expectedCont int
+		parameters   generalLedgerAccountTxDatesFiatAccountParams
+	}{
+		{
+			name:         "ClientID1 USD: Before-After",
+			expectedCont: 4,
+			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+				ClientID:  clientID1,
+				Currency:  "USD",
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 USD: Before",
+			expectedCont: 0,
+			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+				ClientID:  clientID1,
+				Currency:  "USD",
+				StartTime: hourBehind,
+				EndTime:   minuteBehind,
+			},
+		}, {
+			name:         "ClientID1 USD: After",
+			expectedCont: 0,
+			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+				ClientID:  clientID1,
+				Currency:  "USD",
+				StartTime: minuteAhead,
+				EndTime:   hourAhead,
+			},
+		}, {
+			name:         "ClientID2 - AED: Before-After",
+			expectedCont: 4,
+			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+				ClientID:  clientID2,
+				Currency:  "AED",
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID2 - PKR: Before-After",
+			expectedCont: 0,
+			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+				ClientID:  clientID2,
+				Currency:  "PKR",
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
+			rows, err := connection.Query.generalLedgerAccountTxDatesFiatAccount(ctx, &testCase.parameters)
+			require.NoError(t, err, "error expectation failed.")
+			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})
 	}
 }
