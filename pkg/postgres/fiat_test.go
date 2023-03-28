@@ -429,3 +429,86 @@ func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
 		})
 	}
 }
+
+func TestFiat_GetFiatAccount(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the test
+	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+
+	//
+	testCases := []struct {
+		name            string
+		parameter       getFiatAccountParams
+		errExpectation  require.ErrorAssertionFunc
+		boolExpectation require.BoolAssertionFunc
+	}{
+		{
+			name: "ClientID 1 - Not found",
+			parameter: getFiatAccountParams{
+				ClientID: clientID1,
+				Currency: "PKR",
+			},
+			errExpectation:  require.Error,
+			boolExpectation: require.False,
+		}, {
+			name: "ClientID 1 - USD",
+			parameter: getFiatAccountParams{
+				ClientID: clientID1,
+				Currency: "USD",
+			},
+			errExpectation:  require.NoError,
+			boolExpectation: require.True,
+		}, {
+			name: "ClientID 1 - CAD",
+			parameter: getFiatAccountParams{
+				ClientID: clientID1,
+				Currency: "CAD",
+			},
+			errExpectation:  require.NoError,
+			boolExpectation: require.True,
+		}, {
+			name: "ClientID 1 - AED",
+			parameter: getFiatAccountParams{
+				ClientID: clientID1,
+				Currency: "AED",
+			},
+			errExpectation:  require.NoError,
+			boolExpectation: require.True,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Insert new fiat accounts.
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
+			results, err := connection.Query.getFiatAccount(ctx, &testCase.parameter)
+			testCase.errExpectation(t, err, "error expectation failed.")
+			testCase.boolExpectation(t, results.ClientID.Valid, "clientId validity expectation failed.")
+			testCase.boolExpectation(t, results.LastTxTs.Valid, "lastTxTs validity expectation failed.")
+			testCase.boolExpectation(t, results.Balance.Valid, "balance validity expectation failed.")
+			testCase.boolExpectation(t, results.LastTx.Valid, "lastTx validity expectation failed.")
+			testCase.boolExpectation(t, results.CreatedAt.Valid, "createdAt validity expectation failed.")
+			testCase.boolExpectation(t, results.Currency.Valid(), "currency validity expectation failed.")
+
+			if err != nil {
+				return
+			}
+
+			require.Equal(t, testCase.parameter.Currency, results.Currency, "currency mismatch.")
+			require.Equal(t, testCase.parameter.ClientID, results.ClientID, "clientId mismatch.")
+		})
+	}
+}
