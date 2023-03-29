@@ -350,7 +350,7 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 	// Reset the test
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Get general ledger entry test cases.
+	// Get journal entry test cases.
 	testCases := []struct {
 		name        string
 		parameter   fiatGetJournalTransactionForAccountParams
@@ -555,7 +555,7 @@ func TestFiat_GetAllFiatAccounts(t *testing.T) {
 	}
 }
 
-func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
+func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -575,10 +575,10 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 
 	defer cancel()
 
-	// Insert some more fiat general ledger entries for good measure.
+	// Insert some more fiat journal entries for good measure.
 	{
 		parameters, err := getTestFiatJournal(clientID1, clientID2)
-		require.NoError(t, err, "failed to get parameters to insert additional fiat general ledger entries.")
+		require.NoError(t, err, "failed to get parameters to insert additional fiat journal entries.")
 		for _, item := range parameters {
 			parameter := item
 			t.Run(fmt.Sprintf("Inserting %v - %s", parameter.ClientID, parameter.Currency), func(t *testing.T) {
@@ -608,12 +608,12 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 	testCases := []struct {
 		name         string
 		expectedCont int
-		parameters   generalLedgerAccountTxDatesFiatAccountParams
+		parameters   fiatGetJournalTransactionForAccountBetweenDatesParams
 	}{
 		{
 			name:         "ClientID1 USD: Before-After",
 			expectedCont: 4,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: minuteBehind,
@@ -622,7 +622,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: Before",
 			expectedCont: 0,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: hourBehind,
@@ -631,7 +631,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: After",
 			expectedCont: 0,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: minuteAhead,
@@ -640,7 +640,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID2 - AED: Before-After",
 			expectedCont: 4,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID2,
 				Currency:  "AED",
 				StartTime: minuteBehind,
@@ -649,7 +649,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID2 - PKR: Before-After",
 			expectedCont: 0,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID2,
 				Currency:  "PKR",
 				StartTime: minuteBehind,
@@ -660,7 +660,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.generalLedgerAccountTxDatesFiatAccount(ctx, &testCase.parameters)
+			rows, err := connection.Query.fiatGetJournalTransactionForAccountBetweenDates(ctx, &testCase.parameters)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})

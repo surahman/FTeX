@@ -24,11 +24,11 @@ type Querier interface {
 	fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error)
 	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
 	fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
+	// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+	// in a date range.
+	fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
 	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
-	// generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
-	// in a date range.
-	generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatJournal, error)
 	// getAllFiatAccounts will retrieve all accounts associated with a specific user.
 	getAllFiatAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error)
 	// getClientIdUser will retrieve a users client id.

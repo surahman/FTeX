@@ -155,6 +155,56 @@ func (q *Queries) fiatGetJournalTransactionForAccount(ctx context.Context, arg *
 	return items, nil
 }
 
+const fiatGetJournalTransactionForAccountBetweenDates = `-- name: fiatGetJournalTransactionForAccountBetweenDates :many
+SELECT currency, ammount, transacted_at, client_id, tx_id
+FROM fiat_journal
+WHERE client_id = $1
+      AND currency = $2
+      AND transacted_at
+          BETWEEN $3::timestamptz
+              AND $4::timestamptz
+`
+
+type fiatGetJournalTransactionForAccountBetweenDatesParams struct {
+	ClientID  pgtype.UUID        `json:"clientID"`
+	Currency  Currency           `json:"currency"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
+}
+
+// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+// in a date range.
+func (q *Queries) fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
+	rows, err := q.db.Query(ctx, fiatGetJournalTransactionForAccountBetweenDates,
+		arg.ClientID,
+		arg.Currency,
+		arg.StartTime,
+		arg.EndTime,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FiatJournal
+	for rows.Next() {
+		var i FiatJournal
+		if err := rows.Scan(
+			&i.Currency,
+			&i.Ammount,
+			&i.TransactedAt,
+			&i.ClientID,
+			&i.TxID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const fiatInternalTransferJournalEntry = `-- name: fiatInternalTransferJournalEntry :one
 WITH deposit AS (
     INSERT INTO fiat_journal(
@@ -215,56 +265,6 @@ func (q *Queries) fiatInternalTransferJournalEntry(ctx context.Context, arg *fia
 	var i fiatInternalTransferJournalEntryRow
 	err := row.Scan(&i.TxID, &i.TransactedAt)
 	return i, err
-}
-
-const generalLedgerAccountTxDatesFiatAccount = `-- name: generalLedgerAccountTxDatesFiatAccount :many
-SELECT currency, ammount, transacted_at, client_id, tx_id
-FROM fiat_journal
-WHERE client_id = $1
-      AND currency = $2
-      AND transacted_at
-          BETWEEN $3::timestamptz
-              AND $4::timestamptz
-`
-
-type generalLedgerAccountTxDatesFiatAccountParams struct {
-	ClientID  pgtype.UUID        `json:"clientID"`
-	Currency  Currency           `json:"currency"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
-}
-
-// generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
-// in a date range.
-func (q *Queries) generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatJournal, error) {
-	rows, err := q.db.Query(ctx, generalLedgerAccountTxDatesFiatAccount,
-		arg.ClientID,
-		arg.Currency,
-		arg.StartTime,
-		arg.EndTime,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []FiatJournal
-	for rows.Next() {
-		var i FiatJournal
-		if err := rows.Scan(
-			&i.Currency,
-			&i.Ammount,
-			&i.TransactedAt,
-			&i.ClientID,
-			&i.TxID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getAllFiatAccounts = `-- name: getAllFiatAccounts :many
