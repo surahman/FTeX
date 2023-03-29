@@ -84,6 +84,66 @@ func (q *Queries) fiatExternalTransferJournalEntry(ctx context.Context, arg *fia
 	return i, err
 }
 
+const fiatGetAccount = `-- name: fiatGetAccount :one
+SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
+FROM fiat_accounts
+WHERE client_id=$1 AND currency=$2
+`
+
+type fiatGetAccountParams struct {
+	ClientID pgtype.UUID `json:"clientID"`
+	Currency Currency    `json:"currency"`
+}
+
+// getFiatAccount will retrieve a specific user's account for a given currency.
+func (q *Queries) fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error) {
+	row := q.db.QueryRow(ctx, fiatGetAccount, arg.ClientID, arg.Currency)
+	var i FiatAccount
+	err := row.Scan(
+		&i.Currency,
+		&i.Balance,
+		&i.LastTx,
+		&i.LastTxTs,
+		&i.CreatedAt,
+		&i.ClientID,
+	)
+	return i, err
+}
+
+const fiatGetAllAccounts = `-- name: fiatGetAllAccounts :many
+SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
+FROM fiat_accounts
+WHERE client_id=$1
+`
+
+// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
+func (q *Queries) fiatGetAllAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error) {
+	rows, err := q.db.Query(ctx, fiatGetAllAccounts, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FiatAccount
+	for rows.Next() {
+		var i FiatAccount
+		if err := rows.Scan(
+			&i.Currency,
+			&i.Balance,
+			&i.LastTx,
+			&i.LastTxTs,
+			&i.CreatedAt,
+			&i.ClientID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const fiatGetJournalTransaction = `-- name: fiatGetJournalTransaction :many
 SELECT currency, ammount, transacted_at, client_id, tx_id
 FROM fiat_journal
@@ -264,66 +324,6 @@ func (q *Queries) fiatInternalTransferJournalEntry(ctx context.Context, arg *fia
 	)
 	var i fiatInternalTransferJournalEntryRow
 	err := row.Scan(&i.TxID, &i.TransactedAt)
-	return i, err
-}
-
-const getAllFiatAccounts = `-- name: getAllFiatAccounts :many
-SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
-FROM fiat_accounts
-WHERE client_id=$1
-`
-
-// getAllFiatAccounts will retrieve all accounts associated with a specific user.
-func (q *Queries) getAllFiatAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error) {
-	rows, err := q.db.Query(ctx, getAllFiatAccounts, clientID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []FiatAccount
-	for rows.Next() {
-		var i FiatAccount
-		if err := rows.Scan(
-			&i.Currency,
-			&i.Balance,
-			&i.LastTx,
-			&i.LastTxTs,
-			&i.CreatedAt,
-			&i.ClientID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getFiatAccount = `-- name: getFiatAccount :one
-SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
-FROM fiat_accounts
-WHERE client_id=$1 AND currency=$2
-`
-
-type getFiatAccountParams struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Currency Currency    `json:"currency"`
-}
-
-// getFiatAccount will retrieve a specific user's account for a given currency.
-func (q *Queries) getFiatAccount(ctx context.Context, arg *getFiatAccountParams) (FiatAccount, error) {
-	row := q.db.QueryRow(ctx, getFiatAccount, arg.ClientID, arg.Currency)
-	var i FiatAccount
-	err := row.Scan(
-		&i.Currency,
-		&i.Balance,
-		&i.LastTx,
-		&i.LastTxTs,
-		&i.CreatedAt,
-		&i.ClientID,
-	)
 	return i, err
 }
 

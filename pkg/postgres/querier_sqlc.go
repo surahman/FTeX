@@ -20,6 +20,10 @@ type Querier interface {
 	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
 	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
 	fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error)
+	// getFiatAccount will retrieve a specific user's account for a given currency.
+	fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error)
+	// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
+	fiatGetAllAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error)
 	// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 	fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error)
 	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
@@ -29,14 +33,10 @@ type Querier interface {
 	fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
 	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
-	// getAllFiatAccounts will retrieve all accounts associated with a specific user.
-	getAllFiatAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error)
 	// getClientIdUser will retrieve a users client id.
 	getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
 	// getCredentialsUser will retrieve a users client id and password.
 	getCredentialsUser(ctx context.Context, username string) (getCredentialsUserRow, error)
-	// getFiatAccount will retrieve a specific user's account for a given currency.
-	getFiatAccount(ctx context.Context, arg *getFiatAccountParams) (FiatAccount, error)
 	// getInfoUser will retrieve a single users account information.
 	getInfoUser(ctx context.Context, username string) (getInfoUserRow, error)
 	// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.

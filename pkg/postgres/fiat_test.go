@@ -238,7 +238,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 	}
 
 	// Totals check.
-	result, err := connection.Query.getFiatAccount(ctx, &getFiatAccountParams{ClientID: clientID1, Currency: CurrencyUSD})
+	result, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{ClientID: clientID1, Currency: CurrencyUSD})
 	require.NoError(t, err, "failed to retrieve updated balance.")
 	driverValue, err := result.Balance.Value()
 	require.NoError(t, err, "failed to get driver value for total.")
@@ -448,13 +448,13 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	// Test grid.
 	testCases := []struct {
 		name            string
-		parameter       getFiatAccountParams
+		parameter       fiatGetAccountParams
 		errExpectation  require.ErrorAssertionFunc
 		boolExpectation require.BoolAssertionFunc
 	}{
 		{
 			name: "ClientID 1 - Not found",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "PKR",
 			},
@@ -462,7 +462,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			boolExpectation: require.False,
 		}, {
 			name: "ClientID 1 - USD",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "USD",
 			},
@@ -470,7 +470,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			boolExpectation: require.True,
 		}, {
 			name: "ClientID 1 - CAD",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "CAD",
 			},
@@ -478,7 +478,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			boolExpectation: require.True,
 		}, {
 			name: "ClientID 1 - AED",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "AED",
 			},
@@ -494,7 +494,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	// Insert new fiat accounts.
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			results, err := connection.Query.getFiatAccount(ctx, &testCase.parameter)
+			results, err := connection.Query.fiatGetAccount(ctx, &testCase.parameter)
 			testCase.errExpectation(t, err, "error expectation failed.")
 			testCase.boolExpectation(t, results.ClientID.Valid, "clientId validity expectation failed.")
 			testCase.boolExpectation(t, results.LastTxTs.Valid, "lastTxTs validity expectation failed.")
@@ -513,7 +513,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	}
 }
 
-func TestFiat_GetAllFiatAccounts(t *testing.T) {
+func TestFiat_FiatGetAllAccounts(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -548,7 +548,7 @@ func TestFiat_GetAllFiatAccounts(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.getAllFiatAccounts(ctx, testCase.clientID)
+			rows, err := connection.Query.fiatGetAllAccounts(ctx, testCase.clientID)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedRowCnt, len(rows), "expected row count mismatch.")
 		})

@@ -109,14 +109,14 @@ WHERE client_id = $1
           BETWEEN sqlc.arg(start_time)::timestamptz
               AND sqlc.arg(end_time)::timestamptz;
 
--- name: getFiatAccount :one
+-- name: fiatGetAccount :one
 -- getFiatAccount will retrieve a specific user's account for a given currency.
 SELECT *
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2;
 
--- name: getAllFiatAccounts :many
--- getAllFiatAccounts will retrieve all accounts associated with a specific user.
+-- name: fiatGetAllAccounts :many
+-- fiatGetAllAccounts will retrieve all accounts associated with a specific user.
 SELECT *
 FROM fiat_accounts
 WHERE client_id=$1;
