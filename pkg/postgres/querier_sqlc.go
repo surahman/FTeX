@@ -20,13 +20,13 @@ type Querier interface {
 	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
 	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
 	fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error)
+	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
+	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
 	// generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
 	// in a date range.
 	generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatJournal, error)
 	// generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
 	generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatJournal, error)
-	// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
-	generalLedgerInternalFiatAccount(ctx context.Context, arg *generalLedgerInternalFiatAccountParams) (generalLedgerInternalFiatAccountRow, error)
 	// generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
 	generalLedgerTxFiatAccount(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error)
 	// getAllFiatAccounts will retrieve all accounts associated with a specific user.

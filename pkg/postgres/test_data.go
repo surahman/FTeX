@@ -171,9 +171,9 @@ func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]createFi
 	}
 }
 
-// getTestFiatAccounts generates a number of test fiat accounts.
-func getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
-	map[string]generalLedgerInternalFiatAccountParams, error) {
+// getTestJournalInternalFiatAccounts generates a number of test fiat internal transfer journal entries.
+func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
+	map[string]fiatInternalTransferJournalEntryParams, error) {
 	amount1Credit := pgtype.Numeric{}
 	if err := amount1Credit.Scan("123.45"); err != nil {
 		return nil, fmt.Errorf("failed to convert 123.45: %w", err)
@@ -204,7 +204,7 @@ func getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) 
 		return nil, fmt.Errorf("failed to convert -9192.24 %w", err)
 	}
 
-	return map[string]generalLedgerInternalFiatAccountParams{
+	return map[string]fiatInternalTransferJournalEntryParams{
 			"CAD-AED": {
 				SourceAccount:       clientID1,
 				SourceCurrency:      CurrencyCAD,

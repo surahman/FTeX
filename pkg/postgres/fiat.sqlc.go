@@ -84,6 +84,68 @@ func (q *Queries) fiatExternalTransferJournalEntry(ctx context.Context, arg *fia
 	return i, err
 }
 
+const fiatInternalTransferJournalEntry = `-- name: fiatInternalTransferJournalEntry :one
+WITH deposit AS (
+    INSERT INTO fiat_journal(
+        client_id,
+        currency,
+        ammount,
+        transacted_at,
+        tx_id)
+    SELECT
+        $4::uuid,
+        $5::currency,
+        $6::numeric(18, 2),
+        now(),
+        gen_random_uuid()
+    RETURNING tx_id, transacted_at
+)
+INSERT INTO fiat_journal (
+    client_id,
+    currency,
+    ammount,
+    transacted_at,
+    tx_id)
+SELECT
+    $1::uuid,
+    $2::currency,
+    $3::numeric(18, 2),
+    (   SELECT transacted_at
+        FROM deposit),
+    (   SELECT tx_id
+        FROM deposit)
+RETURNING tx_id, transacted_at
+`
+
+type fiatInternalTransferJournalEntryParams struct {
+	DestinationAccount  pgtype.UUID    `json:"destinationAccount"`
+	DestinationCurrency Currency       `json:"destinationCurrency"`
+	CreditAmount        pgtype.Numeric `json:"creditAmount"`
+	SourceAccount       pgtype.UUID    `json:"sourceAccount"`
+	SourceCurrency      Currency       `json:"sourceCurrency"`
+	DebitAmount         pgtype.Numeric `json:"debitAmount"`
+}
+
+type fiatInternalTransferJournalEntryRow struct {
+	TxID         pgtype.UUID        `json:"txID"`
+	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
+}
+
+// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
+func (q *Queries) fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error) {
+	row := q.db.QueryRow(ctx, fiatInternalTransferJournalEntry,
+		arg.DestinationAccount,
+		arg.DestinationCurrency,
+		arg.CreditAmount,
+		arg.SourceAccount,
+		arg.SourceCurrency,
+		arg.DebitAmount,
+	)
+	var i fiatInternalTransferJournalEntryRow
+	err := row.Scan(&i.TxID, &i.TransactedAt)
+	return i, err
+}
+
 const generalLedgerAccountTxDatesFiatAccount = `-- name: generalLedgerAccountTxDatesFiatAccount :many
 SELECT currency, ammount, transacted_at, client_id, tx_id
 FROM fiat_journal
@@ -170,68 +232,6 @@ func (q *Queries) generalLedgerAccountTxFiatAccount(ctx context.Context, arg *ge
 		return nil, err
 	}
 	return items, nil
-}
-
-const generalLedgerInternalFiatAccount = `-- name: generalLedgerInternalFiatAccount :one
-WITH deposit AS (
-    INSERT INTO fiat_journal(
-        client_id,
-        currency,
-        ammount,
-        transacted_at,
-        tx_id)
-    SELECT
-        $4::uuid,
-        $5::currency,
-        $6::numeric(18, 2),
-        now(),
-        gen_random_uuid()
-    RETURNING tx_id, transacted_at
-)
-INSERT INTO fiat_journal (
-    client_id,
-    currency,
-    ammount,
-    transacted_at,
-    tx_id)
-SELECT
-    $1::uuid,
-    $2::currency,
-    $3::numeric(18, 2),
-    (   SELECT transacted_at
-        FROM deposit),
-    (   SELECT tx_id
-        FROM deposit)
-RETURNING tx_id, transacted_at
-`
-
-type generalLedgerInternalFiatAccountParams struct {
-	DestinationAccount  pgtype.UUID    `json:"destinationAccount"`
-	DestinationCurrency Currency       `json:"destinationCurrency"`
-	CreditAmount        pgtype.Numeric `json:"creditAmount"`
-	SourceAccount       pgtype.UUID    `json:"sourceAccount"`
-	SourceCurrency      Currency       `json:"sourceCurrency"`
-	DebitAmount         pgtype.Numeric `json:"debitAmount"`
-}
-
-type generalLedgerInternalFiatAccountRow struct {
-	TxID         pgtype.UUID        `json:"txID"`
-	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
-}
-
-// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
-func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg *generalLedgerInternalFiatAccountParams) (generalLedgerInternalFiatAccountRow, error) {
-	row := q.db.QueryRow(ctx, generalLedgerInternalFiatAccount,
-		arg.DestinationAccount,
-		arg.DestinationCurrency,
-		arg.CreditAmount,
-		arg.SourceAccount,
-		arg.SourceCurrency,
-		arg.DebitAmount,
-	)
-	var i generalLedgerInternalFiatAccountRow
-	err := row.Scan(&i.TxID, &i.TransactedAt)
-	return i, err
 }
 
 const generalLedgerTxFiatAccount = `-- name: generalLedgerTxFiatAccount :many

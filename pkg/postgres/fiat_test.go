@@ -264,7 +264,7 @@ func TestFiat_FiatExternalTransferJournalEntry(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 }
 
-func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
+func TestFiat_FiatInternalTransferJournalEntry(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -276,10 +276,10 @@ func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	// Reset the External Fiat General Ledger.
+	// Reset the External Fiat Journal.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert internal fiat general ledger transactions.
+	// Insert internal fiat journal transactions.
 	_, _ = insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
 }
 
@@ -295,10 +295,10 @@ func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	// Reset the External Fiat General Ledger.
+	// Reset the external fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert internal fiat general ledger transactions.
+	// Insert internal fiat journal transactions.
 	testCases, txRows := insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)

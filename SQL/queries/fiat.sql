@@ -53,8 +53,8 @@ SELECT
         FROM deposit)
 RETURNING tx_id, transacted_at;
 
--- name: generalLedgerInternalFiatAccount :one
--- generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
+-- name: fiatInternalTransferJournalEntry :one
+-- fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 WITH deposit AS (
     INSERT INTO fiat_journal(
         client_id,
