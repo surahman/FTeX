@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFiat_CreateFiatAccount(t *testing.T) {
+func TestFiat_FiatCreateAccount(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -34,7 +34,7 @@ func TestFiat_CreateFiatAccount(t *testing.T) {
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
 			for _, param := range parameters {
 				accInfo := param
-				rowCount, err := connection.Query.createFiatAccount(ctx, &accInfo)
+				rowCount, err := connection.Query.fiatCreateAccount(ctx, &accInfo)
 				require.Error(t, err, "did not error whilst inserting duplicate fiat account.")
 				require.Equal(t, int64(0), rowCount, "rows were added.")
 			}
@@ -42,7 +42,7 @@ func TestFiat_CreateFiatAccount(t *testing.T) {
 	}
 }
 
-func TestFiat_RowLockFiatAccount(t *testing.T) {
+func TestFiat_FiatRowLockAccount(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -57,13 +57,13 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 	// Get general ledger entry test cases.
 	testCases := []struct {
 		name         string
-		parameter    rowLockFiatAccountParams
+		parameter    fiatRowLockAccountParams
 		errExpected  require.ErrorAssertionFunc
 		boolExpected require.BoolAssertionFunc
 	}{
 		{
 			name: "Client1 - USD",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 			},
@@ -71,7 +71,7 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 			boolExpected: require.True,
 		}, {
 			name: "Client1 - AED",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyAED,
 			},
@@ -79,7 +79,7 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 			boolExpected: require.True,
 		}, {
 			name: "Client1 - CAD",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyCAD,
 			},
@@ -87,7 +87,7 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 			boolExpected: require.True,
 		}, {
 			name: "Client2 - USD",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyUSD,
 			},
@@ -95,7 +95,7 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 			boolExpected: require.True,
 		}, {
 			name: "Client2 - AED",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
 			},
@@ -103,7 +103,7 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 			boolExpected: require.True,
 		}, {
 			name: "Client2 - CAD",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
 			},
@@ -111,7 +111,7 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 			boolExpected: require.True,
 		}, {
 			name: "Client1 - Not Found",
-			parameter: rowLockFiatAccountParams{
+			parameter: fiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyEUR,
 			},
@@ -129,14 +129,14 @@ func TestFiat_RowLockFiatAccount(t *testing.T) {
 		test := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
-			balance, err := connection.Query.rowLockFiatAccount(ctx, &test.parameter)
+			balance, err := connection.Query.fiatRowLockAccount(ctx, &test.parameter)
 			test.errExpected(t, err, "error expectation condition failed.")
 			test.boolExpected(t, balance.Valid, "invalid balance.")
 		})
 	}
 }
 
-func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
+func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -182,12 +182,12 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 	testCases := []struct {
 		name       string
 		expectedTS time.Time
-		parameter  updateBalanceFiatAccountParams
+		parameter  fiatUpdateAccountBalanceParams
 	}{
 		{
 			name:       "USD 5643.17",
 			expectedTS: amount1Ts,
-			parameter: updateBalanceFiatAccountParams{
+			parameter: fiatUpdateAccountBalanceParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 				LastTx:   amount1,
@@ -196,7 +196,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 		}, {
 			name:       "USD -1984.56",
 			expectedTS: amount2Ts,
-			parameter: updateBalanceFiatAccountParams{
+			parameter: fiatUpdateAccountBalanceParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 				LastTx:   amount2,
@@ -205,7 +205,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 		}, {
 			name:       "USD 583.81",
 			expectedTS: amount3Ts,
-			parameter: updateBalanceFiatAccountParams{
+			parameter: fiatUpdateAccountBalanceParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 				LastTx:   amount3,
@@ -223,7 +223,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 		test := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
-			result, err := connection.Query.updateBalanceFiatAccount(ctx, &test.parameter)
+			result, err := connection.Query.fiatUpdateAccountBalance(ctx, &test.parameter)
 			require.NoError(t, err, "error expectation condition failed.")
 
 			require.True(t, result.Balance.Valid, "invalid balance.")
@@ -238,7 +238,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 	}
 
 	// Totals check.
-	result, err := connection.Query.getFiatAccount(ctx, &getFiatAccountParams{ClientID: clientID1, Currency: CurrencyUSD})
+	result, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{ClientID: clientID1, Currency: CurrencyUSD})
 	require.NoError(t, err, "failed to retrieve updated balance.")
 	driverValue, err := result.Balance.Value()
 	require.NoError(t, err, "failed to get driver value for total.")
@@ -248,7 +248,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 	require.InDelta(t, expectedBalance, finalBalance, 0.01, "expected and actual balance mismatch.")
 }
 
-func TestFiat_GeneralLedgerExternalFiatAccount(t *testing.T) {
+func TestFiat_FiatExternalTransferJournalEntry(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -261,10 +261,10 @@ func TestFiat_GeneralLedgerExternalFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the External Fiat General Ledger.
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 }
 
-func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
+func TestFiat_FiatInternalTransferJournalEntry(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -276,14 +276,14 @@ func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	// Reset the External Fiat General Ledger.
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	// Reset the External Fiat Journal.
+	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert internal fiat general ledger transactions.
+	// Insert internal fiat journal transactions.
 	_, _ = insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
 }
 
-func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
+func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -295,10 +295,10 @@ func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	// Reset the External Fiat General Ledger.
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	// Reset the external fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert internal fiat general ledger transactions.
+	// Insert internal fiat journal transactions.
 	testCases, txRows := insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
@@ -311,7 +311,7 @@ func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
 		t.Run(fmt.Sprintf("Retrieving %s", key), func(t *testing.T) {
 			tx := testCases[key]
 
-			result, err := connection.Query.generalLedgerTxFiatAccount(ctx, param.TxID)
+			result, err := connection.Query.fiatGetJournalTransaction(ctx, param.TxID)
 			require.NoError(t, err, "error expectation condition failed.")
 			require.Equal(t, 2, len(result), "incorrect row count returned.")
 
@@ -329,13 +329,13 @@ func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
 			require.Equal(t, dstRecord.Currency, tx.DestinationCurrency, "destination currency mismatch.")
 			require.Equal(t, srcRecord.ClientID, tx.SourceAccount, "source client id mismatch.")
 			require.Equal(t, dstRecord.ClientID, tx.DestinationAccount, "destination client id mismatch.")
-			require.Equal(t, srcRecord.Ammount, tx.DebitAmount, "source amount mismatch.")
-			require.Equal(t, dstRecord.Ammount, tx.CreditAmount, "destination amount mismatch.")
+			require.Equal(t, srcRecord.Amount, tx.DebitAmount, "source amount mismatch.")
+			require.Equal(t, dstRecord.Amount, tx.CreditAmount, "destination amount mismatch.")
 		})
 	}
 }
 
-func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
+func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -348,59 +348,59 @@ func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Get general ledger entry test cases.
+	// Get journal entry test cases.
 	testCases := []struct {
 		name        string
-		parameter   generalLedgerAccountTxFiatAccountParams
+		parameter   fiatGetJournalTransactionForAccountParams
 		errExpected require.ErrorAssertionFunc
 	}{
 		{
 			name: "Client1 - USD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client1 - AED",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyAED,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client1 - CAD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyCAD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client2 - USD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyUSD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client2 - AED",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client2 - CAD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client1 - Not Found",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyEUR,
 			},
@@ -417,13 +417,13 @@ func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
 		test := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
-			results, err := connection.Query.generalLedgerAccountTxFiatAccount(ctx, &test.parameter)
+			results, err := connection.Query.fiatGetJournalTransactionForAccount(ctx, &test.parameter)
 			test.errExpected(t, err, "error expectation condition failed.")
 			for _, result := range results {
 				require.Equal(t, test.parameter.Currency, result.Currency, "currency type mismatch.")
 				require.True(t, result.ClientID.Valid, "invalid UUID.")
 				require.True(t, result.TxID.Valid, "invalid TX ID.")
-				require.True(t, result.Ammount.Valid, "invalid amount.")
+				require.True(t, result.Amount.Valid, "invalid amount.")
 				require.True(t, result.TransactedAt.Valid, "invalid TX time.")
 			}
 		})
@@ -443,18 +443,18 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Test grid.
 	testCases := []struct {
 		name            string
-		parameter       getFiatAccountParams
+		parameter       fiatGetAccountParams
 		errExpectation  require.ErrorAssertionFunc
 		boolExpectation require.BoolAssertionFunc
 	}{
 		{
 			name: "ClientID 1 - Not found",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "PKR",
 			},
@@ -462,7 +462,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			boolExpectation: require.False,
 		}, {
 			name: "ClientID 1 - USD",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "USD",
 			},
@@ -470,7 +470,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			boolExpectation: require.True,
 		}, {
 			name: "ClientID 1 - CAD",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "CAD",
 			},
@@ -478,7 +478,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			boolExpectation: require.True,
 		}, {
 			name: "ClientID 1 - AED",
-			parameter: getFiatAccountParams{
+			parameter: fiatGetAccountParams{
 				ClientID: clientID1,
 				Currency: "AED",
 			},
@@ -494,7 +494,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	// Insert new fiat accounts.
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			results, err := connection.Query.getFiatAccount(ctx, &testCase.parameter)
+			results, err := connection.Query.fiatGetAccount(ctx, &testCase.parameter)
 			testCase.errExpectation(t, err, "error expectation failed.")
 			testCase.boolExpectation(t, results.ClientID.Valid, "clientId validity expectation failed.")
 			testCase.boolExpectation(t, results.LastTxTs.Valid, "lastTxTs validity expectation failed.")
@@ -513,7 +513,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	}
 }
 
-func TestFiat_GetAllFiatAccounts(t *testing.T) {
+func TestFiat_FiatGetAllAccounts(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -548,14 +548,14 @@ func TestFiat_GetAllFiatAccounts(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.getAllFiatAccounts(ctx, testCase.clientID)
+			rows, err := connection.Query.fiatGetAllAccounts(ctx, testCase.clientID)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedRowCnt, len(rows), "expected row count mismatch.")
 		})
 	}
 }
 
-func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
+func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -568,22 +568,22 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Context setup for no hold-and-wait.
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
 
 	defer cancel()
 
-	// Insert some more fiat general ledger entries for good measure.
+	// Insert some more fiat journal entries for good measure.
 	{
-		parameters, err := getTestFiatGeneralLedger(clientID1, clientID2)
-		require.NoError(t, err, "failed to get parameters to insert additional fiat general ledger entries.")
+		parameters, err := getTestFiatJournal(clientID1, clientID2)
+		require.NoError(t, err, "failed to get parameters to insert additional fiat journal entries.")
 		for _, item := range parameters {
 			parameter := item
 			t.Run(fmt.Sprintf("Inserting %v - %s", parameter.ClientID, parameter.Currency), func(t *testing.T) {
 				for idx := 0; idx < 3; idx++ {
-					_, err := connection.Query.generalLedgerExternalFiatAccount(ctx, &parameter)
+					_, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameter)
 					require.NoError(t, err, "error expectation failed.")
 				}
 			})
@@ -608,12 +608,12 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 	testCases := []struct {
 		name         string
 		expectedCont int
-		parameters   generalLedgerAccountTxDatesFiatAccountParams
+		parameters   fiatGetJournalTransactionForAccountBetweenDatesParams
 	}{
 		{
 			name:         "ClientID1 USD: Before-After",
 			expectedCont: 4,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: minuteBehind,
@@ -622,7 +622,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: Before",
 			expectedCont: 0,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: hourBehind,
@@ -631,7 +631,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: After",
 			expectedCont: 0,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: minuteAhead,
@@ -640,7 +640,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID2 - AED: Before-After",
 			expectedCont: 4,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID2,
 				Currency:  "AED",
 				StartTime: minuteBehind,
@@ -649,7 +649,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 		}, {
 			name:         "ClientID2 - PKR: Before-After",
 			expectedCont: 0,
-			parameters: generalLedgerAccountTxDatesFiatAccountParams{
+			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
 				ClientID:  clientID2,
 				Currency:  "PKR",
 				StartTime: minuteBehind,
@@ -660,7 +660,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.generalLedgerAccountTxDatesFiatAccount(ctx, &testCase.parameters)
+			rows, err := connection.Query.fiatGetJournalTransactionForAccountBetweenDates(ctx, &testCase.parameters)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})

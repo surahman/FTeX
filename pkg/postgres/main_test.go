@@ -165,7 +165,7 @@ func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
 			for _, param := range parameters {
 				accInfo := param
-				rowCount, err := connection.Query.createFiatAccount(ctx, &accInfo)
+				rowCount, err := connection.Query.fiatCreateAccount(ctx, &accInfo)
 				require.NoError(t, err, "errored whilst trying to insert fiat account.")
 				require.NotEqual(t, 0, rowCount, "no rows were added.")
 			}
@@ -175,12 +175,12 @@ func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 	return clientID1, clientID2
 }
 
-// resetTestFiatGeneralLedger will reset the fiat general ledger with base internal and external entries.
-func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) {
+// resetTestFiatJournal will reset the fiat journal with base internal and external entries.
+func resetTestFiatJournal(t *testing.T, clientID1, clientID2 pgtype.UUID) {
 	t.Helper()
 
-	// Reset the fiat general ledger table.
-	query := "TRUNCATE TABLE fiat_general_ledger CASCADE;"
+	// Reset the fiat journal table.
+	query := "TRUNCATE TABLE fiat_journal CASCADE;"
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
 
 	defer cancel()
@@ -188,10 +188,10 @@ func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) 
 	rows, err := connection.Query.db.Query(ctx, query)
 	rows.Close()
 
-	require.NoError(t, err, "failed to wipe fiat general ledger table before reinserting entries.")
+	require.NoError(t, err, "failed to wipe fiat journal table before reinserting entries.")
 
 	// Get general ledger entry test cases.
-	testCases, err := getTestFiatGeneralLedger(clientID1, clientID2)
+	testCases, err := getTestFiatJournal(clientID1, clientID2)
 	require.NoError(t, err, "failed to generate test cases.")
 
 	// Insert new fiat accounts.
@@ -199,7 +199,7 @@ func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) 
 		parameters := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			result, err := connection.Query.generalLedgerExternalFiatAccount(ctx, &parameters)
+			result, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameters)
 			require.NoError(t, err, "failed to insert external fiat account entry.")
 			require.True(t, result.TxID.Valid, "returned transaction id is invalid.")
 			require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
@@ -207,28 +207,28 @@ func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) 
 	}
 }
 
-// insertTestInternalFiatGeneralLedger will not reset the general ledger and will insert some test internal transfers.
+// insertTestInternalFiatGeneralLedger will not reset the journal and will insert some test internal transfers.
 func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) (
-	map[string]generalLedgerInternalFiatAccountParams, map[string]generalLedgerInternalFiatAccountRow) {
+	map[string]fiatInternalTransferJournalEntryParams, map[string]fiatInternalTransferJournalEntryRow) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
 
 	defer cancel()
 
-	// Get general ledger entry test cases.
-	testCases, err := getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2)
+	// Get journal entry test cases.
+	testCases, err := getTestJournalInternalFiatAccounts(clientID1, clientID2)
 	require.NoError(t, err, "failed to generate test cases.")
 
 	// Mapping for transactions to parameters.
-	transactions := make(map[string]generalLedgerInternalFiatAccountRow, len(testCases))
+	transactions := make(map[string]fiatInternalTransferJournalEntryRow, len(testCases))
 
 	// Insert new fiat accounts.
 	for key, testCase := range testCases {
 		parameters := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			row, err := connection.Query.generalLedgerInternalFiatAccount(ctx, &parameters)
+			row, err := connection.Query.fiatInternalTransferJournalEntry(ctx, &parameters)
 			require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
 			require.NotEqual(t, 0, row, "no rows were added.")
 			transactions[key] = row
