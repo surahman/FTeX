@@ -335,7 +335,7 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 	}
 }
 
-func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
+func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -353,54 +353,54 @@ func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
 	// Get general ledger entry test cases.
 	testCases := []struct {
 		name        string
-		parameter   generalLedgerAccountTxFiatAccountParams
+		parameter   fiatGetJournalTransactionForAccountParams
 		errExpected require.ErrorAssertionFunc
 	}{
 		{
 			name: "Client1 - USD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client1 - AED",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyAED,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client1 - CAD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyCAD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client2 - USD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyUSD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client2 - AED",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client2 - CAD",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
 			},
 			errExpected: require.NoError,
 		}, {
 			name: "Client1 - Not Found",
-			parameter: generalLedgerAccountTxFiatAccountParams{
+			parameter: fiatGetJournalTransactionForAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyEUR,
 			},
@@ -417,7 +417,7 @@ func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
 		test := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
-			results, err := connection.Query.generalLedgerAccountTxFiatAccount(ctx, &test.parameter)
+			results, err := connection.Query.fiatGetJournalTransactionForAccount(ctx, &test.parameter)
 			test.errExpected(t, err, "error expectation condition failed.")
 			for _, result := range results {
 				require.Equal(t, test.parameter.Currency, result.Currency, "currency type mismatch.")

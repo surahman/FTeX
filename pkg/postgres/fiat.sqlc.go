@@ -117,6 +117,44 @@ func (q *Queries) fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUI
 	return items, nil
 }
 
+const fiatGetJournalTransactionForAccount = `-- name: fiatGetJournalTransactionForAccount :many
+SELECT currency, ammount, transacted_at, client_id, tx_id
+FROM fiat_journal
+WHERE client_id = $1 AND currency = $2
+`
+
+type fiatGetJournalTransactionForAccountParams struct {
+	ClientID pgtype.UUID `json:"clientID"`
+	Currency Currency    `json:"currency"`
+}
+
+// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
+func (q *Queries) fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error) {
+	rows, err := q.db.Query(ctx, fiatGetJournalTransactionForAccount, arg.ClientID, arg.Currency)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FiatJournal
+	for rows.Next() {
+		var i FiatJournal
+		if err := rows.Scan(
+			&i.Currency,
+			&i.Ammount,
+			&i.TransactedAt,
+			&i.ClientID,
+			&i.TxID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const fiatInternalTransferJournalEntry = `-- name: fiatInternalTransferJournalEntry :one
 WITH deposit AS (
     INSERT INTO fiat_journal(
@@ -205,44 +243,6 @@ func (q *Queries) generalLedgerAccountTxDatesFiatAccount(ctx context.Context, ar
 		arg.StartTime,
 		arg.EndTime,
 	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []FiatJournal
-	for rows.Next() {
-		var i FiatJournal
-		if err := rows.Scan(
-			&i.Currency,
-			&i.Ammount,
-			&i.TransactedAt,
-			&i.ClientID,
-			&i.TxID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const generalLedgerAccountTxFiatAccount = `-- name: generalLedgerAccountTxFiatAccount :many
-SELECT currency, ammount, transacted_at, client_id, tx_id
-FROM fiat_journal
-WHERE client_id = $1 AND currency = $2
-`
-
-type generalLedgerAccountTxFiatAccountParams struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Currency Currency    `json:"currency"`
-}
-
-// generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
-func (q *Queries) generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatJournal, error) {
-	rows, err := q.db.Query(ctx, generalLedgerAccountTxFiatAccount, arg.ClientID, arg.Currency)
 	if err != nil {
 		return nil, err
 	}

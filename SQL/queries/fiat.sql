@@ -92,8 +92,8 @@ SELECT *
 FROM fiat_journal
 WHERE tx_id = $1;
 
--- name: generalLedgerAccountTxFiatAccount :many
--- generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
+-- name: fiatGetJournalTransactionForAccount :many
+-- fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
 SELECT *
 FROM fiat_journal
 WHERE client_id = $1 AND currency = $2;
