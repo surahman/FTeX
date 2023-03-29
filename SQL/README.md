@@ -7,7 +7,7 @@
 - [Tablespaces](#tablespaces)
 - [Users Table Schema](#users-table-schema)
 - [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
-- [Fiat General Ledger Table Schema](#fiat-general-ledger-table-schema)
+- [Fiat Journal Table Schema](#fiat-journal-table-schema)
 - [Special Purpose Accounts](#special-purpose-accounts)
 - [SQL Queries](#sql-queries)
 - [Schema Migration and Setup](#schema-migration-and-setup)
@@ -20,7 +20,7 @@ A Relational Database is a requirement for this application for the following re
 * Anticipated balance of reads and writes.
 * Strong ACID semantics requirements.
 * Eventual consistency is inadequate.
-* Transactions are mandatory to record entries for accounts and in the general ledger.
+* Transactions are mandatory to record entries for accounts and in the journals.
 * Data denormalization is extremely risky and unacceptable.
 * Foreign key integrity must be maintained across tables.
 * Workloads will frequently require table joins.
@@ -59,14 +59,14 @@ possible.
 
 * Schema data alignment to reduce memory consumption on persistent and volatile memory.
 * The most taxing queries are likely to be _"retrieve all of my assets from the accounts tables"_ and
-  _"retrieve all of my transactions from the general ledgers"_.
+  _"retrieve all of my transactions from the journals"_.
 * Configure indices _(simple or compound)_ for clustering. This will allow related account and transaction data
   to be co-located on persistent storage. as a result, block reads of data that will retrieve all the related
   required data on consecutive blocks. This will also, in turn, potentially lead to fewer instances of
   volatile memory page thrashing. Postgres does not support clustering indices and requires periodic execution
   of the `CLUSTER` command.
 * Configure primary and secondary indices based on queries and table join keys.
-* A general ledger table should contain double entries for each transaction: **_source_** and **_destination_**
+* A journal table should contain double entries for each transaction: **_source_** and **_destination_**
   accounts for audit and fault tolerance purposes.
 * General concurrency considerations whilst holding locks in transactions:
   1. Mutual exclusion will be provided by the concurrency control manager.
@@ -137,7 +137,7 @@ A B-Tree index has also been created on the `ClientID` to facilitate efficient q
 
 <br/>
 
-## Fiat General Ledger Table Schema
+## Fiat Journal Table Schema
 
 | Name (Struct) | Data Type (Struct) | Column Name   | Column Type   | Description                                                                                                                                            |
 |---------------|--------------------|---------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -158,8 +158,8 @@ additional indices have been created on the `client_id` and `tx_id` to support e
 |--------------|--------------------------------------------------------------------------------|
 | deposit-fiat | Inbound deposits to the fiat accounts will be associated to this user account. |
 
-Special purpose accounts will be created for the purpose of general ledger entries. These accounts will have random
-password generated at creation and will be marked as deleted so disable login capabilities.
+Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
+at creation and will be marked as deleted so disable login capabilities.
 
 <br/>
 
