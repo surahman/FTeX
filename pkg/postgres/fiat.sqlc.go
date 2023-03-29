@@ -30,9 +30,63 @@ func (q *Queries) createFiatAccount(ctx context.Context, arg *createFiatAccountP
 	return result.RowsAffected(), nil
 }
 
+const fiatExternalTransferJournalEntry = `-- name: fiatExternalTransferJournalEntry :one
+WITH deposit AS (
+    INSERT INTO fiat_journal (
+        client_id,
+        currency,
+        ammount,
+        transacted_at,
+        tx_id)
+    SELECT
+        (   SELECT client_id
+            FROM users
+            WHERE username = 'deposit-fiat'),
+        $2,
+        -1 * $3::numeric(18, 2),
+        now(),
+        gen_random_uuid()
+    RETURNING tx_id, transacted_at
+)
+INSERT INTO  fiat_journal (
+    client_id,
+    currency,
+    ammount,
+    transacted_at,
+    tx_id)
+SELECT
+    $1,
+    $2,
+    $3::numeric(18, 2),
+    (   SELECT transacted_at
+        FROM deposit),
+    (   SELECT tx_id
+        FROM deposit)
+RETURNING tx_id, transacted_at
+`
+
+type fiatExternalTransferJournalEntryParams struct {
+	ClientID pgtype.UUID    `json:"clientID"`
+	Currency Currency       `json:"currency"`
+	Amount   pgtype.Numeric `json:"amount"`
+}
+
+type fiatExternalTransferJournalEntryRow struct {
+	TxID         pgtype.UUID        `json:"txID"`
+	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
+}
+
+// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
+func (q *Queries) fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error) {
+	row := q.db.QueryRow(ctx, fiatExternalTransferJournalEntry, arg.ClientID, arg.Currency, arg.Amount)
+	var i fiatExternalTransferJournalEntryRow
+	err := row.Scan(&i.TxID, &i.TransactedAt)
+	return i, err
+}
+
 const generalLedgerAccountTxDatesFiatAccount = `-- name: generalLedgerAccountTxDatesFiatAccount :many
 SELECT currency, ammount, transacted_at, client_id, tx_id
-FROM fiat_general_ledger
+FROM fiat_journal
 WHERE client_id = $1
       AND currency = $2
       AND transacted_at
@@ -49,7 +103,7 @@ type generalLedgerAccountTxDatesFiatAccountParams struct {
 
 // generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
 // in a date range.
-func (q *Queries) generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatGeneralLedger, error) {
+func (q *Queries) generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, generalLedgerAccountTxDatesFiatAccount,
 		arg.ClientID,
 		arg.Currency,
@@ -60,9 +114,9 @@ func (q *Queries) generalLedgerAccountTxDatesFiatAccount(ctx context.Context, ar
 		return nil, err
 	}
 	defer rows.Close()
-	var items []FiatGeneralLedger
+	var items []FiatJournal
 	for rows.Next() {
-		var i FiatGeneralLedger
+		var i FiatJournal
 		if err := rows.Scan(
 			&i.Currency,
 			&i.Ammount,
@@ -82,7 +136,7 @@ func (q *Queries) generalLedgerAccountTxDatesFiatAccount(ctx context.Context, ar
 
 const generalLedgerAccountTxFiatAccount = `-- name: generalLedgerAccountTxFiatAccount :many
 SELECT currency, ammount, transacted_at, client_id, tx_id
-FROM fiat_general_ledger
+FROM fiat_journal
 WHERE client_id = $1 AND currency = $2
 `
 
@@ -92,15 +146,15 @@ type generalLedgerAccountTxFiatAccountParams struct {
 }
 
 // generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
-func (q *Queries) generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatGeneralLedger, error) {
+func (q *Queries) generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, generalLedgerAccountTxFiatAccount, arg.ClientID, arg.Currency)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []FiatGeneralLedger
+	var items []FiatJournal
 	for rows.Next() {
-		var i FiatGeneralLedger
+		var i FiatJournal
 		if err := rows.Scan(
 			&i.Currency,
 			&i.Ammount,
@@ -118,63 +172,9 @@ func (q *Queries) generalLedgerAccountTxFiatAccount(ctx context.Context, arg *ge
 	return items, nil
 }
 
-const generalLedgerExternalFiatAccount = `-- name: generalLedgerExternalFiatAccount :one
-WITH deposit AS (
-    INSERT INTO fiat_general_ledger (
-        client_id,
-        currency,
-        ammount,
-        transacted_at,
-        tx_id)
-    SELECT
-        (   SELECT client_id
-            FROM users
-            WHERE username = 'deposit-fiat'),
-        $2,
-        -1 * $3::numeric(18, 2),
-        now(),
-        gen_random_uuid()
-    RETURNING tx_id, transacted_at
-)
-INSERT INTO  fiat_general_ledger (
-    client_id,
-    currency,
-    ammount,
-    transacted_at,
-    tx_id)
-SELECT
-    $1,
-    $2,
-    $3::numeric(18, 2),
-    (   SELECT transacted_at
-        FROM deposit),
-    (   SELECT tx_id
-        FROM deposit)
-RETURNING tx_id, transacted_at
-`
-
-type generalLedgerExternalFiatAccountParams struct {
-	ClientID pgtype.UUID    `json:"clientID"`
-	Currency Currency       `json:"currency"`
-	Amount   pgtype.Numeric `json:"amount"`
-}
-
-type generalLedgerExternalFiatAccountRow struct {
-	TxID         pgtype.UUID        `json:"txID"`
-	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
-}
-
-// generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
-func (q *Queries) generalLedgerExternalFiatAccount(ctx context.Context, arg *generalLedgerExternalFiatAccountParams) (generalLedgerExternalFiatAccountRow, error) {
-	row := q.db.QueryRow(ctx, generalLedgerExternalFiatAccount, arg.ClientID, arg.Currency, arg.Amount)
-	var i generalLedgerExternalFiatAccountRow
-	err := row.Scan(&i.TxID, &i.TransactedAt)
-	return i, err
-}
-
 const generalLedgerInternalFiatAccount = `-- name: generalLedgerInternalFiatAccount :one
 WITH deposit AS (
-    INSERT INTO fiat_general_ledger (
+    INSERT INTO fiat_journal(
         client_id,
         currency,
         ammount,
@@ -188,7 +188,7 @@ WITH deposit AS (
         gen_random_uuid()
     RETURNING tx_id, transacted_at
 )
-INSERT INTO  fiat_general_ledger (
+INSERT INTO fiat_journal (
     client_id,
     currency,
     ammount,
@@ -236,20 +236,20 @@ func (q *Queries) generalLedgerInternalFiatAccount(ctx context.Context, arg *gen
 
 const generalLedgerTxFiatAccount = `-- name: generalLedgerTxFiatAccount :many
 SELECT currency, ammount, transacted_at, client_id, tx_id
-FROM fiat_general_ledger
+FROM fiat_journal
 WHERE tx_id = $1
 `
 
 // generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
-func (q *Queries) generalLedgerTxFiatAccount(ctx context.Context, txID pgtype.UUID) ([]FiatGeneralLedger, error) {
+func (q *Queries) generalLedgerTxFiatAccount(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, generalLedgerTxFiatAccount, txID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []FiatGeneralLedger
+	var items []FiatJournal
 	for rows.Next() {
-		var i FiatGeneralLedger
+		var i FiatJournal
 		if err := rows.Scan(
 			&i.Currency,
 			&i.Ammount,

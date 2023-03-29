@@ -18,17 +18,17 @@ type Querier interface {
 	createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error)
 	// deleteUser will soft delete a users account.
 	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
+	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
+	fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error)
 	// generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
 	// in a date range.
-	generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatGeneralLedger, error)
+	generalLedgerAccountTxDatesFiatAccount(ctx context.Context, arg *generalLedgerAccountTxDatesFiatAccountParams) ([]FiatJournal, error)
 	// generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
-	generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatGeneralLedger, error)
-	// generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
-	generalLedgerExternalFiatAccount(ctx context.Context, arg *generalLedgerExternalFiatAccountParams) (generalLedgerExternalFiatAccountRow, error)
+	generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatJournal, error)
 	// generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
 	generalLedgerInternalFiatAccount(ctx context.Context, arg *generalLedgerInternalFiatAccountParams) (generalLedgerInternalFiatAccountRow, error)
 	// generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
-	generalLedgerTxFiatAccount(ctx context.Context, txID pgtype.UUID) ([]FiatGeneralLedger, error)
+	generalLedgerTxFiatAccount(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error)
 	// getAllFiatAccounts will retrieve all accounts associated with a specific user.
 	getAllFiatAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error)
 	// getClientIdUser will retrieve a users client id.

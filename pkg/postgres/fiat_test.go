@@ -248,7 +248,7 @@ func TestFiat_UpdateBalanceFiatAccount(t *testing.T) {
 	require.InDelta(t, expectedBalance, finalBalance, 0.01, "expected and actual balance mismatch.")
 }
 
-func TestFiat_GeneralLedgerExternalFiatAccount(t *testing.T) {
+func TestFiat_FiatExternalTransferJournalEntry(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -261,7 +261,7 @@ func TestFiat_GeneralLedgerExternalFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the External Fiat General Ledger.
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 }
 
 func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
@@ -277,7 +277,7 @@ func TestFiat_GeneralLedgerInternalFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the External Fiat General Ledger.
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Insert internal fiat general ledger transactions.
 	_, _ = insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
@@ -296,7 +296,7 @@ func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the External Fiat General Ledger.
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Insert internal fiat general ledger transactions.
 	testCases, txRows := insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
@@ -348,7 +348,7 @@ func TestFiat_GeneralLedgerAccountTxFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Get general ledger entry test cases.
 	testCases := []struct {
@@ -443,7 +443,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Test grid.
 	testCases := []struct {
@@ -568,7 +568,7 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
-	resetTestFiatGeneralLedger(t, clientID1, clientID2)
+	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Context setup for no hold-and-wait.
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
@@ -577,13 +577,13 @@ func TestFiat_GeneralLedgerAccountTxDatesFiatAccount(t *testing.T) {
 
 	// Insert some more fiat general ledger entries for good measure.
 	{
-		parameters, err := getTestFiatGeneralLedger(clientID1, clientID2)
+		parameters, err := getTestFiatJournal(clientID1, clientID2)
 		require.NoError(t, err, "failed to get parameters to insert additional fiat general ledger entries.")
 		for _, item := range parameters {
 			parameter := item
 			t.Run(fmt.Sprintf("Inserting %v - %s", parameter.ClientID, parameter.Currency), func(t *testing.T) {
 				for idx := 0; idx < 3; idx++ {
-					_, err := connection.Query.generalLedgerExternalFiatAccount(ctx, &parameter)
+					_, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameter)
 					require.NoError(t, err, "error expectation failed.")
 				}
 			})

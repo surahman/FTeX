@@ -395,7 +395,7 @@ type FiatAccount struct {
 	ClientID  pgtype.UUID        `json:"clientID"`
 }
 
-type FiatGeneralLedger struct {
+type FiatJournal struct {
 	Currency     Currency           `json:"currency"`
 	Ammount      pgtype.Numeric     `json:"ammount"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`

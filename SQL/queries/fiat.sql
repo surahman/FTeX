@@ -18,10 +18,10 @@ SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts;
 
--- name: generalLedgerExternalFiatAccount :one
--- generalLedgerExternalFiatAccount will create both general ledger entries for fiat accounts inbound deposits.
+-- name: fiatExternalTransferJournalEntry :one
+-- fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
 WITH deposit AS (
-    INSERT INTO fiat_general_ledger (
+    INSERT INTO fiat_journal (
         client_id,
         currency,
         ammount,
@@ -37,7 +37,7 @@ WITH deposit AS (
         gen_random_uuid()
     RETURNING tx_id, transacted_at
 )
-INSERT INTO  fiat_general_ledger (
+INSERT INTO  fiat_journal (
     client_id,
     currency,
     ammount,
@@ -56,7 +56,7 @@ RETURNING tx_id, transacted_at;
 -- name: generalLedgerInternalFiatAccount :one
 -- generalLedgerEntriesInternalAccount will create both general ledger entries for fiat accounts internal transfers.
 WITH deposit AS (
-    INSERT INTO fiat_general_ledger (
+    INSERT INTO fiat_journal(
         client_id,
         currency,
         ammount,
@@ -70,7 +70,7 @@ WITH deposit AS (
         gen_random_uuid()
     RETURNING tx_id, transacted_at
 )
-INSERT INTO  fiat_general_ledger (
+INSERT INTO fiat_journal (
     client_id,
     currency,
     ammount,
@@ -89,20 +89,20 @@ RETURNING tx_id, transacted_at;
 -- name: generalLedgerTxFiatAccount :many
 -- generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
 SELECT *
-FROM fiat_general_ledger
+FROM fiat_journal
 WHERE tx_id = $1;
 
 -- name: generalLedgerAccountTxFiatAccount :many
 -- generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
 SELECT *
-FROM fiat_general_ledger
+FROM fiat_journal
 WHERE client_id = $1 AND currency = $2;
 
 -- name: generalLedgerAccountTxDatesFiatAccount :many
 -- generalLedgerAccountTxDatesFiatAccount will retrieve the general ledger entries associated with a specific account
 -- in a date range.
 SELECT *
-FROM fiat_general_ledger
+FROM fiat_journal
 WHERE client_id = $1
       AND currency = $2
       AND transacted_at

@@ -233,9 +233,9 @@ func getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) 
 		nil
 }
 
-// getTestFiatGeneralLedger generates a number of test general ledger entry parameters.
-func getTestFiatGeneralLedger(clientID1, clientID2 pgtype.UUID) (
-	map[string]generalLedgerExternalFiatAccountParams, error) {
+// getTestFiatJournal generates a number of test general ledger entry parameters.
+func getTestFiatJournal(clientID1, clientID2 pgtype.UUID) (
+	map[string]fiatExternalTransferJournalEntryParams, error) {
 	// Create balance amounts.
 	amount1 := pgtype.Numeric{}
 	if err := amount1.Scan("1024.55"); err != nil {
@@ -252,7 +252,7 @@ func getTestFiatGeneralLedger(clientID1, clientID2 pgtype.UUID) (
 		return nil, fmt.Errorf("failed to marshal 256.44 to pgtype %w", err)
 	}
 
-	return map[string]generalLedgerExternalFiatAccountParams{
+	return map[string]fiatExternalTransferJournalEntryParams{
 			"Client ID 1 - USD": {
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
