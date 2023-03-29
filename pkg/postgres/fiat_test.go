@@ -283,7 +283,7 @@ func TestFiat_FiatInternalTransferJournalEntry(t *testing.T) {
 	_, _ = insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
 }
 
-func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
+func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -311,7 +311,7 @@ func TestFiat_GeneralLedgerTxFiatAccount(t *testing.T) {
 		t.Run(fmt.Sprintf("Retrieving %s", key), func(t *testing.T) {
 			tx := testCases[key]
 
-			result, err := connection.Query.generalLedgerTxFiatAccount(ctx, param.TxID)
+			result, err := connection.Query.fiatGetJournalTransaction(ctx, param.TxID)
 			require.NoError(t, err, "error expectation condition failed.")
 			require.Equal(t, 2, len(result), "incorrect row count returned.")
 

@@ -86,8 +86,8 @@ SELECT
         FROM deposit)
 RETURNING tx_id, transacted_at;
 
--- name: generalLedgerTxFiatAccount :many
--- generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
+-- name: fiatGetJournalTransaction :many
+-- fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 SELECT *
 FROM fiat_journal
 WHERE tx_id = $1;

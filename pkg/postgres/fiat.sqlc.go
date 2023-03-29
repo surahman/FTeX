@@ -84,6 +84,39 @@ func (q *Queries) fiatExternalTransferJournalEntry(ctx context.Context, arg *fia
 	return i, err
 }
 
+const fiatGetJournalTransaction = `-- name: fiatGetJournalTransaction :many
+SELECT currency, ammount, transacted_at, client_id, tx_id
+FROM fiat_journal
+WHERE tx_id = $1
+`
+
+// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
+func (q *Queries) fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error) {
+	rows, err := q.db.Query(ctx, fiatGetJournalTransaction, txID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FiatJournal
+	for rows.Next() {
+		var i FiatJournal
+		if err := rows.Scan(
+			&i.Currency,
+			&i.Ammount,
+			&i.TransactedAt,
+			&i.ClientID,
+			&i.TxID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const fiatInternalTransferJournalEntry = `-- name: fiatInternalTransferJournalEntry :one
 WITH deposit AS (
     INSERT INTO fiat_journal(
@@ -210,39 +243,6 @@ type generalLedgerAccountTxFiatAccountParams struct {
 // generalLedgerAccountTxFiatAccount will retrieve the general ledger entries associated with a specific account.
 func (q *Queries) generalLedgerAccountTxFiatAccount(ctx context.Context, arg *generalLedgerAccountTxFiatAccountParams) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, generalLedgerAccountTxFiatAccount, arg.ClientID, arg.Currency)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []FiatJournal
-	for rows.Next() {
-		var i FiatJournal
-		if err := rows.Scan(
-			&i.Currency,
-			&i.Ammount,
-			&i.TransactedAt,
-			&i.ClientID,
-			&i.TxID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const generalLedgerTxFiatAccount = `-- name: generalLedgerTxFiatAccount :many
-SELECT currency, ammount, transacted_at, client_id, tx_id
-FROM fiat_journal
-WHERE tx_id = $1
-`
-
-// generalLedgerTxFiatAccount will retrieve the general ledger entries associated with a transaction.
-func (q *Queries) generalLedgerTxFiatAccount(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error) {
-	rows, err := q.db.Query(ctx, generalLedgerTxFiatAccount, txID)
 	if err != nil {
 		return nil, err
 	}
