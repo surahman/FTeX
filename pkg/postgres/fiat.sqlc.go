@@ -35,7 +35,7 @@ WITH deposit AS (
     INSERT INTO fiat_journal (
         client_id,
         currency,
-        ammount,
+        amount,
         transacted_at,
         tx_id)
     SELECT
@@ -51,7 +51,7 @@ WITH deposit AS (
 INSERT INTO  fiat_journal (
     client_id,
     currency,
-    ammount,
+    amount,
     transacted_at,
     tx_id)
 SELECT
@@ -145,7 +145,7 @@ func (q *Queries) fiatGetAllAccounts(ctx context.Context, clientID pgtype.UUID) 
 }
 
 const fiatGetJournalTransaction = `-- name: fiatGetJournalTransaction :many
-SELECT currency, ammount, transacted_at, client_id, tx_id
+SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE tx_id = $1
 `
@@ -162,7 +162,7 @@ func (q *Queries) fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUI
 		var i FiatJournal
 		if err := rows.Scan(
 			&i.Currency,
-			&i.Ammount,
+			&i.Amount,
 			&i.TransactedAt,
 			&i.ClientID,
 			&i.TxID,
@@ -178,7 +178,7 @@ func (q *Queries) fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUI
 }
 
 const fiatGetJournalTransactionForAccount = `-- name: fiatGetJournalTransactionForAccount :many
-SELECT currency, ammount, transacted_at, client_id, tx_id
+SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE client_id = $1 AND currency = $2
 `
@@ -200,7 +200,7 @@ func (q *Queries) fiatGetJournalTransactionForAccount(ctx context.Context, arg *
 		var i FiatJournal
 		if err := rows.Scan(
 			&i.Currency,
-			&i.Ammount,
+			&i.Amount,
 			&i.TransactedAt,
 			&i.ClientID,
 			&i.TxID,
@@ -216,7 +216,7 @@ func (q *Queries) fiatGetJournalTransactionForAccount(ctx context.Context, arg *
 }
 
 const fiatGetJournalTransactionForAccountBetweenDates = `-- name: fiatGetJournalTransactionForAccountBetweenDates :many
-SELECT currency, ammount, transacted_at, client_id, tx_id
+SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE client_id = $1
       AND currency = $2
@@ -250,7 +250,7 @@ func (q *Queries) fiatGetJournalTransactionForAccountBetweenDates(ctx context.Co
 		var i FiatJournal
 		if err := rows.Scan(
 			&i.Currency,
-			&i.Ammount,
+			&i.Amount,
 			&i.TransactedAt,
 			&i.ClientID,
 			&i.TxID,
@@ -270,7 +270,7 @@ WITH deposit AS (
     INSERT INTO fiat_journal(
         client_id,
         currency,
-        ammount,
+        amount,
         transacted_at,
         tx_id)
     SELECT
@@ -284,7 +284,7 @@ WITH deposit AS (
 INSERT INTO fiat_journal (
     client_id,
     currency,
-    ammount,
+    amount,
     transacted_at,
     tx_id)
 SELECT

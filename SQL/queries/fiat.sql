@@ -24,7 +24,7 @@ WITH deposit AS (
     INSERT INTO fiat_journal (
         client_id,
         currency,
-        ammount,
+        amount,
         transacted_at,
         tx_id)
     SELECT
@@ -40,7 +40,7 @@ WITH deposit AS (
 INSERT INTO  fiat_journal (
     client_id,
     currency,
-    ammount,
+    amount,
     transacted_at,
     tx_id)
 SELECT
@@ -59,7 +59,7 @@ WITH deposit AS (
     INSERT INTO fiat_journal(
         client_id,
         currency,
-        ammount,
+        amount,
         transacted_at,
         tx_id)
     SELECT
@@ -73,7 +73,7 @@ WITH deposit AS (
 INSERT INTO fiat_journal (
     client_id,
     currency,
-    ammount,
+    amount,
     transacted_at,
     tx_id)
 SELECT

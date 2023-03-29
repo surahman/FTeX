@@ -329,8 +329,8 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 			require.Equal(t, dstRecord.Currency, tx.DestinationCurrency, "destination currency mismatch.")
 			require.Equal(t, srcRecord.ClientID, tx.SourceAccount, "source client id mismatch.")
 			require.Equal(t, dstRecord.ClientID, tx.DestinationAccount, "destination client id mismatch.")
-			require.Equal(t, srcRecord.Ammount, tx.DebitAmount, "source amount mismatch.")
-			require.Equal(t, dstRecord.Ammount, tx.CreditAmount, "destination amount mismatch.")
+			require.Equal(t, srcRecord.Amount, tx.DebitAmount, "source amount mismatch.")
+			require.Equal(t, dstRecord.Amount, tx.CreditAmount, "destination amount mismatch.")
 		})
 	}
 }
@@ -423,7 +423,7 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 				require.Equal(t, test.parameter.Currency, result.Currency, "currency type mismatch.")
 				require.True(t, result.ClientID.Valid, "invalid UUID.")
 				require.True(t, result.TxID.Valid, "invalid TX ID.")
-				require.True(t, result.Ammount.Valid, "invalid amount.")
+				require.True(t, result.Amount.Valid, "invalid amount.")
 				require.True(t, result.TransactedAt.Valid, "invalid TX time.")
 			}
 		})

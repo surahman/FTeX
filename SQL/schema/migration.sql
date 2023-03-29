@@ -83,7 +83,7 @@ WHERE
 --comment: Fiat currency accounts transactions journal.
 CREATE TABLE IF NOT EXISTS fiat_journal (
     currency        CURRENCY        NOT NULL,
-    ammount         NUMERIC(18,2)   NOT NULL,
+    amount          NUMERIC(18,2)   NOT NULL,
     transacted_at   TIMESTAMPTZ     NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
     tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
