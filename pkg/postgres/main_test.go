@@ -165,7 +165,7 @@ func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
 			for _, param := range parameters {
 				accInfo := param
-				rowCount, err := connection.Query.createFiatAccount(ctx, &accInfo)
+				rowCount, err := connection.Query.fiatCreateAccount(ctx, &accInfo)
 				require.NoError(t, err, "errored whilst trying to insert fiat account.")
 				require.NotEqual(t, 0, rowCount, "no rows were added.")
 			}

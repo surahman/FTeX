@@ -142,8 +142,8 @@ func getTestUsers() map[string]createUserParams {
 }
 
 // getTestFiatAccounts generates a number of test fiat accounts.
-func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]createFiatAccountParams {
-	return map[string][]createFiatAccountParams{
+func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]fiatCreateAccountParams {
+	return map[string][]fiatCreateAccountParams{
 		"clientID1": {
 			{
 				ClientID: clientID1,

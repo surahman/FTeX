@@ -12,12 +12,12 @@ import (
 )
 
 type Querier interface {
-	// createFiatAccount inserts a fiat account record.
-	createFiatAccount(ctx context.Context, arg *createFiatAccountParams) (int64, error)
 	// createUser will create a new user record.
 	createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error)
 	// deleteUser will soft delete a users account.
 	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
+	// fiatCreateAccount inserts a fiat account record.
+	fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error)
 	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
 	fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error)
 	// getFiatAccount will retrieve a specific user's account for a given currency.
@@ -33,16 +33,16 @@ type Querier interface {
 	fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
 	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
+	// fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
+	fiatRowLockAccount(ctx context.Context, arg *fiatRowLockAccountParams) (pgtype.Numeric, error)
+	// fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
+	fiatUpdateAccountBalance(ctx context.Context, arg *fiatUpdateAccountBalanceParams) (fiatUpdateAccountBalanceRow, error)
 	// getClientIdUser will retrieve a users client id.
 	getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
 	// getCredentialsUser will retrieve a users client id and password.
 	getCredentialsUser(ctx context.Context, username string) (getCredentialsUserRow, error)
 	// getInfoUser will retrieve a single users account information.
 	getInfoUser(ctx context.Context, username string) (getInfoUserRow, error)
-	// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
-	rowLockFiatAccount(ctx context.Context, arg *rowLockFiatAccountParams) (pgtype.Numeric, error)
-	// updateBalanceFiatAccount will add an amount to a fiat accounts balance.
-	updateBalanceFiatAccount(ctx context.Context, arg *updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

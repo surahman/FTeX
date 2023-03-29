@@ -11,19 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createFiatAccount = `-- name: createFiatAccount :execrows
+const fiatCreateAccount = `-- name: fiatCreateAccount :execrows
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2)
 `
 
-type createFiatAccountParams struct {
+type fiatCreateAccountParams struct {
 	ClientID pgtype.UUID `json:"clientID"`
 	Currency Currency    `json:"currency"`
 }
 
-// createFiatAccount inserts a fiat account record.
-func (q *Queries) createFiatAccount(ctx context.Context, arg *createFiatAccountParams) (int64, error) {
-	result, err := q.db.Exec(ctx, createFiatAccount, arg.ClientID, arg.Currency)
+// fiatCreateAccount inserts a fiat account record.
+func (q *Queries) fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error) {
+	result, err := q.db.Exec(ctx, fiatCreateAccount, arg.ClientID, arg.Currency)
 	if err != nil {
 		return 0, err
 	}
@@ -327,7 +327,7 @@ func (q *Queries) fiatInternalTransferJournalEntry(ctx context.Context, arg *fia
 	return i, err
 }
 
-const rowLockFiatAccount = `-- name: rowLockFiatAccount :one
+const fiatRowLockAccount = `-- name: fiatRowLockAccount :one
 SELECT balance
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2
@@ -335,48 +335,48 @@ LIMIT 1
 FOR NO KEY UPDATE
 `
 
-type rowLockFiatAccountParams struct {
+type fiatRowLockAccountParams struct {
 	ClientID pgtype.UUID `json:"clientID"`
 	Currency Currency    `json:"currency"`
 }
 
-// rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
-func (q *Queries) rowLockFiatAccount(ctx context.Context, arg *rowLockFiatAccountParams) (pgtype.Numeric, error) {
-	row := q.db.QueryRow(ctx, rowLockFiatAccount, arg.ClientID, arg.Currency)
+// fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
+func (q *Queries) fiatRowLockAccount(ctx context.Context, arg *fiatRowLockAccountParams) (pgtype.Numeric, error) {
+	row := q.db.QueryRow(ctx, fiatRowLockAccount, arg.ClientID, arg.Currency)
 	var balance pgtype.Numeric
 	err := row.Scan(&balance)
 	return balance, err
 }
 
-const updateBalanceFiatAccount = `-- name: updateBalanceFiatAccount :one
+const fiatUpdateAccountBalance = `-- name: fiatUpdateAccountBalance :one
 UPDATE fiat_accounts
 SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts
 `
 
-type updateBalanceFiatAccountParams struct {
+type fiatUpdateAccountBalanceParams struct {
 	ClientID pgtype.UUID        `json:"clientID"`
 	Currency Currency           `json:"currency"`
 	LastTx   pgtype.Numeric     `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 }
 
-type updateBalanceFiatAccountRow struct {
+type fiatUpdateAccountBalanceRow struct {
 	Balance  pgtype.Numeric     `json:"balance"`
 	LastTx   pgtype.Numeric     `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 }
 
-// updateBalanceFiatAccount will add an amount to a fiat accounts balance.
-func (q *Queries) updateBalanceFiatAccount(ctx context.Context, arg *updateBalanceFiatAccountParams) (updateBalanceFiatAccountRow, error) {
-	row := q.db.QueryRow(ctx, updateBalanceFiatAccount,
+// fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
+func (q *Queries) fiatUpdateAccountBalance(ctx context.Context, arg *fiatUpdateAccountBalanceParams) (fiatUpdateAccountBalanceRow, error) {
+	row := q.db.QueryRow(ctx, fiatUpdateAccountBalance,
 		arg.ClientID,
 		arg.Currency,
 		arg.LastTx,
 		arg.LastTxTs,
 	)
-	var i updateBalanceFiatAccountRow
+	var i fiatUpdateAccountBalanceRow
 	err := row.Scan(&i.Balance, &i.LastTx, &i.LastTxTs)
 	return i, err
 }

@@ -1,18 +1,18 @@
--- name: createFiatAccount :execrows
--- createFiatAccount inserts a fiat account record.
+-- name: fiatCreateAccount :execrows
+-- fiatCreateAccount inserts a fiat account record.
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2);
 
--- name: rowLockFiatAccount :one
--- rowLockFiatAccount will acquire a row level lock without locks on the foreign keys.
+-- name: fiatRowLockAccount :one
+-- fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
 SELECT balance
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2
 LIMIT 1
 FOR NO KEY UPDATE;
 
--- name: updateBalanceFiatAccount :one
--- updateBalanceFiatAccount will add an amount to a fiat accounts balance.
+-- name: fiatUpdateAccountBalance :one
+-- fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 UPDATE fiat_accounts
 SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
 WHERE client_id=$1 AND currency=$2
