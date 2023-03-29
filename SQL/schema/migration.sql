@@ -80,8 +80,8 @@ WHERE
 
 --changeset surahman:5
 --preconditions onFail:HALT onError:HALT
---comment: Fiat currency accounts general ledger.
-CREATE TABLE IF NOT EXISTS fiat_general_ledger (
+--comment: Fiat currency accounts transactions journal.
+CREATE TABLE IF NOT EXISTS fiat_journal (
     currency        CURRENCY        NOT NULL,
     ammount         NUMERIC(18,2)   NOT NULL,
     transacted_at   TIMESTAMPTZ     NOT NULL,
@@ -90,6 +90,6 @@ CREATE TABLE IF NOT EXISTS fiat_general_ledger (
     PRIMARY KEY(tx_id, client_id, currency)
 );
 
-CREATE INDEX IF NOT EXISTS fiat_general_ledger_client_idx ON fiat_general_ledger USING btree (client_id);
-CREATE INDEX IF NOT EXISTS fiat_general_ledger_tx_idx ON fiat_general_ledger USING btree (tx_id);
---rollback DROP TABLE fiat_general_ledger CASCADE;
+CREATE INDEX IF NOT EXISTS fiat_journal_client_idx ON fiat_journal USING btree (client_id);
+CREATE INDEX IF NOT EXISTS fiat_journal_tx_idx ON fiat_journal USING btree (tx_id);
+--rollback DROP TABLE fiat_journal CASCADE;
