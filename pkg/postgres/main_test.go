@@ -1,13 +1,17 @@
 package postgres
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
@@ -19,14 +23,8 @@ var postgresConfigTestData = configTestData()
 // configFileKey is the name of the Postgres configuration file to use in the tests.
 var configFileKey string
 
-// testConnection is the connection pool to the Postgres test database.
-type testConnection struct {
-	db *Postgres // Test database connection.
-	// mu sync.RWMutex // Mutex to enforce sequential test execution.
-}
-
 // connection pool to Cassandra cluster.
-var connection testConnection
+var connection *Postgres
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
@@ -70,7 +68,7 @@ func setup() error {
 
 	var err error
 
-	// If running on a GitHub Actions runner use the default credentials for Cassandra.
+	// If running on a GitHub Actions runner use the default credentials for Postgres.
 	configFileKey = "test_suite"
 	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
@@ -90,11 +88,11 @@ func setup() error {
 	}
 
 	// Load Postgres configurations for test suite.
-	if connection.db, err = NewPostgres(&fs, zapLogger); err != nil {
+	if connection, err = NewPostgres(&fs, zapLogger); err != nil {
 		return err
 	}
 
-	if err = connection.db.Open(); err != nil {
+	if err = connection.Open(); err != nil {
 		return fmt.Errorf("postgres connection opening failed: %w", err)
 	}
 
@@ -104,10 +102,138 @@ func setup() error {
 // tearDown will delete the test clusters keyspace.
 func tearDown() (err error) {
 	if !testing.Short() {
-		if err := connection.db.Close(); err != nil {
+		if err := connection.Close(); err != nil {
 			return fmt.Errorf("postgres connection termination failure in test suite: %w", err)
 		}
 	}
 
 	return
+}
+
+// insertTestUsers will reset the users table and create some test user accounts.
+func insertTestUsers(t *testing.T) {
+	t.Helper()
+
+	// Reset the users table.
+	query := "DELETE FROM users WHERE first_name != 'Internal';"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.Query.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe users table before reinserting users.")
+
+	// Insert new users.
+	for key, testCase := range getTestUsers() {
+		user := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			clientID, err := connection.Query.createUser(ctx, &user)
+			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
+			require.True(t, clientID.Valid, "failed to retrieve client id from response")
+		})
+	}
+}
+
+// resetTestFiatAccounts will reset the fiat accounts table and create some test accounts.
+func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
+	t.Helper()
+
+	// Reset the fiat accounts table.
+	query := "TRUNCATE TABLE fiat_accounts CASCADE;"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.Query.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
+
+	// Retrieve client ids from users table.
+	clientID1, err := connection.Query.getClientIdUser(ctx, "username1")
+	require.NoError(t, err, "failed to retrieve username1 client id.")
+	clientID2, err := connection.Query.getClientIdUser(ctx, "username2")
+	require.NoError(t, err, "failed to retrieve username2 client id.")
+
+	// Insert new fiat accounts.
+	for key, testCase := range getTestFiatAccounts(clientID1, clientID2) {
+		parameters := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			for _, param := range parameters {
+				accInfo := param
+				rowCount, err := connection.Query.createFiatAccount(ctx, &accInfo)
+				require.NoError(t, err, "errored whilst trying to insert fiat account.")
+				require.NotEqual(t, 0, rowCount, "no rows were added.")
+			}
+		})
+	}
+
+	return clientID1, clientID2
+}
+
+// resetTestFiatGeneralLedger will reset the fiat general ledger with base internal and external entries.
+func resetTestFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) {
+	t.Helper()
+
+	// Reset the fiat general ledger table.
+	query := "TRUNCATE TABLE fiat_general_ledger CASCADE;"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.Query.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe fiat general ledger table before reinserting entries.")
+
+	// Get general ledger entry test cases.
+	testCases, err := getTestFiatGeneralLedger(clientID1, clientID2)
+	require.NoError(t, err, "failed to generate test cases.")
+
+	// Insert new fiat accounts.
+	for key, testCase := range testCases {
+		parameters := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			result, err := connection.Query.generalLedgerExternalFiatAccount(ctx, &parameters)
+			require.NoError(t, err, "failed to insert external fiat account entry.")
+			require.True(t, result.TxID.Valid, "returned transaction id is invalid.")
+			require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
+		})
+	}
+}
+
+// insertTestInternalFiatGeneralLedger will not reset the general ledger and will insert some test internal transfers.
+func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) (
+	map[string]generalLedgerInternalFiatAccountParams, map[string]generalLedgerInternalFiatAccountRow) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	// Get general ledger entry test cases.
+	testCases, err := getTestGeneralLedgerInternalFiatAccounts(clientID1, clientID2)
+	require.NoError(t, err, "failed to generate test cases.")
+
+	// Mapping for transactions to parameters.
+	transactions := make(map[string]generalLedgerInternalFiatAccountRow, len(testCases))
+
+	// Insert new fiat accounts.
+	for key, testCase := range testCases {
+		parameters := testCase
+
+		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
+			row, err := connection.Query.generalLedgerInternalFiatAccount(ctx, &parameters)
+			require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
+			require.NotEqual(t, 0, row, "no rows were added.")
+			transactions[key] = row
+		})
+	}
+
+	return testCases, transactions
 }

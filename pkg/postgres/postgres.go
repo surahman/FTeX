@@ -20,6 +20,7 @@ type Postgres struct {
 	conf   config
 	pool   *pgxpool.Pool
 	logger *logger.Logger
+	Query  *Queries
 }
 
 // NewPostgres will create a new Postgres configuration and load it from disk.
@@ -75,6 +76,9 @@ func (p *Postgres) Open() error {
 	if err = p.createSessionRetry(); err != nil {
 		return err
 	}
+
+	// Setup SQLC DBTX interface.
+	p.Query = New(p.pool)
 
 	return nil
 }
