@@ -15,6 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Querier
+//go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres DBTX
+
 // Postgres contains objects required to interface with the database.
 type Postgres struct {
 	conf   config
