@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/surahman/FTeX/pkg/utilities"
 	"go.uber.org/zap"
 )
 
@@ -38,8 +39,8 @@ type FiatAccountTransferResult struct {
     [4] Update the balance for the internal account.
 */
 func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *FiatAccountDetails, amount float64) (
-	FiatAccountTransferResult, error) {
-	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second)
+	*FiatAccountTransferResult, error) {
+	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
 
 	defer cancel()
 
@@ -47,17 +48,16 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		err        error
 		tx         pgx.Tx
 		txAmount   pgtype.Numeric
-		result     FiatAccountTransferResult
 		journalRow fiatExternalTransferJournalEntryRow
 		updateRow  fiatUpdateAccountBalanceRow
 	)
 
 	// Create transaction amount.
-	if err = txAmount.Scan(fmt.Sprintf("%.2f", amount)); err != nil {
+	if err = txAmount.Scan(utilities.Float64TwoDecimalPlacesString(amount)); err != nil {
 		msg := "failed to truncate the external Fiat transaction amount to two decimal places"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Begin transaction.
@@ -66,7 +66,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		msg := "external transfer Fiat transaction block setup failed"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Set rollback in case of failure.
@@ -89,7 +89,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		msg := "failed to get row lock on destination Fiat account"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Make General Journal ledger entries.
@@ -101,7 +101,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		msg := "failed to post Fiat account Journal entries"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Update the account balance.
@@ -114,7 +114,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		msg := "failed to update Fiat account balance"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Commit transaction.
@@ -122,16 +122,16 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		msg := "failed to commit external Fiat account transfer"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(msg+" %w", err)
 	}
 
-	// Prepare result.
-	result.ClientID = destination.ClientID
-	result.Currency = destination.Currency
-	result.Balance = updateRow.Balance
-	result.TxID = journalRow.TxID
-	result.LastTx = updateRow.LastTx
-	result.TxTS = journalRow.TransactedAt
-
-	return result, nil
+	return &FiatAccountTransferResult{
+			TxID:     journalRow.TxID,
+			ClientID: destination.ClientID,
+			TxTS:     journalRow.TransactedAt,
+			Balance:  updateRow.Balance,
+			LastTx:   updateRow.LastTx,
+			Currency: destination.Currency,
+		},
+		nil
 }
