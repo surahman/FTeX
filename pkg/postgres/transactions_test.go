@@ -24,4 +24,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 
 	result, err := connection.FiatExternalTransfer(context.Background(), &xferDetails, 1443.9786)
 	_, _ = result, err
+
+	result, err = connection.FiatExternalTransfer(context.Background(), &xferDetails, 1443.9786)
+	_, _ = result, err
 }

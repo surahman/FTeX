@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -38,7 +39,7 @@ type FiatAccountTransferResult struct {
 */
 func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *FiatAccountDetails, amount float64) (
 	FiatAccountTransferResult, error) {
-	ctx, cancel := context.WithTimeout(parentCtx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second)
 
 	defer cancel()
 
@@ -54,7 +55,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 	// Create transaction amount.
 	if err = txAmount.Scan(fmt.Sprintf("%.2f", amount)); err != nil {
 		msg := "failed to truncate the external Fiat transaction amount to two decimal places"
-		p.logger.Error(msg, zap.Error(err))
+		p.logger.Warn(msg, zap.Error(err))
 
 		return result, fmt.Errorf(msg+" %w", err)
 	}
@@ -63,15 +64,18 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 
 	if tx, err = p.pool.Begin(ctx); err != nil {
 		msg := "external transfer Fiat transaction block setup failed"
-		p.logger.Error(msg, zap.Error(err))
+		p.logger.Warn(msg, zap.Error(err))
 
 		return result, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Set rollback in case of failure.
 	defer func() {
-		if err = tx.Rollback(ctx); err != nil {
-			p.logger.Error("external transfer Fiat transaction block rollback failed", zap.Error(err))
+		if errRollback := tx.Rollback(context.TODO()); errRollback != nil {
+			// If the connection is closed the transaction was committed. Ignore the error from rollback in this case.
+			if !errors.Is(errRollback, pgx.ErrTxClosed) {
+				p.logger.Error("failed to rollback external Fiat account transaction", zap.Error(errRollback))
+			}
 		}
 	}()
 
@@ -83,7 +87,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		Currency: destination.Currency,
 	}); err != nil {
 		msg := "failed to get row lock on destination Fiat account"
-		p.logger.Error(msg, zap.Error(err))
+		p.logger.Warn(msg, zap.Error(err))
 
 		return result, fmt.Errorf(msg+" %w", err)
 	}
@@ -94,8 +98,8 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		Currency: destination.Currency,
 		Amount:   txAmount,
 	}); err != nil {
-		msg := "failed to make Fiat account Journal entries"
-		p.logger.Error(msg, zap.Error(err))
+		msg := "failed to post Fiat account Journal entries"
+		p.logger.Warn(msg, zap.Error(err))
 
 		return result, fmt.Errorf(msg+" %w", err)
 	}
@@ -108,7 +112,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to update Fiat account balance"
-		p.logger.Error(msg, zap.Error(err))
+		p.logger.Warn(msg, zap.Error(err))
 
 		return result, fmt.Errorf(msg+" %w", err)
 	}
@@ -116,7 +120,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 	// Commit transaction.
 	if err = tx.Commit(ctx); err != nil {
 		msg := "failed to commit external Fiat account transfer"
-		p.logger.Error(msg, zap.Error(err))
+		p.logger.Warn(msg, zap.Error(err))
 
 		return result, fmt.Errorf(msg+" %w", err)
 	}
