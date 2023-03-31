@@ -37,7 +37,7 @@ WITH deposit AS (
         gen_random_uuid()
     RETURNING tx_id, transacted_at
 )
-INSERT INTO  fiat_journal (
+INSERT INTO fiat_journal (
     client_id,
     currency,
     amount,
