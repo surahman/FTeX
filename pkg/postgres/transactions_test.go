@@ -109,7 +109,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 				require.True(t, transferResult.Balance.Valid, "invalid balance returned.")
 
 				// Check for journal entries.
-				journalRow, err := connection.Query.fiatGetJournalTransaction(ctx, transferResult.TxID)
+				journalRow, err := connection.Query.FiatGetJournalTransaction(ctx, transferResult.TxID)
 				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
 				require.Equal(t, 2, len(journalRow), "incorrect number of journal entries.")
 			})
@@ -120,7 +120,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	wg.Wait()
 
 	t.Run("Checking end totals", func(t *testing.T) {
-		actual, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{
+		actual, err := connection.Query.FiatGetAccount(ctx, &FiatGetAccountParams{
 			ClientID: xferDetails.ClientID,
 			Currency: xferDetails.Currency,
 		})

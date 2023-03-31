@@ -142,8 +142,8 @@ func getTestUsers() map[string]createUserParams {
 }
 
 // getTestFiatAccounts generates a number of test fiat accounts.
-func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]fiatCreateAccountParams {
-	return map[string][]fiatCreateAccountParams{
+func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]FiatCreateAccountParams {
+	return map[string][]FiatCreateAccountParams{
 		"clientID1": {
 			{
 				ClientID: clientID1,
@@ -173,7 +173,7 @@ func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]fiatCrea
 
 // getTestJournalInternalFiatAccounts generates a number of test fiat internal transfer journal entries.
 func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
-	map[string]fiatInternalTransferJournalEntryParams, error) {
+	map[string]FiatInternalTransferJournalEntryParams, error) {
 	amount1Credit := pgtype.Numeric{}
 	if err := amount1Credit.Scan("123.45"); err != nil {
 		return nil, fmt.Errorf("failed to convert 123.45: %w", err)
@@ -204,7 +204,7 @@ func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
 		return nil, fmt.Errorf("failed to convert -9192.24 %w", err)
 	}
 
-	return map[string]fiatInternalTransferJournalEntryParams{
+	return map[string]FiatInternalTransferJournalEntryParams{
 			"CAD-AED": {
 				SourceAccount:       clientID1,
 				SourceCurrency:      CurrencyCAD,
@@ -235,7 +235,7 @@ func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
 
 // getTestFiatJournal generates a number of test general ledger entry parameters.
 func getTestFiatJournal(clientID1, clientID2 pgtype.UUID) (
-	map[string]fiatExternalTransferJournalEntryParams, error) {
+	map[string]FiatExternalTransferJournalEntryParams, error) {
 	// Create balance amounts.
 	amount1 := pgtype.Numeric{}
 	if err := amount1.Scan("1024.55"); err != nil {
@@ -252,7 +252,7 @@ func getTestFiatJournal(clientID1, clientID2 pgtype.UUID) (
 		return nil, fmt.Errorf("failed to marshal 256.44 to pgtype %w", err)
 	}
 
-	return map[string]fiatExternalTransferJournalEntryParams{
+	return map[string]FiatExternalTransferJournalEntryParams{
 			"Client ID 1 - USD": {
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
