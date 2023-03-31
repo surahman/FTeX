@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
@@ -421,8 +422,8 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 			test.errExpected(t, err, "error expectation condition failed.")
 			for _, result := range results {
 				require.Equal(t, test.parameter.Currency, result.Currency, "currency type mismatch.")
-				require.True(t, result.ClientID.Valid, "invalid UUID.")
-				require.True(t, result.TxID.Valid, "invalid TX ID.")
+				require.False(t, result.ClientID.IsNil(), "invalid UUID.")
+				require.False(t, result.TxID.IsNil(), "invalid TX ID.")
 				require.True(t, result.Amount.Valid, "invalid amount.")
 				require.True(t, result.TransactedAt.Valid, "invalid TX time.")
 			}
@@ -496,7 +497,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
 			results, err := connection.Query.FiatGetAccount(ctx, &testCase.parameter)
 			testCase.errExpectation(t, err, "error expectation failed.")
-			testCase.boolExpectation(t, results.ClientID.Valid, "clientId validity expectation failed.")
+			testCase.boolExpectation(t, !results.ClientID.IsNil(), "clientId validity expectation failed.")
 			testCase.boolExpectation(t, results.LastTxTs.Valid, "lastTxTs validity expectation failed.")
 			testCase.boolExpectation(t, results.Balance.Valid, "balance validity expectation failed.")
 			testCase.boolExpectation(t, results.LastTx.Valid, "lastTx validity expectation failed.")
@@ -528,7 +529,7 @@ func TestFiat_FiatGetAllAccounts(t *testing.T) {
 	// Testing grid.
 	testCases := []struct {
 		name           string
-		clientID       pgtype.UUID
+		clientID       uuid.UUID
 		expectedRowCnt int
 	}{
 		{
@@ -537,7 +538,7 @@ func TestFiat_FiatGetAllAccounts(t *testing.T) {
 			expectedRowCnt: 3,
 		}, {
 			name:           "Nonexistent",
-			clientID:       pgtype.UUID{},
+			clientID:       uuid.UUID{},
 			expectedRowCnt: 0,
 		},
 	}

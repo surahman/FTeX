@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/gofrs/uuid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -132,13 +132,13 @@ func insertTestUsers(t *testing.T) {
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
 			clientID, err := connection.Query.UserCreate(ctx, &user)
 			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
-			require.True(t, clientID.Valid, "failed to retrieve client id from response")
+			require.False(t, clientID.IsNil(), "failed to retrieve client id from response")
 		})
 	}
 }
 
 // resetTestFiatAccounts will reset the fiat accounts table and create some test accounts.
-func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
+func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 	t.Helper()
 
 	// Reset the fiat accounts table.
@@ -176,7 +176,7 @@ func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 }
 
 // resetTestFiatJournal will reset the fiat journal with base internal and external entries.
-func resetTestFiatJournal(t *testing.T, clientID1, clientID2 pgtype.UUID) {
+func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 	t.Helper()
 
 	// Reset the fiat journal table.
@@ -201,14 +201,14 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 pgtype.UUID) {
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
 			result, err := connection.Query.FiatExternalTransferJournalEntry(ctx, &parameters)
 			require.NoError(t, err, "failed to insert external fiat account entry.")
-			require.True(t, result.TxID.Valid, "returned transaction id is invalid.")
+			require.False(t, result.TxID.IsNil(), "returned transaction id is invalid.")
 			require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
 		})
 	}
 }
 
 // insertTestInternalFiatGeneralLedger will not reset the journal and will insert some test internal transfers.
-func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) (
+func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid.UUID) (
 	map[string]FiatInternalTransferJournalEntryParams, map[string]FiatInternalTransferJournalEntryRow) {
 	t.Helper()
 

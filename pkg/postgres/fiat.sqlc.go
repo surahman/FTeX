@@ -8,6 +8,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -17,8 +18,8 @@ VALUES ($1, $2)
 `
 
 type FiatCreateAccountParams struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Currency Currency    `json:"currency"`
+	ClientID uuid.UUID `json:"clientID"`
+	Currency Currency  `json:"currency"`
 }
 
 // FiatCreateAccount inserts a fiat account record.
@@ -66,13 +67,13 @@ RETURNING tx_id, transacted_at
 `
 
 type FiatExternalTransferJournalEntryParams struct {
-	ClientID pgtype.UUID    `json:"clientID"`
+	ClientID uuid.UUID      `json:"clientID"`
 	Currency Currency       `json:"currency"`
 	Amount   pgtype.Numeric `json:"amount"`
 }
 
 type FiatExternalTransferJournalEntryRow struct {
-	TxID         pgtype.UUID        `json:"txID"`
+	TxID         uuid.UUID          `json:"txID"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
 }
 
@@ -91,8 +92,8 @@ WHERE client_id=$1 AND currency=$2
 `
 
 type FiatGetAccountParams struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Currency Currency    `json:"currency"`
+	ClientID uuid.UUID `json:"clientID"`
+	Currency Currency  `json:"currency"`
 }
 
 // FiatGetAccount will retrieve a specific user's account for a given currency.
@@ -117,7 +118,7 @@ WHERE client_id=$1
 `
 
 // FiatGetAllAccounts will retrieve all accounts associated with a specific user.
-func (q *Queries) FiatGetAllAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error) {
+func (q *Queries) FiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error) {
 	rows, err := q.db.Query(ctx, fiatGetAllAccounts, clientID)
 	if err != nil {
 		return nil, err
@@ -151,7 +152,7 @@ WHERE tx_id = $1
 `
 
 // FiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
-func (q *Queries) FiatGetJournalTransaction(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error) {
+func (q *Queries) FiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, fiatGetJournalTransaction, txID)
 	if err != nil {
 		return nil, err
@@ -184,8 +185,8 @@ WHERE client_id = $1 AND currency = $2
 `
 
 type FiatGetJournalTransactionForAccountParams struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Currency Currency    `json:"currency"`
+	ClientID uuid.UUID `json:"clientID"`
+	Currency Currency  `json:"currency"`
 }
 
 // FiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
@@ -226,7 +227,7 @@ WHERE client_id = $1
 `
 
 type FiatGetJournalTransactionForAccountBetweenDatesParams struct {
-	ClientID  pgtype.UUID        `json:"clientID"`
+	ClientID  uuid.UUID          `json:"clientID"`
 	Currency  Currency           `json:"currency"`
 	StartTime pgtype.Timestamptz `json:"startTime"`
 	EndTime   pgtype.Timestamptz `json:"endTime"`
@@ -299,16 +300,16 @@ RETURNING tx_id, transacted_at
 `
 
 type FiatInternalTransferJournalEntryParams struct {
-	DestinationAccount  pgtype.UUID    `json:"destinationAccount"`
+	DestinationAccount  uuid.UUID      `json:"destinationAccount"`
 	DestinationCurrency Currency       `json:"destinationCurrency"`
 	CreditAmount        pgtype.Numeric `json:"creditAmount"`
-	SourceAccount       pgtype.UUID    `json:"sourceAccount"`
+	SourceAccount       uuid.UUID      `json:"sourceAccount"`
 	SourceCurrency      Currency       `json:"sourceCurrency"`
 	DebitAmount         pgtype.Numeric `json:"debitAmount"`
 }
 
 type FiatInternalTransferJournalEntryRow struct {
-	TxID         pgtype.UUID        `json:"txID"`
+	TxID         uuid.UUID          `json:"txID"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
 }
 
@@ -336,8 +337,8 @@ FOR NO KEY UPDATE
 `
 
 type FiatRowLockAccountParams struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Currency Currency    `json:"currency"`
+	ClientID uuid.UUID `json:"clientID"`
+	Currency Currency  `json:"currency"`
 }
 
 // FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
@@ -356,7 +357,7 @@ RETURNING balance, last_tx, last_tx_ts
 `
 
 type FiatUpdateAccountBalanceParams struct {
-	ClientID pgtype.UUID        `json:"clientID"`
+	ClientID uuid.UUID          `json:"clientID"`
 	Currency Currency           `json:"currency"`
 	LastTx   pgtype.Numeric     `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`

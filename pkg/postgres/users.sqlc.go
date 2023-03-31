@@ -8,8 +8,8 @@ package postgres
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const userCreate = `-- name: UserCreate :one
@@ -27,7 +27,7 @@ type UserCreateParams struct {
 }
 
 // UserCreate will create a new user record.
-func (q *Queries) UserCreate(ctx context.Context, arg *UserCreateParams) (pgtype.UUID, error) {
+func (q *Queries) UserCreate(ctx context.Context, arg *UserCreateParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, userCreate,
 		arg.Username,
 		arg.Password,
@@ -35,7 +35,7 @@ func (q *Queries) UserCreate(ctx context.Context, arg *UserCreateParams) (pgtype
 		arg.LastName,
 		arg.Email,
 	)
-	var client_id pgtype.UUID
+	var client_id uuid.UUID
 	err := row.Scan(&client_id)
 	return client_id, err
 }
@@ -59,9 +59,9 @@ LIMIT 1
 `
 
 // UserGetClientId will retrieve a users client id.
-func (q *Queries) UserGetClientId(ctx context.Context, username string) (pgtype.UUID, error) {
+func (q *Queries) UserGetClientId(ctx context.Context, username string) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, userGetClientId, username)
-	var client_id pgtype.UUID
+	var client_id uuid.UUID
 	err := row.Scan(&client_id)
 	return client_id, err
 }
@@ -74,8 +74,8 @@ LIMIT 1
 `
 
 type UserGetCredentialsRow struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Password string      `json:"password"`
+	ClientID uuid.UUID `json:"clientID"`
+	Password string    `json:"password"`
 }
 
 // UserGetCredentials will retrieve a users client id and password.
@@ -94,11 +94,11 @@ LIMIT 1
 `
 
 type UserGetInfoRow struct {
-	FirstName string      `json:"firstName"`
-	LastName  string      `json:"lastName"`
-	Email     string      `json:"email"`
-	ClientID  pgtype.UUID `json:"clientID"`
-	IsDeleted bool        `json:"isDeleted"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Email     string    `json:"email"`
+	ClientID  uuid.UUID `json:"clientID"`
+	IsDeleted bool      `json:"isDeleted"`
 }
 
 // UserGetInfo will retrieve a single users account information.

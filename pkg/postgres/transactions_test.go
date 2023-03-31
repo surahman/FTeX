@@ -101,8 +101,8 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 					return
 				}
 
-				require.True(t, transferResult.TxID.Valid, "invalid transaction ID returned.")
-				require.True(t, transferResult.ClientID.Valid, "invalid client ID returned.")
+				require.False(t, transferResult.TxID.IsNil(), "invalid transaction ID returned.")
+				require.False(t, transferResult.ClientID.IsNil(), "invalid client ID returned.")
 				require.True(t, transferResult.Currency.Valid(), "invalid currency returned.")
 				require.True(t, transferResult.TxTS.Valid, "invalid transaction timestamp returned.")
 				require.True(t, transferResult.LastTx.Valid, "invalid last transaction returned.")

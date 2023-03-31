@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/surahman/FTeX/pkg/utilities"
@@ -13,13 +14,13 @@ import (
 )
 
 type FiatAccountDetails struct {
-	ClientID pgtype.UUID `json:"clientId"`
-	Currency Currency    `json:"currency"`
+	ClientID uuid.UUID `json:"clientId"`
+	Currency Currency  `json:"currency"`
 }
 
 type FiatAccountTransferResult struct {
-	TxID     pgtype.UUID        `json:"txId"`
-	ClientID pgtype.UUID        `json:"clientId"`
+	TxID     uuid.UUID          `json:"txId"`
+	ClientID uuid.UUID          `json:"clientId"`
 	TxTS     pgtype.Timestamptz `json:"txTimestamp"`
 	Balance  pgtype.Numeric     `json:"balance"`
 	LastTx   pgtype.Numeric     `json:"lastTx"`

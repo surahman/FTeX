@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -142,7 +143,7 @@ func getTestUsers() map[string]UserCreateParams {
 }
 
 // getTestFiatAccounts generates a number of test fiat accounts.
-func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]FiatCreateAccountParams {
+func getTestFiatAccounts(clientID1, clientID2 uuid.UUID) map[string][]FiatCreateAccountParams {
 	return map[string][]FiatCreateAccountParams{
 		"clientID1": {
 			{
@@ -172,7 +173,7 @@ func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]FiatCrea
 }
 
 // getTestJournalInternalFiatAccounts generates a number of test fiat internal transfer journal entries.
-func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
+func getTestJournalInternalFiatAccounts(clientID1, clientID2 uuid.UUID) (
 	map[string]FiatInternalTransferJournalEntryParams, error) {
 	amount1Credit := pgtype.Numeric{}
 	if err := amount1Credit.Scan("123.45"); err != nil {
@@ -234,7 +235,7 @@ func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
 }
 
 // getTestFiatJournal generates a number of test general ledger entry parameters.
-func getTestFiatJournal(clientID1, clientID2 pgtype.UUID) (
+func getTestFiatJournal(clientID1, clientID2 uuid.UUID) (
 	map[string]FiatExternalTransferJournalEntryParams, error) {
 	// Create balance amounts.
 	amount1 := pgtype.Numeric{}

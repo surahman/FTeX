@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -19,9 +20,9 @@ type Querier interface {
 	// FiatGetAccount will retrieve a specific user's account for a given currency.
 	FiatGetAccount(ctx context.Context, arg *FiatGetAccountParams) (FiatAccount, error)
 	// FiatGetAllAccounts will retrieve all accounts associated with a specific user.
-	FiatGetAllAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error)
+	FiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error)
 	// FiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
-	FiatGetJournalTransaction(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error)
+	FiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error)
 	// FiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
 	FiatGetJournalTransactionForAccount(ctx context.Context, arg *FiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
 	// FiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
@@ -34,11 +35,11 @@ type Querier interface {
 	// FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 	FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error)
 	// UserCreate will create a new user record.
-	UserCreate(ctx context.Context, arg *UserCreateParams) (pgtype.UUID, error)
+	UserCreate(ctx context.Context, arg *UserCreateParams) (uuid.UUID, error)
 	// UserDelete will soft delete a users account.
 	UserDelete(ctx context.Context, username string) (pgconn.CommandTag, error)
 	// UserGetClientId will retrieve a users client id.
-	UserGetClientId(ctx context.Context, username string) (pgtype.UUID, error)
+	UserGetClientId(ctx context.Context, username string) (uuid.UUID, error)
 	// UserGetCredentials will retrieve a users client id and password.
 	UserGetCredentials(ctx context.Context, username string) (UserGetCredentialsRow, error)
 	// UserGetInfo will retrieve a single users account information.
