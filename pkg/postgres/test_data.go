@@ -119,8 +119,8 @@ pool:
 }
 
 // getTestUsers will generate a number of test users for testing.
-func getTestUsers() map[string]createUserParams {
-	users := make(map[string]createUserParams)
+func getTestUsers() map[string]UserCreateParams {
+	users := make(map[string]UserCreateParams)
 	username := "username%d"
 	password := "user-password-%d"
 	firstname := "firstname-%d"
@@ -129,7 +129,7 @@ func getTestUsers() map[string]createUserParams {
 
 	for idx := 1; idx < 5; idx++ {
 		uname := fmt.Sprintf(username, idx)
-		users[uname] = createUserParams{
+		users[uname] = UserCreateParams{
 			Username:  fmt.Sprintf(username, idx),
 			Password:  fmt.Sprintf(password, idx),
 			FirstName: fmt.Sprintf(firstname, idx),

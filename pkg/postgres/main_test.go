@@ -130,7 +130,7 @@ func insertTestUsers(t *testing.T) {
 		user := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			clientID, err := connection.Query.createUser(ctx, &user)
+			clientID, err := connection.Query.UserCreate(ctx, &user)
 			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 			require.True(t, clientID.Valid, "failed to retrieve client id from response")
 		})
@@ -153,9 +153,9 @@ func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
 
 	// Retrieve client ids from users table.
-	clientID1, err := connection.Query.getClientIdUser(ctx, "username1")
+	clientID1, err := connection.Query.UserGetClientId(ctx, "username1")
 	require.NoError(t, err, "failed to retrieve username1 client id.")
-	clientID2, err := connection.Query.getClientIdUser(ctx, "username2")
+	clientID2, err := connection.Query.UserGetClientId(ctx, "username2")
 	require.NoError(t, err, "failed to retrieve username2 client id.")
 
 	// Insert new fiat accounts.
