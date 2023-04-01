@@ -28,49 +28,56 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	expectedTotal := pgtype.Numeric{}
 	require.NoError(t, expectedTotal.Scan("52145.77"))
 
-	xferDetails := FiatAccountDetails{
-		ClientID: clientID1,
-		Currency: "USD",
-	}
-
 	// Test grid.
 	testCases := []struct {
 		name                 string
 		amount               float64
-		accountDetails       *FiatAccountDetails
+		accountDetails       *FiatTransactionDetails
 		errExpectation       require.ErrorAssertionFunc
 		nilResultExpectation require.ValueAssertionFunc
 	}{
 		{
-			name:                 "5443.9786",
-			amount:               5443.9786,
-			accountDetails:       &xferDetails,
+			name: "5443.9786",
+			accountDetails: &FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: "USD",
+				Amount:   5443.9786,
+			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
 		}, {
-			name:                 "-1293.4321",
-			amount:               -1293.4321,
-			accountDetails:       &xferDetails,
+			name: "-1293.4321",
+			accountDetails: &FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: "USD",
+				Amount:   -1293.4321,
+			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
 		}, {
-			name:                 "-4.1235",
-			amount:               -4.1235,
-			accountDetails:       &xferDetails,
+			name: "-4.1235",
+			accountDetails: &FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: "USD",
+				Amount:   -4.1235,
+			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
 		}, {
-			name:                 "47999.3587",
-			amount:               47999.3587,
-			accountDetails:       &xferDetails,
+			name: "47999.3587",
+			accountDetails: &FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: "USD",
+				Amount:   47999.3587,
+			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
 		}, {
-			name:   "Invalid Account",
-			amount: 1234.5678,
-			accountDetails: &FiatAccountDetails{
+			name: "Invalid Account",
+			accountDetails: &FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: "GBP",
+				Amount:   1234.5678,
 			},
 			errExpectation:       require.Error,
 			nilResultExpectation: require.Nil,
@@ -93,7 +100,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 				defer wg.Done()
 
 				// External transfer
-				transferResult, err := connection.FiatExternalTransfer(ctx, test.accountDetails, test.amount)
+				transferResult, err := connection.FiatExternalTransfer(ctx, test.accountDetails)
 				test.errExpectation(t, err, "error expectation failed.")
 				test.nilResultExpectation(t, transferResult, "nil transferResult expectation failed.")
 
@@ -121,8 +128,8 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 
 	t.Run("Checking end totals", func(t *testing.T) {
 		actual, err := connection.Query.FiatGetAccount(ctx, &FiatGetAccountParams{
-			ClientID: xferDetails.ClientID,
-			Currency: xferDetails.Currency,
+			ClientID: clientID1,
+			Currency: CurrencyUSD,
 		})
 		require.NoError(t, err, "failed to fiat account.")
 		require.Equal(t, expectedTotal, actual.Balance, "end of test expected totals mismatched.")
