@@ -161,6 +161,53 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		nil
 }
 
+// FiatTransactionRowLockAndBalanceCheck will acquire row locks on the Fiat accounts in a deterministic lock order.
+// It will then check to see if the balance of the source/debit account is sufficient for the transaction.
+func fiatTransactionRowLockAndBalanceCheck(
+	ctx context.Context,
+	queryTx *Queries,
+	src,
+	dst *FiatTransactionDetails) error {
+	// Order locks.
+	lockFirst, lockSecond := src.Less(dst)
+
+	// Row lock the accounts in order.
+	balanceFirst, err := queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
+		ClientID: (*lockFirst).ClientID,
+		Currency: (*lockFirst).Currency,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get row lock on first Fiat account %w", err)
+	}
+
+	balanceSecond, err := queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
+		ClientID: (*lockSecond).ClientID,
+		Currency: (*lockSecond).Currency,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get row lock on second Fiat account %w", err)
+	}
+
+	// Check which lock operation returned the source/debit balance.
+	debitBalance := &balanceFirst
+	if *lockSecond == src {
+		debitBalance = &balanceSecond
+	}
+
+	// Check if the debit amount exceeds the source account balance.
+	balance, err := debitBalance.Float64Value()
+	if err != nil {
+		return fmt.Errorf("failed to convert source Fiat account balance to float64 %w", err)
+	}
+
+	// BEWARE IEEE FLOATING POINT PRECISION ISSUES.
+	if balance.Float64 < src.Amount {
+		return fmt.Errorf("insufficient balance in source account: %f, %f", balance.Float64, src.Amount)
+	}
+
+	return nil
+}
+
 // FiatInternalTransfer will perform transfers between fiat accounts using a transaction block.
 /*
   		Minimize the duration for which the transaction block will be active by performing as many operations as
@@ -180,20 +227,17 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	defer cancel()
 
 	var (
-		err        error
-		tx         pgx.Tx
-		srcAmount  pgtype.Numeric
-		dstAmount  pgtype.Numeric
-		journalRow FiatInternalTransferJournalEntryRow
-
-		lockFirst     **FiatTransactionDetails
-		lockSecond    **FiatTransactionDetails
-		balanceFirst  pgtype.Numeric
-		balanceSecond pgtype.Numeric
+		err           error
+		tx            pgx.Tx
+		srcAmount     pgtype.Numeric
+		dstAmount     pgtype.Numeric
+		journalRow    FiatInternalTransferJournalEntryRow
+		postCreditRow FiatUpdateAccountBalanceRow
+		postDebitRow  FiatUpdateAccountBalanceRow
 	)
 
-	// Create transaction amounts.
-	if err = srcAmount.Scan(utilities.Float64TwoDecimalPlacesString(src.Amount)); err != nil {
+	// Create transaction amounts. The debit/source amount should be negative.
+	if err = srcAmount.Scan(utilities.Float64TwoDecimalPlacesString(-src.Amount)); err != nil {
 		msg := "failed to truncate the source Fiat transaction amount to two decimal places"
 		p.logger.Warn(msg, zap.Error(err))
 
@@ -206,9 +250,6 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
-
-	// Order locks.
-	lockFirst, lockSecond = src.Less(dst)
 
 	// Begin transaction.
 	if tx, err = p.pool.Begin(ctx); err != nil {
@@ -228,48 +269,15 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 		}
 	}()
 
+	// Configure transaction query connection.
 	queryTx := p.Query.WithTx(tx)
 
-	// Row lock the accounts in order.
-	if balanceFirst, err = queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
-		ClientID: (*lockFirst).ClientID,
-		Currency: (*lockFirst).Currency,
-	}); err != nil {
-		msg := "failed to get row lock on first Fiat account"
+	// Row lock the accounts in order and check balances.
+	if err = fiatTransactionRowLockAndBalanceCheck(ctx, queryTx, src, dst); err != nil {
+		msg := "failed to get row lock on Fiat accounts and verify balance of debit account"
 		p.logger.Warn(msg, zap.Error(err))
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
-	}
-
-	if balanceSecond, err = queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
-		ClientID: (*lockSecond).ClientID,
-		Currency: (*lockSecond).Currency,
-	}); err != nil {
-		msg := "failed to get row lock on second Fiat account"
-		p.logger.Warn(msg, zap.Error(err))
-
-		return nil, nil, fmt.Errorf(msg+" %w", err)
-	}
-
-	// Check if the debit amount exceeds the source account balance.
-	{
-		debitBalance := &balanceFirst
-		if *lockSecond == src {
-			debitBalance = &balanceSecond
-		}
-
-		balance, err := debitBalance.Float64Value()
-		if err != nil {
-			msg := "failed to convert source Fiat account balance to float64"
-			p.logger.Warn(msg, zap.Error(err))
-
-			return nil, nil, fmt.Errorf(msg+" %w", err)
-		}
-
-		// BEWARE IEEE FLOATING POINT PRECISION ISSUES.
-		if balance.Float64 < src.Amount {
-			return nil, nil, fmt.Errorf("insufficient balance in source account: %f, %f", balance.Float64, src.Amount)
-		}
 	}
 
 	// Make General Journal ledger entries.
@@ -281,11 +289,60 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 		SourceCurrency:      src.Currency,
 		DebitAmount:         srcAmount,
 	}); err != nil {
-		msg := "failed to post Fiat account Journal entries"
+		msg := "failed to post Fiat account Journal entries for internal transfer"
 		p.logger.Warn(msg, zap.Error(err))
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
 
-	return nil, nil, nil
+	// Update the destination and then source account balances.
+	if postCreditRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+		ClientID: dst.ClientID,
+		Currency: dst.Currency,
+		LastTx:   dstAmount,
+		LastTxTs: journalRow.TransactedAt,
+	}); err != nil {
+		msg := "failed to credit Fiat account balance for internal transfer"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	if postDebitRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+		ClientID: src.ClientID,
+		Currency: src.Currency,
+		LastTx:   srcAmount,
+		LastTxTs: journalRow.TransactedAt,
+	}); err != nil {
+		msg := "failed to debit Fiat account balance for internal transfer"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	// Commit transaction.
+	if err = tx.Commit(ctx); err != nil {
+		msg := "failed to commit internal Fiat account transfer"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	return &FiatAccountTransferResult{
+			TxID:     journalRow.TxID,
+			ClientID: dst.ClientID,
+			TxTS:     postCreditRow.LastTxTs,
+			Balance:  postCreditRow.Balance,
+			LastTx:   postCreditRow.LastTx,
+			Currency: dst.Currency,
+		},
+		&FiatAccountTransferResult{
+			TxID:     journalRow.TxID,
+			ClientID: src.ClientID,
+			TxTS:     postDebitRow.LastTxTs,
+			Balance:  postDebitRow.Balance,
+			LastTx:   postDebitRow.LastTx,
+			Currency: src.Currency,
+		},
+		nil
 }
