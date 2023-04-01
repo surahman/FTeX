@@ -127,8 +127,10 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert initial set of test Fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the Fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// End of test expected totals.
@@ -241,4 +243,169 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 		require.NoError(t, err, "failed to fiat account.")
 		require.Equal(t, expectedTotal, actual.Balance, "end of test expected totals mismatched.")
 	})
+}
+
+func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
+	t.Parallel()
+
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test Fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the Fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Initial balances, transaction amounts, and timestamp.
+	balanceClientID1 := pgtype.Numeric{}
+	require.NoError(t, balanceClientID1.Scan("52145.77"), "failed to create ClientID1 balance.")
+
+	balanceClientID2 := pgtype.Numeric{}
+	require.NoError(t, balanceClientID2.Scan("1921.68"), "failed to create ClientID2 balance.")
+
+	txTimestamp := pgtype.Timestamptz{}
+	require.NoError(t, txTimestamp.Scan(time.Now().UTC()), "failed to create current timestamp.")
+
+	const amount20k = 20987.65
+
+	const amount1k = 1234.56
+
+	// Configure context for test suite.
+	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+
+	t.Cleanup(func() {
+		cancel()
+	})
+
+	// Update base balances in accounts to test from.
+	_, err := connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+		ClientID: clientID1,
+		Currency: CurrencyUSD,
+		LastTx:   balanceClientID1,
+		LastTxTs: txTimestamp,
+	})
+	require.NoError(t, err, "failed to set base balance for Client1 in USD")
+
+	_, err = connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+		ClientID: clientID2,
+		Currency: CurrencyAED,
+		LastTx:   balanceClientID2,
+		LastTxTs: txTimestamp,
+	})
+	require.NoError(t, err, "failed to set base balance for Client2 in AED")
+
+	// Test grid.
+	testCases := []struct {
+		name           string
+		source         FiatTransactionDetails
+		destination    FiatTransactionDetails
+		errExpectation require.ErrorAssertionFunc
+	}{
+		{
+			name: "Client1USD 20k, Client2AED 1k",
+			source: FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   amount20k,
+			},
+			destination: FiatTransactionDetails{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amount1k,
+			},
+			errExpectation: require.NoError,
+		}, {
+			name: "Client2AED 1k, Client1USD 20k",
+			source: FiatTransactionDetails{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amount1k,
+			},
+			destination: FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   amount20k,
+			},
+			errExpectation: require.NoError,
+		}, {
+			name: "Client1USD 1k, Client2AED 20k",
+			source: FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   52145.98,
+			},
+			destination: FiatTransactionDetails{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amount20k,
+			},
+			errExpectation: require.Error,
+		}, {
+			name: "Client2AED 20k, Client1USD 1k",
+			source: FiatTransactionDetails{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amount20k,
+			},
+			destination: FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   amount1k,
+			},
+			errExpectation: require.Error,
+		},
+	}
+
+	// Run testing grid in parallel.
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Configure transaction and setup rollback.
+			tx, err := connection.pool.Begin(ctx)
+			require.NoError(t, err, "failed to start transaction.")
+
+			defer tx.Rollback(ctx) //nolint:errcheck
+
+			queryTx := connection.Query.WithTx(tx)
+
+			err = fiatTransactionRowLockAndBalanceCheck(ctx, queryTx, &test.source, &test.destination)
+			test.errExpectation(t, err, "failed error expectation")
+
+			if err != nil {
+				require.Contains(t, err.Error(), "insufficient", "failure not related to balance.")
+			}
+		})
+	}
+}
+
+func TestTransactions_FiatInternalTransfer(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test Fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Reset the Fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// End of test expected totals.
+	expectedTotalClientID1 := pgtype.Numeric{}
+	require.NoError(t, expectedTotalClientID1.Scan("52145.77"))
+
+	expectedTotalClientID2 := pgtype.Numeric{}
+	require.NoError(t, expectedTotalClientID2.Scan("1921.68"))
 }
