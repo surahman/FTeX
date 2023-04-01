@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/surahman/FTeX/pkg/utilities"
@@ -13,13 +14,13 @@ import (
 )
 
 type FiatAccountDetails struct {
-	ClientID pgtype.UUID `json:"clientId"`
-	Currency Currency    `json:"currency"`
+	ClientID uuid.UUID `json:"clientId"`
+	Currency Currency  `json:"currency"`
 }
 
 type FiatAccountTransferResult struct {
-	TxID     pgtype.UUID        `json:"txId"`
-	ClientID pgtype.UUID        `json:"clientId"`
+	TxID     uuid.UUID          `json:"txId"`
+	ClientID uuid.UUID          `json:"clientId"`
 	TxTS     pgtype.Timestamptz `json:"txTimestamp"`
 	Balance  pgtype.Numeric     `json:"balance"`
 	LastTx   pgtype.Numeric     `json:"lastTx"`
@@ -48,8 +49,8 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 		err        error
 		tx         pgx.Tx
 		txAmount   pgtype.Numeric
-		journalRow fiatExternalTransferJournalEntryRow
-		updateRow  fiatUpdateAccountBalanceRow
+		journalRow FiatExternalTransferJournalEntryRow
+		updateRow  FiatUpdateAccountBalanceRow
 	)
 
 	// Create transaction amount.
@@ -82,7 +83,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 	queryTx := p.Query.WithTx(tx)
 
 	// Row lock the destination account.
-	if _, err = queryTx.fiatRowLockAccount(ctx, &fiatRowLockAccountParams{
+	if _, err = queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
 		ClientID: destination.ClientID,
 		Currency: destination.Currency,
 	}); err != nil {
@@ -93,7 +94,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 	}
 
 	// Make General Journal ledger entries.
-	if journalRow, err = queryTx.fiatExternalTransferJournalEntry(ctx, &fiatExternalTransferJournalEntryParams{
+	if journalRow, err = queryTx.FiatExternalTransferJournalEntry(ctx, &FiatExternalTransferJournalEntryParams{
 		ClientID: destination.ClientID,
 		Currency: destination.Currency,
 		Amount:   txAmount,
@@ -105,7 +106,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, destination *
 	}
 
 	// Update the account balance.
-	if updateRow, err = queryTx.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
+	if updateRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: destination.ClientID,
 		Currency: destination.Currency,
 		LastTx:   txAmount,

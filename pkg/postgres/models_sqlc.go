@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -392,23 +393,23 @@ type FiatAccount struct {
 	LastTx    pgtype.Numeric     `json:"lastTx"`
 	LastTxTs  pgtype.Timestamptz `json:"lastTxTs"`
 	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-	ClientID  pgtype.UUID        `json:"clientID"`
+	ClientID  uuid.UUID          `json:"clientID"`
 }
 
 type FiatJournal struct {
 	Currency     Currency           `json:"currency"`
 	Amount       pgtype.Numeric     `json:"amount"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
-	ClientID     pgtype.UUID        `json:"clientID"`
-	TxID         pgtype.UUID        `json:"txID"`
+	ClientID     uuid.UUID          `json:"clientID"`
+	TxID         uuid.UUID          `json:"txID"`
 }
 
 type User struct {
-	FirstName string      `json:"firstName"`
-	LastName  string      `json:"lastName"`
-	Email     string      `json:"email"`
-	Username  string      `json:"username"`
-	Password  string      `json:"password"`
-	ClientID  pgtype.UUID `json:"clientID"`
-	IsDeleted bool        `json:"isDeleted"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
+	ClientID  uuid.UUID `json:"clientID"`
+	IsDeleted bool      `json:"isDeleted"`
 }

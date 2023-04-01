@@ -4,6 +4,8 @@ go 1.20
 
 require (
 	github.com/go-playground/validator/v10 v10.12.0
+	github.com/gofrs/uuid v4.4.0+incompatible
+	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v5 v5.2.0
 	github.com/rs/xid v1.4.0
 	github.com/spf13/afero v1.9.3
@@ -20,7 +22,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect

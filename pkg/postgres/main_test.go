@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/gofrs/uuid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -126,19 +126,17 @@ func insertTestUsers(t *testing.T) {
 	require.NoError(t, err, "failed to wipe users table before reinserting users.")
 
 	// Insert new users.
-	for key, testCase := range getTestUsers() {
+	for _, testCase := range getTestUsers() {
 		user := testCase
 
-		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			clientID, err := connection.Query.createUser(ctx, &user)
-			require.NoErrorf(t, err, "failed to insert test user account: %w", err)
-			require.True(t, clientID.Valid, "failed to retrieve client id from response")
-		})
+		clientID, err := connection.Query.UserCreate(ctx, &user)
+		require.NoErrorf(t, err, "failed to insert test user account: %w", err)
+		require.False(t, clientID.IsNil(), "failed to retrieve client id from response")
 	}
 }
 
 // resetTestFiatAccounts will reset the fiat accounts table and create some test accounts.
-func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
+func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 	t.Helper()
 
 	// Reset the fiat accounts table.
@@ -153,30 +151,28 @@ func resetTestFiatAccounts(t *testing.T) (pgtype.UUID, pgtype.UUID) {
 	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
 
 	// Retrieve client ids from users table.
-	clientID1, err := connection.Query.getClientIdUser(ctx, "username1")
+	clientID1, err := connection.Query.UserGetClientId(ctx, "username1")
 	require.NoError(t, err, "failed to retrieve username1 client id.")
-	clientID2, err := connection.Query.getClientIdUser(ctx, "username2")
+	clientID2, err := connection.Query.UserGetClientId(ctx, "username2")
 	require.NoError(t, err, "failed to retrieve username2 client id.")
 
 	// Insert new fiat accounts.
-	for key, testCase := range getTestFiatAccounts(clientID1, clientID2) {
+	for _, testCase := range getTestFiatAccounts(clientID1, clientID2) {
 		parameters := testCase
 
-		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			for _, param := range parameters {
-				accInfo := param
-				rowCount, err := connection.Query.fiatCreateAccount(ctx, &accInfo)
-				require.NoError(t, err, "errored whilst trying to insert fiat account.")
-				require.NotEqual(t, 0, rowCount, "no rows were added.")
-			}
-		})
+		for _, param := range parameters {
+			accInfo := param
+			rowCount, err := connection.Query.FiatCreateAccount(ctx, &accInfo)
+			require.NoError(t, err, "errored whilst trying to insert fiat account.")
+			require.NotEqual(t, 0, rowCount, "no rows were added.")
+		}
 	}
 
 	return clientID1, clientID2
 }
 
 // resetTestFiatJournal will reset the fiat journal with base internal and external entries.
-func resetTestFiatJournal(t *testing.T, clientID1, clientID2 pgtype.UUID) {
+func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 	t.Helper()
 
 	// Reset the fiat journal table.
@@ -195,21 +191,19 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 pgtype.UUID) {
 	require.NoError(t, err, "failed to generate test cases.")
 
 	// Insert new fiat accounts.
-	for key, testCase := range testCases {
+	for _, testCase := range testCases {
 		parameters := testCase
 
-		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			result, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameters)
-			require.NoError(t, err, "failed to insert external fiat account entry.")
-			require.True(t, result.TxID.Valid, "returned transaction id is invalid.")
-			require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
-		})
+		result, err := connection.Query.FiatExternalTransferJournalEntry(ctx, &parameters)
+		require.NoError(t, err, "failed to insert external fiat account entry.")
+		require.False(t, result.TxID.IsNil(), "returned transaction id is invalid.")
+		require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
 	}
 }
 
 // insertTestInternalFiatGeneralLedger will not reset the journal and will insert some test internal transfers.
-func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgtype.UUID) (
-	map[string]fiatInternalTransferJournalEntryParams, map[string]fiatInternalTransferJournalEntryRow) {
+func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid.UUID) (
+	map[string]FiatInternalTransferJournalEntryParams, map[string]FiatInternalTransferJournalEntryRow) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
@@ -221,18 +215,16 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 pgty
 	require.NoError(t, err, "failed to generate test cases.")
 
 	// Mapping for transactions to parameters.
-	transactions := make(map[string]fiatInternalTransferJournalEntryRow, len(testCases))
+	transactions := make(map[string]FiatInternalTransferJournalEntryRow, len(testCases))
 
 	// Insert new fiat accounts.
 	for key, testCase := range testCases {
 		parameters := testCase
 
-		t.Run(fmt.Sprintf("Inserting %s", key), func(t *testing.T) {
-			row, err := connection.Query.fiatInternalTransferJournalEntry(ctx, &parameters)
-			require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
-			require.NotEqual(t, 0, row, "no rows were added.")
-			transactions[key] = row
-		})
+		row, err := connection.Query.FiatInternalTransferJournalEntry(ctx, &parameters)
+		require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
+		require.NotEqual(t, 0, row, "no rows were added.")
+		transactions[key] = row
 	}
 
 	return testCases, transactions

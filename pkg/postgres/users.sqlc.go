@@ -8,17 +8,17 @@ package postgres
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createUser = `-- name: createUser :one
+const userCreate = `-- name: UserCreate :one
 INSERT INTO users (username, password, first_name, last_name, email)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING client_id
 `
 
-type createUserParams struct {
+type UserCreateParams struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	FirstName string `json:"firstName"`
@@ -26,85 +26,85 @@ type createUserParams struct {
 	Email     string `json:"email"`
 }
 
-// createUser will create a new user record.
-func (q *Queries) createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createUser,
+// UserCreate will create a new user record.
+func (q *Queries) UserCreate(ctx context.Context, arg *UserCreateParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, userCreate,
 		arg.Username,
 		arg.Password,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
 	)
-	var client_id pgtype.UUID
+	var client_id uuid.UUID
 	err := row.Scan(&client_id)
 	return client_id, err
 }
 
-const deleteUser = `-- name: deleteUser :execresult
+const userDelete = `-- name: UserDelete :execresult
 UPDATE users
 SET is_deleted=true
 WHERE username=$1 AND is_deleted=false
 `
 
-// deleteUser will soft delete a users account.
-func (q *Queries) deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error) {
-	return q.db.Exec(ctx, deleteUser, username)
+// UserDelete will soft delete a users account.
+func (q *Queries) UserDelete(ctx context.Context, username string) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, userDelete, username)
 }
 
-const getClientIdUser = `-- name: getClientIdUser :one
+const userGetClientId = `-- name: UserGetClientId :one
 SELECT client_id
 FROM users
 WHERE username=$1
 LIMIT 1
 `
 
-// getClientIdUser will retrieve a users client id.
-func (q *Queries) getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, getClientIdUser, username)
-	var client_id pgtype.UUID
+// UserGetClientId will retrieve a users client id.
+func (q *Queries) UserGetClientId(ctx context.Context, username string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, userGetClientId, username)
+	var client_id uuid.UUID
 	err := row.Scan(&client_id)
 	return client_id, err
 }
 
-const getCredentialsUser = `-- name: getCredentialsUser :one
+const userGetCredentials = `-- name: UserGetCredentials :one
 SELECT client_id, password
 FROM users
 WHERE username=$1 AND is_deleted=false
 LIMIT 1
 `
 
-type getCredentialsUserRow struct {
-	ClientID pgtype.UUID `json:"clientID"`
-	Password string      `json:"password"`
+type UserGetCredentialsRow struct {
+	ClientID uuid.UUID `json:"clientID"`
+	Password string    `json:"password"`
 }
 
-// getCredentialsUser will retrieve a users client id and password.
-func (q *Queries) getCredentialsUser(ctx context.Context, username string) (getCredentialsUserRow, error) {
-	row := q.db.QueryRow(ctx, getCredentialsUser, username)
-	var i getCredentialsUserRow
+// UserGetCredentials will retrieve a users client id and password.
+func (q *Queries) UserGetCredentials(ctx context.Context, username string) (UserGetCredentialsRow, error) {
+	row := q.db.QueryRow(ctx, userGetCredentials, username)
+	var i UserGetCredentialsRow
 	err := row.Scan(&i.ClientID, &i.Password)
 	return i, err
 }
 
-const getInfoUser = `-- name: getInfoUser :one
+const userGetInfo = `-- name: UserGetInfo :one
 SELECT first_name, last_name, email, client_id, is_deleted
 FROM users
 WHERE username=$1
 LIMIT 1
 `
 
-type getInfoUserRow struct {
-	FirstName string      `json:"firstName"`
-	LastName  string      `json:"lastName"`
-	Email     string      `json:"email"`
-	ClientID  pgtype.UUID `json:"clientID"`
-	IsDeleted bool        `json:"isDeleted"`
+type UserGetInfoRow struct {
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Email     string    `json:"email"`
+	ClientID  uuid.UUID `json:"clientID"`
+	IsDeleted bool      `json:"isDeleted"`
 }
 
-// getInfoUser will retrieve a single users account information.
-func (q *Queries) getInfoUser(ctx context.Context, username string) (getInfoUserRow, error) {
-	row := q.db.QueryRow(ctx, getInfoUser, username)
-	var i getInfoUserRow
+// UserGetInfo will retrieve a single users account information.
+func (q *Queries) UserGetInfo(ctx context.Context, username string) (UserGetInfoRow, error) {
+	row := q.db.QueryRow(ctx, userGetInfo, username)
+	var i UserGetInfoRow
 	err := row.Scan(
 		&i.FirstName,
 		&i.LastName,

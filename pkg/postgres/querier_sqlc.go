@@ -7,42 +7,43 @@ package postgres
 import (
 	"context"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
-	// createUser will create a new user record.
-	createUser(ctx context.Context, arg *createUserParams) (pgtype.UUID, error)
-	// deleteUser will soft delete a users account.
-	deleteUser(ctx context.Context, username string) (pgconn.CommandTag, error)
-	// fiatCreateAccount inserts a fiat account record.
-	fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error)
-	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
-	fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error)
-	// getFiatAccount will retrieve a specific user's account for a given currency.
-	fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error)
-	// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
-	fiatGetAllAccounts(ctx context.Context, clientID pgtype.UUID) ([]FiatAccount, error)
-	// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
-	fiatGetJournalTransaction(ctx context.Context, txID pgtype.UUID) ([]FiatJournal, error)
-	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
-	fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
-	// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+	// FiatCreateAccount inserts a fiat account record.
+	FiatCreateAccount(ctx context.Context, arg *FiatCreateAccountParams) (int64, error)
+	// FiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
+	FiatExternalTransferJournalEntry(ctx context.Context, arg *FiatExternalTransferJournalEntryParams) (FiatExternalTransferJournalEntryRow, error)
+	// FiatGetAccount will retrieve a specific user's account for a given currency.
+	FiatGetAccount(ctx context.Context, arg *FiatGetAccountParams) (FiatAccount, error)
+	// FiatGetAllAccounts will retrieve all accounts associated with a specific user.
+	FiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error)
+	// FiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
+	FiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error)
+	// FiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
+	FiatGetJournalTransactionForAccount(ctx context.Context, arg *FiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
+	// FiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
 	// in a date range.
-	fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
-	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
-	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
-	// fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
-	fiatRowLockAccount(ctx context.Context, arg *fiatRowLockAccountParams) (pgtype.Numeric, error)
-	// fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
-	fiatUpdateAccountBalance(ctx context.Context, arg *fiatUpdateAccountBalanceParams) (fiatUpdateAccountBalanceRow, error)
-	// getClientIdUser will retrieve a users client id.
-	getClientIdUser(ctx context.Context, username string) (pgtype.UUID, error)
-	// getCredentialsUser will retrieve a users client id and password.
-	getCredentialsUser(ctx context.Context, username string) (getCredentialsUserRow, error)
-	// getInfoUser will retrieve a single users account information.
-	getInfoUser(ctx context.Context, username string) (getInfoUserRow, error)
+	FiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *FiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
+	// FiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
+	FiatInternalTransferJournalEntry(ctx context.Context, arg *FiatInternalTransferJournalEntryParams) (FiatInternalTransferJournalEntryRow, error)
+	// FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
+	FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (pgtype.Numeric, error)
+	// FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
+	FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error)
+	// UserCreate will create a new user record.
+	UserCreate(ctx context.Context, arg *UserCreateParams) (uuid.UUID, error)
+	// UserDelete will soft delete a users account.
+	UserDelete(ctx context.Context, username string) (pgconn.CommandTag, error)
+	// UserGetClientId will retrieve a users client id.
+	UserGetClientId(ctx context.Context, username string) (uuid.UUID, error)
+	// UserGetCredentials will retrieve a users client id and password.
+	UserGetCredentials(ctx context.Context, username string) (UserGetCredentialsRow, error)
+	// UserGetInfo will retrieve a single users account information.
+	UserGetInfo(ctx context.Context, username string) (UserGetInfoRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

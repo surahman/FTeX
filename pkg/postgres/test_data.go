@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -119,8 +120,8 @@ pool:
 }
 
 // getTestUsers will generate a number of test users for testing.
-func getTestUsers() map[string]createUserParams {
-	users := make(map[string]createUserParams)
+func getTestUsers() map[string]UserCreateParams {
+	users := make(map[string]UserCreateParams)
 	username := "username%d"
 	password := "user-password-%d"
 	firstname := "firstname-%d"
@@ -129,7 +130,7 @@ func getTestUsers() map[string]createUserParams {
 
 	for idx := 1; idx < 5; idx++ {
 		uname := fmt.Sprintf(username, idx)
-		users[uname] = createUserParams{
+		users[uname] = UserCreateParams{
 			Username:  fmt.Sprintf(username, idx),
 			Password:  fmt.Sprintf(password, idx),
 			FirstName: fmt.Sprintf(firstname, idx),
@@ -142,8 +143,8 @@ func getTestUsers() map[string]createUserParams {
 }
 
 // getTestFiatAccounts generates a number of test fiat accounts.
-func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]fiatCreateAccountParams {
-	return map[string][]fiatCreateAccountParams{
+func getTestFiatAccounts(clientID1, clientID2 uuid.UUID) map[string][]FiatCreateAccountParams {
+	return map[string][]FiatCreateAccountParams{
 		"clientID1": {
 			{
 				ClientID: clientID1,
@@ -172,8 +173,8 @@ func getTestFiatAccounts(clientID1, clientID2 pgtype.UUID) map[string][]fiatCrea
 }
 
 // getTestJournalInternalFiatAccounts generates a number of test fiat internal transfer journal entries.
-func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
-	map[string]fiatInternalTransferJournalEntryParams, error) {
+func getTestJournalInternalFiatAccounts(clientID1, clientID2 uuid.UUID) (
+	map[string]FiatInternalTransferJournalEntryParams, error) {
 	amount1Credit := pgtype.Numeric{}
 	if err := amount1Credit.Scan("123.45"); err != nil {
 		return nil, fmt.Errorf("failed to convert 123.45: %w", err)
@@ -204,7 +205,7 @@ func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
 		return nil, fmt.Errorf("failed to convert -9192.24 %w", err)
 	}
 
-	return map[string]fiatInternalTransferJournalEntryParams{
+	return map[string]FiatInternalTransferJournalEntryParams{
 			"CAD-AED": {
 				SourceAccount:       clientID1,
 				SourceCurrency:      CurrencyCAD,
@@ -234,8 +235,8 @@ func getTestJournalInternalFiatAccounts(clientID1, clientID2 pgtype.UUID) (
 }
 
 // getTestFiatJournal generates a number of test general ledger entry parameters.
-func getTestFiatJournal(clientID1, clientID2 pgtype.UUID) (
-	map[string]fiatExternalTransferJournalEntryParams, error) {
+func getTestFiatJournal(clientID1, clientID2 uuid.UUID) (
+	map[string]FiatExternalTransferJournalEntryParams, error) {
 	// Create balance amounts.
 	amount1 := pgtype.Numeric{}
 	if err := amount1.Scan("1024.55"); err != nil {
@@ -252,7 +253,7 @@ func getTestFiatJournal(clientID1, clientID2 pgtype.UUID) (
 		return nil, fmt.Errorf("failed to marshal 256.44 to pgtype %w", err)
 	}
 
-	return map[string]fiatExternalTransferJournalEntryParams{
+	return map[string]FiatExternalTransferJournalEntryParams{
 			"Client ID 1 - USD": {
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
