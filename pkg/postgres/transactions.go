@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -32,10 +33,9 @@ type FiatTransactionDetails struct {
 */
 func (lhs *FiatTransactionDetails) Less(rhs *FiatTransactionDetails) (
 	**FiatTransactionDetails, **FiatTransactionDetails) {
-	lhsUUID := lhs.ClientID.String()
-	rhsUUID := rhs.ClientID.String()
+	compare := bytes.Compare(lhs.ClientID.Bytes(), rhs.ClientID.Bytes())
 
-	if (lhsUUID == rhsUUID && lhs.Currency > rhs.Currency) || (lhsUUID > rhsUUID) {
+	if (compare == 0 && lhs.Currency > rhs.Currency) || compare > 0 {
 		return &rhs, &lhs
 	}
 
