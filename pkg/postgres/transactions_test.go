@@ -7,9 +7,116 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
+
+func TestTransactions_FiatTransactionsDetails_Less(t *testing.T) {
+	t.Parallel()
+
+	firstUUID, err := uuid.FromString("515fb04e-ea91-460b-ad4e-487cb673601e")
+	require.NoError(t, err, "failed to parse first UUID.")
+
+	secondUUID, err := uuid.FromString("d68d52a1-aa7c-4301-a27f-611196726edc")
+	require.NoError(t, err, "failed to parse second UUID.")
+
+	var (
+		uuid1USD = &FiatTransactionDetails{ClientID: firstUUID, Currency: CurrencyUSD}
+		uuid1AED = &FiatTransactionDetails{ClientID: firstUUID, Currency: CurrencyAED}
+		uuid2USD = &FiatTransactionDetails{ClientID: secondUUID, Currency: CurrencyUSD}
+		uuid2AED = &FiatTransactionDetails{ClientID: secondUUID, Currency: CurrencyAED}
+	)
+
+	testCases := []struct {
+		name        string
+		lhs         *FiatTransactionDetails
+		rhs         *FiatTransactionDetails
+		expectedLHS *FiatTransactionDetails
+		expectedRHS *FiatTransactionDetails
+	}{
+		{
+			name:        "UUID1 USD, UUID1 AED - Swap",
+			lhs:         uuid1USD,
+			rhs:         uuid1AED,
+			expectedLHS: uuid1AED,
+			expectedRHS: uuid1USD,
+		}, {
+			name:        "UUID1 USD, UUID2 USD - No swap",
+			lhs:         uuid1USD,
+			rhs:         uuid2USD,
+			expectedLHS: uuid1USD,
+			expectedRHS: uuid2USD,
+		}, {
+			name:        "UUID1 USD, UUID2 AED - No swap",
+			lhs:         uuid1USD,
+			rhs:         uuid2AED,
+			expectedLHS: uuid1USD,
+			expectedRHS: uuid2AED,
+		}, {
+			name:        "UUID1 AED, UUID2 USD - No swap",
+			lhs:         uuid1AED,
+			rhs:         uuid2USD,
+			expectedLHS: uuid1AED,
+			expectedRHS: uuid2USD,
+		}, {
+			name:        "UUID1 AED, UUID2 AED - No swap",
+			lhs:         uuid1AED,
+			rhs:         uuid2AED,
+			expectedLHS: uuid1AED,
+			expectedRHS: uuid2AED,
+		}, {
+			name:        "UUID2 AED, UUID1 USD - Swap.",
+			lhs:         uuid2AED,
+			rhs:         uuid1USD,
+			expectedLHS: uuid1USD,
+			expectedRHS: uuid2AED,
+		}, {
+			name:        "UUID2 AED, UUID2 USD - No swap.",
+			lhs:         uuid2AED,
+			rhs:         uuid2USD,
+			expectedLHS: uuid2AED,
+			expectedRHS: uuid2USD,
+		}, {
+			name:        "UUID2 AED, UUID1 AED - Swap.",
+			lhs:         uuid2AED,
+			rhs:         uuid1AED,
+			expectedLHS: uuid1AED,
+			expectedRHS: uuid2AED,
+		}, {
+			name:        "UUID2 USD, UUID1 USD - Swap.",
+			lhs:         uuid2USD,
+			rhs:         uuid1USD,
+			expectedLHS: uuid1USD,
+			expectedRHS: uuid2USD,
+		}, {
+			name:        "UUID2 USD, UUID1 AED - Swap.",
+			lhs:         uuid2USD,
+			rhs:         uuid1AED,
+			expectedLHS: uuid1AED,
+			expectedRHS: uuid2USD,
+		}, {
+			name:        "UUID1 AED, UUID1 USD - Swap.",
+			lhs:         uuid1AED,
+			rhs:         uuid1USD,
+			expectedLHS: uuid1AED,
+			expectedRHS: uuid1USD,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			first, second := test.lhs.Less(test.rhs)
+
+			require.Equal(t, test.expectedLHS, *first, "first parameter did not match expected.")
+			require.Equal(t, test.expectedRHS, *second, "second parameter did not match expected.")
+		})
+	}
+}
 
 func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	// Skip integration tests for short test runs.

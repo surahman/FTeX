@@ -19,6 +19,29 @@ type FiatTransactionDetails struct {
 	Amount   float64   `json:"amount"`
 }
 
+// Less returns a total ordering on two FiatTransactionDetails structs.
+/*	IF
+ [1] 	LHS UUID is equal to the RHS UUID
+		AND
+		LHS Currency is greater than the RHS Currency
+ [2] 	OR
+		LHS UUID is greater than the RHS UUID
+	RETURN RHS and LHS
+		ELSE
+	RETURN LHS and RHS
+*/
+func (lhs *FiatTransactionDetails) Less(rhs *FiatTransactionDetails) (
+	**FiatTransactionDetails, **FiatTransactionDetails) {
+	lhsUUID := lhs.ClientID.String()
+	rhsUUID := rhs.ClientID.String()
+
+	if (lhsUUID == rhsUUID && lhs.Currency > rhs.Currency) || (lhsUUID > rhsUUID) {
+		return &rhs, &lhs
+	}
+
+	return &lhs, &rhs
+}
+
 type FiatAccountTransferResult struct {
 	TxID     uuid.UUID          `json:"txId"`
 	ClientID uuid.UUID          `json:"clientId"`
