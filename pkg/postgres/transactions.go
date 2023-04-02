@@ -10,14 +10,13 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/surahman/FTeX/pkg/utilities"
 	"go.uber.org/zap"
 )
 
 type FiatTransactionDetails struct {
-	ClientID uuid.UUID `json:"clientId"`
-	Currency Currency  `json:"currency"`
-	Amount   float64   `json:"amount"`
+	ClientID uuid.UUID      `json:"clientId"`
+	Currency Currency       `json:"currency"`
+	Amount   pgtype.Numeric `json:"amount"`
 }
 
 // Less returns a total ordering on two FiatTransactionDetails structs.
@@ -72,18 +71,9 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 	var (
 		err        error
 		tx         pgx.Tx
-		txAmount   pgtype.Numeric
 		journalRow FiatExternalTransferJournalEntryRow
 		updateRow  FiatUpdateAccountBalanceRow
 	)
-
-	// Create transaction amount.
-	if err = txAmount.Scan(utilities.Float64TwoDecimalPlacesString(xferDetails.Amount)); err != nil {
-		msg := "failed to truncate the external Fiat transaction amount to two decimal places"
-		p.logger.Warn(msg, zap.Error(err))
-
-		return nil, fmt.Errorf(msg+" %w", err)
-	}
 
 	// Begin transaction.
 
@@ -121,7 +111,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 	if journalRow, err = queryTx.FiatExternalTransferJournalEntry(ctx, &FiatExternalTransferJournalEntryParams{
 		ClientID: xferDetails.ClientID,
 		Currency: xferDetails.Currency,
-		Amount:   txAmount,
+		Amount:   xferDetails.Amount,
 	}); err != nil {
 		msg := "failed to post Fiat account Journal entries"
 		p.logger.Warn(msg, zap.Error(err))
@@ -133,7 +123,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 	if updateRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: xferDetails.ClientID,
 		Currency: xferDetails.Currency,
-		LastTx:   txAmount,
+		LastTx:   xferDetails.Amount,
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to update Fiat account balance"
@@ -200,9 +190,14 @@ func fiatTransactionRowLockAndBalanceCheck(
 		return fmt.Errorf("failed to convert source Fiat account balance to float64 %w", err)
 	}
 
+	transactionAmount, err := src.Amount.Float64Value()
+	if err != nil {
+		return fmt.Errorf("failed to convert transaction amount to float64 %w", err)
+	}
+
 	// BEWARE IEEE FLOATING POINT PRECISION ISSUES.
-	if balance.Float64 < src.Amount {
-		return fmt.Errorf("insufficient balance in source account: %f, %f", balance.Float64, src.Amount)
+	if balance.Float64 < transactionAmount.Float64 {
+		return fmt.Errorf("insufficient balance in source account: %f, %f", balance.Float64, transactionAmount.Float64)
 	}
 
 	return nil
@@ -229,29 +224,13 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	var (
 		err           error
 		tx            pgx.Tx
-		srcAmount     pgtype.Numeric
-		dstAmount     pgtype.Numeric
 		journalRow    FiatInternalTransferJournalEntryRow
 		postCreditRow FiatUpdateAccountBalanceRow
 		postDebitRow  FiatUpdateAccountBalanceRow
 	)
 
-	// Create transaction amounts. The debit/source amount should be negative.
-	if err = srcAmount.Scan(utilities.Float64TwoDecimalPlacesString(-src.Amount)); err != nil {
-		msg := "failed to truncate the source Fiat transaction amount to two decimal places"
-		p.logger.Warn(msg, zap.Error(err))
-
-		return nil, nil, fmt.Errorf(msg+" %w", err)
-	}
-
-	if err = dstAmount.Scan(utilities.Float64TwoDecimalPlacesString(dst.Amount)); err != nil {
-		msg := "failed to truncate the destination Fiat transaction amount to two decimal places"
-		p.logger.Warn(msg, zap.Error(err))
-
-		return nil, nil, fmt.Errorf(msg+" %w", err)
-	}
-
 	// Begin transaction.
+
 	if tx, err = p.pool.Begin(ctx); err != nil {
 		msg := "internal transfer Fiat transaction block setup failed"
 		p.logger.Warn(msg, zap.Error(err))
@@ -284,10 +263,10 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	if journalRow, err = queryTx.FiatInternalTransferJournalEntry(ctx, &FiatInternalTransferJournalEntryParams{
 		DestinationAccount:  dst.ClientID,
 		DestinationCurrency: dst.Currency,
-		CreditAmount:        dstAmount,
+		CreditAmount:        dst.Amount,
 		SourceAccount:       src.ClientID,
 		SourceCurrency:      src.Currency,
-		DebitAmount:         srcAmount,
+		DebitAmount:         src.Amount,
 	}); err != nil {
 		msg := "failed to post Fiat account Journal entries for internal transfer"
 		p.logger.Warn(msg, zap.Error(err))
@@ -299,7 +278,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	if postCreditRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: dst.ClientID,
 		Currency: dst.Currency,
-		LastTx:   dstAmount,
+		LastTx:   dst.Amount,
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to credit Fiat account balance for internal transfer"
@@ -311,7 +290,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	if postDebitRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: src.ClientID,
 		Currency: src.Currency,
-		LastTx:   srcAmount,
+		LastTx:   src.Amount,
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to debit Fiat account balance for internal transfer"
