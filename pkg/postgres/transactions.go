@@ -211,7 +211,7 @@ func fiatTransactionRowLockAndBalanceCheck(
     [1] Convert the transaction amounts to a pgtype and truncate to two decimal places. This is to adjust for the
 		floating point precision representational issues.
     [2] Acquire a row lock on the accounts without holding a lock on the foreign key for the Client ID.
-        There accounts will be compared for against each other using a total order rule.
+        Their accounts will be compared against each other using a total order rule.
     [3] Make the Journal entries for both of the accounts.
     [4] Update the balance for both of the accounts.
 */
