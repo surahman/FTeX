@@ -5,9 +5,9 @@ go 1.20
 require (
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v5 v5.2.0
 	github.com/rs/xid v1.4.0
+	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/afero v1.9.3
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.2
