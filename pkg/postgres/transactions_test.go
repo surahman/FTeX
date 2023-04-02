@@ -9,17 +9,9 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
-
-func createPgTypeNumeric(t *testing.T, val string) pgtype.Numeric {
-	t.Helper()
-
-	numeric := pgtype.Numeric{}
-	require.NoErrorf(t, numeric.Scan(val), "failed to convert %s to pgtype numeric.", val)
-
-	return numeric
-}
 
 func TestTransactions_FiatTransactionsDetails_Less(t *testing.T) {
 	t.Parallel()
@@ -143,8 +135,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// End of test expected totals.
-	expectedTotal := pgtype.Numeric{}
-	require.NoError(t, expectedTotal.Scan("52145.79"))
+	expectedTotal := decimal.NewFromFloat(52145.79)
 
 	// Test grid.
 	testCases := []struct {
@@ -159,7 +150,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 			accountDetails: &FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: "USD",
-				Amount:   createPgTypeNumeric(t, "5443.9786"),
+				Amount:   decimal.NewFromFloat(5443.9786),
 			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
@@ -168,7 +159,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 			accountDetails: &FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: "USD",
-				Amount:   createPgTypeNumeric(t, "-1293.4321"),
+				Amount:   decimal.NewFromFloat(-1293.4321),
 			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
@@ -177,7 +168,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 			accountDetails: &FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: "USD",
-				Amount:   createPgTypeNumeric(t, "-4.1235"),
+				Amount:   decimal.NewFromFloat(-4.1235),
 			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
@@ -186,7 +177,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 			accountDetails: &FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: "USD",
-				Amount:   createPgTypeNumeric(t, "47999.3587"),
+				Amount:   decimal.NewFromFloat(47999.3587),
 			},
 			errExpectation:       require.NoError,
 			nilResultExpectation: require.NotNil,
@@ -195,7 +186,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 			accountDetails: &FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: "GBP",
-				Amount:   createPgTypeNumeric(t, "1234.5678"),
+				Amount:   decimal.NewFromFloat(1234.5678),
 			},
 			errExpectation:       require.Error,
 			nilResultExpectation: require.Nil,
@@ -230,8 +221,6 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 				require.False(t, transferResult.ClientID.IsNil(), "invalid client ID returned.")
 				require.True(t, transferResult.Currency.Valid(), "invalid currency returned.")
 				require.True(t, transferResult.TxTS.Valid, "invalid transaction timestamp returned.")
-				require.True(t, transferResult.LastTx.Valid, "invalid last transaction returned.")
-				require.True(t, transferResult.Balance.Valid, "invalid balance returned.")
 
 				// Check for journal entries.
 				journalRow, err := connection.Query.FiatGetJournalTransaction(ctx, transferResult.TxID)
@@ -272,18 +261,15 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Initial balances, transaction amounts, and timestamp.
-	balanceClientID1 := pgtype.Numeric{}
-	require.NoError(t, balanceClientID1.Scan("52145.77"), "failed to create ClientID1 balance.")
+	var (
+		balanceClientID1 = decimal.NewFromFloat(52145.77)
+		balanceClientID2 = decimal.NewFromFloat(1921.68)
+		amount20k        = decimal.NewFromFloat(20987.65)
+		amount1k         = decimal.NewFromFloat(1234.56)
+		txTimestamp      = pgtype.Timestamptz{}
+	)
 
-	balanceClientID2 := pgtype.Numeric{}
-	require.NoError(t, balanceClientID2.Scan("1921.68"), "failed to create ClientID2 balance.")
-
-	txTimestamp := pgtype.Timestamptz{}
 	require.NoError(t, txTimestamp.Scan(time.Now().UTC()), "failed to create current timestamp.")
-
-	const amount20k = "20987.65"
-
-	const amount1k = "1234.56"
 
 	// Configure context for test suite.
 	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
@@ -321,12 +307,12 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, amount20k),
+				Amount:   amount20k,
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
-				Amount:   createPgTypeNumeric(t, amount1k),
+				Amount:   amount1k,
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -334,12 +320,12 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
-				Amount:   createPgTypeNumeric(t, amount1k),
+				Amount:   amount1k,
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, amount20k),
+				Amount:   amount20k,
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -347,12 +333,12 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "52145.98"),
+				Amount:   decimal.NewFromFloat(52145.80),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
-				Amount:   createPgTypeNumeric(t, amount20k),
+				Amount:   amount20k,
 			},
 			errExpectation: require.Error,
 		}, {
@@ -360,12 +346,12 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
-				Amount:   createPgTypeNumeric(t, amount20k),
+				Amount:   amount20k,
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, amount1k),
+				Amount:   amount1k,
 			},
 			errExpectation: require.Error,
 		},
@@ -396,7 +382,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	}
 }
 
-func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
+func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -411,21 +397,14 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 	// Reset the Fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// End of test expected totals.
-	expectedTotalClientID1 := pgtype.Numeric{}
-	require.NoError(t, expectedTotalClientID1.Scan("616115.59"))
+	var (
+		expectedTotalClientID1 = decimal.NewFromFloat(616115.59)
+		expectedTotalClientID2 = decimal.NewFromFloat(284321.37)
+		balanceClientID1       = decimal.NewFromFloat(521459.77)
+		balanceClientID2       = decimal.NewFromFloat(192103.68)
+		txTimestamp            = pgtype.Timestamptz{}
+	)
 
-	expectedTotalClientID2 := pgtype.Numeric{}
-	require.NoError(t, expectedTotalClientID2.Scan("284321.37"))
-
-	// Initial balances, transaction amounts, and timestamp.
-	balanceClientID1 := pgtype.Numeric{}
-	require.NoError(t, balanceClientID1.Scan("521459.77"), "failed to create ClientID1 balance.")
-
-	balanceClientID2 := pgtype.Numeric{}
-	require.NoError(t, balanceClientID2.Scan("192103.68"), "failed to create ClientID2 balance.")
-
-	txTimestamp := pgtype.Timestamptz{}
 	require.NoError(t, txTimestamp.Scan(time.Now().UTC()), "failed to create current timestamp.")
 
 	// Configure context for test suite.
@@ -462,12 +441,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "6830.69"),
+				Amount:   decimal.NewFromFloat(6830.69),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "10182.72"),
+				Amount:   decimal.NewFromFloat(10182.72),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -475,12 +454,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "9300.58"),
+				Amount:   decimal.NewFromFloat(9300.58),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "11894.37"),
+				Amount:   decimal.NewFromFloat(11894.37),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -488,12 +467,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "5741.18"),
+				Amount:   decimal.NewFromFloat(5741.18),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "7678.79"),
+				Amount:   decimal.NewFromFloat(7678.79),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -501,12 +480,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "5034.36"),
+				Amount:   decimal.NewFromFloat(5034.36),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "2469.99"),
+				Amount:   decimal.NewFromFloat(2469.99),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -514,12 +493,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "14657.84"),
+				Amount:   decimal.NewFromFloat(14657.84),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "14763.92"),
+				Amount:   decimal.NewFromFloat(14763.92),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -527,12 +506,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "12517.73"),
+				Amount:   decimal.NewFromFloat(12517.73),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "12828.39"),
+				Amount:   decimal.NewFromFloat(12828.39),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -540,12 +519,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "7887.40"),
+				Amount:   decimal.NewFromFloat(7887.40),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "10453.91"),
+				Amount:   decimal.NewFromFloat(10453.91),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -553,12 +532,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "7838.29"),
+				Amount:   decimal.NewFromFloat(7838.29),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "6783.08"),
+				Amount:   decimal.NewFromFloat(6783.08),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -566,12 +545,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "14287.55"),
+				Amount:   decimal.NewFromFloat(14287.55),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "2407.57"),
+				Amount:   decimal.NewFromFloat(2407.57),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -579,12 +558,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "12039.82"),
+				Amount:   decimal.NewFromFloat(12039.82),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "11275.33"),
+				Amount:   decimal.NewFromFloat(11275.33),
 			},
 			errExpectation: require.NoError,
 		}, {
@@ -592,12 +571,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
-				Amount:   createPgTypeNumeric(t, "999999.82"),
+				Amount:   decimal.NewFromFloat(999999.82),
 			},
 			destination: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				Amount:   createPgTypeNumeric(t, "11275.33"),
+				Amount:   decimal.NewFromFloat(11275.33),
 			},
 			errExpectation: require.Error,
 		},
@@ -626,16 +605,12 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 				require.Equal(t, test.source.ClientID, srcResult.ClientID, "source client id mismatch.")
 				require.Equal(t, test.source.Currency, srcResult.Currency, "source currency mismatch.")
 				require.False(t, srcResult.TxID.IsNil(), "source transaction id is invalid.")
-				require.True(t, srcResult.Balance.Valid, "source balance is invalid.")
-				require.True(t, srcResult.LastTx.Valid, "source last transaction is invalid.")
 				require.True(t, srcResult.TxTS.Valid, "source transaction timestamp is invalid.")
 
 				require.False(t, dstResult.ClientID.IsNil(), "destination client id is invalid.")
 				require.Equal(t, test.destination.ClientID, dstResult.ClientID, "destination client id mismatch.")
 				require.Equal(t, test.destination.Currency, dstResult.Currency, "destination currency mismatch.")
 				require.False(t, dstResult.TxID.IsNil(), "destination transaction id is invalid.")
-				require.True(t, dstResult.Balance.Valid, "destination balance is invalid.")
-				require.True(t, dstResult.LastTx.Valid, "destination last transaction is invalid.")
 				require.True(t, dstResult.TxTS.Valid, "destination transaction timestamp is invalid.")
 
 				// Check for journal entries.

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gofrs/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 // configTestData will return a map of test data containing valid and invalid logger configs.
@@ -173,117 +173,76 @@ func getTestFiatAccounts(clientID1, clientID2 uuid.UUID) map[string][]FiatCreate
 }
 
 // getTestJournalInternalFiatAccounts generates a number of test fiat internal transfer journal entries.
-func getTestJournalInternalFiatAccounts(clientID1, clientID2 uuid.UUID) (
-	map[string]FiatInternalTransferJournalEntryParams, error) {
-	amount1Credit := pgtype.Numeric{}
-	if err := amount1Credit.Scan("123.45"); err != nil {
-		return nil, fmt.Errorf("failed to convert 123.45: %w", err)
-	}
-
-	amount1Debit := pgtype.Numeric{}
-	if err := amount1Debit.Scan("-123.45"); err != nil {
-		return nil, fmt.Errorf("failed to convert -123.45: %w", err)
-	}
-
-	amount2Credit := pgtype.Numeric{}
-	if err := amount2Credit.Scan("4567.89"); err != nil {
-		return nil, fmt.Errorf("failed to convert 4567.89 %w", err)
-	}
-
-	amount2Debit := pgtype.Numeric{}
-	if err := amount2Debit.Scan("-4567.89"); err != nil {
-		return nil, fmt.Errorf("failed to convert -4567.89 %w", err)
-	}
-
-	amount3Credit := pgtype.Numeric{}
-	if err := amount3Credit.Scan("9192.24"); err != nil {
-		return nil, fmt.Errorf("failed to convert 9192.24 %w", err)
-	}
-
-	amount3Debit := pgtype.Numeric{}
-	if err := amount3Debit.Scan("-9192.24"); err != nil {
-		return nil, fmt.Errorf("failed to convert -9192.24 %w", err)
-	}
-
+func getTestJournalInternalFiatAccounts(
+	clientID1,
+	clientID2 uuid.UUID) map[string]FiatInternalTransferJournalEntryParams {
 	return map[string]FiatInternalTransferJournalEntryParams{
-			"CAD-AED": {
-				SourceAccount:       clientID1,
-				SourceCurrency:      CurrencyCAD,
-				DestinationAccount:  clientID2,
-				DestinationCurrency: CurrencyAED,
-				CreditAmount:        amount1Credit,
-				DebitAmount:         amount1Debit,
-			},
-			"CAD-USD": {
-				SourceAccount:       clientID1,
-				SourceCurrency:      CurrencyCAD,
-				DestinationAccount:  clientID2,
-				DestinationCurrency: CurrencyUSD,
-				CreditAmount:        amount2Credit,
-				DebitAmount:         amount2Debit,
-			},
-			"USD-AED": {
-				SourceAccount:       clientID1,
-				SourceCurrency:      CurrencyUSD,
-				DestinationAccount:  clientID2,
-				DestinationCurrency: CurrencyAED,
-				CreditAmount:        amount3Credit,
-				DebitAmount:         amount3Debit,
-			},
+		"CAD-AED": {
+			SourceAccount:       clientID1,
+			SourceCurrency:      CurrencyCAD,
+			DestinationAccount:  clientID2,
+			DestinationCurrency: CurrencyAED,
+			CreditAmount:        decimal.NewFromFloat(123.45),
+			DebitAmount:         decimal.NewFromFloat(-123.45),
 		},
-		nil
+		"CAD-USD": {
+			SourceAccount:       clientID1,
+			SourceCurrency:      CurrencyCAD,
+			DestinationAccount:  clientID2,
+			DestinationCurrency: CurrencyUSD,
+			CreditAmount:        decimal.NewFromFloat(4567.89),
+			DebitAmount:         decimal.NewFromFloat(-4567.89),
+		},
+		"USD-AED": {
+			SourceAccount:       clientID1,
+			SourceCurrency:      CurrencyUSD,
+			DestinationAccount:  clientID2,
+			DestinationCurrency: CurrencyAED,
+			CreditAmount:        decimal.NewFromFloat(9192.24),
+			DebitAmount:         decimal.NewFromFloat(-9192.24),
+		},
+	}
 }
 
 // getTestFiatJournal generates a number of test general ledger entry parameters.
-func getTestFiatJournal(clientID1, clientID2 uuid.UUID) (
-	map[string]FiatExternalTransferJournalEntryParams, error) {
+func getTestFiatJournal(clientID1, clientID2 uuid.UUID) map[string]FiatExternalTransferJournalEntryParams {
 	// Create balance amounts.
-	amount1 := pgtype.Numeric{}
-	if err := amount1.Scan("1024.55"); err != nil {
-		return nil, fmt.Errorf("failed to marshal 1024.55 to pgtype %w", err)
-	}
-
-	amount2 := pgtype.Numeric{}
-	if err := amount2.Scan("4096.89"); err != nil {
-		return nil, fmt.Errorf("failed to marshal 4096.89 to pgtype %w", err)
-	}
-
-	amount3 := pgtype.Numeric{}
-	if err := amount3.Scan("256.44"); err != nil {
-		return nil, fmt.Errorf("failed to marshal 256.44 to pgtype %w", err)
-	}
+	var (
+		amount1 = decimal.NewFromFloat(1024.55)
+		amount2 = decimal.NewFromFloat(4096.89)
+		amount3 = decimal.NewFromFloat(256.44)
+	)
 
 	return map[string]FiatExternalTransferJournalEntryParams{
-			"Client ID 1 - USD": {
-				ClientID: clientID1,
-				Currency: CurrencyUSD,
-				Amount:   amount1,
-			},
-			"Client ID 1 - AED": {
-				ClientID: clientID1,
-				Currency: CurrencyAED,
-				Amount:   amount2,
-			},
-			"Client ID 1 - CAD": {
-				ClientID: clientID1,
-				Currency: CurrencyCAD,
-				Amount:   amount3,
-			},
-			"Client ID 2 - USD": {
-				ClientID: clientID2,
-				Currency: CurrencyUSD,
-				Amount:   amount2,
-			},
-			"Client ID 2 - AED": {
-				ClientID: clientID2,
-				Currency: CurrencyAED,
-				Amount:   amount3,
-			},
-			"Client ID 2 - CAD": {
-				ClientID: clientID2,
-				Currency: CurrencyCAD,
-				Amount:   amount1,
-			},
+		"Client ID 1 - USD": {
+			ClientID: clientID1,
+			Currency: CurrencyUSD,
+			Amount:   amount1,
 		},
-		nil
+		"Client ID 1 - AED": {
+			ClientID: clientID1,
+			Currency: CurrencyAED,
+			Amount:   amount2,
+		},
+		"Client ID 1 - CAD": {
+			ClientID: clientID1,
+			Currency: CurrencyCAD,
+			Amount:   amount3,
+		},
+		"Client ID 2 - USD": {
+			ClientID: clientID2,
+			Currency: CurrencyUSD,
+			Amount:   amount2,
+		},
+		"Client ID 2 - AED": {
+			ClientID: clientID2,
+			Currency: CurrencyAED,
+			Amount:   amount3,
+		},
+		"Client ID 2 - CAD": {
+			ClientID: clientID2,
+			Currency: CurrencyCAD,
+			Amount:   amount1,
+		},
+	}
 }
