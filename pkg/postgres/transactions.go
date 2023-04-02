@@ -330,19 +330,19 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 
 	return &FiatAccountTransferResult{
 			TxID:     journalRow.TxID,
-			ClientID: dst.ClientID,
-			TxTS:     postCreditRow.LastTxTs,
-			Balance:  postCreditRow.Balance,
-			LastTx:   postCreditRow.LastTx,
-			Currency: dst.Currency,
-		},
-		&FiatAccountTransferResult{
-			TxID:     journalRow.TxID,
 			ClientID: src.ClientID,
 			TxTS:     postDebitRow.LastTxTs,
 			Balance:  postDebitRow.Balance,
 			LastTx:   postDebitRow.LastTx,
 			Currency: src.Currency,
+		},
+		&FiatAccountTransferResult{
+			TxID:     journalRow.TxID,
+			ClientID: dst.ClientID,
+			TxTS:     postCreditRow.LastTxTs,
+			Balance:  postCreditRow.Balance,
+			LastTx:   postCreditRow.LastTx,
+			Currency: dst.Currency,
 		},
 		nil
 }
