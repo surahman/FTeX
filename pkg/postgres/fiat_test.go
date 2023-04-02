@@ -123,10 +123,8 @@ func TestFiat_FiatRowLockAccount(t *testing.T) {
 		test := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
-			balance, err := connection.Query.FiatRowLockAccount(ctx, &test.parameter)
+			_, err := connection.Query.FiatRowLockAccount(ctx, &test.parameter)
 			test.errExpected(t, err, "error expectation condition failed.")
-
-			_ = balance
 		})
 	}
 }
