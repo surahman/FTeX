@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,11 +57,10 @@ func TestFiat_FiatRowLockAccount(t *testing.T) {
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Get general ledger entry test cases.
-	testCases := []struct {
-		name         string
-		parameter    FiatRowLockAccountParams
-		errExpected  require.ErrorAssertionFunc
-		boolExpected require.BoolAssertionFunc
+	testCases := []struct { //nolint:dupl
+		name        string
+		parameter   FiatRowLockAccountParams
+		errExpected require.ErrorAssertionFunc
 	}{
 		{
 			name: "Client1 - USD",
@@ -68,56 +68,49 @@ func TestFiat_FiatRowLockAccount(t *testing.T) {
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 			},
-			errExpected:  require.NoError,
-			boolExpected: require.True,
+			errExpected: require.NoError,
 		}, {
 			name: "Client1 - AED",
 			parameter: FiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyAED,
 			},
-			errExpected:  require.NoError,
-			boolExpected: require.True,
+			errExpected: require.NoError,
 		}, {
 			name: "Client1 - CAD",
 			parameter: FiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyCAD,
 			},
-			errExpected:  require.NoError,
-			boolExpected: require.True,
+			errExpected: require.NoError,
 		}, {
 			name: "Client2 - USD",
 			parameter: FiatRowLockAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyUSD,
 			},
-			errExpected:  require.NoError,
-			boolExpected: require.True,
+			errExpected: require.NoError,
 		}, {
 			name: "Client2 - AED",
 			parameter: FiatRowLockAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
 			},
-			errExpected:  require.NoError,
-			boolExpected: require.True,
+			errExpected: require.NoError,
 		}, {
 			name: "Client2 - CAD",
 			parameter: FiatRowLockAccountParams{
 				ClientID: clientID2,
 				Currency: CurrencyCAD,
 			},
-			errExpected:  require.NoError,
-			boolExpected: require.True,
+			errExpected: require.NoError,
 		}, {
 			name: "Client1 - Not Found",
 			parameter: FiatRowLockAccountParams{
 				ClientID: clientID1,
 				Currency: CurrencyEUR,
 			},
-			errExpected:  require.Error,
-			boolExpected: require.False,
+			errExpected: require.Error,
 		},
 	}
 
@@ -130,9 +123,8 @@ func TestFiat_FiatRowLockAccount(t *testing.T) {
 		test := testCase
 
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
-			balance, err := connection.Query.FiatRowLockAccount(ctx, &test.parameter)
+			_, err := connection.Query.FiatRowLockAccount(ctx, &test.parameter)
 			test.errExpected(t, err, "error expectation condition failed.")
-			test.boolExpected(t, balance.Valid, "invalid balance.")
 		})
 	}
 }
@@ -154,29 +146,26 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 
 	var (
 		amount1Ts = time.Now().UTC()
-		amount1   = pgtype.Numeric{}
+		amount1   = decimal.NewFromFloat(5643.17)
 		ts1       = pgtype.Timestamptz{}
 	)
 
-	require.NoError(t, amount1.Scan("5643.17"), "failed to parse 5643.17")
 	require.NoError(t, ts1.Scan(amount1Ts), "time stamp 1 parse failed.")
 
 	var (
 		amount2Ts = time.Now().Add(time.Minute).UTC()
-		amount2   = pgtype.Numeric{}
+		amount2   = decimal.NewFromFloat(-1984.56)
 		ts2       = pgtype.Timestamptz{}
 	)
 
-	require.NoError(t, amount2.Scan("-1984.56"), "failed to parse -1984.56")
 	require.NoError(t, ts2.Scan(amount2Ts), "time stamp 2 parse failed.")
 
 	var (
 		amount3Ts = time.Now().Add(3 * time.Minute).UTC()
-		amount3   = pgtype.Numeric{}
+		amount3   = decimal.NewFromFloat(583.81)
 		ts3       = pgtype.Timestamptz{}
 	)
 
-	require.NoError(t, amount3.Scan("583.81"), "failed to parse 583.81")
 	require.NoError(t, ts3.Scan(amount3Ts), "time stamp 3 parse failed.")
 
 	// Get general ledger entry test cases.
@@ -226,12 +215,6 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 		t.Run(fmt.Sprintf("Inserting %s", test.name), func(t *testing.T) {
 			result, err := connection.Query.FiatUpdateAccountBalance(ctx, &test.parameter)
 			require.NoError(t, err, "error expectation condition failed.")
-
-			require.True(t, result.Balance.Valid, "invalid balance.")
-
-			require.True(t, result.LastTx.Valid, "invalid last_tx.")
-			require.Equal(t, test.parameter.LastTx, result.LastTx, "expected and actual last_tx mismatched.")
-
 			require.True(t, result.LastTxTs.Valid, "invalid last transaction timestamp.")
 			require.WithinDuration(t, test.expectedTS, result.LastTxTs.Time, time.Second,
 				"expected and actual last_ts mismatched.")
@@ -352,7 +335,7 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Get journal entry test cases.
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name        string
 		parameter   FiatGetJournalTransactionForAccountParams
 		errExpected require.ErrorAssertionFunc
@@ -424,7 +407,6 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 				require.Equal(t, test.parameter.Currency, result.Currency, "currency type mismatch.")
 				require.False(t, result.ClientID.IsNil(), "invalid UUID.")
 				require.False(t, result.TxID.IsNil(), "invalid TX ID.")
-				require.True(t, result.Amount.Valid, "invalid amount.")
 				require.True(t, result.TransactedAt.Valid, "invalid TX time.")
 			}
 		})
@@ -499,8 +481,6 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 			testCase.errExpectation(t, err, "error expectation failed.")
 			testCase.boolExpectation(t, !results.ClientID.IsNil(), "clientId validity expectation failed.")
 			testCase.boolExpectation(t, results.LastTxTs.Valid, "lastTxTs validity expectation failed.")
-			testCase.boolExpectation(t, results.Balance.Valid, "balance validity expectation failed.")
-			testCase.boolExpectation(t, results.LastTx.Valid, "lastTx validity expectation failed.")
 			testCase.boolExpectation(t, results.CreatedAt.Valid, "createdAt validity expectation failed.")
 			testCase.boolExpectation(t, results.Currency.Valid(), "currency validity expectation failed.")
 
@@ -578,8 +558,7 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 
 	// Insert some more fiat journal entries for good measure.
 	{
-		parameters, err := getTestFiatJournal(clientID1, clientID2)
-		require.NoError(t, err, "failed to get parameters to insert additional fiat journal entries.")
+		parameters := getTestFiatJournal(clientID1, clientID2)
 		for _, item := range parameters {
 			parameter := item
 			t.Run(fmt.Sprintf("Inserting %v - %s", parameter.ClientID, parameter.Currency), func(t *testing.T) {

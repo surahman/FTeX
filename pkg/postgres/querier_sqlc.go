@@ -9,7 +9,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 type Querier interface {
@@ -31,7 +31,7 @@ type Querier interface {
 	// FiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 	FiatInternalTransferJournalEntry(ctx context.Context, arg *FiatInternalTransferJournalEntryParams) (FiatInternalTransferJournalEntryRow, error)
 	// FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
-	FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (pgtype.Numeric, error)
+	FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (decimal.Decimal, error)
 	// FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 	FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error)
 	// UserCreate will create a new user record.

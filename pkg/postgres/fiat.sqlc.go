@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 const fiatCreateAccount = `-- name: FiatCreateAccount :execrows
@@ -67,9 +68,9 @@ RETURNING tx_id, transacted_at
 `
 
 type FiatExternalTransferJournalEntryParams struct {
-	ClientID uuid.UUID      `json:"clientID"`
-	Currency Currency       `json:"currency"`
-	Amount   pgtype.Numeric `json:"amount"`
+	ClientID uuid.UUID       `json:"clientID"`
+	Currency Currency        `json:"currency"`
+	Amount   decimal.Decimal `json:"amount"`
 }
 
 type FiatExternalTransferJournalEntryRow struct {
@@ -300,12 +301,12 @@ RETURNING tx_id, transacted_at
 `
 
 type FiatInternalTransferJournalEntryParams struct {
-	DestinationAccount  uuid.UUID      `json:"destinationAccount"`
-	DestinationCurrency Currency       `json:"destinationCurrency"`
-	CreditAmount        pgtype.Numeric `json:"creditAmount"`
-	SourceAccount       uuid.UUID      `json:"sourceAccount"`
-	SourceCurrency      Currency       `json:"sourceCurrency"`
-	DebitAmount         pgtype.Numeric `json:"debitAmount"`
+	DestinationAccount  uuid.UUID       `json:"destinationAccount"`
+	DestinationCurrency Currency        `json:"destinationCurrency"`
+	CreditAmount        decimal.Decimal `json:"creditAmount"`
+	SourceAccount       uuid.UUID       `json:"sourceAccount"`
+	SourceCurrency      Currency        `json:"sourceCurrency"`
+	DebitAmount         decimal.Decimal `json:"debitAmount"`
 }
 
 type FiatInternalTransferJournalEntryRow struct {
@@ -342,9 +343,9 @@ type FiatRowLockAccountParams struct {
 }
 
 // FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
-func (q *Queries) FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (pgtype.Numeric, error) {
+func (q *Queries) FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (decimal.Decimal, error) {
 	row := q.db.QueryRow(ctx, fiatRowLockAccount, arg.ClientID, arg.Currency)
-	var balance pgtype.Numeric
+	var balance decimal.Decimal
 	err := row.Scan(&balance)
 	return balance, err
 }
@@ -359,13 +360,13 @@ RETURNING balance, last_tx, last_tx_ts
 type FiatUpdateAccountBalanceParams struct {
 	ClientID uuid.UUID          `json:"clientID"`
 	Currency Currency           `json:"currency"`
-	LastTx   pgtype.Numeric     `json:"lastTx"`
+	LastTx   decimal.Decimal    `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 }
 
 type FiatUpdateAccountBalanceRow struct {
-	Balance  pgtype.Numeric     `json:"balance"`
-	LastTx   pgtype.Numeric     `json:"lastTx"`
+	Balance  decimal.Decimal    `json:"balance"`
+	LastTx   decimal.Decimal    `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 }
 

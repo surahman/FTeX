@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 type Currency string
@@ -389,8 +390,8 @@ func (e Currency) Valid() bool {
 
 type FiatAccount struct {
 	Currency  Currency           `json:"currency"`
-	Balance   pgtype.Numeric     `json:"balance"`
-	LastTx    pgtype.Numeric     `json:"lastTx"`
+	Balance   decimal.Decimal    `json:"balance"`
+	LastTx    decimal.Decimal    `json:"lastTx"`
 	LastTxTs  pgtype.Timestamptz `json:"lastTxTs"`
 	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 	ClientID  uuid.UUID          `json:"clientID"`
@@ -398,7 +399,7 @@ type FiatAccount struct {
 
 type FiatJournal struct {
 	Currency     Currency           `json:"currency"`
-	Amount       pgtype.Numeric     `json:"amount"`
+	Amount       decimal.Decimal    `json:"amount"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
 	ClientID     uuid.UUID          `json:"clientID"`
 	TxID         uuid.UUID          `json:"txID"`

@@ -28,6 +28,7 @@ linters-settings:
   gomnd:
     ignored-functions:
       - 'math.*'
+      - 'decimal.*'
   paralleltest:
     ignore-missing: true
   varnamelen:

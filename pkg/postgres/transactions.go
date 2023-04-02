@@ -10,13 +10,14 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
 
 type FiatTransactionDetails struct {
-	ClientID uuid.UUID      `json:"clientId"`
-	Currency Currency       `json:"currency"`
-	Amount   pgtype.Numeric `json:"amount"`
+	ClientID uuid.UUID       `json:"clientId"`
+	Currency Currency        `json:"currency"`
+	Amount   decimal.Decimal `json:"amount"`
 }
 
 // Less returns a total ordering on two FiatTransactionDetails structs.
@@ -45,8 +46,8 @@ type FiatAccountTransferResult struct {
 	TxID     uuid.UUID          `json:"txId"`
 	ClientID uuid.UUID          `json:"clientId"`
 	TxTS     pgtype.Timestamptz `json:"txTimestamp"`
-	Balance  pgtype.Numeric     `json:"balance"`
-	LastTx   pgtype.Numeric     `json:"lastTx"`
+	Balance  decimal.Decimal    `json:"balance"`
+	LastTx   decimal.Decimal    `json:"lastTx"`
 	Currency Currency           `json:"currency"`
 }
 
@@ -184,20 +185,9 @@ func fiatTransactionRowLockAndBalanceCheck(
 		debitBalance = &balanceSecond
 	}
 
-	// Check if the debit amount exceeds the source account balance.
-	balance, err := debitBalance.Float64Value()
-	if err != nil {
-		return fmt.Errorf("failed to convert source Fiat account balance to float64 %w", err)
-	}
-
-	transactionAmount, err := src.Amount.Float64Value()
-	if err != nil {
-		return fmt.Errorf("failed to convert transaction amount to float64 %w", err)
-	}
-
-	// BEWARE IEEE FLOATING POINT PRECISION ISSUES.
-	if balance.Float64 < transactionAmount.Float64 {
-		return fmt.Errorf("insufficient balance in source account: %f, %f", balance.Float64, transactionAmount.Float64)
+	// Check for sufficient funds.
+	if debitBalance.LessThan(src.Amount) {
+		return fmt.Errorf("insufficient balance in source account: %s, %s", debitBalance, src.Amount)
 	}
 
 	return nil

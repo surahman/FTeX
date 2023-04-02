@@ -187,8 +187,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 	require.NoError(t, err, "failed to wipe fiat journal table before reinserting entries.")
 
 	// Get general ledger entry test cases.
-	testCases, err := getTestFiatJournal(clientID1, clientID2)
-	require.NoError(t, err, "failed to generate test cases.")
+	testCases := getTestFiatJournal(clientID1, clientID2)
 
 	// Insert new fiat accounts.
 	for _, testCase := range testCases {
@@ -211,8 +210,7 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 	defer cancel()
 
 	// Get journal entry test cases.
-	testCases, err := getTestJournalInternalFiatAccounts(clientID1, clientID2)
-	require.NoError(t, err, "failed to generate test cases.")
+	testCases := getTestJournalInternalFiatAccounts(clientID1, clientID2)
 
 	// Mapping for transactions to parameters.
 	transactions := make(map[string]FiatInternalTransferJournalEntryRow, len(testCases))
