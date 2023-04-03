@@ -44,6 +44,8 @@ type Querier interface {
 	UserGetCredentials(ctx context.Context, username string) (UserGetCredentialsRow, error)
 	// UserGetInfo will retrieve a single users account information.
 	UserGetInfo(ctx context.Context, username string) (UserGetInfoRow, error)
+	// testRoundHalfEven
+	testRoundHalfEven(ctx context.Context, arg *testRoundHalfEvenParams) (decimal.Decimal, error)
 }
 
 var _ Querier = (*Queries)(nil)
