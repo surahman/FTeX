@@ -76,7 +76,64 @@ possible.
 * `Tablespace`s should be created for the `production` database's tables to allow for partition resizing
   and performance tuning.
 
-  <br/>
+<br/>
+
+## Numeric Rounding
+The following steps will be taken to minimize the [issues](https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html)
+associated with IEEE Floating point representation:
+
+* PostgresSQL`Numeric` data type will be used.
+* Golang [`decimal.Decimal`](https://pkg.go.dev/github.com/shopspring/decimal) data type will be used.
+* [Half-to-Even/Bankers’ Rounding](https://en.wikipedia.org/wiki/Rounding#Rounding_half_to_even).
+* Fiat assets will be stored with two decimal places.
+* Cypto assets will be stored with TBD decimal places.
+
+The PostgresSQL `Money` and `Decimal` types are synonyms for `Numeric`. Numbers associated with assets will be captured as
+close to their origin as possible and converted to `decimal.Decimal` with Half-to-Even rounding to the required decimal places.
+
+There is unfortunately no builtin method for Half-to-Even rounding as of PostgreSQL 14. As such, a User Defined Function
+(UDF) will be deployed. Arithmetic rounding can lead to errors that can snowball to significant numbers over many calculations.
+Please see [this article](https://www.eetimes.com/an-introduction-to-different-rounding-algorithms/) on rounding methods in the EETimes.
+This UDF will be used on all functions that store financial values on the database side as a secondary safeguard. This is
+necessary and will mean having to incur a calculation overhead.
+
+The UDF does not access or modify data from any tables and thus meets the requirements for the following Postgres function characteristics:
+
+* Immutable
+* Strict
+* Parallel Safe
+
+The algorithm is as below and the function is located in the Liquibase migrations files:
+
+### Rounding Half-Up
+```math
+\lceil \frac{\lfloor 2x \rfloor}{2} \rceil
+```
+
+### Rounding Half-Even
+
+```text
+Inputs:
+-------
+NUM   <-- num
+SCALE <-- scale
+
+
+Algorithm:
+----------
+IF number of decimal places of NUM == SCALE THEN
+    RETURN NUM
+
+multiplier <-- 10 ^ SCALE
+
+IF (absolute value of difference of NUM Half-Up rounded with SCALE and NUM) * multiplier == 0.5 AND
+    (Half-Up rounded value * mulitplier) % 2 != 0 THEN
+        rounded = round Half-Up (NUM - (difference of NUM Half-Up rounded with SCALE and NUM)) to SCALE
+
+RETURN rounded
+```
+
+<br/>
 
 ## Tablespaces
 
