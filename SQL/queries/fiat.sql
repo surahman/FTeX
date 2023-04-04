@@ -65,8 +65,8 @@ WITH deposit AS (
         transacted_at,
         tx_id)
     SELECT
-        sqlc.arg(source_account)::uuid,
-        sqlc.arg(source_currency)::currency,
+        @source_account::uuid,
+        @source_currency::currency,
         round_half_even(@debit_amount::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
@@ -79,8 +79,8 @@ INSERT INTO fiat_journal (
     transacted_at,
     tx_id)
 SELECT
-    sqlc.arg(destination_account)::uuid,
-    sqlc.arg(destination_currency)::currency,
+    @destination_account::uuid,
+    @destination_currency::currency,
     round_half_even(@credit_amount::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
@@ -108,8 +108,8 @@ FROM fiat_journal
 WHERE client_id = $1
       AND currency = $2
       AND transacted_at
-          BETWEEN sqlc.arg(start_time)::timestamptz
-              AND sqlc.arg(end_time)::timestamptz;
+          BETWEEN @start_time::timestamptz
+              AND @end_time::timestamptz;
 
 -- name: FiatGetAccount :one
 -- FiatGetAccount will retrieve a specific user's account for a given currency.
