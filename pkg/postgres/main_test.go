@@ -120,7 +120,7 @@ func insertTestUsers(t *testing.T) {
 
 	defer cancel()
 
-	rows, err := connection.Query.db.Query(ctx, query)
+	rows, err := connection.queries.db.Query(ctx, query)
 	rows.Close()
 
 	require.NoError(t, err, "failed to wipe users table before reinserting users.")
@@ -145,7 +145,7 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 
 	defer cancel()
 
-	rows, err := connection.Query.db.Query(ctx, query)
+	rows, err := connection.queries.db.Query(ctx, query)
 	rows.Close()
 
 	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
@@ -181,7 +181,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 
 	defer cancel()
 
-	rows, err := connection.Query.db.Query(ctx, query)
+	rows, err := connection.queries.db.Query(ctx, query)
 	rows.Close()
 
 	require.NoError(t, err, "failed to wipe fiat journal table before reinserting entries.")

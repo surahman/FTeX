@@ -95,7 +95,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		}
 	}()
 
-	queryTx := p.Query.WithTx(tx)
+	queryTx := p.queries.WithTx(tx)
 
 	// Row lock the destination account.
 	if _, err = queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
@@ -239,7 +239,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	}()
 
 	// Configure transaction query connection.
-	queryTx := p.Query.WithTx(tx)
+	queryTx := p.queries.WithTx(tx)
 
 	// Row lock the accounts in order and check balances.
 	if err = fiatTransactionRowLockAndBalanceCheck(ctx, queryTx, src, dst); err != nil {
