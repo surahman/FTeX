@@ -67,7 +67,7 @@ WITH deposit AS (
     SELECT
         sqlc.arg(source_account)::uuid,
         sqlc.arg(source_currency)::currency,
-        sqlc.arg(debit_amount)::numeric(18, 2),
+        round_half_even(@debit_amount::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -81,7 +81,7 @@ INSERT INTO fiat_journal (
 SELECT
     sqlc.arg(destination_account)::uuid,
     sqlc.arg(destination_currency)::currency,
-    sqlc.arg(credit_amount)::numeric(18, 2),
+    round_half_even(@credit_amount::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id

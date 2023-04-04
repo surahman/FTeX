@@ -278,7 +278,7 @@ WITH deposit AS (
     SELECT
         $4::uuid,
         $5::currency,
-        $6::numeric(18, 2),
+        round_half_even($6::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -292,7 +292,7 @@ INSERT INTO fiat_journal (
 SELECT
     $1::uuid,
     $2::currency,
-    $3::numeric(18, 2),
+    round_half_even($3::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
