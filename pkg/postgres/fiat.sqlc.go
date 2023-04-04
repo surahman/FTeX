@@ -45,7 +45,7 @@ WITH deposit AS (
             FROM users
             WHERE username = 'deposit-fiat'),
         $2,
-        -1 * $3::numeric(18, 2),
+        round_half_even(-1 * $3::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -59,7 +59,7 @@ INSERT INTO fiat_journal (
 SELECT
     $1,
     $2,
-    $3::numeric(18, 2),
+    round_half_even($3::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
