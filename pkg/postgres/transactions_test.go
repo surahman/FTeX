@@ -370,7 +370,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 
 			defer tx.Rollback(ctx) //nolint:errcheck
 
-			queryTx := connection.Query.WithTx(tx)
+			queryTx := connection.queries.WithTx(tx)
 
 			err = fiatTransactionRowLockAndBalanceCheck(ctx, queryTx, &test.source, &test.destination)
 			test.errExpectation(t, err, "failed error expectation")

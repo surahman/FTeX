@@ -20,10 +20,11 @@ import (
 
 // Postgres contains objects required to interface with the database.
 type Postgres struct {
-	conf   config
-	pool   *pgxpool.Pool
-	logger *logger.Logger
-	Query  *Queries
+	conf    config
+	pool    *pgxpool.Pool
+	logger  *logger.Logger
+	queries *Queries
+	Query   Querier
 }
 
 // NewPostgres will create a new Postgres configuration and load it from disk.
@@ -81,7 +82,8 @@ func (p *Postgres) Open() error {
 	}
 
 	// Setup SQLC DBTX interface.
-	p.Query = New(p.pool)
+	p.queries = New(p.pool)
+	p.Query = p.queries
 
 	return nil
 }
