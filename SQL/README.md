@@ -4,6 +4,9 @@
 
 - [Case Study and Justification](#case-study-and-justification)
 - [Design Considerations](#design-considerations)
+- [Numeric Rounding](#numeric-rounding)
+  - [Rounding Half-Up](#rounding-half-up)
+  - [Rounding Half-Even](#rounding-half-even)
 - [Tablespaces](#tablespaces)
 - [Users Table Schema](#users-table-schema)
 - [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
@@ -86,12 +89,12 @@ associated with IEEE Floating point representation:
 * Golang [`decimal.Decimal`](https://pkg.go.dev/github.com/shopspring/decimal) data type will be used.
 * [Half-to-Even/Bankers’ Rounding](https://en.wikipedia.org/wiki/Rounding#Rounding_half_to_even).
 * Fiat assets will be stored with two decimal places.
-* Cypto assets will be stored with TBD decimal places.
+* Crypto assets will be stored with TBD decimal places.
 
 The PostgresSQL `Money` and `Decimal` types are synonyms for `Numeric`. Numbers associated with assets will be captured as
 close to their origin as possible and converted to `decimal.Decimal` with Half-to-Even rounding to the required decimal places.
 
-There is unfortunately no builtin method for Half-to-Even rounding as of PostgreSQL 14. As such, a User Defined Function
+There is unfortunately no builtin method for Half-to-Even rounding as of PostgresSQL 14. As such, a User Defined Function
 (UDF) will be deployed. Arithmetic rounding can lead to errors that can snowball to significant numbers over many calculations.
 Please see [this article](https://www.eetimes.com/an-introduction-to-different-rounding-algorithms/) on rounding methods in the EETimes.
 This UDF will be used on all functions that store financial values on the database side as a secondary safeguard. This is
