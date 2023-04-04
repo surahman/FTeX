@@ -93,3 +93,40 @@ CREATE TABLE IF NOT EXISTS fiat_journal (
 CREATE INDEX IF NOT EXISTS fiat_journal_client_idx ON fiat_journal USING btree (client_id);
 CREATE INDEX IF NOT EXISTS fiat_journal_tx_idx ON fiat_journal USING btree (tx_id);
 --rollback DROP TABLE fiat_journal CASCADE;
+
+--changeset surahman:6
+--preconditions onFail:HALT onError:HALT
+--comment: Rounds a number with arbitrary precision to a specified scale using the the Round Half-Even/Bankers' Algorithm.
+CREATE OR REPLACE FUNCTION round_half_even(num NUMERIC, scale INTEGER)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+    IMMUTABLE
+    STRICT
+    PARALLEL SAFE
+AS '
+    DECLARE
+        rounded     NUMERIC;
+        difference  NUMERIC;
+        multiplier  NUMERIC;
+    BEGIN
+        -- Check to see if rounding is needed.
+        IF SCALE(num) <= scale THEN
+            RETURN num;
+        END IF;
+
+        multiplier := (10::NUMERIC ^ scale);
+        rounded    := round(num, scale);
+        difference := rounded - num;
+
+        -- IF half-way between two integers AND even THEN round-down:
+        IF ABS(difference) * multiplier = 0.5::NUMERIC AND
+            (rounded * multiplier) % 2::NUMERIC != 0::NUMERIC
+        THEN
+            rounded := round(num - difference, scale);
+        END IF;
+
+        RETURN rounded;
+
+    END;
+';
+--rollback DROP FUNCTION round_half_even;

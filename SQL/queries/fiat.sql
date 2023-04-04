@@ -14,7 +14,9 @@ FOR NO KEY UPDATE;
 -- name: FiatUpdateAccountBalance :one
 -- FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 UPDATE fiat_accounts
-SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
+SET balance=round_half_even(balance + @Amount::numeric(18, 2), 2),
+    last_tx=round_half_even(@Amount::numeric(18, 2), 2),
+    last_tx_ts=$3
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts;
 
@@ -32,7 +34,7 @@ WITH deposit AS (
             FROM users
             WHERE username = 'deposit-fiat'),
         $2,
-        -1 * sqlc.arg(amount)::numeric(18, 2),
+        round_half_even(-1 * @amount::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -46,7 +48,7 @@ INSERT INTO fiat_journal (
 SELECT
     $1,
     $2,
-    sqlc.arg(amount)::numeric(18, 2),
+    round_half_even(@amount::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
@@ -63,9 +65,9 @@ WITH deposit AS (
         transacted_at,
         tx_id)
     SELECT
-        sqlc.arg(source_account)::uuid,
-        sqlc.arg(source_currency)::currency,
-        sqlc.arg(debit_amount)::numeric(18, 2),
+        @source_account::uuid,
+        @source_currency::currency,
+        round_half_even(@debit_amount::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -77,9 +79,9 @@ INSERT INTO fiat_journal (
     transacted_at,
     tx_id)
 SELECT
-    sqlc.arg(destination_account)::uuid,
-    sqlc.arg(destination_currency)::currency,
-    sqlc.arg(credit_amount)::numeric(18, 2),
+    @destination_account::uuid,
+    @destination_currency::currency,
+    round_half_even(@credit_amount::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
@@ -106,8 +108,8 @@ FROM fiat_journal
 WHERE client_id = $1
       AND currency = $2
       AND transacted_at
-          BETWEEN sqlc.arg(start_time)::timestamptz
-              AND sqlc.arg(end_time)::timestamptz;
+          BETWEEN @start_time::timestamptz
+              AND @end_time::timestamptz;
 
 -- name: FiatGetAccount :one
 -- FiatGetAccount will retrieve a specific user's account for a given currency.

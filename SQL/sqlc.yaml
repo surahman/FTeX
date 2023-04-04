@@ -2,8 +2,9 @@ version: 2
 sql:
     - engine: postgresql
       queries:
-        - queries/users.sql
         - queries/fiat.sql
+        - queries/udf.sql
+        - queries/users.sql
       schema: schema/migration.sql
       gen:
           go:

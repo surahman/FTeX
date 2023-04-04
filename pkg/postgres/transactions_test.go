@@ -282,7 +282,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	_, err := connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: clientID1,
 		Currency: CurrencyUSD,
-		LastTx:   balanceClientID1,
+		Amount:   balanceClientID1,
 		LastTxTs: txTimestamp,
 	})
 	require.NoError(t, err, "failed to set base balance for Client1 in USD")
@@ -290,7 +290,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	_, err = connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: clientID2,
 		Currency: CurrencyAED,
-		LastTx:   balanceClientID2,
+		Amount:   balanceClientID2,
 		LastTxTs: txTimestamp,
 	})
 	require.NoError(t, err, "failed to set base balance for Client2 in AED")
@@ -416,7 +416,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	_, err := connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: clientID1,
 		Currency: CurrencyUSD,
-		LastTx:   balanceClientID1,
+		Amount:   balanceClientID1,
 		LastTxTs: txTimestamp,
 	})
 	require.NoError(t, err, "failed to set base balance for Client1 in USD")
@@ -424,7 +424,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	_, err = connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: clientID2,
 		Currency: CurrencyCAD,
-		LastTx:   balanceClientID2,
+		Amount:   balanceClientID2,
 		LastTxTs: txTimestamp,
 	})
 	require.NoError(t, err, "failed to set base balance for Client2 in AED")

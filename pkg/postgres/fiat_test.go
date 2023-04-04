@@ -180,7 +180,7 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 			parameter: FiatUpdateAccountBalanceParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				LastTx:   amount1,
+				Amount:   amount1,
 				LastTxTs: ts1,
 			},
 		}, {
@@ -189,7 +189,7 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 			parameter: FiatUpdateAccountBalanceParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				LastTx:   amount2,
+				Amount:   amount2,
 				LastTxTs: ts2,
 			},
 		}, {
@@ -198,7 +198,7 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 			parameter: FiatUpdateAccountBalanceParams{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
-				LastTx:   amount3,
+				Amount:   amount3,
 				LastTxTs: ts3,
 			},
 		},

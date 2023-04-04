@@ -45,7 +45,7 @@ WITH deposit AS (
             FROM users
             WHERE username = 'deposit-fiat'),
         $2,
-        -1 * $3::numeric(18, 2),
+        round_half_even(-1 * $3::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -59,7 +59,7 @@ INSERT INTO fiat_journal (
 SELECT
     $1,
     $2,
-    $3::numeric(18, 2),
+    round_half_even($3::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
@@ -278,7 +278,7 @@ WITH deposit AS (
     SELECT
         $4::uuid,
         $5::currency,
-        $6::numeric(18, 2),
+        round_half_even($6::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at
@@ -292,7 +292,7 @@ INSERT INTO fiat_journal (
 SELECT
     $1::uuid,
     $2::currency,
-    $3::numeric(18, 2),
+    round_half_even($3::numeric(18, 2), 2),
     (   SELECT transacted_at
         FROM deposit),
     (   SELECT tx_id
@@ -352,7 +352,9 @@ func (q *Queries) FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccoun
 
 const fiatUpdateAccountBalance = `-- name: FiatUpdateAccountBalance :one
 UPDATE fiat_accounts
-SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
+SET balance=round_half_even(balance + $4::numeric(18, 2), 2),
+    last_tx=round_half_even($4::numeric(18, 2), 2),
+    last_tx_ts=$3
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts
 `
@@ -360,8 +362,8 @@ RETURNING balance, last_tx, last_tx_ts
 type FiatUpdateAccountBalanceParams struct {
 	ClientID uuid.UUID          `json:"clientID"`
 	Currency Currency           `json:"currency"`
-	LastTx   decimal.Decimal    `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
+	Amount   decimal.Decimal    `json:"amount"`
 }
 
 type FiatUpdateAccountBalanceRow struct {
@@ -375,8 +377,8 @@ func (q *Queries) FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateA
 	row := q.db.QueryRow(ctx, fiatUpdateAccountBalance,
 		arg.ClientID,
 		arg.Currency,
-		arg.LastTx,
 		arg.LastTxTs,
+		arg.Amount,
 	)
 	var i FiatUpdateAccountBalanceRow
 	err := row.Scan(&i.Balance, &i.LastTx, &i.LastTxTs)
