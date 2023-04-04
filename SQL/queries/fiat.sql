@@ -14,7 +14,9 @@ FOR NO KEY UPDATE;
 -- name: FiatUpdateAccountBalance :one
 -- FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 UPDATE fiat_accounts
-SET balance=balance + $3, last_tx=$3, last_tx_ts=$4
+SET balance=round_half_even(balance + @Amount::numeric(18, 2), 2),
+    last_tx=round_half_even(@Amount::numeric(18, 2), 2),
+    last_tx_ts=$3
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts;
 

@@ -124,7 +124,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 	if updateRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: xferDetails.ClientID,
 		Currency: xferDetails.Currency,
-		LastTx:   xferDetails.Amount,
+		Amount:   xferDetails.Amount,
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to update Fiat account balance"
@@ -268,7 +268,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	if postCreditRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: dst.ClientID,
 		Currency: dst.Currency,
-		LastTx:   dst.Amount,
+		Amount:   dst.Amount,
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to credit Fiat account balance for internal transfer"
@@ -280,7 +280,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	if postDebitRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
 		ClientID: src.ClientID,
 		Currency: src.Currency,
-		LastTx:   src.Amount,
+		Amount:   src.Amount,
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to debit Fiat account balance for internal transfer"
