@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTransactions_FiatTransactionsDetails_Less(t *testing.T) {
+func TestTransactions_FiatTransactionsDetails_LessComparator(t *testing.T) {
 	t.Parallel()
 
 	firstUUID, err := uuid.FromString("515fb04e-ea91-460b-ad4e-487cb673601e")
@@ -478,6 +478,103 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			if err != nil {
 				require.Contains(t, err.Error(), "insufficient", "failure not related to balance.")
 			}
+		})
+	}
+}
+
+func TestTransactions_FiatTransactionRowLockAndBalanceCheck_mock(t *testing.T) {
+	t.Parallel()
+
+	firstUUID, err := uuid.FromString("515fb04e-ea91-460b-ad4e-487cb673601e")
+	require.NoError(t, err, "failed to parse first UUID.")
+
+	secondUUID, err := uuid.FromString("d68d52a1-aa7c-4301-a27f-611196726edc")
+	require.NoError(t, err, "failed to parse second UUID.")
+
+	var (
+		uuid1USD = &FiatTransactionDetails{ClientID: firstUUID, Currency: CurrencyUSD}
+		uuid2USD = &FiatTransactionDetails{ClientID: secondUUID, Currency: CurrencyUSD}
+	)
+
+	testCases := []struct {
+		name                 string
+		expectedErrMsg       string
+		srcAccount           *FiatTransactionDetails
+		dstAccount           *FiatTransactionDetails
+		firstRowLockBalance  decimal.Decimal
+		firstRowLockErr      error
+		firstRowLockTimes    int
+		secondRowLockBalance decimal.Decimal
+		secondRowLockErr     error
+		secondRowLockTimes   int
+	}{
+		{
+			name:                 "First row lock failure.",
+			expectedErrMsg:       "first row lock failure",
+			srcAccount:           uuid1USD,
+			dstAccount:           uuid2USD,
+			firstRowLockBalance:  decimal.Decimal{},
+			firstRowLockErr:      fmt.Errorf("first row lock failure"),
+			firstRowLockTimes:    1,
+			secondRowLockBalance: decimal.Decimal{},
+			secondRowLockErr:     nil,
+			secondRowLockTimes:   0,
+		}, {
+			name:                 "Second row lock failure.",
+			expectedErrMsg:       "second row lock failure",
+			srcAccount:           uuid1USD,
+			dstAccount:           uuid2USD,
+			firstRowLockBalance:  decimal.Decimal{},
+			firstRowLockErr:      nil,
+			firstRowLockTimes:    1,
+			secondRowLockBalance: decimal.Decimal{},
+			secondRowLockErr:     fmt.Errorf("second row lock failure"),
+			secondRowLockTimes:   1,
+		}, {
+			name:           "Insufficient balance failure.",
+			expectedErrMsg: "insufficient balance",
+			srcAccount: &FiatTransactionDetails{
+				ClientID: uuid1USD.ClientID,
+				Currency: CurrencyUSD,
+				Amount:   decimal.NewFromFloat(101.1),
+			},
+			dstAccount:           uuid2USD,
+			firstRowLockBalance:  decimal.Decimal{},
+			firstRowLockErr:      nil,
+			firstRowLockTimes:    1,
+			secondRowLockBalance: decimal.NewFromFloat(100.0),
+			secondRowLockErr:     nil,
+			secondRowLockTimes:   1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mockQuerier := NewMockQuerier(mockCtrl)
+
+			// Configure mock expectations.
+			gomock.InOrder(
+				mockQuerier.EXPECT().
+					FiatRowLockAccount(gomock.Any(), gomock.Any()).
+					Return(test.firstRowLockBalance, test.firstRowLockErr).
+					Times(test.firstRowLockTimes),
+
+				mockQuerier.EXPECT().
+					FiatRowLockAccount(gomock.Any(), gomock.Any()).
+					Return(test.secondRowLockBalance, test.secondRowLockErr).
+					Times(test.secondRowLockTimes),
+			)
+
+			// Check for error.
+			err := fiatTransactionRowLockAndBalanceCheck(context.TODO(), mockQuerier, test.srcAccount, test.dstAccount)
+			require.Error(t, err, "failed to get error.")
+			require.True(t, strings.Contains(err.Error(), test.expectedErrMsg), "error messages mismatched.")
 		})
 	}
 }
