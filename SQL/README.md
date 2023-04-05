@@ -138,6 +138,19 @@ RETURN rounded
 
 <br/>
 
+## Transactions
+
+_**Always and design and develop systems with Mechanical Sympathy in mind.**_
+
+It is almost always best to develop transactions in User Defined Functions (_UDFs_) that return results to the backend upon
+completion (success or failure). This helps to minimize the latency introduced by network communication when running
+staged/phased transactions on the backend. This will in turn results in lower lock contention, resulting in higher throughput
+and less resource pressure on the database instance.
+
+Transactions are being developed on the backend here strictly as a technical presentation.
+
+<br/>
+
 ## Tablespaces
 
 Cluster-wide tablespaces will need to be created for each of the tables in the production environment.
