@@ -140,7 +140,7 @@ RETURN rounded
 
 ## Transactions
 
-_**Always and design and develop systems with Mechanical Sympathy in mind.**_
+_**Always design and develop systems with Mechanical Sympathy in mind.**_
 
 It is almost always best to develop transactions in User Defined Functions (_UDFs_) that return results to the backend upon
 completion (success or failure). This helps to minimize the latency introduced by network communication when running
