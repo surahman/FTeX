@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
+	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -51,18 +52,7 @@ type FiatAccountTransferResult struct {
 	Currency Currency           `json:"currency"`
 }
 
-// FiatExternalTransfer will deposit inbound transfers into fiat accounts using a transaction block.
-/*
-  		Minimize the duration for which the transaction block will be active by performing as many operations as
-   		possible outside the transaction.
-
-    [1] Convert the transaction amount to a pgtype and truncate to two decimal places. This is to adjust for the
-		floating point precision representational issues.
-    [2] Acquire a row lock on the destination account without holding a lock on the foreign key for the Client ID.
-        There will be no update for the external account balance so there is no need for a row lock on the account.
-    [3] Make the Journal entries for the external and internal accounts.
-    [4] Update the balance for the internal account.
-*/
+// FiatExternalTransfer controls the transaction block that the external Fiat transfer transaction executes in.
 func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *FiatTransactionDetails) (
 	*FiatAccountTransferResult, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
@@ -70,14 +60,12 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 	defer cancel()
 
 	var (
-		err        error
-		tx         pgx.Tx
-		journalRow FiatExternalTransferJournalEntryRow
-		updateRow  FiatUpdateAccountBalanceRow
+		err       error
+		tx        pgx.Tx
+		txReceipt *FiatAccountTransferResult
 	)
 
 	// Begin transaction.
-
 	if tx, err = p.pool.Begin(ctx); err != nil {
 		msg := "external transfer Fiat transaction block setup failed"
 		p.logger.Warn(msg, zap.Error(err))
@@ -95,7 +83,50 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		}
 	}()
 
+	// Configure transaction query connection.
 	queryTx := p.queries.WithTx(tx)
+
+	// Handoff to external fiat transaction core logic.
+	if txReceipt, err = fiatExternalTransfer(ctx, p.logger, queryTx, xferDetails); err != nil {
+		msg := "failed to complete external Fiat transfer transaction"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	// Commit transaction.
+	if err = tx.Commit(ctx); err != nil {
+		msg := "failed to commit external Fiat account transfer"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	return txReceipt, nil
+}
+
+// fiatExternalTransfer will execute the logic to complete the external Fiat transfer transaction.
+/*
+  		Minimize the duration for which the transaction block will be active by performing as many operations as
+   		possible outside the transaction.
+
+    [1] Convert the transaction amount to a pgtype and truncate to two decimal places. This is to adjust for the
+		floating point precision representational issues.
+    [2] Acquire a row lock on the destination account without holding a lock on the foreign key for the Client ID.
+        There will be no update for the external account balance so there is no need for a row lock on the account.
+    [3] Make the Journal entries for the external and internal accounts.
+    [4] Update the balance for the internal account.
+*/
+func fiatExternalTransfer(
+	ctx context.Context,
+	logger *logger.Logger,
+	queryTx Querier,
+	xferDetails *FiatTransactionDetails) (*FiatAccountTransferResult, error) {
+	var (
+		err        error
+		journalRow FiatExternalTransferJournalEntryRow
+		updateRow  FiatUpdateAccountBalanceRow
+	)
 
 	// Row lock the destination account.
 	if _, err = queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
@@ -103,7 +134,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		Currency: xferDetails.Currency,
 	}); err != nil {
 		msg := "failed to get row lock on destination Fiat account"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, fmt.Errorf(msg+" %w", err)
 	}
@@ -115,7 +146,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		Amount:   xferDetails.Amount,
 	}); err != nil {
 		msg := "failed to post Fiat account Journal entries"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, fmt.Errorf(msg+" %w", err)
 	}
@@ -128,15 +159,7 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to update Fiat account balance"
-		p.logger.Warn(msg, zap.Error(err))
-
-		return nil, fmt.Errorf(msg+" %w", err)
-	}
-
-	// Commit transaction.
-	if err = tx.Commit(ctx); err != nil {
-		msg := "failed to commit external Fiat account transfer"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, fmt.Errorf(msg+" %w", err)
 	}
@@ -152,11 +175,11 @@ func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *
 		nil
 }
 
-// FiatTransactionRowLockAndBalanceCheck will acquire row locks on the Fiat accounts in a deterministic lock order.
+// fiatTransactionRowLockAndBalanceCheck will acquire row locks on the Fiat accounts in a deterministic lock order.
 // It will then check to see if the balance of the source/debit account is sufficient for the transaction.
 func fiatTransactionRowLockAndBalanceCheck(
 	ctx context.Context,
-	queryTx *Queries,
+	queryTx Querier,
 	src,
 	dst *FiatTransactionDetails) error {
 	// Order locks.
@@ -193,34 +216,23 @@ func fiatTransactionRowLockAndBalanceCheck(
 	return nil
 }
 
-// FiatInternalTransfer will perform transfers between fiat accounts using a transaction block.
-/*
-  		Minimize the duration for which the transaction block will be active by performing as many operations as
-   		possible outside the transaction.
-
-    [1] Convert the transaction amounts to a pgtype and truncate to two decimal places. This is to adjust for the
-		floating point precision representational issues.
-    [2] Acquire a row lock on the accounts without holding a lock on the foreign key for the Client ID.
-        Their accounts will be compared against each other using a total order rule.
-    [3] Make the Journal entries for both of the accounts.
-    [4] Update the balance for both of the accounts.
-*/
-func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *FiatTransactionDetails) (
-	*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
+// FiatInternalTransfer controls the transaction block that the internal Fiat transfer transaction executes in.
+func (p *Postgres) FiatInternalTransfer(
+	parentCtx context.Context,
+	src,
+	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
 
 	defer cancel()
 
 	var (
-		err           error
-		tx            pgx.Tx
-		journalRow    FiatInternalTransferJournalEntryRow
-		postCreditRow FiatUpdateAccountBalanceRow
-		postDebitRow  FiatUpdateAccountBalanceRow
+		err          error
+		tx           pgx.Tx
+		dstTxReceipt *FiatAccountTransferResult
+		srcTxReceipt *FiatAccountTransferResult
 	)
 
 	// Begin transaction.
-
 	if tx, err = p.pool.Begin(ctx); err != nil {
 		msg := "internal transfer Fiat transaction block setup failed"
 		p.logger.Warn(msg, zap.Error(err))
@@ -241,10 +253,54 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 	// Configure transaction query connection.
 	queryTx := p.queries.WithTx(tx)
 
+	// Handoff to internal fiat transaction core logic.
+	if srcTxReceipt, dstTxReceipt, err = fiatInternalTransfer(ctx, p.logger, queryTx, src, dst); err != nil {
+		msg := "failed to complete internal Fiat transfer transaction"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	// Commit transaction.
+	if err = tx.Commit(ctx); err != nil {
+		msg := "failed to commit internal Fiat account transfer"
+		p.logger.Warn(msg, zap.Error(err))
+
+		return nil, nil, fmt.Errorf(msg+" %w", err)
+	}
+
+	return srcTxReceipt, dstTxReceipt, nil
+}
+
+// fiatInternalTransfer will execute the logic to complete the internal Fiat transfer transaction.
+/*
+  		Minimize the duration for which the transaction block will be active by performing as many operations as
+   		possible outside the transaction.
+
+    [1] Convert the transaction amounts to a pgtype and truncate to two decimal places. This is to adjust for the
+		floating point precision representational issues.
+    [2] Acquire a row lock on the accounts without holding a lock on the foreign key for the Client ID.
+        Their accounts will be compared against each other using a total order rule.
+    [3] Make the Journal entries for both of the accounts.
+    [4] Update the balance for the source and destination accounts.
+*/
+func fiatInternalTransfer(
+	ctx context.Context,
+	logger *logger.Logger,
+	queryTx Querier,
+	src,
+	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
+	var (
+		err           error
+		journalRow    FiatInternalTransferJournalEntryRow
+		postCreditRow FiatUpdateAccountBalanceRow
+		postDebitRow  FiatUpdateAccountBalanceRow
+	)
+
 	// Row lock the accounts in order and check balances.
 	if err = fiatTransactionRowLockAndBalanceCheck(ctx, queryTx, src, dst); err != nil {
 		msg := "failed to get row lock on Fiat accounts and verify balance of debit account"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
@@ -259,7 +315,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 		DebitAmount:         src.Amount,
 	}); err != nil {
 		msg := "failed to post Fiat account Journal entries for internal transfer"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
@@ -272,7 +328,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to credit Fiat account balance for internal transfer"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
@@ -284,15 +340,7 @@ func (p *Postgres) FiatInternalTransfer(parentCtx context.Context, src, dst *Fia
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to debit Fiat account balance for internal transfer"
-		p.logger.Warn(msg, zap.Error(err))
-
-		return nil, nil, fmt.Errorf(msg+" %w", err)
-	}
-
-	// Commit transaction.
-	if err = tx.Commit(ctx); err != nil {
-		msg := "failed to commit internal Fiat account transfer"
-		p.logger.Warn(msg, zap.Error(err))
+		logger.Warn(msg, zap.Error(err))
 
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
