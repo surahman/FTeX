@@ -31,12 +31,12 @@ type Redis interface {
 	// Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
 	Healthcheck() error
 
-	//// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
-	// Set(string, any) error
-	//
-	//// Get will retrieve a value associated with a provided key.
-	//Get(string, any) error
-	//
+	// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+	Set(string, any) error
+
+	// Get will retrieve a value associated with a provided key.
+	Get(string, any) error
+
 	//// Del will remove all keys provided as a set of keys.
 	//Del(...string) error
 }
@@ -190,6 +190,26 @@ func (r *redisImpl) Set(key string, value any) error {
 		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
 
 		return NewError(err.Error()).errorCacheSet()
+	}
+
+	return nil
+}
+
+// Get will retrieve a value associated with a provided key and write the result into the value parameter.
+func (r *redisImpl) Get(key string, value any) error {
+	var (
+		err     error
+		rawData []byte
+	)
+
+	if rawData, err = r.redisDB.Get(context.Background(), key).Bytes(); err != nil {
+		return NewError(err.Error()).errorCacheMiss()
+	}
+
+	// Convert to struct.
+	decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
+	if err = decoder.Decode(value); err != nil {
+		return NewError(err.Error())
 	}
 
 	return nil
