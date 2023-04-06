@@ -150,7 +150,7 @@ authentication:
   username: default
   password:
 connection:
-  addr: 127.0.0.1:7379
+  addr: 127.0.0.1:6379
   maxConnAttempts: 3
   maxRetries: 3
   poolSize: 4
