@@ -2,6 +2,7 @@ package redis
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -50,27 +51,35 @@ func TestMain(m *testing.M) {
 }
 
 // setup will configure the connection to the test clusters keyspace.
-func setup() (err error) {
+func setup() error {
 	if testing.Short() {
 		zapLogger.Warn("Short test: Skipping Redis integration tests")
 
-		return
+		return nil
 	}
 
 	conf := config{}
-	if err = yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &conf); err != nil {
-		return
+	if err := yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &conf); err != nil {
+		return fmt.Errorf("failed to parse test suite Redis configs %w", err)
 	}
 
 	connection = &redisImpl{conf: &conf, logger: zapLogger}
-	if err = connection.Open(); err != nil {
-		return
+	if err := connection.Open(); err != nil {
+		return fmt.Errorf("failed to test suite Redis logger %w", err)
 	}
 
-	return
+	return nil
 }
 
 // tearDown will delete the test clusters keyspace.
-func tearDown() (err error) {
-	return
+func tearDown() error {
+	if !testing.Short() {
+		if err := connection.Close(); err != nil {
+			return fmt.Errorf("redis test suite failed to close connection %w", err)
+		}
+
+		return nil
+	}
+
+	return nil
 }
