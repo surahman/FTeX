@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -61,8 +62,16 @@ func setup() error {
 		return nil
 	}
 
+	// If running on a GitHub Actions runner use the default credentials for Postgres.
+	configFileKey := "test_suite"
+	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
+		configFileKey = "github-ci-runner"
+
+		zapLogger.Info("Integration Test running on Github CI runner.")
+	}
+
 	conf := config{}
-	if err := yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &conf); err != nil {
+	if err := yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &conf); err != nil {
 		return fmt.Errorf("failed to parse test suite Redis configs %w", err)
 	}
 
