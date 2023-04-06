@@ -1,7 +1,9 @@
 package redis
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"math"
@@ -30,7 +32,7 @@ type Redis interface {
 	Healthcheck() error
 
 	//// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
-	//Set(string, any) error
+	// Set(string, any) error
 	//
 	//// Get will retrieve a value associated with a provided key.
 	//Get(string, any) error
@@ -167,6 +169,27 @@ func (r *redisImpl) Healthcheck() error {
 		r.logger.Info(msg)
 
 		return fmt.Errorf(msg+" %w", err)
+	}
+
+	return nil
+}
+
+// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+func (r *redisImpl) Set(key string, value any) error {
+	// Write value to byte array.
+	buffer := bytes.Buffer{}
+	encoder := gob.NewEncoder(&buffer)
+
+	if err := encoder.Encode(value); err != nil {
+		return NewError(err.Error())
+	}
+
+	if err := r.redisDB.Set(context.Background(), key, buffer.Bytes(),
+		time.Duration(r.conf.Data.TTL)*time.Second).
+		Err(); err != nil {
+		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
+
+		return NewError(err.Error()).errorCacheSet()
 	}
 
 	return nil
