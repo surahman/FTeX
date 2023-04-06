@@ -45,3 +45,11 @@ func TestGetPostgresDSN(t *testing.T) {
 func TestGetTestDatabaseName(t *testing.T) {
 	require.Equal(t, testDatabaseName, GetTestDatabaseName(), "Incorrect test suite database name")
 }
+
+func TestGetRedisFileName(t *testing.T) {
+	require.Equal(t, redisConfigFileName, GetRedisFileName(), "Incorrect Redis filename")
+}
+
+func TestGetRedisPrefix(t *testing.T) {
+	require.Equal(t, redisPrefix, GetRedisPrefix(), "Incorrect Redis prefix")
+}

@@ -1,0 +1,12 @@
+authentication:
+  username: ftex_service
+  password: ZoF1bncLLyYT1agKfWQY
+connection:
+  addr: 127.0.0.1:7379
+  maxConnAttempts: 5
+  maxRetries: 3
+  poolSize: 4
+  minIdleConns: 1
+  maxIdleConns: 20
+data:
+  ttl: 900

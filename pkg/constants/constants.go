@@ -9,11 +9,13 @@ const (
 	// Configuration file names.
 	loggerConfigFileName   = "LoggerConfig.yaml"
 	postgresConfigFileName = "PostgresConfig.yaml"
+	redisConfigFileName    = "RedisConfig.yaml"
 
 	// Environment variables.
 	githubCIKey    = "GITHUB_ACTIONS_CI"
 	loggerPrefix   = "LOGGER"
 	postgresPrefix = "POSTGRES"
+	redisPrefix    = "REDIS"
 
 	// Miscellaneous.
 	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
@@ -68,4 +70,14 @@ func GetPostgresDSN() string {
 // GetTestDatabaseName returns the name of the database used in test suites.
 func GetTestDatabaseName() string {
 	return testDatabaseName
+}
+
+// GetRedisFileName returns the Redis cluster configuration file name.
+func GetRedisFileName() string {
+	return redisConfigFileName
+}
+
+// GetRedisPrefix returns the environment variable prefix for the Redis cluster.
+func GetRedisPrefix() string {
+	return redisPrefix
 }
