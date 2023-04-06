@@ -2,8 +2,10 @@ package redis
 
 import (
 	"testing"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/xid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -198,4 +200,55 @@ func TestRedisImpl_Healthcheck(t *testing.T) {
 	require.NoError(t, healthy.Open(), "opening a connection to good endpoints should not fail")
 	err = healthy.Healthcheck()
 	require.NoError(t, err, "healthy healthcheck failed")
+}
+
+func TestRedisImpl_Set_Get_Del(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	testCases := []struct {
+		name  string
+		key   string
+		value string
+	}{
+		{
+			name:  "First test key",
+			key:   xid.New().String(),
+			value: xid.New().String(),
+		}, {
+			name:  "Second test key",
+			key:   xid.New().String(),
+			value: xid.New().String(),
+		},
+	}
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			// Write to Redis.
+			require.NoError(t, connection.Set(test.key, test.value), "failed to write to Redis")
+			time.Sleep(time.Second) // Allow cache propagation.
+
+			// Get data and validate it.
+			retrieved := ""
+			err := connection.Get(test.key, &retrieved)
+			require.NoError(t, err, "failed to retrieve data from Redis")
+			require.Equal(t, retrieved, test.value, "retrieved value does not match expected")
+
+			// Remove data from cluster.
+			require.NoError(t, connection.Del(test.key), "failed to remove key from Redis cluster")
+			time.Sleep(time.Second) // Allow cache propagation.
+
+			// Check to see if data has been removed.
+			var deleted *string
+			err = connection.Get(test.key, deleted)
+			require.Nil(t, deleted, "returned data from a deleted record should be nil")
+			require.Error(t, err, "deleted record should not be found on redis cluster")
+
+			// Double-delete data.
+			require.Error(t, connection.Del(test.key), "removing a nonexistent key from Redis cluster should fail")
+		})
+	}
 }
