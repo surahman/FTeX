@@ -15,6 +15,9 @@ import (
 // redisConfigTestData is a map of Redis configuration test data.
 var redisConfigTestData = configTestData()
 
+// Bad/invalid server address used in test suite.
+var invalidServerAddr = "127.0.0.1:7777"
+
 // connection pool to Redis cluster.
 var connection Redis
 

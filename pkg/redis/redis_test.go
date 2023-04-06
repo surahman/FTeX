@@ -126,7 +126,7 @@ func TestRedisImpl_Open(t *testing.T) {
 
 	// Ping failure.
 	badCfg := &config{}
-	badCfg.Connection.Addr = "127.0.0.1:7777"
+	badCfg.Connection.Addr = invalidServerAddr
 	badCfg.Connection.MaxConnAttempts = 1
 	noNodes := redisImpl{conf: badCfg, logger: zapLogger}
 	err := noNodes.Open()
@@ -152,7 +152,7 @@ func TestRedisImpl_Close(t *testing.T) {
 
 	// Ping failure.
 	badCfg := &config{}
-	badCfg.Connection.Addr = "127.0.0.1:7777"
+	badCfg.Connection.Addr = invalidServerAddr
 	badCfg.Connection.MaxConnAttempts = 1
 	noNodes := redisImpl{conf: badCfg, logger: zapLogger}
 	err := noNodes.Close()
@@ -169,4 +169,33 @@ func TestRedisImpl_Close(t *testing.T) {
 
 	// Leaked connection check.
 	require.Error(t, testRedis.Close(), "closing a closed Redis client connection should raise an error.")
+}
+
+func TestRedisImpl_Healthcheck(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Open unhealthy connection, ignore error, and run check.
+	unhealthyConf := config{}
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &unhealthyConf),
+		"failed to prepare unhealthy config")
+
+	unhealthyConf.Connection.Addr = invalidServerAddr
+	unhealthy := redisImpl{conf: &unhealthyConf, logger: zapLogger}
+	require.Error(t, unhealthy.Open(), "opening a connection to bad endpoints should fail")
+	err := unhealthy.Healthcheck()
+	require.Error(t, err, "unhealthy healthcheck failed")
+	require.Contains(t, err.Error(), "connection refused", "error is not about a bad connection")
+
+	// Open healthy connection, ignore error, and run check.
+	healthyConf := config{}
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &healthyConf),
+		"failed to prepare healthy config")
+
+	healthy := redisImpl{conf: &healthyConf, logger: zapLogger}
+	require.NoError(t, healthy.Open(), "opening a connection to good endpoints should not fail")
+	err = healthy.Healthcheck()
+	require.NoError(t, err, "healthy healthcheck failed")
 }
