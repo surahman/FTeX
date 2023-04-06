@@ -37,8 +37,8 @@ type Redis interface {
 	// Get will retrieve a value associated with a provided key.
 	Get(string, any) error
 
-	//// Del will remove all keys provided as a set of keys.
-	//Del(...string) error
+	// Del will remove all keys provided as a set of keys.
+	Del(...string) error
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -210,6 +210,27 @@ func (r *redisImpl) Get(key string, value any) error {
 	decoder := gob.NewDecoder(bytes.NewBuffer(rawData))
 	if err = decoder.Decode(value); err != nil {
 		return NewError(err.Error())
+	}
+
+	return nil
+}
+
+// Del will remove all keys provided as a list of keys.
+func (r *redisImpl) Del(keys ...string) error {
+	for _, key := range keys {
+		intCmd := r.redisDB.Del(context.Background(), key)
+		if err := intCmd.Err(); err != nil {
+			r.logger.Error("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+
+			return NewError(err.Error()).errorCacheDel()
+		}
+
+		if intCmd.Val() == 0 {
+			err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
+			r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
+
+			return err
+		}
 	}
 
 	return nil
