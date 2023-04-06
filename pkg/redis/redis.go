@@ -26,9 +26,9 @@ type Redis interface {
 	// correctly.
 	Close() error
 
-	//// Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
-	//Healthcheck() error
-	//
+	// Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
+	Healthcheck() error
+
 	//// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
 	//Set(string, any) error
 	//
@@ -91,13 +91,17 @@ func (r *redisImpl) createSessionRetry() error {
 
 		time.Sleep(waitTime)
 
+		// Successfully opened lazy connection with a ping.
 		if err = r.redisDB.Ping(context.Background()).Err(); err == nil {
 			return nil
 		}
 	}
-	r.logger.Error("unable to establish connection to Redis cluster", zap.Error(err))
 
-	return nil
+	// Unable to ping Redis server and establish lazy connection.
+	msg := "unable to establish connection to Redis cluster"
+	r.logger.Error(msg, zap.Error(err))
+
+	return fmt.Errorf(msg+" %w", err)
 }
 
 // Open will establish a connection to the Redis cache cluster.
@@ -107,17 +111,18 @@ func (r *redisImpl) Open() error {
 		msg := "session to Redis server is already established"
 		r.logger.Warn(msg)
 
-		return errors.New(msg)
+		return fmt.Errorf(msg+" %w", err)
 	}
 
 	// Compile Redis connection configurations.
 	redisConfig := &redis.Options{
-		Addr:         r.conf.Connection.Addr,
-		Username:     r.conf.Authentication.Username,
-		Password:     r.conf.Authentication.Password,
-		MaxRetries:   r.conf.Connection.MaxRetries,
-		PoolSize:     r.conf.Connection.PoolSize,
-		MinIdleConns: r.conf.Connection.MinIdleConns,
+		Addr:                  r.conf.Connection.Addr,
+		Username:              r.conf.Authentication.Username,
+		Password:              r.conf.Authentication.Password,
+		MaxRetries:            r.conf.Connection.MaxRetries,
+		PoolSize:              r.conf.Connection.PoolSize,
+		MinIdleConns:          r.conf.Connection.MinIdleConns,
+		ContextTimeoutEnabled: true,
 	}
 
 	if r.conf.Connection.MaxIdleConns > 0 {
@@ -138,14 +143,30 @@ func (r *redisImpl) Close() error {
 		msg := "no session to Redis server established to close"
 		r.logger.Warn(msg)
 
-		return errors.New(msg)
+		return fmt.Errorf(msg+" %w", err)
 	}
 
 	if err = r.redisDB.Close(); err != nil {
 		msg := "failed to close Redis server connection"
 		r.logger.Warn(msg)
 
-		return errors.New(msg)
+		return fmt.Errorf(msg+" %w", err)
+	}
+
+	return nil
+}
+
+// Healthcheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
+func (r *redisImpl) Healthcheck() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	if err := r.redisDB.Ping(ctx).Err(); err != nil {
+		msg := "redis health check ping failed"
+		r.logger.Info(msg)
+
+		return fmt.Errorf(msg+" %w", err)
 	}
 
 	return nil
