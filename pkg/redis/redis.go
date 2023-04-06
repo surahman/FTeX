@@ -22,9 +22,10 @@ type Redis interface {
 	// Open will create a connection pool and establish a connection to the cache cluster.
 	Open() error
 
-	//// Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated correctly.
-	//Close() error
-	//
+	// Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated
+	// correctly.
+	Close() error
+
 	//// Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
 	//Healthcheck() error
 	//
@@ -126,4 +127,26 @@ func (r *redisImpl) Open() error {
 	r.redisDB = redis.NewClient(redisConfig)
 
 	return r.createSessionRetry()
+}
+
+// Close will terminate a connection to the Redis cache cluster.
+func (r *redisImpl) Close() error {
+	var err error
+
+	// Check for an open connection.
+	if err = r.verifySession(); err != nil {
+		msg := "no session to Redis server established to close"
+		r.logger.Warn(msg)
+
+		return errors.New(msg)
+	}
+
+	if err = r.redisDB.Close(); err != nil {
+		msg := "failed to close Redis server connection"
+		r.logger.Warn(msg)
+
+		return errors.New(msg)
+	}
+
+	return nil
 }
