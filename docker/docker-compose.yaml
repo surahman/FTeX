@@ -23,12 +23,16 @@ services:
 
   redis:
     container_name: redis
-    image: redis:latest
-    restart: always
+    image: bitnami/redis:latest
+#    restart: always
     ports:
       - '7379:6379'
+    environment:
+      - REDIS_PASSWORD=v7h0JZq8AZhVcF3NWz9u
     volumes:
-      - redis_data:/data
+      - ./setup_scripts/redis_users.acl:/opt/bitnami/redis/mounted-etc/users.acl
+      - ./setup_scripts/redis_overrides.conf:/opt/bitnami/redis/mounted-etc/overrides.conf
+      - redis_data:/bitnami/redis/data
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 60s

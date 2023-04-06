@@ -165,10 +165,15 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redi
 
 **Redis:**
 
-- Username : none
-- Password : none
+- Username : `default`
+- Password : `v7h0JZq8AZhVcF3NWz9u`
+
+- Username : `ftex_service`
+- Password : `ZoF1bncLLyYT1agKfWQY`
+
 - Port : `7379`
-- Database: `1`
+- Database Fiat: `0`
+- Database Crypto: `1`
 
 <br/>
 
