@@ -27,13 +27,13 @@ func TestNewRedisImpl(t *testing.T) {
 		{
 			name:      "File found",
 			fileName:  constants.GetRedisFileName(),
-			input:     redisConfigTestData["test_suite"],
+			input:     redisConfigTestData[configFileKey],
 			expectErr: require.NoError,
 			expectNil: require.NotNil,
 		}, {
 			name:      "File not found",
 			fileName:  "wrong_file_name.yaml",
-			input:     redisConfigTestData["test_suite"],
+			input:     redisConfigTestData[configFileKey],
 			expectErr: require.Error,
 			expectNil: require.Nil,
 		},
@@ -64,7 +64,7 @@ func TestNewRedis(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "failed to create in memory directory.")
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetRedisFileName(),
-		[]byte(redisConfigTestData["test_suite"]), 0644), "failed to write in memory file.")
+		[]byte(redisConfigTestData[configFileKey]), 0644), "failed to write in memory file.")
 
 	testCases := []struct {
 		name      string
@@ -137,7 +137,7 @@ func TestRedisImpl_Open(t *testing.T) {
 
 	// Connection success.
 	conf := config{}
-	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &conf), "failed to prepare test config.")
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &conf), "failed to prepare test config.")
 
 	testRedis := redisImpl{conf: &conf, logger: zapLogger}
 	require.NoError(t, testRedis.Open(), "failed to create new cluster connection.")
@@ -163,7 +163,7 @@ func TestRedisImpl_Close(t *testing.T) {
 
 	// Connection success.
 	conf := config{}
-	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &conf), "failed to prepare test config.")
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &conf), "failed to prepare test config.")
 
 	testRedis := redisImpl{conf: &conf, logger: zapLogger}
 	require.NoError(t, testRedis.Open(), "failed to open Redis server connection for test.")
@@ -181,7 +181,7 @@ func TestRedisImpl_Healthcheck(t *testing.T) {
 
 	// Open unhealthy connection, ignore error, and run check.
 	unhealthyConf := config{}
-	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &unhealthyConf),
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &unhealthyConf),
 		"failed to prepare unhealthy config")
 
 	unhealthyConf.Connection.Addr = invalidServerAddr
@@ -193,7 +193,7 @@ func TestRedisImpl_Healthcheck(t *testing.T) {
 
 	// Open healthy connection, ignore error, and run check.
 	healthyConf := config{}
-	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData["test_suite"]), &healthyConf),
+	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &healthyConf),
 		"failed to prepare healthy config")
 
 	healthy := redisImpl{conf: &healthyConf, logger: zapLogger}

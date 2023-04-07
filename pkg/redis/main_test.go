@@ -16,8 +16,11 @@ import (
 // redisConfigTestData is a map of Redis configuration test data.
 var redisConfigTestData = configTestData()
 
-// Bad/invalid server address used in test suite.
+// invalidServerAddr ia a bad/invalid server address used in test suite.
 var invalidServerAddr = "127.0.0.1:7777"
+
+// configFileKey is the redis configuration key name that is loaded based on whether the test is run locally or on GHA.
+var configFileKey string
 
 // connection pool to Redis cluster.
 var connection Redis
@@ -63,7 +66,7 @@ func setup() error {
 	}
 
 	// If running on a GitHub Actions runner use the default credentials for Postgres.
-	configFileKey := "test_suite"
+	configFileKey = "test_suite"
 	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
 
