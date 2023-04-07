@@ -1,5 +1,7 @@
 package redis
 
+import "errors"
+
 // Error codes.
 const (
 	ErrorUnknown = iota
@@ -20,6 +22,16 @@ var _ error = &Error{}
 // Error get human readable error message.
 func (e *Error) Error() string {
 	return e.Message
+}
+
+// Is will return whether the input err is an instance of expected error.
+func (e *Error) Is(err error) bool {
+	var target *Error
+	if !errors.As(err, &target) {
+		return false
+	}
+
+	return e.Code == target.Code
 }
 
 // NewError is a base error message with no special code.

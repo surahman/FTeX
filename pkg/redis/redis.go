@@ -19,19 +19,19 @@ import (
 // Mock Redis interface stub generation.
 //go:generate mockgen -destination=../mocks/mock_redis.go -package=mocks github.com/surahman/mcq-platform/pkg/redis Redis
 
-// Redis is the interface through which the cluster can be accessed. Created to support mock testing.
+// Redis is the interface through which the cache server can be accessed. Created to support mock testing.
 type Redis interface {
-	// Open will create a connection pool and establish a connection to the cache cluster.
+	// Open will create a connection pool and establish a connection to the Redis cache server.
 	Open() error
 
-	// Close will shut down the connection pool and ensure that the connection to the cache cluster is terminated
+	// Close will shut down the connection pool and ensure that the connection to the Redis cache server is terminated.
 	// correctly.
 	Close() error
 
-	// Healthcheck will ping all the nodes in the cluster to see if all the shards are reachable.
+	// Healthcheck will ping all the Redis cache server to see if all the shards are reachable.
 	Healthcheck() error
 
-	// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+	// Set will place a key with a given value in the cache with a TTL, if specified in the configurations.
 	Set(string, any) error
 
 	// Get will retrieve a value associated with a provided key.
@@ -44,7 +44,7 @@ type Redis interface {
 // Check to ensure the Redis interface has been implemented.
 var _ Redis = &redisImpl{}
 
-// redisImpl implements the Redis interface and contains the logic to interface with the cluster.
+// redisImpl implements the Redis interface and contains the logic to interface with the cache.
 type redisImpl struct {
 	conf    *config
 	redisDB *redis.Client
@@ -100,13 +100,13 @@ func (r *redisImpl) createSessionRetry() error {
 	}
 
 	// Unable to ping Redis server and establish lazy connection.
-	msg := "unable to establish connection to Redis cluster"
+	msg := "unable to establish connection to Redis server"
 	r.logger.Error(msg, zap.Error(err))
 
 	return fmt.Errorf(msg+" %w", err)
 }
 
-// Open will establish a connection to the Redis cache cluster.
+// Open will establish a connection to the Redis cache server.
 func (r *redisImpl) Open() error {
 	// Stop connection leaks.
 	if err := r.verifySession(); err == nil {
@@ -136,7 +136,7 @@ func (r *redisImpl) Open() error {
 	return r.createSessionRetry()
 }
 
-// Close will terminate a connection to the Redis cache cluster.
+// Close will terminate a connection to the Redis cache server.
 func (r *redisImpl) Close() error {
 	var err error
 
@@ -174,7 +174,7 @@ func (r *redisImpl) Healthcheck() error {
 	return nil
 }
 
-// Set will place a key with a given value in the cluster with a TTL, if specified in the configurations.
+// Set will place a key with a given value in the Redis cache server with a TTL, if specified in the configurations.
 func (r *redisImpl) Set(key string, value any) error {
 	// Write value to byte array.
 	buffer := bytes.Buffer{}
@@ -226,7 +226,7 @@ func (r *redisImpl) Del(keys ...string) error {
 		}
 
 		if intCmd.Val() == 0 {
-			err := NewError("unable to locate key on Redis cluster").errorCacheMiss()
+			err := NewError("unable to locate key on Redis cache").errorCacheMiss()
 			r.logger.Warn("failed to evict item from Redis cache", zap.String("key", key), zap.Error(err))
 
 			return err
