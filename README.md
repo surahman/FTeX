@@ -117,7 +117,7 @@ ifconfig | grep 'inet 192'
 
 ### Data Tier Containers
 
-To spin-up the Postgres container please use the commands below from the project root directory.
+To spin-up the Postgres and Redis containers please use the commands below from the project root directory.
 
 Create containers:
 
@@ -141,19 +141,39 @@ docker ps
 docker inspect --format='{{json .State.Health}}' postgres
 ```
 
+```bash
+docker inspect --format='{{json .State.Health}}' redis
+```
+
 Get IP Addresses:
 
 ```bash
 docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres
 ```
 
+```bash
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis
+```
+
 
 **Postgres:**
-- 
+
 - Username : `postgres`
 - Password : `postgres`
 - Port : `6432`
-- Database : `ft-ex-db`
+- Database : `ftex_db`
+
+**Redis:**
+
+- Username : `default`
+- Password : `v7h0JZq8AZhVcF3NWz9u`
+
+- Username : `ftex_service`
+- Password : `ZoF1bncLLyYT1agKfWQY`
+
+- Port : `7379`
+- Database Fiat: `0`
+- Database Crypto: `1`
 
 <br/>
 
