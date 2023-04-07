@@ -29,11 +29,17 @@ func TestRedisConfigs_Load(t *testing.T) {
 			name:         "empty - etc dir",
 			input:        redisConfigTestData["empty"],
 			envValue:     xid.New().String(),
-			expectErrCnt: 7,
+			expectErrCnt: 6,
 			expectErr:    require.Error,
 		}, {
 			name:         "valid - etc dir",
 			input:        redisConfigTestData["valid"],
+			envValue:     xid.New().String(),
+			expectErrCnt: 0,
+			expectErr:    require.NoError,
+		}, {
+			name:         "github-ci-runner - etc dir",
+			input:        redisConfigTestData["github-ci-runner"],
 			envValue:     xid.New().String(),
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
@@ -47,8 +53,8 @@ func TestRedisConfigs_Load(t *testing.T) {
 			name:         "no password - etc dir",
 			input:        redisConfigTestData["password_empty"],
 			envValue:     xid.New().String(),
-			expectErrCnt: 1,
-			expectErr:    require.Error,
+			expectErrCnt: 0,
+			expectErr:    require.NoError,
 		}, {
 			name:         "no addrs - etc dir",
 			input:        redisConfigTestData["no_addr"],
@@ -77,7 +83,7 @@ func TestRedisConfigs_Load(t *testing.T) {
 			name:         "no max idle conns - etc dir",
 			input:        redisConfigTestData["no_max_idle_conns"],
 			envValue:     xid.New().String(),
-			expectErrCnt: 1,
+			expectErrCnt: 0,
 			expectErr:    require.NoError,
 		}, {
 			name:         "invalid min TTL - etc dir",

@@ -23,7 +23,6 @@ func TestNewRedisImpl(t *testing.T) {
 		expectErr require.ErrorAssertionFunc
 		expectNil require.ValueAssertionFunc
 	}{
-		// ----- test cases start ----- //
 		{
 			name:      "File found",
 			fileName:  constants.GetRedisFileName(),
@@ -37,7 +36,6 @@ func TestNewRedisImpl(t *testing.T) {
 			expectErr: require.Error,
 			expectNil: require.Nil,
 		},
-		// ----- test cases end ----- //
 	}
 	for _, testCase := range testCases {
 		test := testCase
@@ -116,7 +114,7 @@ func TestVerifySession(t *testing.T) {
 	nilConnection := redisImpl{redisDB: nil}
 	require.Error(t, nilConnection.verifySession(), "nil connection should return an error.")
 
-	badConnection := redisImpl{redisDB: redis.NewClient(&redis.Options{})}
+	badConnection := redisImpl{redisDB: redis.NewClient(&redis.Options{Addr: invalidServerAddr})}
 	require.Error(t, badConnection.verifySession(), "verifying a not open connection should return an error.")
 }
 
@@ -140,7 +138,7 @@ func TestRedisImpl_Open(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &conf), "failed to prepare test config.")
 
 	testRedis := redisImpl{conf: &conf, logger: zapLogger}
-	require.NoError(t, testRedis.Open(), "failed to create new cluster connection.")
+	require.NoError(t, testRedis.Open(), "failed to create new Redis server connection.")
 
 	// Leaked connection check.
 	require.Error(t, testRedis.Open(), "leaking a connection should raise an error.")
@@ -237,18 +235,18 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 			require.NoError(t, err, "failed to retrieve data from Redis")
 			require.Equal(t, retrieved, test.value, "retrieved value does not match expected")
 
-			// Remove data from cluster.
-			require.NoError(t, connection.Del(test.key), "failed to remove key from Redis cluster")
+			// Remove data from Redis server.
+			require.NoError(t, connection.Del(test.key), "failed to remove key from Redis server")
 			time.Sleep(time.Second) // Allow cache propagation.
 
 			// Check to see if data has been removed.
 			var deleted *string
 			err = connection.Get(test.key, deleted)
 			require.Nil(t, deleted, "returned data from a deleted record should be nil")
-			require.Error(t, err, "deleted record should not be found on redis cluster")
+			require.Error(t, err, "deleted record should not be found on redis Redis server")
 
 			// Double-delete data.
-			require.Error(t, connection.Del(test.key), "removing a nonexistent key from Redis cluster should fail")
+			require.Error(t, connection.Del(test.key), "removing a nonexistent key from Redis server should fail")
 		})
 	}
 }

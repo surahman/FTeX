@@ -20,7 +20,7 @@ type config struct {
 // authenticationConfig contains the Redis session authentication information.
 type authenticationConfig struct {
 	Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
-	Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+	Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password"`
 }
 
 // connectionConfig contains the Redis session connection information.
