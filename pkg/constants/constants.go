@@ -10,12 +10,14 @@ const (
 	loggerConfigFileName   = "LoggerConfig.yaml"
 	postgresConfigFileName = "PostgresConfig.yaml"
 	redisConfigFileName    = "RedisConfig.yaml"
+	quotesConfigFileName   = "QuotesConfig.yaml"
 
 	// Environment variables.
 	githubCIKey    = "GITHUB_ACTIONS_CI"
 	loggerPrefix   = "LOGGER"
 	postgresPrefix = "POSTGRES"
 	redisPrefix    = "REDIS"
+	quotesPrefix   = "QUOTES"
 
 	// Miscellaneous.
 	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
@@ -72,12 +74,22 @@ func GetTestDatabaseName() string {
 	return testDatabaseName
 }
 
-// GetRedisFileName returns the Redis cluster configuration file name.
+// GetRedisFileName returns the Redis server configuration file name.
 func GetRedisFileName() string {
 	return redisConfigFileName
 }
 
-// GetRedisPrefix returns the environment variable prefix for the Redis cluster.
+// GetRedisPrefix returns the environment variable prefix for the Redis server.
 func GetRedisPrefix() string {
 	return redisPrefix
+}
+
+// GetQuotesFileName returns the quotes configuration file name.
+func GetQuotesFileName() string {
+	return quotesConfigFileName
+}
+
+// GetQuotesPrefix returns the environment variable prefix for the quotes.
+func GetQuotesPrefix() string {
+	return quotesPrefix
 }

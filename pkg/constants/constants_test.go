@@ -53,3 +53,11 @@ func TestGetRedisFileName(t *testing.T) {
 func TestGetRedisPrefix(t *testing.T) {
 	require.Equal(t, redisPrefix, GetRedisPrefix(), "Incorrect Redis prefix")
 }
+
+func TestGetQuotesFileName(t *testing.T) {
+	require.Equal(t, quotesConfigFileName, GetQuotesFileName(), "Incorrect Quotes filename")
+}
+
+func TestGetQuotesPrefix(t *testing.T) {
+	require.Equal(t, quotesPrefix, GetQuotesPrefix(), "Incorrect Quotes prefix")
+}
