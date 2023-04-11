@@ -51,12 +51,12 @@ Cache Policy:
 
 The configuration loader will search for the configurations in the following order:
 
-| Location                 | Details                                                                                                |
-|--------------------------|--------------------------------------------------------------------------------------------------------|
-| `/etc/MCQPlatform.conf/` | The `etc` directory is the canonical location for configurations.                                      |
-| `$HOME/.MCQPlatform/`    | Configurations can be located in the user's home directory.                                            |
-| `./configs/`             | The config folder in the root directory where the application is located.                              |
-| Environment variables    | Finally, the configurations will be loaded from environment variables and override configuration files |
+| Location              | Details                                                                                                |
+|-----------------------|--------------------------------------------------------------------------------------------------------|
+| `/etc/FTeX.conf/`     | The `etc` directory is the canonical location for configurations.                                      |
+| `$HOME/.FTeX/`        | Configurations can be located in the user's home directory.                                            |
+| `./configs/`          | The config folder in the root directory where the application is located.                              |
+| Environment variables | Finally, the configurations will be loaded from environment variables and override configuration files |
 
 ### Configuration File
 
