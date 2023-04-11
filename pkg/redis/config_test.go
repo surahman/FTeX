@@ -20,7 +20,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 	testCases := []struct {
 		name         string
 		input        string
-		envValue     string
 		expectErrCnt int
 		expectErr    require.ErrorAssertionFunc
 	}{
@@ -28,67 +27,56 @@ func TestRedisConfigs_Load(t *testing.T) {
 		{
 			name:         "empty - etc dir",
 			input:        redisConfigTestData["empty"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 6,
 			expectErr:    require.Error,
 		}, {
 			name:         "valid - etc dir",
 			input:        redisConfigTestData["valid"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
 		}, {
 			name:         "github-ci-runner - etc dir",
 			input:        redisConfigTestData["github-ci-runner"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
 		}, {
 			name:         "no username - etc dir",
 			input:        redisConfigTestData["username_empty"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
 			name:         "no password - etc dir",
 			input:        redisConfigTestData["password_empty"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
 		}, {
 			name:         "no addrs - etc dir",
 			input:        redisConfigTestData["no_addr"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
 			name:         "invalid max retries - etc dir",
 			input:        redisConfigTestData["invalid_max_retries"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
 			name:         "invalid pool size - etc dir",
 			input:        redisConfigTestData["invalid_pool_size"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
 			name:         "invalid min idle conns - etc dir",
 			input:        redisConfigTestData["invalid_min_idle_conns"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
 			name:         "no max idle conns - etc dir",
 			input:        redisConfigTestData["no_max_idle_conns"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
 		}, {
 			name:         "invalid min TTL - etc dir",
 			input:        redisConfigTestData["invalid_min_ttl"],
-			envValue:     xid.New().String(),
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		},
@@ -137,7 +125,7 @@ func TestRedisConfigs_Load(t *testing.T) {
 			ttl := 999
 			t.Setenv(envDataKey+"TTL", strconv.Itoa(ttl))
 
-			require.NoErrorf(t, actual.Load(fs), "failed to load constants file: %v", err)
+			require.NoErrorf(t, actual.Load(fs), "failed to load configurations file: %v", err)
 
 			require.Equal(t, username, actual.Authentication.Username, "failed to load username.")
 			require.Equal(t, password, actual.Authentication.Password, "failed to load password.")
