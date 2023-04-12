@@ -33,6 +33,7 @@ jobs:
     needs: [ lint ]
     env:
       GITHUB_ACTIONS_CI: true
+      QUOTES_CI_CONFIGS: ${{ secrets.QUOTES_CI_CONFIGS }}
 
     services:
       postgres:

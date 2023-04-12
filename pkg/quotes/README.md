@@ -23,8 +23,12 @@ override the settings in the configuration files. The configuration files are al
 Configurations for the API Keys and endpoints for Fiat and Crypto-Currency prices will be set through this file. This
 configuration file would be encrypted and stored in a secrets store for a production environment.
 
+The development environment requires that a configuration file called `DevQuotesConfig.yaml` be located in the `configs` directory.
+This file will contain the API credentials and endpoint information used in the local test/dev environment. The GitHub Actions CI
+pipeline will need to have a secret with the configurations stored under the environment variable `QUOTES_CI_CONFIGS`.
+
 Free API Keys for data can be obtained [here for fiat currencies](https://apilayer.com/marketplace/exchangerates_data-api), and
-[here for cryptocurrencies](https://coinlayer.com/signup/free).
+[here for cryptocurrencies](https://www.coinapi.io/pricing?apikey).
 
 <br/>
 
