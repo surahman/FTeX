@@ -27,7 +27,7 @@ func TestQuotesConfigs_Load(t *testing.T) {
 		{
 			name:         "empty - etc dir",
 			input:        quotesConfigTestData["empty"],
-			expectErrCnt: 6,
+			expectErrCnt: 8,
 			expectErr:    require.Error,
 		}, {
 			name:         "valid - etc dir",
@@ -40,6 +40,11 @@ func TestQuotesConfigs_Load(t *testing.T) {
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
+			name:         "no api header fiat",
+			input:        quotesConfigTestData["no fiat header key"],
+			expectErrCnt: 1,
+			expectErr:    require.Error,
+		}, {
 			name:         "no api endpoint fiat",
 			input:        quotesConfigTestData["no fiat api endpoint"],
 			expectErrCnt: 1,
@@ -47,11 +52,16 @@ func TestQuotesConfigs_Load(t *testing.T) {
 		}, {
 			name:         "no fiat",
 			input:        quotesConfigTestData["no fiat"],
-			expectErrCnt: 2,
+			expectErrCnt: 3,
 			expectErr:    require.Error,
 		}, {
 			name:         "no api key crypto",
 			input:        quotesConfigTestData["no crypto api key"],
+			expectErrCnt: 1,
+			expectErr:    require.Error,
+		}, {
+			name:         "no api header crypto",
+			input:        quotesConfigTestData["no crypto header key"],
 			expectErrCnt: 1,
 			expectErr:    require.Error,
 		}, {
@@ -62,7 +72,7 @@ func TestQuotesConfigs_Load(t *testing.T) {
 		}, {
 			name:         "no crypto",
 			input:        quotesConfigTestData["no crypto"],
-			expectErrCnt: 2,
+			expectErrCnt: 3,
 			expectErr:    require.Error,
 		}, {
 			name:         "no connection user-agent",
@@ -104,13 +114,17 @@ func TestQuotesConfigs_Load(t *testing.T) {
 
 			// Test configuring of environment variable.
 			apiKeyFiat := xid.New().String()
+			headerKeyFiat := xid.New().String()
 			apiEndpointFiat := xid.New().String()
 			t.Setenv(envFiatKey+"APIKEY", apiKeyFiat)
+			t.Setenv(envFiatKey+"HEADERKEY", headerKeyFiat)
 			t.Setenv(envFiatKey+"ENDPOINT", apiEndpointFiat)
 
 			apiKeyCrypto := xid.New().String()
+			headerKeyCrypto := xid.New().String()
 			apiEndpointCrypto := xid.New().String()
 			t.Setenv(envCryptoKey+"APIKEY", apiKeyCrypto)
+			t.Setenv(envCryptoKey+"HEADERKEY", headerKeyCrypto)
 			t.Setenv(envCryptoKey+"ENDPOINT", apiEndpointCrypto)
 
 			timeout := 999 * time.Second
@@ -121,9 +135,11 @@ func TestQuotesConfigs_Load(t *testing.T) {
 			require.NoErrorf(t, actual.Load(fs), "failed to load configurations file: %v", err)
 
 			require.Equal(t, apiKeyFiat, actual.FiatCurrency.APIKey, "failed to load fiat API Key.")
+			require.Equal(t, headerKeyFiat, actual.FiatCurrency.HeaderKey, "failed to load fiat Header Key.")
 			require.Equal(t, apiEndpointFiat, actual.FiatCurrency.Endpoint, "failed to load fiat API endpoint.")
 
 			require.Equal(t, apiKeyCrypto, actual.CryptoCurrency.APIKey, "failed to load crypto API Key.")
+			require.Equal(t, headerKeyCrypto, actual.CryptoCurrency.HeaderKey, "failed to load crypto Header Key.")
 			require.Equal(t, apiEndpointCrypto, actual.CryptoCurrency.Endpoint, "failed to load crypto API endpoint.")
 
 			require.Equal(t, timeout, actual.Connection.Timeout, "failed to load timeout.")

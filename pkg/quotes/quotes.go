@@ -80,7 +80,7 @@ func configFiatClient(conf *config) (*req.Client, error) {
 	return req.C().
 			SetUserAgent(conf.Connection.UserAgent).
 			SetTimeout(conf.Connection.Timeout).
-			SetCommonHeader("X-RapidAPI-Key", conf.FiatCurrency.APIKey),
+			SetCommonHeader(conf.FiatCurrency.HeaderKey, conf.FiatCurrency.APIKey),
 		nil
 }
 
@@ -93,7 +93,7 @@ func configCryptoClient(conf *config) (*req.Client, error) {
 	return req.C().
 			SetUserAgent(conf.Connection.UserAgent).
 			SetTimeout(conf.Connection.Timeout).
-			SetCommonHeader("X-CoinAPI-Key", conf.CryptoCurrency.APIKey),
+			SetCommonHeader(conf.CryptoCurrency.HeaderKey, conf.CryptoCurrency.APIKey),
 		nil
 }
 

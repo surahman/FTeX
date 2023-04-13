@@ -51,9 +51,11 @@ The expected file name is `QuotesConfig.yaml`. Unless otherwise specified, all t
 |-----------------------|--------------------------|---------------|-------------------------------------------------------------------|
 | **_Fiat Currency_**   | `QUOTES_FIATCURRENCY`    |               | **_Parent key for Fiat Exchange endpoint information._**          |
 | ↳ APIKey              | ↳ `.APIKEY`              | string        | API Key for fiat currency quotes.                                 |
+| ↳ HeaderKey           | ↳ `.HEADERKEY`           | string        | Header key under which the API Key must be stored.                |
 | ↳ Endpoint            | ↳ `.ENDPOINT`            | string        | API endpoint for fiat currency quotes.                            |
 | **_Crypto Currency_** | `QUOTES_CRYPTOCURRENCY`  |               | **_Parent key for Crypto Exchange endpoint information._**        |
 | ↳ APIKey              | ↳ `.APIKEY`              | string        | API Key for crypto currency quotes.                               |
+| ↳ HeaderKey           | ↳ `.HEADERKEY`           | string        | Header key under which the API Key must be stored.                |
 | ↳ Endpoint            | ↳ `.ENDPOINT`            | string        | API endpoint for crypto currency quotes.                          |
 | **_Connection_**      | `QUOTES_CONNECTION`      |               | **_Parent key for connection configuration._**                    |
 | ↳ userAgent           | ↳ `.USERAGENT`           | string        | The user-agent to be used as the request client in http requests. |
@@ -64,13 +66,16 @@ The expected file name is `QuotesConfig.yaml`. Unless otherwise specified, all t
 ```yaml
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
-  endpoint: url-to-data-source-for-fiat-currency-price-quotes
+  headerKey: X-RapidAPI-Key
+  endpoint: https://api.apilayer.com/exchangerates_data/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
+  headerKey: X-CoinAPI-Key
   endpoint: url-to-data-source-for-crypto-currency-price-quotes
 connection:
   userAgent: ftex_inc
   timeout: 1s
+
 ```
 
 #### Example Environment Variables

@@ -1,8 +1,10 @@
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
+  headerKey: X-RapidAPI-Key
   endpoint: https://api.apilayer.com/exchangerates_data/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
+  headerKey: X-CoinAPI-Key
   endpoint: url-to-data-source-for-crypto-currency-price-quotes
 connection:
   userAgent: ftex_inc

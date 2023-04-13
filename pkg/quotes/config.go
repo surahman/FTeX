@@ -20,8 +20,9 @@ type config struct {
 
 // apiConfig contains the API Key and URL information for a currency exchange endpoint.
 type apiConfig struct {
-	APIKey   string `json:"apiKey,omitempty" yaml:"apiKey,omitempty" mapstructure:"apiKey" validate:"required"`
-	Endpoint string `json:"endpoint,omitempty" yaml:"endpoint,omitempty" mapstructure:"endpoint" validate:"required"`
+	APIKey    string `json:"apiKey,omitempty" yaml:"apiKey,omitempty" mapstructure:"apiKey" validate:"required"`
+	HeaderKey string `json:"headerKey,omitempty" yaml:"headerKey,omitempty" mapstructure:"headerKey" validate:"required"`
+	Endpoint  string `json:"endpoint,omitempty" yaml:"endpoint,omitempty" mapstructure:"endpoint" validate:"required"`
 }
 
 // connectionConfig contains HTTP connection attempt information.
