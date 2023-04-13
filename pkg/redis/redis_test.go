@@ -14,8 +14,6 @@ import (
 )
 
 func TestNewRedisImpl(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		name      string
 		fileName  string
@@ -41,8 +39,6 @@ func TestNewRedisImpl(t *testing.T) {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
 			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "failed to create in memory directory.")
