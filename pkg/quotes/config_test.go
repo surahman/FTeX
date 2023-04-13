@@ -102,7 +102,7 @@ func TestQuotesConfigs_Load(t *testing.T) {
 			// Load from mock filesystem.
 			actual := &config{}
 			err := actual.Load(fs)
-			testCase.expectErr(t, err, "Failed to load test config from mock filesystem.")
+			testCase.expectErr(t, err, "error expectation failed after loading from mock filesystem.")
 
 			validationError := &validator.ValidationError{}
 			if errors.As(err, &validationError) {

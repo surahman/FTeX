@@ -108,16 +108,16 @@ func setup() error {
 		zapLogger.Info("Integration Test running on Github CI runner.")
 		zapLogger.Warn("*** Please ensure that the Quotes configurations are upto date in GHA Secrets ***")
 
-		// Check Fiat currency API Key is set.
-		if _, ok = os.LookupEnv(constants.GetQuotesPrefix() + "_FIATCURRENCY.APIKEY"); !ok {
+		// Remove Fiat currency API Key from environment variables.
+		if err := os.Unsetenv(constants.GetQuotesPrefix() + "_FIATCURRENCY.APIKEY"); err != nil {
 			msg := "failed to load  Fiat currency API Key from GitHub Actions Secrets"
 			zapLogger.Error(msg)
 
 			return fmt.Errorf(msg)
 		}
 
-		// Check Cryptocurrency API Key is set.
-		if _, ok = os.LookupEnv(constants.GetQuotesPrefix() + "_CRYPTOCURRENCY.APIKEY"); !ok {
+		// Remove Cryptocurrency API Key from environment variables.
+		if err := os.Unsetenv(constants.GetQuotesPrefix() + "_CRYPTOCURRENCY.APIKEY"); err != nil {
 			msg := "failed to load Cryptocurrency API Key from GitHub Actions Secrets"
 			zapLogger.Error(msg)
 
