@@ -11,6 +11,7 @@ import (
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 // quotesConfigTestData is a map Quotes configuration test data.
@@ -82,43 +83,8 @@ func setup() error {
 		return nil
 	}
 
-	var (
-		rawConfigs string
-		fs         afero.Fs
-	)
-
-	// If running on a GitHub Actions runner use the secret stored in the GitHub Actions Secrets.
-	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok {
-		zapLogger.Info("Integration Test running on Github CI runner.")
-		zapLogger.Warn("*** Please ensure that the Quotes configurations are upto date in GHA Secrets ***")
-
-		if rawConfigs, ok = os.LookupEnv(constants.GetQuotesPrefix() + "_CI_CONFIGS"); !ok {
-			msg := "failed to load Quotes configs from GitHub Actions Secrets"
-			zapLogger.Error(msg)
-
-			return fmt.Errorf(msg)
-		}
-	} else {
-		fsDevLoader := afero.Afero{
-			Fs: afero.NewOsFs(),
-		}
-
-		var bytes []byte
-
-		bytes, err := fsDevLoader.ReadFile("../../configs/DevQuotesConfig.yaml")
-		if err != nil || len(bytes) < 1 {
-			zapLogger.Error("Please ensure there are API Keys and Endpoints configured in" +
-				"\".configs/DevQuotesConfig.yaml\" for development.")
-
-			return fmt.Errorf("failed to read dev confiq file, number of bytes: %d %w", len(bytes), err)
-		}
-
-		rawConfigs = string(bytes)
-	}
-
 	// Configure in memory file system to load configs.
-	fs = afero.NewMemMapFs()
-
+	fs := afero.NewMemMapFs()
 	if err := fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
 		return fmt.Errorf("failed to create in memory directory %w", err)
 	}
@@ -126,7 +92,7 @@ func setup() error {
 	if err := afero.WriteFile(
 		fs,
 		constants.GetEtcDir()+constants.GetQuotesFileName(),
-		[]byte(rawConfigs),
+		[]byte(quotesConfigTestData["valid"]),
 		0644); err != nil {
 		return fmt.Errorf("failed to write in memory file %w", err)
 	}
@@ -137,10 +103,76 @@ func setup() error {
 		return fmt.Errorf("failed to load test configs %w", err)
 	}
 
+	// If running on a GitHub Actions runner use the secret stored in the GitHub Actions Secrets.
+	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok {
+		zapLogger.Info("Integration Test running on Github CI runner.")
+		zapLogger.Warn("*** Please ensure that the Quotes configurations are upto date in GHA Secrets ***")
+
+		// Check Fiat currency API Key is set.
+		if _, ok = os.LookupEnv(constants.GetQuotesPrefix() + "_FIATCURRENCY.APIKEY"); !ok {
+			msg := "failed to load  Fiat currency API Key from GitHub Actions Secrets"
+			zapLogger.Error(msg)
+
+			return fmt.Errorf(msg)
+		}
+
+		// Check Cryptocurrency API Key is set.
+		if _, ok = os.LookupEnv(constants.GetQuotesPrefix() + "_CRYPTOCURRENCY.APIKEY"); !ok {
+			msg := "failed to load Cryptocurrency API Key from GitHub Actions Secrets"
+			zapLogger.Error(msg)
+
+			return fmt.Errorf(msg)
+		}
+	} else {
+		zapLogger.Info("Tests are running on local development environment.")
+		zapLogger.Warn("*** Please ensure that the Quotes configurations are upto date ***")
+
+		creds, err := readDevAPICredentials()
+		if err != nil {
+			msg := "failed to read credentials for development environment"
+			zapLogger.Error(msg)
+
+			return fmt.Errorf(msg)
+		}
+
+		testConfigs.FiatCurrency.APIKey = creds.Fiat
+		testConfigs.CryptoCurrency.APIKey = creds.Crypto
+	}
+
 	return nil
 }
 
 // tearDown will delete the test clusters keyspace.
 func tearDown() error {
 	return nil
+}
+
+// apiCredentials contains the API credentials used in the test suite.
+type apiCredentials struct {
+	Fiat   string `json:"fiatCurrency" yaml:"fiatCurrency"`
+	Crypto string `json:"cryptoCurrency" yaml:"cryptoCurrency"`
+}
+
+// readDevAPICredentials will load the API credentials stored on disk.
+func readDevAPICredentials() (apiCredentials, error) {
+	fsDevLoader := afero.Afero{
+		Fs: afero.NewOsFs(),
+	}
+
+	credentials := apiCredentials{}
+
+	// Read credentials from disk.
+	bytes, err := fsDevLoader.ReadFile("../../configs/DevAPICredentials.yaml")
+	if err != nil || len(bytes) < 1 {
+		zapLogger.Error("Please ensure there are API Keys and Endpoints configured in" +
+			"\".configs/DevAPICredentials.yaml\" for development.")
+
+		return credentials, fmt.Errorf("failed to read dev confiq file, number of bytes: %d %w", len(bytes), err)
+	}
+
+	if err = yaml.Unmarshal(bytes, &credentials); err != nil {
+		log.Fatal(err)
+	}
+
+	return credentials, nil
 }

@@ -67,7 +67,7 @@ The expected file name is `QuotesConfig.yaml`. Unless otherwise specified, all t
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key

@@ -9,11 +9,11 @@ func configTestData() map[string]string {
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -22,11 +22,11 @@ connection:
 fiatCurrency:
   apiKey:
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -35,11 +35,11 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey:
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s
@@ -53,7 +53,7 @@ fiatCurrency:
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -62,7 +62,7 @@ connection:
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -71,11 +71,11 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey:
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -84,11 +84,11 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey:
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -97,7 +97,7 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
@@ -110,7 +110,7 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 connection:
   userAgent: ftex_inc
   timeout: 1s`,
@@ -119,11 +119,11 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent:
   timeout: 1s`,
@@ -132,11 +132,11 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout:`,
@@ -145,10 +145,10 @@ connection:
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
   headerKey: X-RapidAPI-Key
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes`,
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}`,
 	}
 }
