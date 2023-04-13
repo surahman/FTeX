@@ -22,6 +22,9 @@ var testConfigs *config
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
+// quotes is used test wide to access third-party currency pricing services.
+var quotes Quotes
+
 func TestMain(m *testing.M) {
 	// Parse commandline flags to check for short tests.
 	flag.Parse()
@@ -37,6 +40,19 @@ func TestMain(m *testing.M) {
 	if err = setup(); err != nil {
 		zapLogger.Error("Test suite setup failure", zap.Error(err))
 		os.Exit(1)
+	}
+
+	// Configure Quotes.
+	clientFiat, err := configFiatClient(testConfigs)
+	if err != nil {
+		zapLogger.Error("Failed to configure Fiat client", zap.Error(err))
+		os.Exit(1)
+	}
+
+	quotes = &quotesImpl{
+		clientFiat: clientFiat,
+		conf:       testConfigs,
+		logger:     zapLogger,
 	}
 
 	// Run test suite.
