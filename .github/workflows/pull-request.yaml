@@ -33,6 +33,8 @@ jobs:
     needs: [ lint ]
     env:
       GITHUB_ACTIONS_CI: true
+      QUOTES_FIATCURRENCY.APIKEY: ${{ secrets.FIATCURRENCY_APIKEY }}
+      QUOTES_CRYPTOCURRENCY.APIKEY: ${{ secrets.CRYPTOCURRENCY_APIKEY }}
 
     services:
       postgres:

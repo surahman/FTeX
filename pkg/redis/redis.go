@@ -17,7 +17,7 @@ import (
 )
 
 // Mock Redis interface stub generation.
-//go:generate mockgen -destination=../mocks/mock_redis.go -package=mocks github.com/surahman/mcq-platform/pkg/redis Redis
+//go:generate mockgen -destination=../mocks/mock_redis.go -package=mocks github.com/surahman/FTeX/pkg/redis Redis
 
 // Redis is the interface through which the cache server can be accessed. Created to support mock testing.
 type Redis interface {
@@ -47,8 +47,8 @@ var _ Redis = &redisImpl{}
 // redisImpl implements the Redis interface and contains the logic to interface with the cache.
 type redisImpl struct {
 	conf    *config
-	redisDB *redis.Client
 	logger  *logger.Logger
+	redisDB *redis.Client
 }
 
 // NewRedis will create a new Redis configuration by loading it.

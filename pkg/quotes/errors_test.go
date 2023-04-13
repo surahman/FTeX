@@ -1,7 +1,8 @@
-package redis
+package quotes
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,19 +19,19 @@ func TestError_New(t *testing.T) {
 		{
 			name:         "base error",
 			err:          NewError("base error"),
-			expectedCode: ErrorUnknown,
+			expectedCode: 0,
 		}, {
-			name:         "cache miss",
-			err:          NewError("cache miss").errorCacheMiss(),
-			expectedCode: ErrorCacheMiss,
+			name:         "bad request",
+			err:          NewError("bad request").SetStatus(http.StatusBadRequest),
+			expectedCode: http.StatusBadRequest,
 		}, {
-			name:         "cache set",
-			err:          NewError("cache set").errorCacheSet(),
-			expectedCode: ErrorCacheSet,
+			name:         "too many requests",
+			err:          NewError("too many requests").SetStatus(http.StatusTooManyRequests),
+			expectedCode: http.StatusTooManyRequests,
 		}, {
-			name:         "cache del",
-			err:          NewError("cache del").errorCacheDel(),
-			expectedCode: ErrorCacheDel,
+			name:         "bad gateway",
+			err:          NewError("bad gateway").SetStatus(http.StatusBadGateway),
+			expectedCode: http.StatusBadGateway,
 		},
 	}
 
@@ -74,34 +75,14 @@ func TestError_Is(t *testing.T) {
 			baseErr:         nil,
 			boolExpectation: require.False,
 		}, {
-			name:            "base vs cache miss",
-			inputErr:        NewError("").errorCacheMiss(),
+			name:            "base vs too many requests",
+			inputErr:        &Error{Message: "input", Code: http.StatusTooManyRequests},
 			baseErr:         baseError,
 			boolExpectation: require.False,
 		}, {
-			name:            "base vs cache set",
-			inputErr:        NewError("").errorCacheSet(),
-			baseErr:         baseError,
-			boolExpectation: require.False,
-		}, {
-			name:            "base vs cache del",
-			inputErr:        NewError("").errorCacheDel(),
-			baseErr:         baseError,
-			boolExpectation: require.False,
-		}, {
-			name:            "cache miss",
-			inputErr:        NewError("").errorCacheMiss(),
-			baseErr:         NewError("").errorCacheMiss(),
-			boolExpectation: require.True,
-		}, {
-			name:            "cache set",
-			inputErr:        NewError("").errorCacheSet(),
-			baseErr:         NewError("").errorCacheSet(),
-			boolExpectation: require.True,
-		}, {
-			name:            "cache del",
-			inputErr:        NewError("").errorCacheDel(),
-			baseErr:         NewError("").errorCacheDel(),
+			name:            "too many requests",
+			inputErr:        &Error{Message: "input", Code: http.StatusTooManyRequests},
+			baseErr:         &Error{Message: "base", Code: http.StatusTooManyRequests},
 			boolExpectation: require.True,
 		},
 	}

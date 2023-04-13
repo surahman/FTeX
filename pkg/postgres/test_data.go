@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// configTestData will return a map of test data containing valid and invalid logger configs.
+// configTestData will return a map of test data containing valid and invalid Postgres configs.
 func configTestData() map[string]string {
 	return map[string]string{
 		"empty": ``,
