@@ -4,7 +4,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// FiatQuote is the quote returned from the Exchange Rates Data API.
+// FiatQuote is the quote returned from the Fiat Exchange Rates Data API.
 type FiatQuote struct {
 	Info    FiatInfo        `json:"info"`
 	Query   FiatQuery       `json:"query"`
@@ -32,4 +32,14 @@ type FiatError struct {
 	Code int    `json:"code"`
 	Type string `json:"type"`
 	Info string `json:"info"`
+}
+
+// CryptoQuote is the quote returned from the Crypto Exchange Rates Data API.
+//
+//nolint:tagliatelle
+type CryptoQuote struct {
+	BaseCurrency  string          `json:"asset_id_base"`
+	QuoteCurrency string          `json:"asset_id_quote"`
+	Time          string          `json:"time"`
+	Rate          decimal.Decimal `json:"rate"`
 }
