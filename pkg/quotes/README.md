@@ -24,8 +24,16 @@ Configurations for the API Keys and endpoints for Fiat and Crypto-Currency price
 configuration file would be encrypted and stored in a secrets store for a production environment.
 
 The development environment requires that a configuration file called `DevQuotesConfig.yaml` be located in the `configs` directory.
-This file will contain the API credentials and endpoint information used in the local test/dev environment. The GitHub Actions CI
-pipeline will need to have a secret with the configurations stored under the environment variable `QUOTES_CI_CONFIGS`.
+This file will contain the API credentials in the following format:
+
+```yaml
+fiatCurrency: your-fiat-currency-api-key
+cryptoCurrency: your-cryptocurrency-api-key
+```
+
+The GitHub Actions CI pipeline will need to have a secrets with the API keys configuration stored under the Repository Secrets:
+- `CRYPTOCURRENCY_APIKEY`
+- `FIATCURRENCY_APIKEY`
 
 Free API Keys for data can be obtained [here for fiat currencies](https://rapidapi.com/principalapis/api/currency-conversion-and-exchange-rates), and
 [here for cryptocurrencies](https://www.coinapi.io/pricing?apikey).
