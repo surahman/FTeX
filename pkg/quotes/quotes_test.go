@@ -52,10 +52,22 @@ func TestQuotesImpl_ConfigFiatClient(t *testing.T) {
 	t.Parallel()
 
 	testClient, err := configFiatClient(nil)
-	require.Error(t, err, "neither config nor logger.")
+	require.Error(t, err, "no config should fail")
 	require.Nil(t, testClient, "failure should return nil client.")
 
 	testClient, err = configFiatClient(testConfigs)
+	require.NoError(t, err, "failed to configure Quotes.")
+	require.NotNil(t, testClient, "failed to configure Quotes.")
+}
+
+func TestQuotesImpl_ConfigCryptoClient(t *testing.T) {
+	t.Parallel()
+
+	testClient, err := configCryptoClient(nil)
+	require.Error(t, err, "no config should fail.")
+	require.Nil(t, testClient, "failure should return nil client.")
+
+	testClient, err = configCryptoClient(testConfigs)
 	require.NoError(t, err, "failed to configure Quotes.")
 	require.NotNil(t, testClient, "failed to configure Quotes.")
 }
@@ -113,6 +125,54 @@ func TestQuotesImpl_FiatQuote(t *testing.T) {
 			require.True(t, result.Info.Timestamp > 0, "invalid timestamp.")
 			require.True(t, result.Result.IsPositive() && !result.Result.IsZero(), "invalid result.")
 			require.True(t, len(result.Date) > 0, "invalid date.")
+		})
+	}
+}
+
+func TestQuotesImpl_CryptoQuote(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name           string
+		source         string
+		destination    string
+		errExpectation require.ErrorAssertionFunc
+	}{
+		{
+			name:           "BTC to USD",
+			source:         "BTC",
+			destination:    "USD",
+			errExpectation: require.NoError,
+		}, {
+			name:           "USD to BTC",
+			source:         "USD",
+			destination:    "BTC",
+			errExpectation: require.NoError,
+		}, {
+			name:           "invalid",
+			source:         "INVALID",
+			destination:    "CAD",
+			errExpectation: require.Error,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := quotes.CryptoQuote(test.source, test.destination)
+			test.errExpectation(t, err, "error expectation failed.")
+
+			if err != nil {
+				return
+			}
+
+			require.Equal(t, test.source, result.BaseCurrency, "source mismatched base currency.")
+			require.Equal(t, test.destination, result.QuoteCurrency, "destination mismatched quote currency.")
+			require.True(t, len(result.Time) > 0, "no time stamp returned.")
+			require.True(t, result.Rate.IsPositive() && !result.Rate.IsZero(), "invalid rate.")
 		})
 	}
 }

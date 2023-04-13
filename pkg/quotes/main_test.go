@@ -49,10 +49,17 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
+	clientCrypto, err := configCryptoClient(testConfigs)
+	if err != nil {
+		zapLogger.Error("Failed to configure Fiat client", zap.Error(err))
+		os.Exit(1)
+	}
+
 	quotes = &quotesImpl{
-		clientFiat: clientFiat,
-		conf:       testConfigs,
-		logger:     zapLogger,
+		clientFiat:   clientFiat,
+		clientCrypto: clientCrypto,
+		conf:         testConfigs,
+		logger:       zapLogger,
 	}
 
 	// Run test suite.
