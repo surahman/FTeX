@@ -113,12 +113,12 @@ func (q *quotesImpl) FiatQuote(source, destination string, sourceAmount decimal.
 		msg := "failed to get Fiat currency price quote"
 		q.logger.Warn(msg, zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return result, NewError("please try again later").SetStatus(http.StatusServiceUnavailable)
 	}
 
 	// Check for a successful rate retrieval.
 	if !result.Success {
-		return result, fmt.Errorf("invalid Fiat currency code")
+		return result, NewError("invalid Fiat currency code").SetStatus(http.StatusBadRequest)
 	}
 
 	return result, nil
@@ -136,14 +136,21 @@ func (q *quotesImpl) CryptoQuote(source, destination string) (models.CryptoQuote
 
 	// Failed to query endpoint for price.
 	if err != nil {
-		msg := "failed to get Fiat currency price quote"
-		q.logger.Warn(msg, zap.Error(err))
+		q.logger.Warn("failed to get Fiat currency price quote", zap.Error(err))
 
-		return result, fmt.Errorf(msg+" %w", err)
+		return result, NewError("crypto price service unreachable").SetStatus(http.StatusInternalServerError)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("invalid Crypto currency code")
+	if !resp.IsSuccessState() {
+		// Invalid cryptocurrency codes.
+		if resp.StatusCode == 550 { //nolint:gomnd
+			return result, NewError("invalid Crypto currency code").SetStatus(http.StatusBadRequest)
+		}
+
+		// Log and other API related errors and return an internal server error to user.
+		q.logger.Error("API error", zap.String("Response", resp.String()))
+
+		return result, NewError("please try again later").SetStatus(http.StatusInternalServerError)
 	}
 
 	return result, nil
