@@ -34,6 +34,13 @@ across availability zones.
 
 <br/>
 
+## Quotes
+
+Price quotes for Crypto and Fiat currencies are obtained through external third-party providers. The API endpoints used
+in this project can be accessed with free accounts. Details can be found in the [`quotes`](pkg/quotes) package.
+
+<br/>
+
 ## Logging
 
 Configuration information for the logger can be found in the [`logger`](pkg/logger) package.
