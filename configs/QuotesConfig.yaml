@@ -1,6 +1,6 @@
 fiatCurrency:
   apiKey: some-api-key-for-fiat-currencies
-  endpoint: https://api.apilayer.com/exchangerates_data/convert?to={to}&from={from}&amount={amount}
+  endpoint: https://api.apilayer.com/exchangerates_data/convert?
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   endpoint: url-to-data-source-for-crypto-currency-price-quotes

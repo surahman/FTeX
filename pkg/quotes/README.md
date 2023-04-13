@@ -27,7 +27,7 @@ The development environment requires that a configuration file called `DevQuotes
 This file will contain the API credentials and endpoint information used in the local test/dev environment. The GitHub Actions CI
 pipeline will need to have a secret with the configurations stored under the environment variable `QUOTES_CI_CONFIGS`.
 
-Free API Keys for data can be obtained [here for fiat currencies](https://apilayer.com/marketplace/exchangerates_data-api), and
+Free API Keys for data can be obtained [here for fiat currencies](https://rapidapi.com/principalapis/api/currency-conversion-and-exchange-rates), and
 [here for cryptocurrencies](https://www.coinapi.io/pricing?apikey).
 
 <br/>
