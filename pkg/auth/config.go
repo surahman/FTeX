@@ -33,8 +33,8 @@ type generalConfig struct {
 }
 
 // newConfig creates a blank configuration struct for the authorization.
-func newConfig() config {
-	return config{}
+func newConfig() *config {
+	return &config{}
 }
 
 // Load will attempt to load configurations from a file on a file system.
