@@ -37,154 +37,154 @@ func (m *MockQuerier) EXPECT() *MockQuerierMockRecorder {
 	return m.recorder
 }
 
-// FiatCreateAccount mocks base method.
-func (m *MockQuerier) FiatCreateAccount(arg0 context.Context, arg1 *FiatCreateAccountParams) (int64, error) {
+// fiatCreateAccount mocks base method.
+func (m *MockQuerier) fiatCreateAccount(arg0 context.Context, arg1 *fiatCreateAccountParams) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatCreateAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatCreateAccount", arg0, arg1)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatCreateAccount indicates an expected call of FiatCreateAccount.
-func (mr *MockQuerierMockRecorder) FiatCreateAccount(arg0, arg1 interface{}) *gomock.Call {
+// fiatCreateAccount indicates an expected call of fiatCreateAccount.
+func (mr *MockQuerierMockRecorder) fiatCreateAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatCreateAccount", reflect.TypeOf((*MockQuerier)(nil).FiatCreateAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatCreateAccount", reflect.TypeOf((*MockQuerier)(nil).fiatCreateAccount), arg0, arg1)
 }
 
-// FiatExternalTransferJournalEntry mocks base method.
-func (m *MockQuerier) FiatExternalTransferJournalEntry(arg0 context.Context, arg1 *FiatExternalTransferJournalEntryParams) (FiatExternalTransferJournalEntryRow, error) {
+// fiatExternalTransferJournalEntry mocks base method.
+func (m *MockQuerier) fiatExternalTransferJournalEntry(arg0 context.Context, arg1 *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatExternalTransferJournalEntry", arg0, arg1)
-	ret0, _ := ret[0].(FiatExternalTransferJournalEntryRow)
+	ret := m.ctrl.Call(m, "fiatExternalTransferJournalEntry", arg0, arg1)
+	ret0, _ := ret[0].(fiatExternalTransferJournalEntryRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatExternalTransferJournalEntry indicates an expected call of FiatExternalTransferJournalEntry.
-func (mr *MockQuerierMockRecorder) FiatExternalTransferJournalEntry(arg0, arg1 interface{}) *gomock.Call {
+// fiatExternalTransferJournalEntry indicates an expected call of fiatExternalTransferJournalEntry.
+func (mr *MockQuerierMockRecorder) fiatExternalTransferJournalEntry(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatExternalTransferJournalEntry", reflect.TypeOf((*MockQuerier)(nil).FiatExternalTransferJournalEntry), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatExternalTransferJournalEntry", reflect.TypeOf((*MockQuerier)(nil).fiatExternalTransferJournalEntry), arg0, arg1)
 }
 
-// FiatGetAccount mocks base method.
-func (m *MockQuerier) FiatGetAccount(arg0 context.Context, arg1 *FiatGetAccountParams) (FiatAccount, error) {
+// fiatGetAccount mocks base method.
+func (m *MockQuerier) fiatGetAccount(arg0 context.Context, arg1 *fiatGetAccountParams) (FiatAccount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatGetAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatGetAccount", arg0, arg1)
 	ret0, _ := ret[0].(FiatAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatGetAccount indicates an expected call of FiatGetAccount.
-func (mr *MockQuerierMockRecorder) FiatGetAccount(arg0, arg1 interface{}) *gomock.Call {
+// fiatGetAccount indicates an expected call of fiatGetAccount.
+func (mr *MockQuerierMockRecorder) fiatGetAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatGetAccount", reflect.TypeOf((*MockQuerier)(nil).FiatGetAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAccount", reflect.TypeOf((*MockQuerier)(nil).fiatGetAccount), arg0, arg1)
 }
 
-// FiatGetAllAccounts mocks base method.
-func (m *MockQuerier) FiatGetAllAccounts(arg0 context.Context, arg1 uuid.UUID) ([]FiatAccount, error) {
+// fiatGetAllAccounts mocks base method.
+func (m *MockQuerier) fiatGetAllAccounts(arg0 context.Context, arg1 uuid.UUID) ([]FiatAccount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatGetAllAccounts", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatGetAllAccounts", arg0, arg1)
 	ret0, _ := ret[0].([]FiatAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatGetAllAccounts indicates an expected call of FiatGetAllAccounts.
-func (mr *MockQuerierMockRecorder) FiatGetAllAccounts(arg0, arg1 interface{}) *gomock.Call {
+// fiatGetAllAccounts indicates an expected call of fiatGetAllAccounts.
+func (mr *MockQuerierMockRecorder) fiatGetAllAccounts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatGetAllAccounts", reflect.TypeOf((*MockQuerier)(nil).FiatGetAllAccounts), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAllAccounts", reflect.TypeOf((*MockQuerier)(nil).fiatGetAllAccounts), arg0, arg1)
 }
 
-// FiatGetJournalTransaction mocks base method.
-func (m *MockQuerier) FiatGetJournalTransaction(arg0 context.Context, arg1 uuid.UUID) ([]FiatJournal, error) {
+// fiatGetJournalTransaction mocks base method.
+func (m *MockQuerier) fiatGetJournalTransaction(arg0 context.Context, arg1 uuid.UUID) ([]FiatJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatGetJournalTransaction", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatGetJournalTransaction", arg0, arg1)
 	ret0, _ := ret[0].([]FiatJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatGetJournalTransaction indicates an expected call of FiatGetJournalTransaction.
-func (mr *MockQuerierMockRecorder) FiatGetJournalTransaction(arg0, arg1 interface{}) *gomock.Call {
+// fiatGetJournalTransaction indicates an expected call of fiatGetJournalTransaction.
+func (mr *MockQuerierMockRecorder) fiatGetJournalTransaction(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatGetJournalTransaction", reflect.TypeOf((*MockQuerier)(nil).FiatGetJournalTransaction), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetJournalTransaction", reflect.TypeOf((*MockQuerier)(nil).fiatGetJournalTransaction), arg0, arg1)
 }
 
-// FiatGetJournalTransactionForAccount mocks base method.
-func (m *MockQuerier) FiatGetJournalTransactionForAccount(arg0 context.Context, arg1 *FiatGetJournalTransactionForAccountParams) ([]FiatJournal, error) {
+// fiatGetJournalTransactionForAccount mocks base method.
+func (m *MockQuerier) fiatGetJournalTransactionForAccount(arg0 context.Context, arg1 *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatGetJournalTransactionForAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatGetJournalTransactionForAccount", arg0, arg1)
 	ret0, _ := ret[0].([]FiatJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatGetJournalTransactionForAccount indicates an expected call of FiatGetJournalTransactionForAccount.
-func (mr *MockQuerierMockRecorder) FiatGetJournalTransactionForAccount(arg0, arg1 interface{}) *gomock.Call {
+// fiatGetJournalTransactionForAccount indicates an expected call of fiatGetJournalTransactionForAccount.
+func (mr *MockQuerierMockRecorder) fiatGetJournalTransactionForAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatGetJournalTransactionForAccount", reflect.TypeOf((*MockQuerier)(nil).FiatGetJournalTransactionForAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetJournalTransactionForAccount", reflect.TypeOf((*MockQuerier)(nil).fiatGetJournalTransactionForAccount), arg0, arg1)
 }
 
-// FiatGetJournalTransactionForAccountBetweenDates mocks base method.
-func (m *MockQuerier) FiatGetJournalTransactionForAccountBetweenDates(arg0 context.Context, arg1 *FiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
+// fiatGetJournalTransactionForAccountBetweenDates mocks base method.
+func (m *MockQuerier) fiatGetJournalTransactionForAccountBetweenDates(arg0 context.Context, arg1 *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatGetJournalTransactionForAccountBetweenDates", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatGetJournalTransactionForAccountBetweenDates", arg0, arg1)
 	ret0, _ := ret[0].([]FiatJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatGetJournalTransactionForAccountBetweenDates indicates an expected call of FiatGetJournalTransactionForAccountBetweenDates.
-func (mr *MockQuerierMockRecorder) FiatGetJournalTransactionForAccountBetweenDates(arg0, arg1 interface{}) *gomock.Call {
+// fiatGetJournalTransactionForAccountBetweenDates indicates an expected call of fiatGetJournalTransactionForAccountBetweenDates.
+func (mr *MockQuerierMockRecorder) fiatGetJournalTransactionForAccountBetweenDates(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatGetJournalTransactionForAccountBetweenDates", reflect.TypeOf((*MockQuerier)(nil).FiatGetJournalTransactionForAccountBetweenDates), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetJournalTransactionForAccountBetweenDates", reflect.TypeOf((*MockQuerier)(nil).fiatGetJournalTransactionForAccountBetweenDates), arg0, arg1)
 }
 
-// FiatInternalTransferJournalEntry mocks base method.
-func (m *MockQuerier) FiatInternalTransferJournalEntry(arg0 context.Context, arg1 *FiatInternalTransferJournalEntryParams) (FiatInternalTransferJournalEntryRow, error) {
+// fiatInternalTransferJournalEntry mocks base method.
+func (m *MockQuerier) fiatInternalTransferJournalEntry(arg0 context.Context, arg1 *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatInternalTransferJournalEntry", arg0, arg1)
-	ret0, _ := ret[0].(FiatInternalTransferJournalEntryRow)
+	ret := m.ctrl.Call(m, "fiatInternalTransferJournalEntry", arg0, arg1)
+	ret0, _ := ret[0].(fiatInternalTransferJournalEntryRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatInternalTransferJournalEntry indicates an expected call of FiatInternalTransferJournalEntry.
-func (mr *MockQuerierMockRecorder) FiatInternalTransferJournalEntry(arg0, arg1 interface{}) *gomock.Call {
+// fiatInternalTransferJournalEntry indicates an expected call of fiatInternalTransferJournalEntry.
+func (mr *MockQuerierMockRecorder) fiatInternalTransferJournalEntry(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatInternalTransferJournalEntry", reflect.TypeOf((*MockQuerier)(nil).FiatInternalTransferJournalEntry), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatInternalTransferJournalEntry", reflect.TypeOf((*MockQuerier)(nil).fiatInternalTransferJournalEntry), arg0, arg1)
 }
 
-// FiatRowLockAccount mocks base method.
-func (m *MockQuerier) FiatRowLockAccount(arg0 context.Context, arg1 *FiatRowLockAccountParams) (decimal.Decimal, error) {
+// fiatRowLockAccount mocks base method.
+func (m *MockQuerier) fiatRowLockAccount(arg0 context.Context, arg1 *fiatRowLockAccountParams) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatRowLockAccount", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatRowLockAccount", arg0, arg1)
 	ret0, _ := ret[0].(decimal.Decimal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatRowLockAccount indicates an expected call of FiatRowLockAccount.
-func (mr *MockQuerierMockRecorder) FiatRowLockAccount(arg0, arg1 interface{}) *gomock.Call {
+// fiatRowLockAccount indicates an expected call of fiatRowLockAccount.
+func (mr *MockQuerierMockRecorder) fiatRowLockAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatRowLockAccount", reflect.TypeOf((*MockQuerier)(nil).FiatRowLockAccount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatRowLockAccount", reflect.TypeOf((*MockQuerier)(nil).fiatRowLockAccount), arg0, arg1)
 }
 
-// FiatUpdateAccountBalance mocks base method.
-func (m *MockQuerier) FiatUpdateAccountBalance(arg0 context.Context, arg1 *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error) {
+// fiatUpdateAccountBalance mocks base method.
+func (m *MockQuerier) fiatUpdateAccountBalance(arg0 context.Context, arg1 *fiatUpdateAccountBalanceParams) (fiatUpdateAccountBalanceRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatUpdateAccountBalance", arg0, arg1)
-	ret0, _ := ret[0].(FiatUpdateAccountBalanceRow)
+	ret := m.ctrl.Call(m, "fiatUpdateAccountBalance", arg0, arg1)
+	ret0, _ := ret[0].(fiatUpdateAccountBalanceRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatUpdateAccountBalance indicates an expected call of FiatUpdateAccountBalance.
-func (mr *MockQuerierMockRecorder) FiatUpdateAccountBalance(arg0, arg1 interface{}) *gomock.Call {
+// fiatUpdateAccountBalance indicates an expected call of fiatUpdateAccountBalance.
+func (mr *MockQuerierMockRecorder) fiatUpdateAccountBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatUpdateAccountBalance", reflect.TypeOf((*MockQuerier)(nil).FiatUpdateAccountBalance), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatUpdateAccountBalance", reflect.TypeOf((*MockQuerier)(nil).fiatUpdateAccountBalance), arg0, arg1)
 }
 
 // testRoundHalfEven mocks base method.

@@ -162,7 +162,7 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 
 		for _, param := range parameters {
 			accInfo := param
-			rowCount, err := connection.Query.FiatCreateAccount(ctx, &accInfo)
+			rowCount, err := connection.Query.fiatCreateAccount(ctx, &accInfo)
 			require.NoError(t, err, "errored whilst trying to insert fiat account.")
 			require.NotEqual(t, 0, rowCount, "no rows were added.")
 		}
@@ -193,7 +193,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 	for _, testCase := range testCases {
 		parameters := testCase
 
-		result, err := connection.Query.FiatExternalTransferJournalEntry(ctx, &parameters)
+		result, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameters)
 		require.NoError(t, err, "failed to insert external fiat account entry.")
 		require.False(t, result.TxID.IsNil(), "returned transaction id is invalid.")
 		require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
@@ -202,7 +202,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 
 // insertTestInternalFiatGeneralLedger will not reset the journal and will insert some test internal transfers.
 func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid.UUID) (
-	map[string]FiatInternalTransferJournalEntryParams, map[string]FiatInternalTransferJournalEntryRow) {
+	map[string]fiatInternalTransferJournalEntryParams, map[string]fiatInternalTransferJournalEntryRow) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
@@ -213,13 +213,13 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 	testCases := getTestJournalInternalFiatAccounts(clientID1, clientID2)
 
 	// Mapping for transactions to parameters.
-	transactions := make(map[string]FiatInternalTransferJournalEntryRow, len(testCases))
+	transactions := make(map[string]fiatInternalTransferJournalEntryRow, len(testCases))
 
 	// Insert new fiat accounts.
 	for key, testCase := range testCases {
 		parameters := testCase
 
-		row, err := connection.Query.FiatInternalTransferJournalEntry(ctx, &parameters)
+		row, err := connection.Query.fiatInternalTransferJournalEntry(ctx, &parameters)
 		require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
 		require.NotEqual(t, 0, row, "no rows were added.")
 		transactions[key] = row

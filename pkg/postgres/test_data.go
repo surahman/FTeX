@@ -143,8 +143,8 @@ func getTestUsers() map[string]userCreateParams {
 }
 
 // getTestFiatAccounts generates a number of test fiat accounts.
-func getTestFiatAccounts(clientID1, clientID2 uuid.UUID) map[string][]FiatCreateAccountParams {
-	return map[string][]FiatCreateAccountParams{
+func getTestFiatAccounts(clientID1, clientID2 uuid.UUID) map[string][]fiatCreateAccountParams {
+	return map[string][]fiatCreateAccountParams{
 		"clientID1": {
 			{
 				ClientID: clientID1,
@@ -175,8 +175,8 @@ func getTestFiatAccounts(clientID1, clientID2 uuid.UUID) map[string][]FiatCreate
 // getTestJournalInternalFiatAccounts generates a number of test fiat internal transfer journal entries.
 func getTestJournalInternalFiatAccounts(
 	clientID1,
-	clientID2 uuid.UUID) map[string]FiatInternalTransferJournalEntryParams {
-	return map[string]FiatInternalTransferJournalEntryParams{
+	clientID2 uuid.UUID) map[string]fiatInternalTransferJournalEntryParams {
+	return map[string]fiatInternalTransferJournalEntryParams{
 		"CAD-AED": {
 			SourceAccount:       clientID1,
 			SourceCurrency:      CurrencyCAD,
@@ -205,7 +205,7 @@ func getTestJournalInternalFiatAccounts(
 }
 
 // getTestFiatJournal generates a number of test general ledger entry parameters.
-func getTestFiatJournal(clientID1, clientID2 uuid.UUID) map[string]FiatExternalTransferJournalEntryParams {
+func getTestFiatJournal(clientID1, clientID2 uuid.UUID) map[string]fiatExternalTransferJournalEntryParams {
 	// Create balance amounts.
 	var (
 		amount1 = decimal.NewFromFloat(1024.55)
@@ -213,7 +213,7 @@ func getTestFiatJournal(clientID1, clientID2 uuid.UUID) map[string]FiatExternalT
 		amount3 = decimal.NewFromFloat(256.44)
 	)
 
-	return map[string]FiatExternalTransferJournalEntryParams{
+	return map[string]fiatExternalTransferJournalEntryParams{
 		"Client ID 1 - USD": {
 			ClientID: clientID1,
 			Currency: CurrencyUSD,

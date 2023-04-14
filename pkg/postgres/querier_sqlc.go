@@ -13,27 +13,27 @@ import (
 )
 
 type Querier interface {
-	// FiatCreateAccount inserts a fiat account record.
-	FiatCreateAccount(ctx context.Context, arg *FiatCreateAccountParams) (int64, error)
-	// FiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
-	FiatExternalTransferJournalEntry(ctx context.Context, arg *FiatExternalTransferJournalEntryParams) (FiatExternalTransferJournalEntryRow, error)
-	// FiatGetAccount will retrieve a specific user's account for a given currency.
-	FiatGetAccount(ctx context.Context, arg *FiatGetAccountParams) (FiatAccount, error)
-	// FiatGetAllAccounts will retrieve all accounts associated with a specific user.
-	FiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error)
-	// FiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
-	FiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error)
-	// FiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
-	FiatGetJournalTransactionForAccount(ctx context.Context, arg *FiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
-	// FiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+	// fiatCreateAccount inserts a fiat account record.
+	fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error)
+	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
+	fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error)
+	// fiatGetAccount will retrieve a specific user's account for a given currency.
+	fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error)
+	// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
+	fiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error)
+	// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
+	fiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error)
+	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
+	fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
+	// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
 	// in a date range.
-	FiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *FiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
-	// FiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
-	FiatInternalTransferJournalEntry(ctx context.Context, arg *FiatInternalTransferJournalEntryParams) (FiatInternalTransferJournalEntryRow, error)
-	// FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
-	FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (decimal.Decimal, error)
-	// FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
-	FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error)
+	fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
+	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
+	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
+	// fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
+	fiatRowLockAccount(ctx context.Context, arg *fiatRowLockAccountParams) (decimal.Decimal, error)
+	// fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
+	fiatUpdateAccountBalance(ctx context.Context, arg *fiatUpdateAccountBalanceParams) (fiatUpdateAccountBalanceRow, error)
 	// testRoundHalfEven
 	testRoundHalfEven(ctx context.Context, arg *testRoundHalfEvenParams) (decimal.Decimal, error)
 	// userCreate will create a new user record.

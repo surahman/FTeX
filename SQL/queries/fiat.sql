@@ -1,18 +1,18 @@
--- name: FiatCreateAccount :execrows
--- FiatCreateAccount inserts a fiat account record.
+-- name: fiatCreateAccount :execrows
+-- fiatCreateAccount inserts a fiat account record.
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2);
 
--- name: FiatRowLockAccount :one
--- FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
+-- name: fiatRowLockAccount :one
+-- fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
 SELECT balance
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2
 LIMIT 1
 FOR NO KEY UPDATE;
 
--- name: FiatUpdateAccountBalance :one
--- FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
+-- name: fiatUpdateAccountBalance :one
+-- fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 UPDATE fiat_accounts
 SET balance=round_half_even(balance + @Amount::numeric(18, 2), 2),
     last_tx=round_half_even(@Amount::numeric(18, 2), 2),
@@ -20,8 +20,8 @@ SET balance=round_half_even(balance + @Amount::numeric(18, 2), 2),
 WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts;
 
--- name: FiatExternalTransferJournalEntry :one
--- FiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
+-- name: fiatExternalTransferJournalEntry :one
+-- fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
 WITH deposit AS (
     INSERT INTO fiat_journal (
         client_id,
@@ -55,8 +55,8 @@ SELECT
         FROM deposit)
 RETURNING tx_id, transacted_at;
 
--- name: FiatInternalTransferJournalEntry :one
--- FiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
+-- name: fiatInternalTransferJournalEntry :one
+-- fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 WITH deposit AS (
     INSERT INTO fiat_journal(
         client_id,
@@ -88,20 +88,20 @@ SELECT
         FROM deposit)
 RETURNING tx_id, transacted_at;
 
--- name: FiatGetJournalTransaction :many
--- FiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
+-- name: fiatGetJournalTransaction :many
+-- fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 SELECT *
 FROM fiat_journal
 WHERE tx_id = $1;
 
--- name: FiatGetJournalTransactionForAccount :many
--- FiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
+-- name: fiatGetJournalTransactionForAccount :many
+-- fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
 SELECT *
 FROM fiat_journal
 WHERE client_id = $1 AND currency = $2;
 
--- name: FiatGetJournalTransactionForAccountBetweenDates :many
--- FiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+-- name: fiatGetJournalTransactionForAccountBetweenDates :many
+-- fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
 -- in a date range.
 SELECT *
 FROM fiat_journal
@@ -111,14 +111,14 @@ WHERE client_id = $1
           BETWEEN @start_time::timestamptz
               AND @end_time::timestamptz;
 
--- name: FiatGetAccount :one
--- FiatGetAccount will retrieve a specific user's account for a given currency.
+-- name: fiatGetAccount :one
+-- fiatGetAccount will retrieve a specific user's account for a given currency.
 SELECT *
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2;
 
--- name: FiatGetAllAccounts :many
--- FiatGetAllAccounts will retrieve all accounts associated with a specific user.
+-- name: fiatGetAllAccounts :many
+-- fiatGetAllAccounts will retrieve all accounts associated with a specific user.
 SELECT *
 FROM fiat_accounts
 WHERE client_id=$1;
