@@ -125,6 +125,7 @@ func TestRedisConfigs_Load(t *testing.T) {
 			ttl := 999
 			t.Setenv(envDataKey+"TTL", strconv.Itoa(ttl))
 
+			err = actual.Load(fs)
 			require.NoErrorf(t, actual.Load(fs), "failed to load configurations file: %v", err)
 
 			require.Equal(t, username, actual.Authentication.Username, "failed to load username.")
