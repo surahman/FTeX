@@ -34,18 +34,18 @@ type Querier interface {
 	FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (decimal.Decimal, error)
 	// FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
 	FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error)
-	// UserCreate will create a new user record.
-	UserCreate(ctx context.Context, arg *UserCreateParams) (uuid.UUID, error)
-	// UserDelete will soft delete a users account.
-	UserDelete(ctx context.Context, username string) (pgconn.CommandTag, error)
-	// UserGetClientId will retrieve a users client id.
-	UserGetClientId(ctx context.Context, username string) (uuid.UUID, error)
-	// UserGetCredentials will retrieve a users client id and password.
-	UserGetCredentials(ctx context.Context, username string) (UserGetCredentialsRow, error)
-	// UserGetInfo will retrieve a single users account information.
-	UserGetInfo(ctx context.Context, username string) (UserGetInfoRow, error)
 	// testRoundHalfEven
 	testRoundHalfEven(ctx context.Context, arg *testRoundHalfEvenParams) (decimal.Decimal, error)
+	// userCreate will create a new user record.
+	userCreate(ctx context.Context, arg *userCreateParams) (uuid.UUID, error)
+	// userDelete will soft delete a users account.
+	userDelete(ctx context.Context, username string) (pgconn.CommandTag, error)
+	// userGetClientId will retrieve a users client id.
+	userGetClientId(ctx context.Context, username string) (uuid.UUID, error)
+	// userGetCredentials will retrieve a users client id and password.
+	userGetCredentials(ctx context.Context, username string) (userGetCredentialsRow, error)
+	// userGetInfo will retrieve a single users account information.
+	userGetInfo(ctx context.Context, username string) (userGetInfoRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

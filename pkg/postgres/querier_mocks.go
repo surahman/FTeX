@@ -187,81 +187,6 @@ func (mr *MockQuerierMockRecorder) FiatUpdateAccountBalance(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatUpdateAccountBalance", reflect.TypeOf((*MockQuerier)(nil).FiatUpdateAccountBalance), arg0, arg1)
 }
 
-// UserCreate mocks base method.
-func (m *MockQuerier) UserCreate(arg0 context.Context, arg1 *UserCreateParams) (uuid.UUID, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserCreate", arg0, arg1)
-	ret0, _ := ret[0].(uuid.UUID)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UserCreate indicates an expected call of UserCreate.
-func (mr *MockQuerierMockRecorder) UserCreate(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCreate", reflect.TypeOf((*MockQuerier)(nil).UserCreate), arg0, arg1)
-}
-
-// UserDelete mocks base method.
-func (m *MockQuerier) UserDelete(arg0 context.Context, arg1 string) (pgconn.CommandTag, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserDelete", arg0, arg1)
-	ret0, _ := ret[0].(pgconn.CommandTag)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UserDelete indicates an expected call of UserDelete.
-func (mr *MockQuerierMockRecorder) UserDelete(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserDelete", reflect.TypeOf((*MockQuerier)(nil).UserDelete), arg0, arg1)
-}
-
-// UserGetClientId mocks base method.
-func (m *MockQuerier) UserGetClientId(arg0 context.Context, arg1 string) (uuid.UUID, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserGetClientId", arg0, arg1)
-	ret0, _ := ret[0].(uuid.UUID)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UserGetClientId indicates an expected call of UserGetClientId.
-func (mr *MockQuerierMockRecorder) UserGetClientId(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserGetClientId", reflect.TypeOf((*MockQuerier)(nil).UserGetClientId), arg0, arg1)
-}
-
-// UserGetCredentials mocks base method.
-func (m *MockQuerier) UserGetCredentials(arg0 context.Context, arg1 string) (UserGetCredentialsRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserGetCredentials", arg0, arg1)
-	ret0, _ := ret[0].(UserGetCredentialsRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UserGetCredentials indicates an expected call of UserGetCredentials.
-func (mr *MockQuerierMockRecorder) UserGetCredentials(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserGetCredentials", reflect.TypeOf((*MockQuerier)(nil).UserGetCredentials), arg0, arg1)
-}
-
-// UserGetInfo mocks base method.
-func (m *MockQuerier) UserGetInfo(arg0 context.Context, arg1 string) (UserGetInfoRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserGetInfo", arg0, arg1)
-	ret0, _ := ret[0].(UserGetInfoRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UserGetInfo indicates an expected call of UserGetInfo.
-func (mr *MockQuerierMockRecorder) UserGetInfo(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserGetInfo", reflect.TypeOf((*MockQuerier)(nil).UserGetInfo), arg0, arg1)
-}
-
 // testRoundHalfEven mocks base method.
 func (m *MockQuerier) testRoundHalfEven(arg0 context.Context, arg1 *testRoundHalfEvenParams) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
@@ -275,4 +200,79 @@ func (m *MockQuerier) testRoundHalfEven(arg0 context.Context, arg1 *testRoundHal
 func (mr *MockQuerierMockRecorder) testRoundHalfEven(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "testRoundHalfEven", reflect.TypeOf((*MockQuerier)(nil).testRoundHalfEven), arg0, arg1)
+}
+
+// userCreate mocks base method.
+func (m *MockQuerier) userCreate(arg0 context.Context, arg1 *userCreateParams) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "userCreate", arg0, arg1)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// userCreate indicates an expected call of userCreate.
+func (mr *MockQuerierMockRecorder) userCreate(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userCreate", reflect.TypeOf((*MockQuerier)(nil).userCreate), arg0, arg1)
+}
+
+// userDelete mocks base method.
+func (m *MockQuerier) userDelete(arg0 context.Context, arg1 string) (pgconn.CommandTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "userDelete", arg0, arg1)
+	ret0, _ := ret[0].(pgconn.CommandTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// userDelete indicates an expected call of userDelete.
+func (mr *MockQuerierMockRecorder) userDelete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userDelete", reflect.TypeOf((*MockQuerier)(nil).userDelete), arg0, arg1)
+}
+
+// userGetClientId mocks base method.
+func (m *MockQuerier) userGetClientId(arg0 context.Context, arg1 string) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "userGetClientId", arg0, arg1)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// userGetClientId indicates an expected call of userGetClientId.
+func (mr *MockQuerierMockRecorder) userGetClientId(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userGetClientId", reflect.TypeOf((*MockQuerier)(nil).userGetClientId), arg0, arg1)
+}
+
+// userGetCredentials mocks base method.
+func (m *MockQuerier) userGetCredentials(arg0 context.Context, arg1 string) (userGetCredentialsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "userGetCredentials", arg0, arg1)
+	ret0, _ := ret[0].(userGetCredentialsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// userGetCredentials indicates an expected call of userGetCredentials.
+func (mr *MockQuerierMockRecorder) userGetCredentials(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userGetCredentials", reflect.TypeOf((*MockQuerier)(nil).userGetCredentials), arg0, arg1)
+}
+
+// userGetInfo mocks base method.
+func (m *MockQuerier) userGetInfo(arg0 context.Context, arg1 string) (userGetInfoRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "userGetInfo", arg0, arg1)
+	ret0, _ := ret[0].(userGetInfoRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// userGetInfo indicates an expected call of userGetInfo.
+func (mr *MockQuerierMockRecorder) userGetInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userGetInfo", reflect.TypeOf((*MockQuerier)(nil).userGetInfo), arg0, arg1)
 }

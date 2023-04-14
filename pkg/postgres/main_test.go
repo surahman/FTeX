@@ -129,7 +129,7 @@ func insertTestUsers(t *testing.T) {
 	for _, testCase := range getTestUsers() {
 		user := testCase
 
-		clientID, err := connection.Query.UserCreate(ctx, &user)
+		clientID, err := connection.Query.userCreate(ctx, &user)
 		require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 		require.False(t, clientID.IsNil(), "failed to retrieve client id from response")
 	}
@@ -151,9 +151,9 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
 
 	// Retrieve client ids from users table.
-	clientID1, err := connection.Query.UserGetClientId(ctx, "username1")
+	clientID1, err := connection.Query.userGetClientId(ctx, "username1")
 	require.NoError(t, err, "failed to retrieve username1 client id.")
-	clientID2, err := connection.Query.UserGetClientId(ctx, "username2")
+	clientID2, err := connection.Query.userGetClientId(ctx, "username2")
 	require.NoError(t, err, "failed to retrieve username2 client id.")
 
 	// Insert new fiat accounts.
