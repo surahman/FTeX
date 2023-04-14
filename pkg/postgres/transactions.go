@@ -53,7 +53,7 @@ type FiatAccountTransferResult struct {
 }
 
 // FiatExternalTransfer controls the transaction block that the external Fiat transfer transaction executes in.
-func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *FiatTransactionDetails) (
+func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetails *FiatTransactionDetails) (
 	*FiatAccountTransferResult, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
 
@@ -217,7 +217,7 @@ func fiatTransactionRowLockAndBalanceCheck(
 }
 
 // FiatInternalTransfer controls the transaction block that the internal Fiat transfer transaction executes in.
-func (p *Postgres) FiatInternalTransfer(
+func (p *postgresImpl) FiatInternalTransfer(
 	parentCtx context.Context,
 	src,
 	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {

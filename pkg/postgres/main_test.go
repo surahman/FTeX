@@ -24,7 +24,7 @@ var postgresConfigTestData = configTestData()
 var configFileKey string
 
 // connection pool to Cassandra cluster.
-var connection *Postgres
+var connection *postgresImpl
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
@@ -88,7 +88,7 @@ func setup() error {
 	}
 
 	// Load Postgres configurations for test suite.
-	if connection, err = NewPostgres(&fs, zapLogger); err != nil {
+	if connection, err = newPostgresImpl(&fs, zapLogger); err != nil {
 		return err
 	}
 
