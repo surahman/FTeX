@@ -9,7 +9,9 @@ import (
 	"github.com/surahman/FTeX/pkg/logger"
 )
 
-func TestNewPostgres_Filesystem_Logger(t *testing.T) {
+func TestNewPostgres(t *testing.T) {
+	t.Parallel()
+
 	fs := afero.NewMemMapFs()
 	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
 	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
@@ -22,7 +24,6 @@ func TestNewPostgres_Filesystem_Logger(t *testing.T) {
 		expectErr require.ErrorAssertionFunc
 		expectNil require.ValueAssertionFunc
 	}{
-		// ----- test cases start ----- //
 		{
 			name:      "Invalid file system and logger",
 			fs:        nil,
@@ -48,19 +49,22 @@ func TestNewPostgres_Filesystem_Logger(t *testing.T) {
 			expectErr: require.NoError,
 			expectNil: require.NotNil,
 		},
-		// ----- test cases end ----- //
 	}
 
 	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			postgres, err := NewPostgres(testCase.fs, testCase.log)
-			testCase.expectErr(t, err)
-			testCase.expectNil(t, postgres)
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			postgres, err := NewPostgres(test.fs, test.log)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectNil(t, postgres, "nil expectation for returned interface failed.")
 		})
 	}
 }
 
-func TestNewPostgres(t *testing.T) {
+func TestNewPostgresImpl(t *testing.T) {
 	testCases := []struct {
 		name      string
 		fileName  string
@@ -68,7 +72,6 @@ func TestNewPostgres(t *testing.T) {
 		expectErr require.ErrorAssertionFunc
 		expectNil require.ValueAssertionFunc
 	}{
-		// ----- test cases start ----- //
 		{
 			name:      "File found",
 			fileName:  constants.GetPostgresFileName(),
@@ -82,7 +85,6 @@ func TestNewPostgres(t *testing.T) {
 			expectErr: require.Error,
 			expectNil: require.Nil,
 		},
-		// ----- test cases end ----- //
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -92,7 +94,7 @@ func TestNewPostgres(t *testing.T) {
 			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testCase.fileName,
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
-			c, err := NewPostgres(&fs, zapLogger)
+			c, err := newPostgresImpl(&fs, zapLogger)
 			testCase.expectErr(t, err)
 			testCase.expectNil(t, c)
 		})
@@ -106,7 +108,7 @@ func TestPostgres_verifySession(t *testing.T) {
 	}
 
 	// Nil Session.
-	postgres := &Postgres{}
+	postgres := &postgresImpl{}
 	require.Error(t, postgres.verifySession(), "nil session should return error")
 
 	// Setup mock filesystem for configs.
@@ -116,7 +118,7 @@ func TestPostgres_verifySession(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Not open session.
-	postgres, err := NewPostgres(&fs, zapLogger)
+	postgres, err := newPostgresImpl(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.verifySession(), "failed to return error on closed connection")
 
@@ -145,7 +147,7 @@ func TestPostgres_Open(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
-	postgres, err := NewPostgres(&fs, zapLogger)
+	postgres, err := newPostgresImpl(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.NoError(t, postgres.Open(), "failed to open connection")
 	require.NoError(t, postgres.Close(), "failed to close connection")
@@ -169,7 +171,7 @@ func TestPostgres_Close(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
-	postgres, err := NewPostgres(&fs, zapLogger)
+	postgres, err := newPostgresImpl(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.Close(), "failed to return error on closing a connection not opened")
 	require.NoError(t, postgres.Open(), "failed to open connection.")
@@ -189,7 +191,7 @@ func TestPostgres_Healthcheck(t *testing.T) {
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
-	postgres, err := NewPostgres(&fs, zapLogger)
+	postgres, err := newPostgresImpl(&fs, zapLogger)
 	require.NoError(t, err, "failed to load configuration")
 	require.Error(t, postgres.Healthcheck(), "failed to return bad health on uninitialized connection")
 

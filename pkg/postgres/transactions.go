@@ -53,7 +53,7 @@ type FiatAccountTransferResult struct {
 }
 
 // FiatExternalTransfer controls the transaction block that the external Fiat transfer transaction executes in.
-func (p *Postgres) FiatExternalTransfer(parentCtx context.Context, xferDetails *FiatTransactionDetails) (
+func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetails *FiatTransactionDetails) (
 	*FiatAccountTransferResult, error) {
 	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
 
@@ -124,12 +124,12 @@ func fiatExternalTransfer(
 	xferDetails *FiatTransactionDetails) (*FiatAccountTransferResult, error) {
 	var (
 		err        error
-		journalRow FiatExternalTransferJournalEntryRow
-		updateRow  FiatUpdateAccountBalanceRow
+		journalRow fiatExternalTransferJournalEntryRow
+		updateRow  fiatUpdateAccountBalanceRow
 	)
 
 	// Row lock the destination account.
-	if _, err = queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
+	if _, err = queryTx.fiatRowLockAccount(ctx, &fiatRowLockAccountParams{
 		ClientID: xferDetails.ClientID,
 		Currency: xferDetails.Currency,
 	}); err != nil {
@@ -140,7 +140,7 @@ func fiatExternalTransfer(
 	}
 
 	// Make General Journal ledger entries.
-	if journalRow, err = queryTx.FiatExternalTransferJournalEntry(ctx, &FiatExternalTransferJournalEntryParams{
+	if journalRow, err = queryTx.fiatExternalTransferJournalEntry(ctx, &fiatExternalTransferJournalEntryParams{
 		ClientID: xferDetails.ClientID,
 		Currency: xferDetails.Currency,
 		Amount:   xferDetails.Amount,
@@ -152,7 +152,7 @@ func fiatExternalTransfer(
 	}
 
 	// Update the account balance.
-	if updateRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	if updateRow, err = queryTx.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: xferDetails.ClientID,
 		Currency: xferDetails.Currency,
 		Amount:   xferDetails.Amount,
@@ -186,7 +186,7 @@ func fiatTransactionRowLockAndBalanceCheck(
 	lockFirst, lockSecond := src.Less(dst)
 
 	// Row lock the accounts in order.
-	balanceFirst, err := queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
+	balanceFirst, err := queryTx.fiatRowLockAccount(ctx, &fiatRowLockAccountParams{
 		ClientID: (*lockFirst).ClientID,
 		Currency: (*lockFirst).Currency,
 	})
@@ -194,7 +194,7 @@ func fiatTransactionRowLockAndBalanceCheck(
 		return fmt.Errorf("failed to get row lock on first Fiat account %w", err)
 	}
 
-	balanceSecond, err := queryTx.FiatRowLockAccount(ctx, &FiatRowLockAccountParams{
+	balanceSecond, err := queryTx.fiatRowLockAccount(ctx, &fiatRowLockAccountParams{
 		ClientID: (*lockSecond).ClientID,
 		Currency: (*lockSecond).Currency,
 	})
@@ -217,7 +217,7 @@ func fiatTransactionRowLockAndBalanceCheck(
 }
 
 // FiatInternalTransfer controls the transaction block that the internal Fiat transfer transaction executes in.
-func (p *Postgres) FiatInternalTransfer(
+func (p *postgresImpl) FiatInternalTransfer(
 	parentCtx context.Context,
 	src,
 	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
@@ -292,9 +292,9 @@ func fiatInternalTransfer(
 	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
 	var (
 		err           error
-		journalRow    FiatInternalTransferJournalEntryRow
-		postCreditRow FiatUpdateAccountBalanceRow
-		postDebitRow  FiatUpdateAccountBalanceRow
+		journalRow    fiatInternalTransferJournalEntryRow
+		postCreditRow fiatUpdateAccountBalanceRow
+		postDebitRow  fiatUpdateAccountBalanceRow
 	)
 
 	// Row lock the accounts in order and check balances.
@@ -306,7 +306,7 @@ func fiatInternalTransfer(
 	}
 
 	// Make General Journal ledger entries.
-	if journalRow, err = queryTx.FiatInternalTransferJournalEntry(ctx, &FiatInternalTransferJournalEntryParams{
+	if journalRow, err = queryTx.fiatInternalTransferJournalEntry(ctx, &fiatInternalTransferJournalEntryParams{
 		DestinationAccount:  dst.ClientID,
 		DestinationCurrency: dst.Currency,
 		CreditAmount:        dst.Amount,
@@ -321,7 +321,7 @@ func fiatInternalTransfer(
 	}
 
 	// Update the destination and then source account balances.
-	if postCreditRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	if postCreditRow, err = queryTx.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: dst.ClientID,
 		Currency: dst.Currency,
 		Amount:   dst.Amount,
@@ -333,7 +333,7 @@ func fiatInternalTransfer(
 		return nil, nil, fmt.Errorf(msg+" %w", err)
 	}
 
-	if postDebitRow, err = queryTx.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	if postDebitRow, err = queryTx.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: src.ClientID,
 		Currency: src.Currency,
 		Amount:   src.Amount,

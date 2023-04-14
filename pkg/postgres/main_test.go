@@ -24,7 +24,7 @@ var postgresConfigTestData = configTestData()
 var configFileKey string
 
 // connection pool to Cassandra cluster.
-var connection *Postgres
+var connection *postgresImpl
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
@@ -88,7 +88,7 @@ func setup() error {
 	}
 
 	// Load Postgres configurations for test suite.
-	if connection, err = NewPostgres(&fs, zapLogger); err != nil {
+	if connection, err = newPostgresImpl(&fs, zapLogger); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func insertTestUsers(t *testing.T) {
 	for _, testCase := range getTestUsers() {
 		user := testCase
 
-		clientID, err := connection.Query.UserCreate(ctx, &user)
+		clientID, err := connection.Query.userCreate(ctx, &user)
 		require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 		require.False(t, clientID.IsNil(), "failed to retrieve client id from response")
 	}
@@ -151,9 +151,9 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
 
 	// Retrieve client ids from users table.
-	clientID1, err := connection.Query.UserGetClientId(ctx, "username1")
+	clientID1, err := connection.Query.userGetClientId(ctx, "username1")
 	require.NoError(t, err, "failed to retrieve username1 client id.")
-	clientID2, err := connection.Query.UserGetClientId(ctx, "username2")
+	clientID2, err := connection.Query.userGetClientId(ctx, "username2")
 	require.NoError(t, err, "failed to retrieve username2 client id.")
 
 	// Insert new fiat accounts.
@@ -162,7 +162,7 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 
 		for _, param := range parameters {
 			accInfo := param
-			rowCount, err := connection.Query.FiatCreateAccount(ctx, &accInfo)
+			rowCount, err := connection.Query.fiatCreateAccount(ctx, &accInfo)
 			require.NoError(t, err, "errored whilst trying to insert fiat account.")
 			require.NotEqual(t, 0, rowCount, "no rows were added.")
 		}
@@ -193,7 +193,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 	for _, testCase := range testCases {
 		parameters := testCase
 
-		result, err := connection.Query.FiatExternalTransferJournalEntry(ctx, &parameters)
+		result, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameters)
 		require.NoError(t, err, "failed to insert external fiat account entry.")
 		require.False(t, result.TxID.IsNil(), "returned transaction id is invalid.")
 		require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
@@ -202,7 +202,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 
 // insertTestInternalFiatGeneralLedger will not reset the journal and will insert some test internal transfers.
 func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid.UUID) (
-	map[string]FiatInternalTransferJournalEntryParams, map[string]FiatInternalTransferJournalEntryRow) {
+	map[string]fiatInternalTransferJournalEntryParams, map[string]fiatInternalTransferJournalEntryRow) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
@@ -213,13 +213,13 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 	testCases := getTestJournalInternalFiatAccounts(clientID1, clientID2)
 
 	// Mapping for transactions to parameters.
-	transactions := make(map[string]FiatInternalTransferJournalEntryRow, len(testCases))
+	transactions := make(map[string]fiatInternalTransferJournalEntryRow, len(testCases))
 
 	// Insert new fiat accounts.
 	for key, testCase := range testCases {
 		parameters := testCase
 
-		row, err := connection.Query.FiatInternalTransferJournalEntry(ctx, &parameters)
+		row, err := connection.Query.fiatInternalTransferJournalEntry(ctx, &parameters)
 		require.NoError(t, err, "errored whilst inserting internal fiat general ledger entry.")
 		require.NotEqual(t, 0, row, "no rows were added.")
 		transactions[key] = row

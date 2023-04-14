@@ -13,18 +13,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const fiatCreateAccount = `-- name: FiatCreateAccount :execrows
+const fiatCreateAccount = `-- name: fiatCreateAccount :execrows
 INSERT INTO fiat_accounts (client_id, currency)
 VALUES ($1, $2)
 `
 
-type FiatCreateAccountParams struct {
+type fiatCreateAccountParams struct {
 	ClientID uuid.UUID `json:"clientID"`
 	Currency Currency  `json:"currency"`
 }
 
-// FiatCreateAccount inserts a fiat account record.
-func (q *Queries) FiatCreateAccount(ctx context.Context, arg *FiatCreateAccountParams) (int64, error) {
+// fiatCreateAccount inserts a fiat account record.
+func (q *Queries) fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error) {
 	result, err := q.db.Exec(ctx, fiatCreateAccount, arg.ClientID, arg.Currency)
 	if err != nil {
 		return 0, err
@@ -32,7 +32,7 @@ func (q *Queries) FiatCreateAccount(ctx context.Context, arg *FiatCreateAccountP
 	return result.RowsAffected(), nil
 }
 
-const fiatExternalTransferJournalEntry = `-- name: FiatExternalTransferJournalEntry :one
+const fiatExternalTransferJournalEntry = `-- name: fiatExternalTransferJournalEntry :one
 WITH deposit AS (
     INSERT INTO fiat_journal (
         client_id,
@@ -67,38 +67,38 @@ SELECT
 RETURNING tx_id, transacted_at
 `
 
-type FiatExternalTransferJournalEntryParams struct {
+type fiatExternalTransferJournalEntryParams struct {
 	ClientID uuid.UUID       `json:"clientID"`
 	Currency Currency        `json:"currency"`
 	Amount   decimal.Decimal `json:"amount"`
 }
 
-type FiatExternalTransferJournalEntryRow struct {
+type fiatExternalTransferJournalEntryRow struct {
 	TxID         uuid.UUID          `json:"txID"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
 }
 
-// FiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
-func (q *Queries) FiatExternalTransferJournalEntry(ctx context.Context, arg *FiatExternalTransferJournalEntryParams) (FiatExternalTransferJournalEntryRow, error) {
+// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
+func (q *Queries) fiatExternalTransferJournalEntry(ctx context.Context, arg *fiatExternalTransferJournalEntryParams) (fiatExternalTransferJournalEntryRow, error) {
 	row := q.db.QueryRow(ctx, fiatExternalTransferJournalEntry, arg.ClientID, arg.Currency, arg.Amount)
-	var i FiatExternalTransferJournalEntryRow
+	var i fiatExternalTransferJournalEntryRow
 	err := row.Scan(&i.TxID, &i.TransactedAt)
 	return i, err
 }
 
-const fiatGetAccount = `-- name: FiatGetAccount :one
+const fiatGetAccount = `-- name: fiatGetAccount :one
 SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2
 `
 
-type FiatGetAccountParams struct {
+type fiatGetAccountParams struct {
 	ClientID uuid.UUID `json:"clientID"`
 	Currency Currency  `json:"currency"`
 }
 
-// FiatGetAccount will retrieve a specific user's account for a given currency.
-func (q *Queries) FiatGetAccount(ctx context.Context, arg *FiatGetAccountParams) (FiatAccount, error) {
+// fiatGetAccount will retrieve a specific user's account for a given currency.
+func (q *Queries) fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error) {
 	row := q.db.QueryRow(ctx, fiatGetAccount, arg.ClientID, arg.Currency)
 	var i FiatAccount
 	err := row.Scan(
@@ -112,14 +112,14 @@ func (q *Queries) FiatGetAccount(ctx context.Context, arg *FiatGetAccountParams)
 	return i, err
 }
 
-const fiatGetAllAccounts = `-- name: FiatGetAllAccounts :many
+const fiatGetAllAccounts = `-- name: fiatGetAllAccounts :many
 SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
 FROM fiat_accounts
 WHERE client_id=$1
 `
 
-// FiatGetAllAccounts will retrieve all accounts associated with a specific user.
-func (q *Queries) FiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error) {
+// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
+func (q *Queries) fiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error) {
 	rows, err := q.db.Query(ctx, fiatGetAllAccounts, clientID)
 	if err != nil {
 		return nil, err
@@ -146,14 +146,14 @@ func (q *Queries) FiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([
 	return items, nil
 }
 
-const fiatGetJournalTransaction = `-- name: FiatGetJournalTransaction :many
+const fiatGetJournalTransaction = `-- name: fiatGetJournalTransaction :many
 SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE tx_id = $1
 `
 
-// FiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
-func (q *Queries) FiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error) {
+// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
+func (q *Queries) fiatGetJournalTransaction(ctx context.Context, txID uuid.UUID) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, fiatGetJournalTransaction, txID)
 	if err != nil {
 		return nil, err
@@ -179,19 +179,19 @@ func (q *Queries) FiatGetJournalTransaction(ctx context.Context, txID uuid.UUID)
 	return items, nil
 }
 
-const fiatGetJournalTransactionForAccount = `-- name: FiatGetJournalTransactionForAccount :many
+const fiatGetJournalTransactionForAccount = `-- name: fiatGetJournalTransactionForAccount :many
 SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE client_id = $1 AND currency = $2
 `
 
-type FiatGetJournalTransactionForAccountParams struct {
+type fiatGetJournalTransactionForAccountParams struct {
 	ClientID uuid.UUID `json:"clientID"`
 	Currency Currency  `json:"currency"`
 }
 
-// FiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
-func (q *Queries) FiatGetJournalTransactionForAccount(ctx context.Context, arg *FiatGetJournalTransactionForAccountParams) ([]FiatJournal, error) {
+// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
+func (q *Queries) fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, fiatGetJournalTransactionForAccount, arg.ClientID, arg.Currency)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (q *Queries) FiatGetJournalTransactionForAccount(ctx context.Context, arg *
 	return items, nil
 }
 
-const fiatGetJournalTransactionForAccountBetweenDates = `-- name: FiatGetJournalTransactionForAccountBetweenDates :many
+const fiatGetJournalTransactionForAccountBetweenDates = `-- name: fiatGetJournalTransactionForAccountBetweenDates :many
 SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE client_id = $1
@@ -227,16 +227,16 @@ WHERE client_id = $1
               AND $4::timestamptz
 `
 
-type FiatGetJournalTransactionForAccountBetweenDatesParams struct {
+type fiatGetJournalTransactionForAccountBetweenDatesParams struct {
 	ClientID  uuid.UUID          `json:"clientID"`
 	Currency  Currency           `json:"currency"`
 	StartTime pgtype.Timestamptz `json:"startTime"`
 	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
-// FiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
 // in a date range.
-func (q *Queries) FiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *FiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
+func (q *Queries) fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, fiatGetJournalTransactionForAccountBetweenDates,
 		arg.ClientID,
 		arg.Currency,
@@ -267,7 +267,7 @@ func (q *Queries) FiatGetJournalTransactionForAccountBetweenDates(ctx context.Co
 	return items, nil
 }
 
-const fiatInternalTransferJournalEntry = `-- name: FiatInternalTransferJournalEntry :one
+const fiatInternalTransferJournalEntry = `-- name: fiatInternalTransferJournalEntry :one
 WITH deposit AS (
     INSERT INTO fiat_journal(
         client_id,
@@ -300,7 +300,7 @@ SELECT
 RETURNING tx_id, transacted_at
 `
 
-type FiatInternalTransferJournalEntryParams struct {
+type fiatInternalTransferJournalEntryParams struct {
 	DestinationAccount  uuid.UUID       `json:"destinationAccount"`
 	DestinationCurrency Currency        `json:"destinationCurrency"`
 	CreditAmount        decimal.Decimal `json:"creditAmount"`
@@ -309,13 +309,13 @@ type FiatInternalTransferJournalEntryParams struct {
 	DebitAmount         decimal.Decimal `json:"debitAmount"`
 }
 
-type FiatInternalTransferJournalEntryRow struct {
+type fiatInternalTransferJournalEntryRow struct {
 	TxID         uuid.UUID          `json:"txID"`
 	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
 }
 
-// FiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
-func (q *Queries) FiatInternalTransferJournalEntry(ctx context.Context, arg *FiatInternalTransferJournalEntryParams) (FiatInternalTransferJournalEntryRow, error) {
+// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
+func (q *Queries) fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error) {
 	row := q.db.QueryRow(ctx, fiatInternalTransferJournalEntry,
 		arg.DestinationAccount,
 		arg.DestinationCurrency,
@@ -324,12 +324,12 @@ func (q *Queries) FiatInternalTransferJournalEntry(ctx context.Context, arg *Fia
 		arg.SourceCurrency,
 		arg.DebitAmount,
 	)
-	var i FiatInternalTransferJournalEntryRow
+	var i fiatInternalTransferJournalEntryRow
 	err := row.Scan(&i.TxID, &i.TransactedAt)
 	return i, err
 }
 
-const fiatRowLockAccount = `-- name: FiatRowLockAccount :one
+const fiatRowLockAccount = `-- name: fiatRowLockAccount :one
 SELECT balance
 FROM fiat_accounts
 WHERE client_id=$1 AND currency=$2
@@ -337,20 +337,20 @@ LIMIT 1
 FOR NO KEY UPDATE
 `
 
-type FiatRowLockAccountParams struct {
+type fiatRowLockAccountParams struct {
 	ClientID uuid.UUID `json:"clientID"`
 	Currency Currency  `json:"currency"`
 }
 
-// FiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
-func (q *Queries) FiatRowLockAccount(ctx context.Context, arg *FiatRowLockAccountParams) (decimal.Decimal, error) {
+// fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.
+func (q *Queries) fiatRowLockAccount(ctx context.Context, arg *fiatRowLockAccountParams) (decimal.Decimal, error) {
 	row := q.db.QueryRow(ctx, fiatRowLockAccount, arg.ClientID, arg.Currency)
 	var balance decimal.Decimal
 	err := row.Scan(&balance)
 	return balance, err
 }
 
-const fiatUpdateAccountBalance = `-- name: FiatUpdateAccountBalance :one
+const fiatUpdateAccountBalance = `-- name: fiatUpdateAccountBalance :one
 UPDATE fiat_accounts
 SET balance=round_half_even(balance + $4::numeric(18, 2), 2),
     last_tx=round_half_even($4::numeric(18, 2), 2),
@@ -359,28 +359,28 @@ WHERE client_id=$1 AND currency=$2
 RETURNING balance, last_tx, last_tx_ts
 `
 
-type FiatUpdateAccountBalanceParams struct {
+type fiatUpdateAccountBalanceParams struct {
 	ClientID uuid.UUID          `json:"clientID"`
 	Currency Currency           `json:"currency"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 	Amount   decimal.Decimal    `json:"amount"`
 }
 
-type FiatUpdateAccountBalanceRow struct {
+type fiatUpdateAccountBalanceRow struct {
 	Balance  decimal.Decimal    `json:"balance"`
 	LastTx   decimal.Decimal    `json:"lastTx"`
 	LastTxTs pgtype.Timestamptz `json:"lastTxTs"`
 }
 
-// FiatUpdateAccountBalance will add an amount to a fiat accounts balance.
-func (q *Queries) FiatUpdateAccountBalance(ctx context.Context, arg *FiatUpdateAccountBalanceParams) (FiatUpdateAccountBalanceRow, error) {
+// fiatUpdateAccountBalance will add an amount to a fiat accounts balance.
+func (q *Queries) fiatUpdateAccountBalance(ctx context.Context, arg *fiatUpdateAccountBalanceParams) (fiatUpdateAccountBalanceRow, error) {
 	row := q.db.QueryRow(ctx, fiatUpdateAccountBalance,
 		arg.ClientID,
 		arg.Currency,
 		arg.LastTxTs,
 		arg.Amount,
 	)
-	var i FiatUpdateAccountBalanceRow
+	var i fiatUpdateAccountBalanceRow
 	err := row.Scan(&i.Balance, &i.LastTx, &i.LastTxTs)
 	return i, err
 }

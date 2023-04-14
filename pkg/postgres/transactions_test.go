@@ -109,7 +109,6 @@ func TestTransactions_FiatTransactionsDetails_LessComparator(t *testing.T) {
 
 	for _, testCase := range testCases {
 		test := testCase
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -225,7 +224,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 				require.True(t, transferResult.TxTS.Valid, "invalid transaction timestamp returned.")
 
 				// Check for journal entries.
-				journalRow, err := connection.Query.FiatGetJournalTransaction(ctx, transferResult.TxID)
+				journalRow, err := connection.Query.fiatGetJournalTransaction(ctx, transferResult.TxID)
 				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
 				require.Equal(t, 2, len(journalRow), "incorrect number of journal entries.")
 			})
@@ -236,7 +235,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	wg.Wait()
 
 	t.Run("Checking end totals", func(t *testing.T) {
-		actual, err := connection.Query.FiatGetAccount(ctx, &FiatGetAccountParams{
+		actual, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{
 			ClientID: clientID1,
 			Currency: CurrencyUSD,
 		})
@@ -250,8 +249,8 @@ func TestTransactions_FiatExternalTransfer_Mock(t *testing.T) {
 
 	txDetails := FiatTransactionDetails{}
 	rowLockDecimal := decimal.Decimal{}
-	journalEntryRow := FiatExternalTransferJournalEntryRow{}
-	accountBalanceRow := FiatUpdateAccountBalanceRow{}
+	journalEntryRow := fiatExternalTransferJournalEntryRow{}
+	accountBalanceRow := fiatUpdateAccountBalanceRow{}
 
 	// Test grid.
 	testCases := []struct {
@@ -260,10 +259,10 @@ func TestTransactions_FiatExternalTransfer_Mock(t *testing.T) {
 		rowLockReturn       *decimal.Decimal
 		rowLockError        error
 		rowLockTimes        int
-		extJournalReturn    *FiatExternalTransferJournalEntryRow
+		extJournalReturn    *fiatExternalTransferJournalEntryRow
 		extJournalError     error
 		extJournalTimes     int
-		updateBalanceReturn *FiatUpdateAccountBalanceRow
+		updateBalanceReturn *fiatUpdateAccountBalanceRow
 		updateBalanceError  error
 		updateBalanceTimes  int
 	}{
@@ -308,7 +307,6 @@ func TestTransactions_FiatExternalTransfer_Mock(t *testing.T) {
 
 	for _, testCase := range testCases {
 		test := testCase
-
 		t.Run(fmt.Sprintf("Failure: %s", test.name), func(t *testing.T) {
 			t.Parallel()
 
@@ -320,17 +318,17 @@ func TestTransactions_FiatExternalTransfer_Mock(t *testing.T) {
 			// Configure mock expectations.
 			gomock.InOrder(
 				mockQuerier.EXPECT().
-					FiatRowLockAccount(gomock.Any(), gomock.Any()).
+					fiatRowLockAccount(gomock.Any(), gomock.Any()).
 					Return(*test.rowLockReturn, test.rowLockError).
 					Times(test.rowLockTimes),
 
 				mockQuerier.EXPECT().
-					FiatExternalTransferJournalEntry(gomock.Any(), gomock.Any()).
+					fiatExternalTransferJournalEntry(gomock.Any(), gomock.Any()).
 					Return(*test.extJournalReturn, test.extJournalError).
 					Times(test.extJournalTimes),
 
 				mockQuerier.EXPECT().
-					FiatUpdateAccountBalance(gomock.Any(), gomock.Any()).
+					fiatUpdateAccountBalance(gomock.Any(), gomock.Any()).
 					Return(*test.updateBalanceReturn, test.updateBalanceError).
 					Times(test.updateBalanceTimes),
 			)
@@ -379,7 +377,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	})
 
 	// Update base balances in accounts to test from.
-	_, err := connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	_, err := connection.Query.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: clientID1,
 		Currency: CurrencyUSD,
 		Amount:   balanceClientID1,
@@ -387,7 +385,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	})
 	require.NoError(t, err, "failed to set base balance for Client1 in USD")
 
-	_, err = connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	_, err = connection.Query.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: clientID2,
 		Currency: CurrencyAED,
 		Amount:   balanceClientID2,
@@ -460,7 +458,6 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	// Run testing grid in parallel.
 	for _, testCase := range testCases {
 		test := testCase
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -561,12 +558,12 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck_mock(t *testing.T) {
 			// Configure mock expectations.
 			gomock.InOrder(
 				mockQuerier.EXPECT().
-					FiatRowLockAccount(gomock.Any(), gomock.Any()).
+					fiatRowLockAccount(gomock.Any(), gomock.Any()).
 					Return(test.firstRowLockBalance, test.firstRowLockErr).
 					Times(test.firstRowLockTimes),
 
 				mockQuerier.EXPECT().
-					FiatRowLockAccount(gomock.Any(), gomock.Any()).
+					fiatRowLockAccount(gomock.Any(), gomock.Any()).
 					Return(test.secondRowLockBalance, test.secondRowLockErr).
 					Times(test.secondRowLockTimes),
 			)
@@ -610,7 +607,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	defer cancel()
 
 	// Update base balances in accounts to test from.
-	_, err := connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	_, err := connection.Query.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: clientID1,
 		Currency: CurrencyUSD,
 		Amount:   balanceClientID1,
@@ -618,7 +615,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	})
 	require.NoError(t, err, "failed to set base balance for Client1 in USD")
 
-	_, err = connection.Query.FiatUpdateAccountBalance(ctx, &FiatUpdateAccountBalanceParams{
+	_, err = connection.Query.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: clientID2,
 		Currency: CurrencyCAD,
 		Amount:   balanceClientID2,
@@ -811,7 +808,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 				require.True(t, dstResult.TxTS.Valid, "destination transaction timestamp is invalid.")
 
 				// Check for journal entries.
-				journalRow, err := connection.Query.FiatGetJournalTransaction(ctx, dstResult.TxID)
+				journalRow, err := connection.Query.fiatGetJournalTransaction(ctx, dstResult.TxID)
 				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
 				require.Equal(t, 2, len(journalRow), "incorrect number of journal entries.")
 			})
@@ -822,14 +819,14 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	wg.Wait()
 
 	t.Run("Checking end totals", func(t *testing.T) {
-		client1, err := connection.Query.FiatGetAccount(ctx, &FiatGetAccountParams{
+		client1, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{
 			ClientID: clientID1,
 			Currency: CurrencyUSD,
 		})
 		require.NoError(t, err, "failed to fiat account.")
 		require.Equal(t, expectedTotalClientID1, client1.Balance, "client 1's balance mismatched.")
 
-		client2, err := connection.Query.FiatGetAccount(ctx, &FiatGetAccountParams{
+		client2, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{
 			ClientID: clientID2,
 			Currency: CurrencyCAD,
 		})
@@ -843,20 +840,20 @@ func TestTransactions_FiatInternalTransfer_Mock(t *testing.T) {
 
 	txDetails := FiatTransactionDetails{}
 	rowLockDecimal := decimal.Decimal{}
-	journalEntryRow := FiatInternalTransferJournalEntryRow{}
-	balanceUpdateRow := FiatUpdateAccountBalanceRow{}
+	journalEntryRow := fiatInternalTransferJournalEntryRow{}
+	balanceUpdateRow := fiatUpdateAccountBalanceRow{}
 
 	testCases := []struct {
 		name           string
 		expectedErrMsg string
 		rowLockError   error
-		journalReturn  *FiatInternalTransferJournalEntryRow
+		journalReturn  *fiatInternalTransferJournalEntryRow
 		journalError   error
 		journalTimes   int
-		creditReturn   *FiatUpdateAccountBalanceRow
+		creditReturn   *fiatUpdateAccountBalanceRow
 		creditError    error
 		creditTimes    int
-		debitReturn    *FiatUpdateAccountBalanceRow
+		debitReturn    *fiatUpdateAccountBalanceRow
 		debitError     error
 		debitTimes     int
 	}{
@@ -928,22 +925,22 @@ func TestTransactions_FiatInternalTransfer_Mock(t *testing.T) {
 			// Configure mock expectations.
 			gomock.InOrder(
 				mockQuerier.EXPECT().
-					FiatRowLockAccount(gomock.Any(), gomock.Any()).
+					fiatRowLockAccount(gomock.Any(), gomock.Any()).
 					Return(rowLockDecimal, test.rowLockError).
 					AnyTimes(),
 
 				mockQuerier.EXPECT().
-					FiatInternalTransferJournalEntry(gomock.Any(), gomock.Any()).
+					fiatInternalTransferJournalEntry(gomock.Any(), gomock.Any()).
 					Return(*test.journalReturn, test.journalError).
 					Times(test.journalTimes),
 
 				mockQuerier.EXPECT().
-					FiatUpdateAccountBalance(gomock.Any(), gomock.Any()).
+					fiatUpdateAccountBalance(gomock.Any(), gomock.Any()).
 					Return(*test.creditReturn, test.creditError).
 					Times(test.creditTimes),
 
 				mockQuerier.EXPECT().
-					FiatUpdateAccountBalance(gomock.Any(), gomock.Any()).
+					fiatUpdateAccountBalance(gomock.Any(), gomock.Any()).
 					Return(*test.debitReturn, test.debitError).
 					Times(test.debitTimes),
 			)
