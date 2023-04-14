@@ -1,0 +1,8 @@
+jwt:
+  key: CJa61NnAr8EwNDcTrZt2wmexYk642r44YHxGYQBNGK6UPEVwy3MARzaG
+  issuer: MCQ Platform
+  expiration_duration: 600
+  refresh_threshold: 60
+general:
+  bcrypt_cost: 8
+  crypto_secret: ^Zt*.^Rzan_oy?bBwB,dc^XtPbBT_Pw5
