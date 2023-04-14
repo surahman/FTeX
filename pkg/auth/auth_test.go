@@ -236,7 +236,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Test authorization config and token generation.
+			// Adjust the authorization issuer name and expiration deadline for tests, if needed.
 			testAuthImpl := getTestConfiguration()
 			if test.issuerName != "" {
 				testAuthImpl.conf.JWTConfig.Issuer = test.issuerName
@@ -264,7 +264,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 			}
 
 			require.Equal(t, testUsername, username, "username failed to match the expected")
-			require.True(t, expiresAt > 0, "invalid expiration time")
+			require.True(t, expiresAt > time.Now().Unix(), "invalid expiration time")
 		})
 	}
 }

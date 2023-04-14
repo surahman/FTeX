@@ -136,20 +136,29 @@ func (a *authImpl) GenerateJWT(username string) (*models.JWTAuthResponse, error)
 
 	authResponse := &models.JWTAuthResponse{
 		Token:     tokenString,
-		Expires:   claims.ExpiresAt.Time.Unix(),
+		Expires:   claims.ExpiresAt.Unix(),
 		Threshold: a.conf.JWTConfig.RefreshThreshold,
 	}
 
 	return authResponse, nil
 }
 
-// ValidateJWT will validate a signed JWT and extracts the username from it.
+// ValidateJWT will validate a signed JWT and extracts the username and unix expiration timestamp from it.
 func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
-	claims := jwt.MapClaims{}
-	if _, err := jwt.ParseWithClaims(signedToken, &claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(signedToken, &jwtClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.conf.JWTConfig.Key), nil
-	}); err != nil {
-		msg := "failed to parse jwt"
+	})
+	if err != nil {
+		msg := "failed to parse token"
+		a.logger.Warn(msg, zap.Error(err))
+
+		return "", -1, fmt.Errorf(msg+" %w", err)
+	}
+
+	// Cast token claim to JWT.
+	claims, ok := token.Claims.(*jwtClaim)
+	if !ok || !token.Valid {
+		msg := "failed to extract jwt data"
 		a.logger.Warn(msg, zap.Error(err))
 
 		return "", -1, fmt.Errorf(msg+" %w", err)
@@ -167,19 +176,8 @@ func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
 		return "", -1, errors.New("unauthorized issuer")
 	}
 
-	// Extract the username.
-	username, ok := claims["username"].(string)
-	if !ok {
-		return "", -1, errors.New("username not found")
-	}
-
-	// Extract the expiration time.
-	expiresAt, ok := claims["exp"].(float64)
-	if !ok {
-		return "", -1, errors.New("expiration time not found")
-	}
-
-	return username, int64(expiresAt), nil
+	// Return the username and the unix expiration timestamp.
+	return claims.Username, claims.ExpiresAt.Unix(), nil
 }
 
 // RefreshJWT will extend a valid JWTs lease by generating a fresh valid JWT.
