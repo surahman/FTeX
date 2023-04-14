@@ -122,10 +122,10 @@ func TestAuthConfigs_Load(t *testing.T) {
 			testCryptoSecret := "**crypto secret set in env var**"
 			t.Setenv(keyspaceJwt+"KEY", testKey)
 			t.Setenv(keyspaceJwt+"ISSUER", testIssuer)
-			t.Setenv(keyspaceJwt+"EXPIRATION_DURATION", strconv.FormatInt(testExpDur, 10))
-			t.Setenv(keyspaceJwt+"REFRESH_THRESHOLD", strconv.FormatInt(testRefThreshold, 10))
-			t.Setenv(keyspaceGen+"BCRYPT_COST", strconv.Itoa(testBcryptCost))
-			t.Setenv(keyspaceGen+"CRYPTO_SECRET", testCryptoSecret)
+			t.Setenv(keyspaceJwt+"EXPIRATIONDURATION", strconv.FormatInt(testExpDur, 10))
+			t.Setenv(keyspaceJwt+"REFRESHTHRESHOLD", strconv.FormatInt(testRefThreshold, 10))
+			t.Setenv(keyspaceGen+"BCRYPTCOST", strconv.Itoa(testBcryptCost))
+			t.Setenv(keyspaceGen+"CRYPTOSECRET", testCryptoSecret)
 
 			err = actual.Load(fs)
 			require.NoErrorf(t, err, "Failed to load constants file: %v", err)

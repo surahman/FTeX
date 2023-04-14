@@ -27,7 +27,7 @@ general:
   bcryptCost: 8
   cryptoSecret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
-		"bcryptCost_below_4": `
+		"bcrypt_cost_below_4": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
@@ -37,7 +37,7 @@ general:
   bcryptCost: 2
   cryptoSecret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
-		"bcryptCost_above_31": `
+		"bcrypt_cost_above_31": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
@@ -77,7 +77,7 @@ general:
   bcryptCost: 8
   cryptoSecret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
-		"low_refreshThreshold": `
+		"low_refresh_threshold": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
@@ -87,7 +87,7 @@ general:
   bcryptCost: 8
   cryptoSecret: Xp2s5v8y/B?E(H+MbQeShVmYq3t6w9z$`,
 
-		"refreshThreshold_gt_expiration": `
+		"refresh_threshold_gt_expiration": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
   issuer: MCQ Platform
