@@ -1,6 +1,6 @@
 jwt:
   key: CJa61NnAr8EwNDcTrZt2wmexYk642r44YHxGYQBNGK6UPEVwy3MARzaG
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
