@@ -69,3 +69,11 @@ func TestGetAuthFileName(t *testing.T) {
 func TestGetAuthPrefix(t *testing.T) {
 	require.Equal(t, authPrefix, GetAuthPrefix(), "Incorrect authorization environment prefix")
 }
+
+func TestGetHTTPRESTFileName(t *testing.T) {
+	require.Equal(t, restConfigFileName, GetHTTPRESTFileName(), "Incorrect HTTP REST filename")
+}
+
+func TestGetHTTPRESTPrefix(t *testing.T) {
+	require.Equal(t, restPrefix, GetHTTPRESTPrefix(), "Incorrect HTTP REST environment prefix")
+}
