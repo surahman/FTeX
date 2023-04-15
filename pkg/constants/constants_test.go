@@ -61,3 +61,11 @@ func TestGetQuotesFileName(t *testing.T) {
 func TestGetQuotesPrefix(t *testing.T) {
 	require.Equal(t, quotesPrefix, GetQuotesPrefix(), "Incorrect Quotes prefix")
 }
+
+func TestGetAuthFileName(t *testing.T) {
+	require.Equal(t, authConfigFileName, GetAuthFileName(), "Incorrect authentication filename")
+}
+
+func TestGetAuthPrefix(t *testing.T) {
+	require.Equal(t, authPrefix, GetAuthPrefix(), "Incorrect authorization environment prefix")
+}

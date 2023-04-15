@@ -11,6 +11,7 @@ const (
 	postgresConfigFileName = "PostgresConfig.yaml"
 	redisConfigFileName    = "RedisConfig.yaml"
 	quotesConfigFileName   = "QuotesConfig.yaml"
+	authConfigFileName     = "AuthConfig.yaml"
 
 	// Environment variables.
 	githubCIKey    = "GITHUB_ACTIONS_CI"
@@ -18,6 +19,7 @@ const (
 	postgresPrefix = "POSTGRES"
 	redisPrefix    = "REDIS"
 	quotesPrefix   = "QUOTES"
+	authPrefix     = "AUTH"
 
 	// Miscellaneous.
 	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
@@ -92,4 +94,14 @@ func GetQuotesFileName() string {
 // GetQuotesPrefix returns the environment variable prefix for the quotes.
 func GetQuotesPrefix() string {
 	return quotesPrefix
+}
+
+// GetAuthFileName returns the authentication configuration file name.
+func GetAuthFileName() string {
+	return authConfigFileName
+}
+
+// GetAuthPrefix returns the environment variable prefix for authentication.
+func GetAuthPrefix() string {
+	return authPrefix
 }

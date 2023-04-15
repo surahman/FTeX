@@ -46,7 +46,7 @@ func newConfig() *config {
 }
 
 // Load will attempt to load configurations from a file on a file system.
-func (cfg *config) Load(fs afero.Fs) (err error) {
+func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
