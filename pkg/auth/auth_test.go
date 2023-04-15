@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -173,16 +174,21 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 	t.Parallel()
 
 	userName := "test username"
-	authResponse, err := testAuth.GenerateJWT(userName)
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate clientID.")
+
+	authResponse, err := testAuth.GenerateJWT(userName, clientID)
 	require.NoError(t, err, "JWT creation failed")
-	require.True(t, authResponse.Expires > time.Now().Unix(), "JWT expires before current time")
+	require.True(t, authResponse.Expires > time.Now().Unix(), "JWT expires before current time.")
 	require.True(t, authResponse.Expires < time.Now().Add(time.Duration(expirationDuration+1)*time.Second).Unix(),
-		"JWT expires after deadline")
+		"JWT expires after deadline.")
 
 	// Check validate token and check for username in claim.
-	actualUname, expiresAt, err := testAuth.ValidateJWT(authResponse.Token)
-	require.NoError(t, err, "failed to extract username from JWT")
-	require.Equalf(t, userName, actualUname, "incorrect username retrieved from JWT")
+	actualUname, actualUUID, expiresAt, err := testAuth.ValidateJWT(authResponse.Token)
+	require.NoError(t, err, "failed to extract information from JWT.")
+	require.Equal(t, userName, actualUname, "incorrect username retrieved from JWT.")
+	require.Equal(t, actualUUID, clientID, "incorrect clientID retrieved from JWT.")
 	require.True(t, expiresAt > 0, "invalid expiration time")
 }
 
@@ -194,14 +200,17 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 
 		testAuthImpl := getTestConfiguration()
 
-		_, _, err := testAuthImpl.ValidateJWT("")
+		_, _, _, err := testAuthImpl.ValidateJWT("")
 		require.Error(t, err, "parsing an empty token should fail")
 
-		_, _, err = testAuthImpl.ValidateJWT("bad#token#string")
+		_, _, _, err = testAuthImpl.ValidateJWT("bad#token#string")
 		require.Error(t, err, "parsing and invalid token should fail")
 	})
 
-	const testUsername = "test username"
+	const username = "test username"
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate clientID.")
 
 	testCases := []struct {
 		name               string
@@ -246,7 +255,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 			}
 
 			// Generate test token.
-			testJWT, err := testAuthImpl.GenerateJWT(testUsername)
+			testJWT, err := testAuthImpl.GenerateJWT(username, clientID)
 			require.NoError(t, err, "failed to create test JWT")
 
 			// Conditional sleep to expire token.
@@ -254,7 +263,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 				time.Sleep(time.Duration(test.expirationDuration+1) * time.Second)
 			}
 
-			username, expiresAt, err := testAuth.ValidateJWT(testJWT.Token)
+			actualUsername, actualClientID, expiresAt, err := testAuth.ValidateJWT(testJWT.Token)
 			test.expectErr(t, err, "validation of issued token error condition failed")
 
 			if err != nil {
@@ -263,7 +272,8 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, testUsername, username, "username failed to match the expected")
+			require.Equal(t, username, actualUsername, "username failed to match the expected")
+			require.Equal(t, clientID, actualClientID, "clientId failed to match the expected")
 			require.True(t, expiresAt > time.Now().Unix(), "invalid expiration time")
 		})
 	}
@@ -272,22 +282,24 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 func TestAuthImpl_RefreshJWT(t *testing.T) {
 	t.Parallel()
 
+	username := "test username"
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate clientID.")
+
 	testCases := []struct {
 		name               string
-		testUsername       string
 		expirationDuration int64
 		sleepTime          int
 		expectErr          require.ErrorAssertionFunc
 	}{
 		{
 			name:               "Valid token",
-			testUsername:       "test username",
 			expirationDuration: 4,
 			sleepTime:          2,
 			expectErr:          require.NoError,
 		}, {
 			name:               "Invalid token",
-			testUsername:       "test username",
 			expirationDuration: 1,
 			sleepTime:          2,
 			expectErr:          require.Error,
@@ -305,12 +317,13 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 
 			testAuthImpl.conf.JWTConfig.ExpirationDuration = test.expirationDuration
 
-			testJWT, err := testAuthImpl.GenerateJWT(test.testUsername)
+			testJWT, err := testAuthImpl.GenerateJWT(username, clientID)
 			require.NoError(t, err, "failed to create initial JWT")
 
-			actualUsername, expiresAt, err := testAuthImpl.ValidateJWT(testJWT.Token)
+			actualUsername, actualClientID, expiresAt, err := testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoError(t, err, "failed to validate original test token")
-			require.Equal(t, test.testUsername, actualUsername, "failed to extract correct username from original JWT")
+			require.Equal(t, username, actualUsername, "failed to extract correct username from original JWT")
+			require.Equal(t, clientID, actualClientID, "failed to extract correct clientID from original JWT")
 			require.True(t, expiresAt > 0, "invalid expiration time of original token")
 
 			time.Sleep(time.Duration(test.sleepTime) * time.Second)
@@ -326,9 +339,10 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 					time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration-1)*time.Second).Unix(),
 				"token expires before the required deadline")
 
-			actualUsername, expiresAt, err = testAuthImpl.ValidateJWT(testJWT.Token)
+			actualUsername, actualClientID, expiresAt, err = testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoErrorf(t, err, "failed to validate refreshed JWT")
-			require.Equal(t, test.testUsername, actualUsername, "failed to extract correct username from refreshed JWT")
+			require.Equal(t, username, actualUsername, "failed to extract correct username from refreshed JWT")
+			require.Equal(t, clientID, actualClientID, "failed to extract correct clientID from refreshed JWT")
 			require.True(t, expiresAt > 0, "invalid expiration time of refreshed token")
 		})
 	}

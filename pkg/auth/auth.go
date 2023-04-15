@@ -10,6 +10,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/logger"
@@ -30,11 +31,11 @@ type Auth interface {
 	CheckPassword(string, string) error
 
 	// GenerateJWT will create a valid JSON Web Token and return it in a JWT Authorization Response structure.
-	GenerateJWT(string) (*models.JWTAuthResponse, error)
+	GenerateJWT(string, uuid.UUID) (*models.JWTAuthResponse, error)
 
 	// ValidateJWT will take the JSON Web Token and validate it. It will extract and return the username and expiration
 	// time (Unix timestamp) or an error if validation fails.
-	ValidateJWT(string) (string, int64, error)
+	ValidateJWT(string) (string, uuid.UUID, int64, error)
 
 	// RefreshJWT will take a valid JSON Web Token, and if valid and expiring soon, issue a fresh valid JWT with the time
 	// extended in JWT Authorization Response structure.
@@ -108,14 +109,16 @@ func (a *authImpl) CheckPassword(hashed, plaintext string) (err error) {
 
 // jwtClaim is used internally by the JWT generation and validation routines.
 type jwtClaim struct {
-	Username string `json:"username" yaml:"username"`
+	Username string    `json:"username" yaml:"username"`
+	ClientID uuid.UUID `json:"clientId" yaml:"clientId"`
 	jwt.RegisteredClaims
 }
 
 // GenerateJWT creates a payload consisting of the JWT with the username as well as expiration time.
-func (a *authImpl) GenerateJWT(username string) (*models.JWTAuthResponse, error) {
+func (a *authImpl) GenerateJWT(username string, clientID uuid.UUID) (*models.JWTAuthResponse, error) {
 	claims := &jwtClaim{
 		Username: username,
+		ClientID: clientID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer: a.conf.JWTConfig.Issuer,
 			ExpiresAt: jwt.NewNumericDate(
@@ -144,7 +147,7 @@ func (a *authImpl) GenerateJWT(username string) (*models.JWTAuthResponse, error)
 }
 
 // ValidateJWT will validate a signed JWT and extracts the username and unix expiration timestamp from it.
-func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
+func (a *authImpl) ValidateJWT(signedToken string) (string, uuid.UUID, int64, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &jwtClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.conf.JWTConfig.Key), nil
 	})
@@ -152,7 +155,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
 		msg := "failed to parse token"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return "", -1, fmt.Errorf(msg+" %w", err)
+		return "", uuid.UUID{}, -1, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Cast token claim to JWT.
@@ -161,34 +164,37 @@ func (a *authImpl) ValidateJWT(signedToken string) (string, int64, error) {
 		msg := "failed to extract jwt data"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return "", -1, fmt.Errorf(msg+" %w", err)
+		return "", uuid.UUID{}, -1, fmt.Errorf(msg+" %w", err)
 	}
 
 	// Check for errors and compare the expiration time in Unix format.
 	expiration, err := claims.GetExpirationTime()
 	if err != nil || expiration.Unix() < time.Now().Unix() {
-		return "", -1, errors.New("token has expired")
+		return "", uuid.UUID{}, -1, errors.New("token has expired")
 	}
 
 	// Check the issuer is correct.
 	issuer, err := claims.GetIssuer()
 	if err != nil || issuer != a.conf.JWTConfig.Issuer {
-		return "", -1, errors.New("unauthorized issuer")
+		return "", uuid.UUID{}, -1, errors.New("unauthorized issuer")
 	}
 
 	// Return the username and the unix expiration timestamp.
-	return claims.Username, claims.ExpiresAt.Unix(), nil
+	return claims.Username, claims.ClientID, claims.ExpiresAt.Unix(), nil
 }
 
 // RefreshJWT will extend a valid JWTs lease by generating a fresh valid JWT.
 func (a *authImpl) RefreshJWT(token string) (authResponse *models.JWTAuthResponse, err error) {
-	var username string
+	var (
+		username string
+		clientID uuid.UUID
+	)
 
-	if username, _, err = a.ValidateJWT(token); err != nil {
+	if username, clientID, _, err = a.ValidateJWT(token); err != nil {
 		return
 	}
 
-	if authResponse, err = a.GenerateJWT(username); err != nil {
+	if authResponse, err = a.GenerateJWT(username, clientID); err != nil {
 		return
 	}
 
