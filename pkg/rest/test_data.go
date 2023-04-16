@@ -8,12 +8,11 @@ func configTestData() map[string]string {
 		"valid": `
 server:
   portNumber: 33723
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
   readTimeout: 1s
   writeTimeout: 1s
-  idleTimeout: 30s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
@@ -21,37 +20,34 @@ authorization:
 		"out of range port": `
 server:
   portNumber: 99
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
   readTimeout: 1s
   writeTimeout: 1s
-  idleTimeout: 30s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
 
-		"out of range shutdown delay": `
+		"out of range time delay": `
 server:
   portNumber: 44243
-  shutdownDelay: -1
+  shutdownDelay: 0s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
-  readTimeout: 1s
-  writeTimeout: 1s
-  idleTimeout: 30s
-  readHeaderTimeout: 1s
+  readTimeout: 0s
+  writeTimeout: 0s
+  readHeaderTimeout: 0s
 authorization:
   headerKey: Authorization`,
 
 		"no base path": `
 server:
   portNumber: 44243
-  shutdownDelay: 5
+  shutdownDelay: 5s
   swaggerPath: /swagger/*any
   readTimeout: 1s
   writeTimeout: 1s
-  idleTimeout: 30s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
@@ -59,11 +55,10 @@ authorization:
 		"no swagger path": `
 server:
   portNumber: 44243
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   readTimeout: 1s
   writeTimeout: 1s
-  idleTimeout: 30s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
@@ -71,11 +66,10 @@ authorization:
 		"no read timeout": `
 server:
   portNumber: 33723
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
   writeTimeout: 1s
-  idleTimeout: 30s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
@@ -83,23 +77,10 @@ authorization:
 		"no write timeout": `
 server:
   portNumber: 33723
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
   readTimeout: 1s
-  idleTimeout: 30s
-  readHeaderTimeout: 1s
-authorization:
-  headerKey: Authorization`,
-
-		"no idle timeout": `
-server:
-  portNumber: 33723
-  shutdownDelay: 5
-  basePath: api/rest/v1
-  swaggerPath: /swagger/*any
-  readTimeout: 1s
-  writeTimeout: 1s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
@@ -107,24 +88,22 @@ authorization:
 		"no read header timeout": `
 server:
   portNumber: 33723
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
   readTimeout: 1s
   writeTimeout: 1s
-  idleTimeout: 30s
 authorization:
   headerKey: Authorization`,
 
 		"no auth header": `
 server:
   portNumber: 44243
-  shutdownDelay: 5
+  shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath:  /swagger/*any
   readTimeout: 1s
   writeTimeout: 1s
-  idleTimeout: 30s
   readHeaderTimeout: 1s
 authorization:
   headerKey:`,

@@ -33,15 +33,18 @@ The configuration loader will search for the configurations in the following ord
 
 The expected file name is `HTTPRESTConfig.yaml`. All the configuration items below are _required_.
 
-| Name                | Environment Variable Key | Type   | Description                                                                                |
-|---------------------|--------------------------|--------|--------------------------------------------------------------------------------------------|
-| **_Server_**        | `REST_SERVER`            |        | **_Parent key for server configurations._**                                                |
-| ↳ portNumber        | ↳ `.PORTNUMBER`          | int    | Service port for inbound and outbound connections.                                         |
-| ↳ shutdownDelay     | ↳ `.SHUTDOWNDELAY`       | int    | The number of seconds to wait after a shutdown signal is received to terminate the server. |
-| ↳ basePath          | ↳ `.BASEPATH`            | string | The service endpoints base path.                                                           |
-| ↳ swaggerPath       | ↳ `.SWAGGERPATH`         | string | The path through which the Swagger UI will be accessible.                                  |
-| **_Authorization_** | `REST_AUTHORIZATION`     |        | **_Parent key for authentication configurations._**                                        |
-| ↳ headerKey         | ↳ `.HEADERKEY`           | string | The HTTP header key where the authorization token is stored.                               |
+| Name                | Environment Variable Key | Type          | Description                                                                                |
+|---------------------|--------------------------|---------------|--------------------------------------------------------------------------------------------|
+| **_Server_**        | `REST_SERVER`            |               | **_Parent key for server configurations._**                                                |
+| ↳ portNumber        | ↳ `.PORTNUMBER`          | int           | Service port for inbound and outbound connections.                                         |
+| ↳ basePath          | ↳ `.BASEPATH`            | string        | The service endpoints base path.                                                           |
+| ↳ swaggerPath       | ↳ `.SWAGGERPATH`         | string        | The path through which the Swagger UI will be accessible.                                  |
+| ↳ shutdownDelay     | ↳ `.SHUTDOWNDELAY`       | time.Duration | The number of seconds to wait after a shutdown signal is received to terminate the server. |
+| ↳ readTimeout       | ↳ `.READTIMEOUT`         | time.Duration | The maximum duration to read an entire request with the body before timing out.            |
+| ↳ writeTimeout      | ↳ `.WRITETIMEOUT`        | time.Duration | The maximum duration to write entire response before timing out.                           |
+| ↳ ReadHeaderTimeout | ↳ `.READHEADERTIMEOUT`   | time.Duration | The maximum duration to read an entire request header before timing out.                   |
+| **_Authorization_** | `REST_AUTHORIZATION`     |               | **_Parent key for authentication configurations._**                                        |
+| ↳ headerKey         | ↳ `.HEADERKEY`           | string        | The HTTP header key where the authorization token is stored.                               |
 
 
 #### Example Configuration File
@@ -49,9 +52,12 @@ The expected file name is `HTTPRESTConfig.yaml`. All the configuration items bel
 ```yaml
 server:
   portNumber: 33723
-  shutdownDelay: 5
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
+  shutdownDelay: 5s
+  readTimeout: 1s
+  writeTimeout: 1s
+  readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization
 ```

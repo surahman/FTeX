@@ -24,11 +24,10 @@ type serverConfig struct {
 	BasePath          string        `json:"basePath,omitempty" yaml:"basePath,omitempty" mapstructure:"basePath" validate:"required"`
 	SwaggerPath       string        `json:"swaggerPath,omitempty" yaml:"swaggerPath,omitempty" mapstructure:"swaggerPath" validate:"required"`
 	PortNumber        int           `json:"portNumber,omitempty" yaml:"portNumber,omitempty" mapstructure:"portNumber" validate:"required,min=1000"`
-	ShutdownDelay     int           `json:"shutdownDelay,omitempty" yaml:"shutdownDelay,omitempty" mapstructure:"shutdownDelay" validate:"required,min=0"`
-	ReadTimeout       time.Duration `json:"readTimeout,omitempty" yaml:"readTimeout,omitempty" mapstructure:"readTimeout" validate:"required"`
-	WriteTimeout      time.Duration `json:"writeTimeout,omitempty" yaml:"writeTimeout,omitempty" mapstructure:"writeTimeout" validate:"required"`
-	IdleTimeout       time.Duration `json:"idleTimeout,omitempty" yaml:"idleTimeout,omitempty" mapstructure:"idleTimeout" validate:"required"`
-	ReadHeaderTimeout time.Duration `json:"readHeaderTimeout,omitempty" yaml:"readHeaderTimeout,omitempty" mapstructure:"readHeaderTimeout" validate:"required"`
+	ShutdownDelay     time.Duration `json:"shutdownDelay,omitempty" yaml:"shutdownDelay,omitempty" mapstructure:"shutdownDelay" validate:"required,min=0"`
+	ReadTimeout       time.Duration `json:"readTimeout,omitempty" yaml:"readTimeout,omitempty" mapstructure:"readTimeout" validate:"required,min=1"`
+	WriteTimeout      time.Duration `json:"writeTimeout,omitempty" yaml:"writeTimeout,omitempty" mapstructure:"writeTimeout" validate:"required,min=1"`
+	ReadHeaderTimeout time.Duration `json:"readHeaderTimeout,omitempty" yaml:"readHeaderTimeout,omitempty" mapstructure:"readHeaderTimeout" validate:"required,min=1"`
 }
 
 // authorizationConfig contains the configurations for request authorization.

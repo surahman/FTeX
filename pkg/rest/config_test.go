@@ -29,7 +29,7 @@ func TestRestConfigs_Load(t *testing.T) {
 			name:         "empty - etc dir",
 			input:        restConfigTestData["empty"],
 			expectErr:    require.Error,
-			expectErrCnt: 9,
+			expectErrCnt: 8,
 		}, {
 			name:         "valid - etc dir",
 			input:        restConfigTestData["valid"],
@@ -40,6 +40,11 @@ func TestRestConfigs_Load(t *testing.T) {
 			input:        restConfigTestData["out of range port"],
 			expectErr:    require.Error,
 			expectErrCnt: 1,
+		}, {
+			name:         "out of range time delay - etc dir",
+			input:        restConfigTestData["out of range time delay"],
+			expectErr:    require.Error,
+			expectErrCnt: 4,
 		}, {
 			name:         "no base path - etc dir",
 			input:        restConfigTestData["no base path"],
@@ -58,11 +63,6 @@ func TestRestConfigs_Load(t *testing.T) {
 		}, {
 			name:         "no write timeout - etc dir",
 			input:        restConfigTestData["no write timeout"],
-			expectErr:    require.Error,
-			expectErrCnt: 1,
-		}, {
-			name:         "no idle timeout - etc dir",
-			input:        restConfigTestData["no idle timeout"],
 			expectErr:    require.Error,
 			expectErrCnt: 1,
 		}, {
@@ -109,18 +109,16 @@ func TestRestConfigs_Load(t *testing.T) {
 			swaggerPath := xid.New().String()
 			headerKey := xid.New().String()
 			portNumber := 1600
-			shutdownDelay := 36
+			shutdownDelay := time.Duration(36)
 			readTimeout := time.Duration(4)
 			writeTimeout := time.Duration(5)
-			idleTimeout := time.Duration(6)
 			readHeaderTimeout := time.Duration(7)
 			t.Setenv(keyspaceServer+"BASEPATH", basePath)
 			t.Setenv(keyspaceServer+"SWAGGERPATH", swaggerPath)
 			t.Setenv(keyspaceServer+"PORTNUMBER", strconv.Itoa(portNumber))
-			t.Setenv(keyspaceServer+"SHUTDOWNDELAY", strconv.Itoa(shutdownDelay))
+			t.Setenv(keyspaceServer+"SHUTDOWNDELAY", shutdownDelay.String())
 			t.Setenv(keyspaceServer+"READTIMEOUT", readTimeout.String())
 			t.Setenv(keyspaceServer+"WRITETIMEOUT", writeTimeout.String())
-			t.Setenv(keyspaceServer+"IDLETIMEOUT", idleTimeout.String())
 			t.Setenv(keyspaceServer+"READHEADERTIMEOUT", readHeaderTimeout.String())
 			t.Setenv(keyspaceAuth+"HEADERKEY", headerKey)
 
@@ -137,8 +135,6 @@ func TestRestConfigs_Load(t *testing.T) {
 				"failed to load read timeout environment variable into configs")
 			require.Equal(t, writeTimeout, actual.Server.WriteTimeout,
 				"failed to load write timeout environment variable into configs")
-			require.Equal(t, idleTimeout, actual.Server.IdleTimeout,
-				"failed to load idle timeout environment variable into configs")
 			require.Equal(t, readHeaderTimeout, actual.Server.ReadHeaderTimeout,
 				"failed to load read header timeout environment variable into configs")
 			require.Equal(t, headerKey, actual.Authorization.HeaderKey,

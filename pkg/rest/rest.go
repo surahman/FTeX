@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
@@ -98,7 +97,6 @@ func (s *Server) Run() {
 	srv := &http.Server{
 		ReadTimeout:       s.conf.Server.ReadTimeout,
 		WriteTimeout:      s.conf.Server.WriteTimeout,
-		IdleTimeout:       s.conf.Server.IdleTimeout,
 		ReadHeaderTimeout: s.conf.Server.ReadHeaderTimeout,
 		Addr:              fmt.Sprintf(":%d", s.conf.Server.PortNumber),
 		Handler:           s.router,
@@ -118,9 +116,9 @@ func (s *Server) Run() {
 	// Wait for interrupt.
 	<-quit
 	s.logger.Info("Shutting down REST server...",
-		zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+		zap.Duration("waiting", s.conf.Server.ShutdownDelay))
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.conf.Server.ShutdownDelay)
 
 	defer cancel()
 
