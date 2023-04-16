@@ -7,10 +7,14 @@ func configTestData() map[string]string {
 
 		"valid": `
 server:
-  portNumber: 44243
+  portNumber: 33723
   shutdownDelay: 5
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
 
@@ -20,6 +24,10 @@ server:
   shutdownDelay: 5
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
 
@@ -29,6 +37,10 @@ server:
   shutdownDelay: -1
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
 
@@ -37,6 +49,10 @@ server:
   portNumber: 44243
   shutdownDelay: 5
   swaggerPath: /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
 
@@ -45,6 +61,58 @@ server:
   portNumber: 44243
   shutdownDelay: 5
   basePath: api/rest/v1
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
+authorization:
+  headerKey: Authorization`,
+
+		"no read timeout": `
+server:
+  portNumber: 33723
+  shutdownDelay: 5
+  basePath: api/rest/v1
+  swaggerPath: /swagger/*any
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
+authorization:
+  headerKey: Authorization`,
+
+		"no write timeout": `
+server:
+  portNumber: 33723
+  shutdownDelay: 5
+  basePath: api/rest/v1
+  swaggerPath: /swagger/*any
+  readTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
+authorization:
+  headerKey: Authorization`,
+
+		"no idle timeout": `
+server:
+  portNumber: 33723
+  shutdownDelay: 5
+  basePath: api/rest/v1
+  swaggerPath: /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  readHeaderTimeout: 1s
+authorization:
+  headerKey: Authorization`,
+
+		"no read header timeout": `
+server:
+  portNumber: 33723
+  shutdownDelay: 5
+  basePath: api/rest/v1
+  swaggerPath: /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
 authorization:
   headerKey: Authorization`,
 
@@ -53,6 +121,12 @@ server:
   portNumber: 44243
   shutdownDelay: 5
   basePath: api/rest/v1
-  swaggerPath:  /swagger/*any`,
+  swaggerPath:  /swagger/*any
+  readTimeout: 1s
+  writeTimeout: 1s
+  idleTimeout: 30s
+  readHeaderTimeout: 1s
+authorization:
+  headerKey:`,
 	}
 }

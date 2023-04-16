@@ -1,7 +1,14 @@
 package rest
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
@@ -11,6 +18,7 @@ import (
 	"github.com/surahman/FTeX/pkg/redis"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 // Format and generate Swagger UI files using makefile.
@@ -76,4 +84,52 @@ func (s *Server) initialize() {
 	//	@name						Authorization
 
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
+}
+
+// Run brings the HTTP service up.
+func (s *Server) Run() {
+	// Indicate to bootstrapping thread to wait for completion.
+	defer s.wg.Done()
+
+	// Configure routes.
+	s.initialize()
+
+	// Create server.
+	srv := &http.Server{
+		ReadTimeout:       s.conf.Server.ReadTimeout,
+		WriteTimeout:      s.conf.Server.WriteTimeout,
+		IdleTimeout:       s.conf.Server.IdleTimeout,
+		ReadHeaderTimeout: s.conf.Server.ReadHeaderTimeout,
+		Addr:              fmt.Sprintf(":%d", s.conf.Server.PortNumber),
+		Handler:           s.router,
+	}
+
+	// Start HTTP listener.
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			s.logger.Panic(fmt.Sprintf("listening port: %d", s.conf.Server.PortNumber), zap.Error(err))
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shut down the server.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// Wait for interrupt.
+	<-quit
+	s.logger.Info("Shutting down REST server...",
+		zap.Duration("waiting", time.Duration(s.conf.Server.ShutdownDelay)*time.Second))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.conf.Server.ShutdownDelay)*time.Second)
+
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
+	}
+
+	// 5 second wait to exit.
+	<-ctx.Done()
+
+	s.logger.Info("REST server exited")
 }
