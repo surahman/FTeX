@@ -19,7 +19,7 @@ func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc {
 		}
 
 		if _, _, err := auth.ValidateJWT(tokenString); err != nil {
-			context.JSON(http.StatusForbidden, err.Error())
+			context.JSON(http.StatusForbidden, "request contains invalid or expired authorization token")
 			context.Abort()
 
 			return
