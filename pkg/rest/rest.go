@@ -87,7 +87,11 @@ func (s *Server) initialize() {
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// Endpoint configurations
+	authMiddleware := restHandlers.AuthMiddleware(s.auth, s.conf.Authorization.HeaderKey)
 	api := s.router.Group(s.conf.Server.BasePath)
+
+	//TODO: REMOVE THIS ASSIGNMENT, authMiddleware is not wired to an endpoint point yet.
+	_ = authMiddleware
 
 	api.GET("/health", restHandlers.Healthcheck(s.logger, s.db, s.cache))
 }
