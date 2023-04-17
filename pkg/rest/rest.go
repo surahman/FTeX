@@ -11,10 +11,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
+	_ "github.com/surahman/FTeX/docs" // Swaggo generated Swagger documentation
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/redis"
+	restHandlers "github.com/surahman/FTeX/pkg/rest/handlers"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -83,6 +85,11 @@ func (s *Server) initialize() {
 	//	@name						Authorization
 
 	s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
+
+	// Endpoint configurations
+	api := s.router.Group(s.conf.Server.BasePath)
+
+	api.GET("/health", restHandlers.Healthcheck(s.logger, s.db, s.cache))
 }
 
 // Run brings the HTTP service up.
