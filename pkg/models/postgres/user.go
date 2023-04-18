@@ -1,12 +1,14 @@
-package model
+package models
 
-import "github.com/jackc/pgx/v5/pgtype"
+import (
+	"github.com/gofrs/uuid"
+)
 
 // User represents a users account and is a row in user table.
 type User struct {
 	*UserAccount
-	ClientID  pgtype.UUID `json:"clientId,omitempty"`
-	IsDeleted bool        `json:"isDeleted"`
+	ClientID  uuid.UUID `json:"clientId,omitempty"`
+	IsDeleted bool      `json:"isDeleted"`
 }
 
 // UserAccount is the core user account information.

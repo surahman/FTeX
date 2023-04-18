@@ -7,7 +7,9 @@ package mocks
 import (
 	reflect "reflect"
 
+	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
+	models "github.com/surahman/FTeX/pkg/models/postgres"
 )
 
 // MockPostgres is a mock of Postgres interface.
@@ -45,6 +47,21 @@ func (m *MockPostgres) Close() error {
 func (mr *MockPostgresMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockPostgres)(nil).Close))
+}
+
+// CreateUser mocks base method.
+func (m *MockPostgres) CreateUser(arg0 *models.UserAccount) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUser", arg0)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockPostgresMockRecorder) CreateUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockPostgres)(nil).CreateUser), arg0)
 }
 
 // Healthcheck mocks base method.

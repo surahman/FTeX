@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
+	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
 	"go.uber.org/zap"
 )
 
@@ -31,6 +33,9 @@ type Postgres interface {
 
 	// Healthcheck will run a Ping command on an established Postgres database connection.
 	Healthcheck() error
+
+	// CreateUser will create a user account in the Postgres database.
+	CreateUser(userDetails *modelsPostgres.UserAccount) (uuid.UUID, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.
