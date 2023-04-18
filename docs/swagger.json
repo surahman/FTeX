@@ -11,7 +11,7 @@
     "swagger": "2.0",
     "info": {
         "description": "FTeX Fiat and Cryptocurrency Banking API.\nBank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are\nretrieved from real-time quote providers.",
-        "title": "FTeX, Incorporated. (Formerly Crypto-Bro's Bank, Inc.)",
+        "title": "FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)",
         "contact": {
             "name": "Saad Ur Rahman",
             "url": "https://www.linkedin.com/in/saad-ur-rahman/",

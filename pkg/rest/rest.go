@@ -60,7 +60,7 @@ func NewServer(fs *afero.Fs, auth auth.Auth, postgres postgres.Postgres, redis r
 func (s *Server) initialize() {
 	s.router = gin.Default()
 
-	//	@title						FTeX, Incorporated. (Formerly Crypto-Bro's Bank, Inc.)
+	//	@title						FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
 	//	@version					1.0.0
 	//	@description				FTeX Fiat and Cryptocurrency Banking API.
 	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are

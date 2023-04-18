@@ -93,7 +93,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:33723",
 	BasePath:         "/api/rest/v1",
 	Schemes:          []string{"http"},
-	Title:            "FTeX, Incorporated. (Formerly Crypto-Bro's Bank, Inc.)",
+	Title:            "FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)",
 	Description:      "FTeX Fiat and Cryptocurrency Banking API.\nBank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are\nretrieved from real-time quote providers.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
