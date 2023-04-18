@@ -113,24 +113,31 @@ func (s *Server) Run() {
 		Handler:           s.router,
 	}
 
-	// Start HTTP listener.
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Panic(fmt.Sprintf("listening port: %d", s.conf.Server.PortNumber), zap.Error(err))
-		}
-	}()
+	// Error channel for failed server start.
+	serverErr := make(chan error, 1)
 
 	// Wait for interrupt signal to gracefully shut down the server.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// Wait for interrupt.
-	<-quit
-	s.logger.Info("Shutting down REST server...",
-		zap.Duration("waiting", s.conf.Server.ShutdownDelay))
+	// Start HTTP listener.
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+		}
+	}()
+
+	// Check for server start failure or shutdown signal.
+	select {
+	case err := <-serverErr:
+		s.logger.Error(fmt.Sprintf("REST server failed to listen on port %d", s.conf.Server.PortNumber), zap.Error(err))
+
+		return
+	case <-quit:
+		s.logger.Info("Shutting down REST server...", zap.Duration("waiting", s.conf.Server.ShutdownDelay))
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.conf.Server.ShutdownDelay)
-
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
