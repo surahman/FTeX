@@ -14,14 +14,32 @@ import (
 	"go.uber.org/zap"
 )
 
+// callbacks is an array of callback functions that will be iterated over and called.
+type callbacks []func() error
+
+// add will append callback functions to the callback function array.
+func (c *callbacks) add(callBackFunc func() error) {
+	*c = append(*c, callBackFunc)
+}
+
+// callback will iterate over the array of callback functions, executing each one, and log any failures.
+func (c *callbacks) callback(logger *logger.Logger) {
+	for _, callbackFunc := range *c {
+		if err := callbackFunc(); err != nil {
+			logger.Error("failed to successfully execute callback", zap.Error(err))
+		}
+	}
+}
+
 func main() {
 	var (
-		err           error
-		serverREST    *rest.Server
-		logging       *logger.Logger
 		authorization auth.Auth
-		database      postgres.Postgres
 		cache         redis.Redis
+		cleanup       callbacks
+		database      postgres.Postgres
+		err           error
+		logging       *logger.Logger
+		serverREST    *rest.Server
 		waitGroup     sync.WaitGroup
 	)
 
@@ -36,36 +54,38 @@ func main() {
 
 	// Postgres setup.
 	if database, err = postgres.NewPostgres(&fs, logging); err != nil {
-		logging.Panic("failed to configure Cassandra module", zap.Error(err))
+		cleanup.callback(logging)
+		logging.Panic("failed to configure Postgres module", zap.Error(err))
 	}
 
 	if err = database.Open(); err != nil {
-		logging.Panic("failed open a connection to the Cassandra cluster", zap.Error(err))
+		cleanup.callback(logging)
+		logging.Panic("failed open a connection to the Postgres database", zap.Error(err))
 	}
-	defer func(database postgres.Postgres) {
-		if err = database.Close(); err != nil {
-			logging.Panic("failed close the connection to the Cassandra cluster", zap.Error(err))
-		}
-	}(database)
+
+	cleanup.add(database.Close)
 
 	// Cache setup
 	if cache, err = redis.NewRedis(&fs, logging); err != nil {
+		cleanup.callback(logging)
 		logging.Panic("failed to configure Redis module", zap.Error(err))
 	}
 
 	if err = cache.Open(); err != nil {
+		cleanup.callback(logging)
 		logging.Panic("failed open a connection to the Redis cluster", zap.Error(err))
 	}
-	defer func(cache redis.Redis) {
-		if err = cache.Close(); err != nil {
-			logging.Panic("failed close the connection to the Redis cluster", zap.Error(err))
-		}
-	}(cache)
+
+	cleanup.add(cache.Close)
 
 	// Authorization setup.
 	if authorization, err = auth.NewAuth(&fs, logging); err != nil {
+		cleanup.callback(logging)
 		logging.Panic("failed to configure authorization module", zap.Error(err))
 	}
+
+	// Setup is completed. Configure the cleanup callbacks to be executed on shutdown/exit.
+	defer cleanup.callback(logging)
 
 	// Setup REST server and start it.
 	waitGroup.Add(1)
