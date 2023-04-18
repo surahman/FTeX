@@ -56,6 +56,59 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/register": {
+            "post": {
+                "description": "Creates a user account by inserting credentials into the database. A hashed password is stored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user users register security"
+                ],
+                "summary": "Register a user.",
+                "operationId": "registerUser",
+                "parameters": [
+                    {
+                        "description": "Username, password, first and last name, email address of user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UserAccount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a valid JWT token for the new account",
+                        "schema": {
+                            "$ref": "#/definitions/models.JWTAuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -75,6 +128,62 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.JWTAuthResponse": {
+            "type": "object",
+            "required": [
+                "expires",
+                "threshold",
+                "token"
+            ],
+            "properties": {
+                "expires": {
+                    "description": "Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.",
+                    "type": "integer"
+                },
+                "threshold": {
+                    "description": "The window in seconds before expiration during which the token can be refreshed.",
+                    "type": "integer"
+                },
+                "token": {
+                    "description": "JWT string sent to and validated by the server.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserAccount": {
+            "type": "object",
+            "required": [
+                "email",
+                "firstName",
+                "lastName",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "firstName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "lastName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                }
             }
         }
     },
