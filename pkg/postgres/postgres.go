@@ -23,6 +23,14 @@ import (
 
 // Postgres is the interface through which the queries will be executed on the database.
 type Postgres interface {
+	// Open will establish a pooled connection to the Postgres database and ping it to ensure the connection is open.
+	Open() error
+
+	// Close will close an established Postgres pooled connection to support a healthy database.
+	Close() error
+
+	// Healthcheck will run a Ping command on an established Postgres database connection.
+	Healthcheck() error
 }
 
 // Check to ensure the Postgres interface has been implemented.

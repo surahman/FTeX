@@ -11,7 +11,7 @@ func configTestData() map[string]string {
 		"valid": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
@@ -30,7 +30,7 @@ general:
 		"bcrypt_cost_below_4": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
@@ -40,7 +40,7 @@ general:
 		"bcrypt_cost_above_31": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
@@ -50,7 +50,7 @@ general:
 		"jwt_expiration_below_60s": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 59
   refreshThreshold: 40
 general:
@@ -60,7 +60,7 @@ general:
 		"jwt_key_below_8": `
 jwt:
   key: kYzJdnp
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
@@ -70,7 +70,7 @@ general:
 		"jwt_key_above_256": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9UkYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
@@ -80,7 +80,7 @@ general:
 		"low_refresh_threshold": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 0
 general:
@@ -90,7 +90,7 @@ general:
 		"refresh_threshold_gt_expiration": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 601
 general:
@@ -100,7 +100,7 @@ general:
 		"crypto_key_too_short": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:
@@ -110,7 +110,7 @@ general:
 		"crypto_key_too_long": `
 jwt:
   key: kYzJdnpm6Lj2E7AobZ35RE2itZ2ws82U5tcxrVmeQq1gA4mUfzYQ9t9U
-  issuer: MCQ Platform
+  issuer: FTeX, Inc.
   expirationDuration: 600
   refreshThreshold: 60
 general:

@@ -16,7 +16,7 @@ cryptoCurrency:
   endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
-  timeout: 1s`,
+  timeout: 5s`,
 
 		"no fiat api key": `
 fiatCurrency:

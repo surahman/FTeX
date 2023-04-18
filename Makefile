@@ -29,9 +29,9 @@ generate:
 sqlc:
 	sqlc compile -xf SQL/sqlc.yaml && sqlc generate -xf SQL/sqlc.yaml
 
-# swagger:
-#	swag fmt
-#	swag init -d cmd/,pkg/model/cassandra,pkg/model/http,pkg/http/rest -g ../pkg/http/rest/rest.go
+ swagger:
+	swag fmt
+	swag init -d cmd/,pkg/models/postgres,pkg/models/,pkg/rest -g ../pkg/rest/rest.go
 
 clean:
 	go clean

@@ -40,16 +40,16 @@ an HTTP request:
 
 The expected file name is `AuthConfig.yaml`. All the configuration items below are _required_.
 
-| Name                  | Environment Variable Key | Type                          | Description                                                                                                          |
-|-----------------------|--------------------------|-------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| **_JWT_**             | `AUTH_JWT`               | **_JWT Configurations._**     | **_Parent key for JSON Web Token configurations._**                                                                  |
-| ↳ key                 | ↳ `.KEY`                 | string                        | The encryption key used for the JSON Web Token.                                                                      |
-| ↳ issuer              | ↳ `.ISSUER`              | string                        | The issuer of the JSON Web Token.                                                                                    |
-| ↳ expiration_duration | ↳ `.EXPIRATION_DURATION` | int64                         | The validity duration in seconds for the JSON Web Token.                                                             |
-| ↳ refresh_threshold   | ↳ `.REFRESH_THRESHOLD`   | int64                         | The seconds before expiration that a JSON Web Token can be refreshed before.                                         |
-| **_General_**         | `AUTH_CONFIG `           | **_General Configurations._** | **_Parent key for general authentication configurations._**                                                          |
-| ↳ bcrypt_cost         | ↳ `.BCRYPT_COST`         | int                           | The [cost](https://pkg.go.dev/golang.org/x/crypto/bcrypt#pkg-constants) value that is used for the BCrypt algorithm. |
-| ↳ crypto_secret       | ↳ `.CRYPTO_SECRET`       | string                        | A 32 character secret key to be used for AES256 encryption and decryption.                                           |
+| Name                 | Environment Variable Key | Type                          | Description                                                                                                          |
+|----------------------|--------------------------|-------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| **_JWT_**            | `AUTH_JWT`               | **_JWT Configurations._**     | **_Parent key for JSON Web Token configurations._**                                                                  |
+| ↳ key                | ↳ `.KEY`                 | string                        | The encryption key used for the JSON Web Token.                                                                      |
+| ↳ issuer             | ↳ `.ISSUER`              | string                        | The issuer of the JSON Web Token.                                                                                    |
+| ↳ expirationDuration | ↳ `.EXPIRATIONDURATION`  | int64                         | The validity duration in seconds for the JSON Web Token.                                                             |
+| ↳ refreshThreshold   | ↳ `.REFRESHTHRESHOLD`    | int64                         | The seconds before expiration that a JSON Web Token can be refreshed before.                                         |
+| **_General_**        | `AUTH_CONFIG `           | **_General Configurations._** | **_Parent key for general authentication configurations._**                                                          |
+| ↳ bcryptCost         | ↳ `.BCRYPTCOST`          | int                           | The [cost](https://pkg.go.dev/golang.org/x/crypto/bcrypt#pkg-constants) value that is used for the BCrypt algorithm. |
+| ↳ cryptoSecret       | ↳ `.CRYPTOSECRET`        | string                        | A 32 character secret key to be used for AES256 encryption and decryption.                                           |
 
 #### Example Configuration File
 
@@ -57,10 +57,10 @@ The expected file name is `AuthConfig.yaml`. All the configuration items below a
 jwt:
   key: some-long-random-key
   issuer: issuer of the token
-  expiration_duration: 600
-  refresh_threshold: 60
+  expirationDuration: 600
+  refreshThreshold: 60
 general:
-  bcrypt_cost: 8
+  bcryptCost: 8
 ```
 
 #### Example Environment Variables

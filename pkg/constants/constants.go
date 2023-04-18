@@ -12,6 +12,7 @@ const (
 	redisConfigFileName    = "RedisConfig.yaml"
 	quotesConfigFileName   = "QuotesConfig.yaml"
 	authConfigFileName     = "AuthConfig.yaml"
+	restConfigFileName     = "HTTPRESTConfig.yaml"
 
 	// Environment variables.
 	githubCIKey    = "GITHUB_ACTIONS_CI"
@@ -20,6 +21,7 @@ const (
 	redisPrefix    = "REDIS"
 	quotesPrefix   = "QUOTES"
 	authPrefix     = "AUTH"
+	restPrefix     = "REST"
 
 	// Miscellaneous.
 	postgresDSN      = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
@@ -104,4 +106,14 @@ func GetAuthFileName() string {
 // GetAuthPrefix returns the environment variable prefix for authentication.
 func GetAuthPrefix() string {
 	return authPrefix
+}
+
+// GetHTTPRESTFileName returns the HTTP REST endpoint configuration file name.
+func GetHTTPRESTFileName() string {
+	return restConfigFileName
+}
+
+// GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
+func GetHTTPRESTPrefix() string {
+	return restPrefix
 }

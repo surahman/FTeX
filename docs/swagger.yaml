@@ -1,0 +1,62 @@
+basePath: /api/rest/v1
+consumes:
+- application/json
+definitions:
+  models.HTTPError:
+    properties:
+      message:
+        type: string
+      payload: {}
+    type: object
+  models.HTTPSuccess:
+    properties:
+      message:
+        type: string
+      payload: {}
+    type: object
+host: localhost:33723
+info:
+  contact:
+    email: saad.ur.rahman@gmail.com
+    name: Saad Ur Rahman
+    url: https://www.linkedin.com/in/saad-ur-rahman/
+  description: |-
+    FTeX Fiat and Cryptocurrency Banking API.
+    Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are
+    retrieved from real-time quote providers.
+  license:
+    name: GPL-3.0
+    url: https://opensource.org/licenses/GPL-3.0
+  title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      description: |-
+        This endpoint is exposed to allow load balancers etc. to check the health of the service.
+        This is achieved by the service pinging the data tier comprised of Postgres and Redis.
+      operationId: healthcheck
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: healthy'
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "503":
+          description: error message with any available details
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Healthcheck for service liveness.
+      tags:
+      - health healthcheck liveness
+produces:
+- application/json
+schemes:
+- http
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
