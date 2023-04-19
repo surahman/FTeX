@@ -87,29 +87,31 @@ func (q *Queries) userGetCredentials(ctx context.Context, username string) (user
 }
 
 const userGetInfo = `-- name: userGetInfo :one
-SELECT first_name, last_name, email, client_id, is_deleted
+SELECT username, client_id, first_name, last_name, email, is_deleted
 FROM users
-WHERE username=$1
+WHERE client_id=$1
 LIMIT 1
 `
 
 type userGetInfoRow struct {
+	Username  string    `json:"username"`
+	ClientID  uuid.UUID `json:"clientID"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Email     string    `json:"email"`
-	ClientID  uuid.UUID `json:"clientID"`
 	IsDeleted bool      `json:"isDeleted"`
 }
 
 // userGetInfo will retrieve a single users account information.
-func (q *Queries) userGetInfo(ctx context.Context, username string) (userGetInfoRow, error) {
-	row := q.db.QueryRow(ctx, userGetInfo, username)
+func (q *Queries) userGetInfo(ctx context.Context, clientID uuid.UUID) (userGetInfoRow, error) {
+	row := q.db.QueryRow(ctx, userGetInfo, clientID)
 	var i userGetInfoRow
 	err := row.Scan(
+		&i.Username,
+		&i.ClientID,
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,
-		&i.ClientID,
 		&i.IsDeleted,
 	)
 	return i, err

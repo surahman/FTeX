@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -144,25 +145,34 @@ func TestGetInfoUser(t *testing.T) {
 	}
 
 	// Insert initial set of test users.
-	insertTestUsers(t)
+	clientIDs := insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
 
 	defer cancel()
 
+	invalidID, err := uuid.NewV1()
+	require.NoError(t, err, "failed to generate invalid id.")
+
 	// Non-existent user.
-	result, err := connection.Query.userGetInfo(ctx, "non-existent-user")
+	result, err := connection.Query.userGetInfo(ctx, invalidID)
 	require.Error(t, err, "got credentials for non-existent user.")
+	require.Equal(t, 0, len(result.Username), "got username for a non-existent user.")
 	require.True(t, result.ClientID.IsNil(), "client id for a non-existent user is valid.")
-	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
 	require.Equal(t, 0, len(result.FirstName), "got first name for a non-existent user.")
 	require.Equal(t, 0, len(result.LastName), "got last name for a non-existent user.")
 	require.Equal(t, 0, len(result.Email), "got email address for a non-existent user.")
+	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
 
 	// Get Client IDs for all inserted users.
-	for key, testCase := range getTestUsers() {
-		t.Run(fmt.Sprintf("Getting user information: %s", key), func(t *testing.T) {
-			result, err = connection.Query.userGetInfo(ctx, testCase.Username)
+	testUsers := getTestUsers
+
+	for idx, clientID := range clientIDs {
+		username := fmt.Sprintf("username%d", idx+1)
+		testCase := testUsers()[username]
+
+		t.Run(fmt.Sprintf("Getting user information: %s", username), func(t *testing.T) {
+			result, err = connection.Query.userGetInfo(ctx, clientID)
 			require.NoError(t, err, "failed to get client id for user.")
 			require.False(t, result.ClientID.IsNil(), "invalid client id for user.")
 			require.False(t, result.IsDeleted, "deleted flag for user is set.")

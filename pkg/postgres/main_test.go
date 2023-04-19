@@ -111,7 +111,7 @@ func tearDown() (err error) {
 }
 
 // insertTestUsers will reset the users table and create some test user accounts.
-func insertTestUsers(t *testing.T) {
+func insertTestUsers(t *testing.T) []uuid.UUID {
 	t.Helper()
 
 	// Reset the users table.
@@ -125,6 +125,8 @@ func insertTestUsers(t *testing.T) {
 
 	require.NoError(t, err, "failed to wipe users table before reinserting users.")
 
+	clientIDs := make([]uuid.UUID, 0, 5)
+
 	// Insert new users.
 	for _, testCase := range getTestUsers() {
 		user := testCase
@@ -132,7 +134,11 @@ func insertTestUsers(t *testing.T) {
 		clientID, err := connection.Query.userCreate(ctx, &user)
 		require.NoErrorf(t, err, "failed to insert test user account: %w", err)
 		require.False(t, clientID.IsNil(), "failed to retrieve client id from response")
+
+		clientIDs = append(clientIDs, clientID)
 	}
+
+	return clientIDs
 }
 
 // resetTestFiatAccounts will reset the fiat accounts table and create some test accounts.
