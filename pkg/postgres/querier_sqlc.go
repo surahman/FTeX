@@ -39,7 +39,7 @@ type Querier interface {
 	// userCreate will create a new user record.
 	userCreate(ctx context.Context, arg *userCreateParams) (uuid.UUID, error)
 	// userDelete will soft delete a users account.
-	userDelete(ctx context.Context, username string) (pgconn.CommandTag, error)
+	userDelete(ctx context.Context, clientID uuid.UUID) (pgconn.CommandTag, error)
 	// userGetClientId will retrieve a users client id.
 	userGetClientId(ctx context.Context, username string) (uuid.UUID, error)
 	// userGetCredentials will retrieve a users client id and password.

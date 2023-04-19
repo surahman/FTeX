@@ -43,12 +43,12 @@ func (q *Queries) userCreate(ctx context.Context, arg *userCreateParams) (uuid.U
 const userDelete = `-- name: userDelete :execresult
 UPDATE users
 SET is_deleted=true
-WHERE username=$1 AND is_deleted=false
+WHERE client_id=$1 AND is_deleted=false
 `
 
 // userDelete will soft delete a users account.
-func (q *Queries) userDelete(ctx context.Context, username string) (pgconn.CommandTag, error) {
-	return q.db.Exec(ctx, userDelete, username)
+func (q *Queries) userDelete(ctx context.Context, clientID uuid.UUID) (pgconn.CommandTag, error) {
+	return q.db.Exec(ctx, userDelete, clientID)
 }
 
 const userGetClientId = `-- name: userGetClientId :one
@@ -87,7 +87,7 @@ func (q *Queries) userGetCredentials(ctx context.Context, username string) (user
 }
 
 const userGetInfo = `-- name: userGetInfo :one
-SELECT username, client_id, first_name, last_name, email, is_deleted
+SELECT username, client_id, password, first_name, last_name, email, is_deleted
 FROM users
 WHERE client_id=$1
 LIMIT 1
@@ -96,6 +96,7 @@ LIMIT 1
 type userGetInfoRow struct {
 	Username  string    `json:"username"`
 	ClientID  uuid.UUID `json:"clientID"`
+	Password  string    `json:"password"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Email     string    `json:"email"`
@@ -109,6 +110,7 @@ func (q *Queries) userGetInfo(ctx context.Context, clientID uuid.UUID) (userGetI
 	err := row.Scan(
 		&i.Username,
 		&i.ClientID,
+		&i.Password,
 		&i.FirstName,
 		&i.LastName,
 		&i.Email,

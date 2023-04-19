@@ -58,7 +58,7 @@ func TestQueries_UserCredentials(t *testing.T) {
 	require.True(t, len(hashedPass) > 0, "retrieved an invalid password.")
 
 	// Deleted account.
-	response, err := connection.Query.userDelete(context.TODO(), uname)
+	response, err := connection.Query.userDelete(context.TODO(), clientID)
 	require.NoError(t, err, "errored whilst trying to delete user.")
 	require.Equal(t, response.RowsAffected(), int64(1), "no users were deleted.")
 
@@ -92,6 +92,7 @@ func TestQueries_UserGetInfo(t *testing.T) {
 	actualAccount, err := connection.UserGetInfo(clientID)
 	require.NoError(t, err, "failed to retrieve account info for username1.")
 	require.Equal(t, expectedAccount.Username, actualAccount.Username, "username mismatch.")
+	require.Equal(t, expectedAccount.Password, actualAccount.Password, "password mismatch.")
 	require.Equal(t, expectedAccount.FirstName, actualAccount.FirstName, "firstname mismatch.")
 	require.Equal(t, expectedAccount.LastName, actualAccount.LastName, "lastname mismatch.")
 	require.Equal(t, expectedAccount.Email, actualAccount.Email, "email address mismatch.")

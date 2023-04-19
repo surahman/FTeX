@@ -59,7 +59,7 @@ func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, err
 			UserAccount: &modelsPostgres.UserAccount{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
 					Username: userAccount.Username,
-					Password: "",
+					Password: userAccount.Password,
 				},
 				FirstName: userAccount.FirstName,
 				LastName:  userAccount.LastName,
@@ -69,4 +69,18 @@ func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, err
 			IsDeleted: userAccount.IsDeleted,
 		},
 		nil
+}
+
+// UserDelete is the interface through which external methods can soft-delete a user account.
+func (p *postgresImpl) UserDelete(clientID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	status, err := p.Query.userDelete(ctx, clientID)
+	if err != nil || status.RowsAffected() != int64(1) {
+		return ErrNotFoundUser
+	}
+
+	return nil
 }
