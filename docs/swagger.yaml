@@ -143,6 +143,36 @@ paths:
       summary: Login a user.
       tags:
       - user users login security
+  /user/refresh:
+    post:
+      description: |-
+        Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.
+        JWT must be expiring in under 60 seconds.
+      operationId: loginRefresh
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A new valid JWT
+          schema:
+            $ref: '#/definitions/models.JWTAuthResponse'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "510":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh a user's JWT by extending its expiration time.
+      tags:
+      - user users login refresh security
   /user/register:
     post:
       consumes:

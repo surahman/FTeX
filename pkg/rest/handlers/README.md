@@ -13,6 +13,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [User Endpoints `/user/`](#user-endpoints-user)
   - [Register](#register)
   - [Login](#login)
+  - [Refresh](#refresh)
 
 <br/>
 
@@ -102,5 +103,16 @@ _Response:_ A valid JWT will be returned as an authorization response.
 {
   "password": "string",
   "username": "string"
+}
+```
+#### Refresh
+
+_Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it.
+_Response:_ A valid JWT will be returned as an authorization response.
+
+```json
+{
+  "expires": "expiration time string",
+  "token": "token string"
 }
 ```

@@ -110,6 +110,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/refresh": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.\nJWT must be expiring in under 60 seconds.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user users login refresh security"
+                ],
+                "summary": "Refresh a user's JWT by extending its expiration time.",
+                "operationId": "loginRefresh",
+                "responses": {
+                    "200": {
+                        "description": "A new valid JWT",
+                        "schema": {
+                            "$ref": "#/definitions/models.JWTAuthResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "510": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/user/register": {
             "post": {
                 "description": "Creates a user account by inserting credentials into the database. A hashed password is stored.",
