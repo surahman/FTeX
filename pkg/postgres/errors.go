@@ -45,11 +45,12 @@ func (e *Error) SetStatus(code int) *Error {
 // Errors to be returned by the Postgres Queries exposed through the interface for various failure conditions.
 var (
 	ErrRegisterUser = errorRegisterUser() // ErrorRegisterUser is returned is user registration fails.
+	ErrLoginUser    = errorRegisterUser() // ErrLoginUser is returned is user credentials are not found.
 )
 
 func errorRegisterUser() error {
 	return &Error{
 		Message: "username is already registered",
-		Code:    http.StatusConflict,
+		Code:    http.StatusNotFound,
 	}
 }

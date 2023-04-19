@@ -34,8 +34,11 @@ type Postgres interface {
 	// Healthcheck will run a Ping command on an established Postgres database connection.
 	Healthcheck() error
 
-	// CreateUser will create a user account in the Postgres database.
-	CreateUser(userDetails *modelsPostgres.UserAccount) (uuid.UUID, error)
+	// UserRegister will create a user account in the Postgres database.
+	UserRegister(userDetails *modelsPostgres.UserAccount) (uuid.UUID, error)
+
+	// UserCredentials will retrieve the ClientID and hashed password associated with a provided username.
+	UserCredentials(username string) (uuid.UUID, string, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.
