@@ -94,6 +94,10 @@ func (s *Server) initialize() {
 	_ = authMiddleware
 
 	api.GET("/health", restHandlers.Healthcheck(s.logger, s.db, s.cache))
+
+	userGroup := api.Group("/user")
+	userGroup.POST("/register", restHandlers.RegisterUser(s.logger, s.auth, s.db))
+	userGroup.POST("/login", restHandlers.LoginUser(s.logger, s.auth, s.db))
 }
 
 // Run brings the HTTP service up.
