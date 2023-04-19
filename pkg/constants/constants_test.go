@@ -77,3 +77,8 @@ func TestGetHTTPRESTFileName(t *testing.T) {
 func TestGetHTTPRESTPrefix(t *testing.T) {
 	require.Equal(t, restPrefix, GetHTTPRESTPrefix(), "Incorrect HTTP REST environment prefix")
 }
+
+func TestGetDeleteUserAccountConfirmation(t *testing.T) {
+	require.Equal(t, deleteUserAccountConfirmation, GetDeleteUserAccountConfirmation(),
+		"Incorrect user account deletion confirmation message.")
+}
