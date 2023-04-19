@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
 	models "github.com/surahman/FTeX/pkg/models/postgres"
@@ -71,4 +72,34 @@ func TestQueries_UserCredentials(t *testing.T) {
 	require.Error(t, err, "retrieved invalid users' credentials.")
 	require.True(t, clientID.IsNil(), "retrieved an invalid users' clientID.")
 	require.True(t, len(hashedPass) == 0, "retrieved a password for an invalid user.")
+}
+
+func TestQueries_UserGetInfo(t *testing.T) {
+	// Integration test check.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert initial set of test users.
+	insertTestUsers(t)
+
+	// Get valid account information.
+	const uname = "username1"
+	expectedAccount := getTestUsers()[uname]
+
+	clientID, err := connection.queries.userGetClientId(context.TODO(), uname)
+	require.NoError(t, err, "failed to retrieve client id for username1.")
+	actualAccount, err := connection.UserGetInfo(clientID)
+	require.NoError(t, err, "failed to retrieve account info for username1.")
+	require.Equal(t, expectedAccount.Username, actualAccount.Username, "username mismatch.")
+	require.Equal(t, expectedAccount.FirstName, actualAccount.FirstName, "firstname mismatch.")
+	require.Equal(t, expectedAccount.LastName, actualAccount.LastName, "lastname mismatch.")
+	require.Equal(t, expectedAccount.Email, actualAccount.Email, "email address mismatch.")
+	require.False(t, actualAccount.IsDeleted, "should not be deleted.")
+
+	// Invalid clientID.
+	invalidID, err := uuid.NewV1()
+	require.NoError(t, err, "failed to generate invalid id.")
+	_, err = connection.UserGetInfo(invalidID)
+	require.Error(t, err, "retrieved an invalid id.")
 }

@@ -43,3 +43,30 @@ func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, erro
 
 	return credentials.ClientID, credentials.Password, nil
 }
+
+// UserGetInfo is the interface through which external methods can retrieve user account information.
+func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	userAccount, err := p.Query.userGetInfo(ctx, clientID)
+	if err != nil {
+		return modelsPostgres.User{}, ErrNotFoundUser
+	}
+
+	return modelsPostgres.User{
+			UserAccount: &modelsPostgres.UserAccount{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: userAccount.Username,
+					Password: "",
+				},
+				FirstName: userAccount.FirstName,
+				LastName:  userAccount.LastName,
+				Email:     userAccount.Email,
+			},
+			ClientID:  userAccount.ClientID,
+			IsDeleted: userAccount.IsDeleted,
+		},
+		nil
+}

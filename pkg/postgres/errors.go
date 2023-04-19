@@ -44,13 +44,28 @@ func (e *Error) SetStatus(code int) *Error {
 // Generic error variables.
 // Errors to be returned by the Postgres Queries exposed through the interface for various failure conditions.
 var (
-	ErrRegisterUser = errorRegisterUser() // ErrorRegisterUser is returned is user registration fails.
-	ErrLoginUser    = errorRegisterUser() // ErrLoginUser is returned is user credentials are not found.
+	ErrRegisterUser = errorRegisterUser() // ErrorRegisterUser is returned if user registration fails.
+	ErrLoginUser    = errorLoginUser()    // ErrLoginUser is returned if user credentials are not found.
+	ErrNotFoundUser = errorNotFoundUser() // ErrNotFoundUser is returned if a user account is not found.
 )
 
 func errorRegisterUser() error {
 	return &Error{
 		Message: "username is already registered",
+		Code:    http.StatusNotFound,
+	}
+}
+
+func errorLoginUser() error {
+	return &Error{
+		Message: "invalid username or password",
+		Code:    http.StatusForbidden,
+	}
+}
+
+func errorNotFoundUser() error {
+	return &Error{
+		Message: "invalid username or password",
 		Code:    http.StatusNotFound,
 	}
 }

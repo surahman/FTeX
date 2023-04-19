@@ -93,6 +93,21 @@ func (mr *MockPostgresMockRecorder) UserCredentials(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCredentials", reflect.TypeOf((*MockPostgres)(nil).UserCredentials), arg0)
 }
 
+// UserGetInfo mocks base method.
+func (m *MockPostgres) UserGetInfo(arg0 uuid.UUID) (models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserGetInfo", arg0)
+	ret0, _ := ret[0].(models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserGetInfo indicates an expected call of UserGetInfo.
+func (mr *MockPostgresMockRecorder) UserGetInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserGetInfo", reflect.TypeOf((*MockPostgres)(nil).UserGetInfo), arg0)
+}
+
 // UserRegister mocks base method.
 func (m *MockPostgres) UserRegister(arg0 *models.UserAccount) (uuid.UUID, error) {
 	m.ctrl.T.Helper()

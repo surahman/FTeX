@@ -35,10 +35,13 @@ type Postgres interface {
 	Healthcheck() error
 
 	// UserRegister will create a user account in the Postgres database.
-	UserRegister(userDetails *modelsPostgres.UserAccount) (uuid.UUID, error)
+	UserRegister(*modelsPostgres.UserAccount) (uuid.UUID, error)
 
 	// UserCredentials will retrieve the ClientID and hashed password associated with a provided username.
-	UserCredentials(username string) (uuid.UUID, string, error)
+	UserCredentials(string) (uuid.UUID, string, error)
+
+	// UserGetInfo will retrieve the account information associated with a Client ID.
+	UserGetInfo(uuid.UUID) (modelsPostgres.User, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.
