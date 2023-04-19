@@ -42,6 +42,9 @@ type Postgres interface {
 
 	// UserGetInfo will retrieve the account information associated with a Client ID.
 	UserGetInfo(uuid.UUID) (modelsPostgres.User, error)
+
+	// UserDelete will delete the account information associated with a Client ID.
+	UserDelete(uuid.UUID) error
 }
 
 // Check to ensure the Postgres interface has been implemented.

@@ -101,6 +101,9 @@ func (s *Server) initialize() {
 	userGroup.
 		Use(authMiddleware).
 		POST("/refresh", restHandlers.LoginRefresh(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	userGroup.
+		Use(authMiddleware).
+		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

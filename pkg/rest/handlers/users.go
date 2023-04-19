@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
@@ -208,5 +209,103 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 		}
 
 		context.JSON(http.StatusOK, freshToken)
+	}
+}
+
+// DeleteUser will mark a user as deleted in the database.
+//
+//	@Summary		Deletes a user. The user must supply their credentials as well as a confirmation message.
+//	@Description	Deletes a user stored in the database by marking it as deleted. The user must supply their login
+//	@Description	credentials as well as complete the following confirmation message:
+//	@Description	"I understand the consequences, delete my user account USERNAME HERE"
+//	@Tags			user users delete security
+//	@Id				deleteUser
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			request	body		models.HTTPDeleteUserRequest	true	"The request payload for deleting an account"
+//	@Success		200		{object}	models.HTTPSuccess				"message with a confirmation of a deleted user account"
+//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Router			/user/delete [delete]
+func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var (
+			clientID      uuid.UUID
+			deleteRequest models.HTTPDeleteUserRequest
+			err           error
+			userAccount   modelsPostgres.User
+			jwt           = context.GetHeader(authHeaderKey)
+		)
+
+		// Get the delete request from the message body and validate it.
+		if err = context.ShouldBindJSON(&deleteRequest); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if err = validator.ValidateStruct(&deleteRequest); err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
+
+			return
+		}
+
+		// Validate the JWT and extract the username. Compare the username against the deletion request login
+		// credentials.
+		if clientID, _, err = auth.ValidateJWT(jwt); err != nil {
+			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Get user account information to validate against.
+		if userAccount, err = db.UserGetInfo(clientID); err != nil {
+			context.AbortWithStatusJSON(http.StatusInternalServerError,
+				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		// Validate if the user account is already deleted.
+		if userAccount.Username != deleteRequest.Username {
+			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid deletion request"})
+
+			return
+		}
+
+		// Check confirmation message.
+		if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
+			context.AbortWithStatusJSON(http.StatusBadRequest,
+				&models.HTTPError{Message: "incorrect or incomplete deletion request confirmation"})
+
+			return
+		}
+
+		// Check to make sure the account is not already deleted.
+		if userAccount.IsDeleted {
+			logger.Warn("attempt to delete an already deleted user account", zap.String("username", userAccount.Username))
+			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "user account is already deleted"})
+
+			return
+		}
+
+		if err = auth.CheckPassword(userAccount.Password, deleteRequest.Password); err != nil {
+			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
+
+			return
+		}
+
+		// Mark account as deleted.
+		if err = db.UserDelete(clientID); err != nil {
+			logger.Warn("failed to mark a user record as deleted", zap.String("username", userAccount.Username), zap.Error(err))
+			context.AbortWithStatusJSON(http.StatusInternalServerError,
+				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		context.JSON(http.StatusOK, models.HTTPSuccess{Message: "account successfully deleted"})
 	}
 }

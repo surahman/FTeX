@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,9 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
@@ -393,6 +396,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:      1,
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 
@@ -426,6 +430,270 @@ func TestLoginRefresh(t *testing.T) {
 			// Endpoint setup for test.
 			router.POST(test.path, LoginRefresh(zapLogger, mockAuth, mockPostgres, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, w.Code, "expected status codes do not match")
+		})
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	t.Parallel()
+
+	router := getTestRouter()
+
+	userAccount := &modelsPostgres.UserAccount{
+		UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+			Username: "username1",
+			Password: "user-password-1",
+		},
+	}
+
+	userValid := &modelsPostgres.User{
+		UserAccount: userAccount,
+		ClientID:    uuid.UUID{},
+		IsDeleted:   false,
+	}
+
+	userDeleted := &modelsPostgres.User{
+		UserAccount: userAccount,
+		ClientID:    uuid.UUID{},
+		IsDeleted:   true,
+	}
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		expectedStatus       int
+		deleteRequest        *models.HTTPDeleteUserRequest
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		userGetInfoAcc       modelsPostgres.User
+		userGetInfoErr       error
+		userGetInfoTimes     int
+		authCheckPwdErr      error
+		authCheckPwdTimes    int
+		userDeleteErr        error
+		userDeleteTimes      int
+	}{
+		{
+			name:                 "empty request",
+			path:                 "/delete/empty-request",
+			expectedStatus:       http.StatusBadRequest,
+			deleteRequest:        &models.HTTPDeleteUserRequest{},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			userGetInfoAcc:       modelsPostgres.User{},
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     0,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    0,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		}, {
+			name:           "valid token",
+			path:           "/delete/valid-request",
+			expectedStatus: http.StatusOK,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       *userValid,
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    1,
+			userDeleteErr:        nil,
+			userDeleteTimes:      1,
+		}, {
+			name:           "invalid token",
+			path:           "/delete/invalid-token",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       modelsPostgres.User{},
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     0,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    0,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		}, {
+			name:           "token and request username mismatch",
+			path:           "/delete/token-and-request-username-mismatch",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "different username",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       *userValid,
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    0,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		}, {
+			name:           "db read failure",
+			path:           "/delete/db-read-failure",
+			expectedStatus: http.StatusInternalServerError,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       modelsPostgres.User{},
+			userGetInfoErr:       errors.New("db read failure"),
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    0,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		}, {
+			name:           "already deleted",
+			path:           "/delete/already-deleted",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       *userDeleted,
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    0,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		}, {
+			name:           "db delete failure",
+			path:           "/delete/db-delete-failure",
+			expectedStatus: http.StatusInternalServerError,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       *userValid,
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    1,
+			userDeleteErr:        errors.New("db delete failure"),
+			userDeleteTimes:      1,
+		}, {
+			name:           "bad deletion confirmation",
+			path:           "/delete/bad-deletion-confirmation",
+			expectedStatus: http.StatusBadRequest,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "incorrect and incomplete confirmation"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       *userValid,
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      nil,
+			authCheckPwdTimes:    0,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		}, {
+			name:           "invalid password",
+			path:           "/delete/valid-password",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), "username1"),
+			},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			userGetInfoAcc:       *userValid,
+			userGetInfoErr:       nil,
+			userGetInfoTimes:     1,
+			authCheckPwdErr:      errors.New("password check failed"),
+			authCheckPwdTimes:    1,
+			userDeleteErr:        nil,
+			userDeleteTimes:      0,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			requestJSON, err := json.Marshal(&test.deleteRequest)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			authToken := xid.New().String()
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(authToken).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
+					Return(test.userGetInfoAcc, test.userGetInfoErr).
+					Times(test.userGetInfoTimes),
+
+				mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).
+					Return(test.authCheckPwdErr).
+					Times(test.authCheckPwdTimes),
+
+				mockPostgres.EXPECT().UserDelete(gomock.Any()).
+					Return(test.userDeleteErr).
+					Times(test.userDeleteTimes),
+			)
+
+			// Endpoint setup for test.
+			router.DELETE(test.path, DeleteUser(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodDelete, test.path, bytes.NewBuffer(requestJSON))
+			req.Header.Set("Authorization", authToken)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 

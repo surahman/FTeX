@@ -14,6 +14,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
   - [Register](#register)
   - [Login](#login)
   - [Refresh](#refresh)
+  - [Delete](#delete)
 
 <br/>
 
@@ -116,3 +117,17 @@ _Response:_ A valid JWT will be returned as an authorization response.
   "token": "token string"
 }
 ```
+
+#### Delete
+
+_Request:_ All fields are required and a valid JWT must be provided in the header. The user must supply their login
+credentials as well as complete the confirmation message `I understand the consequences, delete my user
+account **USERNAME HERE**`
+_Response:_ A confirmation message will be returned as a success response.
+
+```json
+{
+  "confirmation": "I understand the consequences, delete my user account <USERNAME HERE>",
+  "password": "password string",
+  "username": "username string"
+}
