@@ -9,6 +9,10 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [Authorization Response](#authorization-response)
 - [Error Response](#error-response)
 - [Success Response](#success-response)
+- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
+- [User Endpoints `/user/`](#user-endpoints-user)
+  - [Register](#register)
+  - [Login](#login)
 
 <br/>
 
@@ -68,3 +72,35 @@ the container.
 _Healthy Response:_ HTTP 200 OK
 
 _Unhealthy Response:_ HTTP 503 Service Unavailable
+
+
+<br/>
+
+### User Endpoints `/user/`
+
+#### Register
+
+_Request:_ All fields are required.
+_Response:_ A valid JWT will be returned as an authorization response.
+
+```json
+{
+  "email": "string",
+  "first_name": "string",
+  "last_name": "string",
+  "password": "string",
+  "username": "string"
+}
+```
+
+#### Login
+
+_Request:_ All fields are required.
+_Response:_ A valid JWT will be returned as an authorization response.
+
+```json
+{
+  "password": "string",
+  "username": "string"
+}
+```
