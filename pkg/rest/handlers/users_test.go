@@ -18,7 +18,9 @@ import (
 	"github.com/surahman/FTeX/pkg/postgres"
 )
 
-func TestRegisterUser(t *testing.T) {
+func TestHandlers_UserRegister(t *testing.T) {
+	t.Parallel()
+
 	router := getTestRouter()
 
 	testCases := []struct {
@@ -102,40 +104,162 @@ func TestRegisterUser(t *testing.T) {
 			authGenJWTTimes: 1,
 		},
 	}
+
 	for _, testCase := range testCases {
+		test := testCase
+
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
-			user := testCase.user
+			user := test.user
 			userJSON, err := json.Marshal(&user)
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
 				mockAuth.EXPECT().HashPassword(gomock.Any()).
-					Return(testCase.authHashPass, testCase.authHashErr).
-					Times(testCase.authHashTimes),
+					Return(test.authHashPass, test.authHashErr).
+					Times(test.authHashTimes),
 
-				mockPostgres.EXPECT().CreateUser(gomock.Any()).
-					Return(uuid.UUID{}, testCase.createUserErr).
-					Times(testCase.createUserTimes),
+				mockPostgres.EXPECT().UserRegister(gomock.Any()).
+					Return(uuid.UUID{}, test.createUserErr).
+					Times(test.createUserTimes),
 
 				mockAuth.EXPECT().GenerateJWT(gomock.Any()).
-					Return(testCase.authGenJWTToken, testCase.authGenJWTErr).
-					Times(testCase.authGenJWTTimes),
+					Return(test.authGenJWTToken, test.authGenJWTErr).
+					Times(test.authGenJWTTimes),
 			)
 
 			// Endpoint setup for test.
-			router.POST(testCase.path, RegisterUser(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, testCase.path, bytes.NewBuffer(userJSON))
+			router.POST(test.path, RegisterUser(zapLogger, mockAuth, mockPostgres))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
 			// Verify responses
-			require.Equal(t, testCase.expectedStatus, w.Code, "expected status codes do not match")
+			require.Equal(t, test.expectedStatus, w.Code, "expected status codes do not match")
+		})
+	}
+}
+
+func TestHandlers_UserCredentials(t *testing.T) {
+	t.Parallel()
+
+	router := getTestRouter()
+
+	testCases := []struct {
+		name               string
+		path               string
+		expectedStatus     int
+		user               *modelsPostgres.UserLoginCredentials
+		userCredsErr       error
+		userCredsTimes     int
+		authCheckPassErr   error
+		authCheckPassTimes int
+		authGenJWTErr      error
+		authGenJWTTimes    int
+	}{
+		{
+			name:               "empty user",
+			path:               "/login/empty-user",
+			expectedStatus:     http.StatusBadRequest,
+			user:               &modelsPostgres.UserLoginCredentials{},
+			userCredsErr:       nil,
+			userCredsTimes:     0,
+			authCheckPassErr:   nil,
+			authCheckPassTimes: 0,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    0,
+		}, {
+			name:               "valid user",
+			path:               "/login/valid-user",
+			expectedStatus:     http.StatusOK,
+			user:               &testUserData["username1"].UserLoginCredentials,
+			userCredsErr:       nil,
+			userCredsTimes:     1,
+			authCheckPassErr:   nil,
+			authCheckPassTimes: 1,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    1,
+		}, {
+			name:               "database failure",
+			path:               "/login/database-failure",
+			expectedStatus:     http.StatusForbidden,
+			user:               &testUserData["username1"].UserLoginCredentials,
+			userCredsErr:       errors.New("database failure"),
+			userCredsTimes:     1,
+			authCheckPassErr:   nil,
+			authCheckPassTimes: 0,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    0,
+		}, {
+			name:               "password check failure",
+			path:               "/login/pwd-check-failure",
+			expectedStatus:     http.StatusForbidden,
+			user:               &testUserData["username1"].UserLoginCredentials,
+			userCredsErr:       nil,
+			userCredsTimes:     1,
+			authCheckPassErr:   errors.New("password hash failure"),
+			authCheckPassTimes: 1,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    0,
+		}, {
+			name:               "auth token failure",
+			path:               "/login/auth-token-failure",
+			expectedStatus:     http.StatusInternalServerError,
+			user:               &testUserData["username1"].UserLoginCredentials,
+			authCheckPassErr:   nil,
+			authCheckPassTimes: 1,
+			userCredsErr:       nil,
+			userCredsTimes:     1,
+			authGenJWTErr:      errors.New("auth token failure"),
+			authGenJWTTimes:    1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			user := test.user
+			userJSON, err := json.Marshal(&user)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			gomock.InOrder(
+				mockPostgres.EXPECT().UserCredentials(gomock.Any()).
+					Return(uuid.UUID{}, "hashed password", test.userCredsErr).
+					Times(test.userCredsTimes),
+
+				mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).
+					Return(test.authCheckPassErr).
+					Times(test.authCheckPassTimes),
+
+				mockAuth.EXPECT().GenerateJWT(gomock.Any()).
+					Return(&models.JWTAuthResponse{}, test.authGenJWTErr).
+					Times(test.authGenJWTTimes),
+			)
+
+			// Endpoint setup for test.
+			router.POST(test.path, LoginUser(zapLogger, mockAuth, mockPostgres))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, w.Code, "expected status codes do not match")
 		})
 	}
 }
