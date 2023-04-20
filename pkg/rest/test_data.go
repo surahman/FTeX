@@ -11,9 +11,9 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   swaggerPath: /swagger/*any
-  readTimeout: 1s
-  writeTimeout: 1s
-  readHeaderTimeout: 1s
+  readTimeout: 3s
+  writeTimeout: 3s
+  readHeaderTimeout: 3s
 authorization:
   headerKey: Authorization`,
 
