@@ -68,16 +68,16 @@ func TestPostgres_DeleteUser(t *testing.T) {
 	// Non-existent user.
 	invalidID, err := uuid.NewV1()
 	require.NoError(t, err, "dailed to generate invalid client id.")
-	result, err := connection.Query.userDelete(ctx, invalidID)
+	rowsAffected, err := connection.Query.userDelete(ctx, invalidID)
 	require.NoError(t, err, "failed to execute delete for non-existent user.")
-	require.Equal(t, int64(0), result.RowsAffected(), "deleted a non-existent user.")
+	require.Equal(t, int64(0), rowsAffected, "deleted a non-existent user.")
 
 	// Remove all inserted users.
 	for _, clientID := range clientIDs {
 		t.Run(fmt.Sprintf("Deleting User: %s", clientID.String()), func(t *testing.T) {
-			result, err := connection.Query.userDelete(ctx, clientID)
+			rowsAffected, err = connection.Query.userDelete(ctx, clientID)
 			require.NoError(t, err, "failed to execute delete on user.")
-			require.Equal(t, int64(1), result.RowsAffected(), "failed to execute delete on user.")
+			require.Equal(t, int64(1), rowsAffected, "failed to execute delete on user.")
 		})
 	}
 }
