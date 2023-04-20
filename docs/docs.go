@@ -30,6 +30,59 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/fiat/open": {
+            "post": {
+                "description": "Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts\ntable.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency open"
+                ],
+                "summary": "Open a Fiat account.",
+                "operationId": "openFiat",
+                "parameters": [
+                    {
+                        "description": "Currency code for new account",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPOpenCurrencyAccount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "a message to confirm the creation of an account",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "This endpoint is exposed to allow load balancers etc. to check the health of the service.\nThis is achieved by the service pinging the data tier comprised of Postgres and Redis.",
@@ -238,7 +291,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "a valid JWT token for the new account",
                         "schema": {
                             "$ref": "#/definitions/models.JWTAuthResponse"
@@ -250,7 +303,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.HTTPError"
                         }
                     },
-                    "409": {
+                    "404": {
                         "description": "error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
@@ -297,6 +350,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.HTTPOpenCurrencyAccount": {
+            "type": "object",
+            "required": [
+                "currency"
+            ],
+            "properties": {
+                "currency": {
+                    "type": "string"
+                }
             }
         },
         "models.HTTPSuccess": {

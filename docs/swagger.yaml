@@ -25,6 +25,13 @@ definitions:
         type: string
       payload: {}
     type: object
+  models.HTTPOpenCurrencyAccount:
+    properties:
+      currency:
+        type: string
+    required:
+    - currency
+    type: object
   models.HTTPSuccess:
     properties:
       message:
@@ -105,6 +112,43 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
+  /fiat/open:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts
+        table.
+      operationId: openFiat
+      parameters:
+      - description: Currency code for new account
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPOpenCurrencyAccount'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: a message to confirm the creation of an account
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Open a Fiat account.
+      tags:
+      - fiat currency open
   /health:
     get:
       description: |-
@@ -248,7 +292,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: a valid JWT token for the new account
           schema:
             $ref: '#/definitions/models.JWTAuthResponse'
@@ -256,7 +300,7 @@ paths:
           description: error message with any available details in payload
           schema:
             $ref: '#/definitions/models.HTTPError'
-        "409":
+        "404":
           description: error message with any available details in payload
           schema:
             $ref: '#/definitions/models.HTTPError'

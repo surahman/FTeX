@@ -90,9 +90,6 @@ func (s *Server) initialize() {
 	authMiddleware := restHandlers.AuthMiddleware(s.auth, s.conf.Authorization.HeaderKey)
 	api := s.router.Group(s.conf.Server.BasePath)
 
-	//TODO: REMOVE THIS ASSIGNMENT, authMiddleware is not wired to an endpoint point yet.
-	_ = authMiddleware
-
 	api.GET("/health", restHandlers.Healthcheck(s.logger, s.db, s.cache))
 
 	userGroup := api.Group("/user")
@@ -104,6 +101,11 @@ func (s *Server) initialize() {
 	userGroup.
 		Use(authMiddleware).
 		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+
+	fiatGroup := api.Group("/fiat")
+	fiatGroup.
+		Use(authMiddleware).
+		POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.
