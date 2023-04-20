@@ -45,6 +45,9 @@ type Postgres interface {
 
 	// UserDelete will delete the account information associated with a Client ID.
 	UserDelete(uuid.UUID) error
+
+	// FiatCreateAccount will an account associated with a Client ID for a specific currency.
+	FiatCreateAccount(uuid.UUID, Currency) error
 }
 
 // Check to ensure the Postgres interface has been implemented.

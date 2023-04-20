@@ -47,6 +47,7 @@ var (
 	ErrRegisterUser = errorRegisterUser() // ErrorRegisterUser is returned if user registration fails.
 	ErrLoginUser    = errorLoginUser()    // ErrLoginUser is returned if user credentials are not found.
 	ErrNotFoundUser = errorNotFoundUser() // ErrNotFoundUser is returned if a user account is not found.
+	ErrCreateFiat   = errorCreateFiat()   // ErrCreateFiat is returned if a Fiat account could not be opened.
 )
 
 func errorRegisterUser() error {
@@ -67,5 +68,12 @@ func errorNotFoundUser() error {
 	return &Error{
 		Message: "invalid username or password",
 		Code:    http.StatusNotFound,
+	}
+}
+
+func errorCreateFiat() error {
+	return &Error{
+		Message: "could not open fiat account",
+		Code:    http.StatusConflict,
 	}
 }

@@ -30,3 +30,8 @@ type HTTPDeleteUserRequest struct {
 	models.UserLoginCredentials
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }
+
+// HTTPOpenCurrencyAccount is a request to open an account in a specified Fiat or Cryptocurrency.
+type HTTPOpenCurrencyAccount struct {
+	Currency string `json:"currency" yaml:"currency" validate:"required"`
+}

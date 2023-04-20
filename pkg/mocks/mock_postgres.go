@@ -10,6 +10,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	models "github.com/surahman/FTeX/pkg/models/postgres"
+	postgres "github.com/surahman/FTeX/pkg/postgres"
 )
 
 // MockPostgres is a mock of Postgres interface.
@@ -47,6 +48,20 @@ func (m *MockPostgres) Close() error {
 func (mr *MockPostgresMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockPostgres)(nil).Close))
+}
+
+// FiatCreateAccount mocks base method.
+func (m *MockPostgres) FiatCreateAccount(arg0 uuid.UUID, arg1 postgres.Currency) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatCreateAccount", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FiatCreateAccount indicates an expected call of FiatCreateAccount.
+func (mr *MockPostgresMockRecorder) FiatCreateAccount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatCreateAccount", reflect.TypeOf((*MockPostgres)(nil).FiatCreateAccount), arg0, arg1)
 }
 
 // Healthcheck mocks base method.
