@@ -32,7 +32,12 @@ const docTemplate = `{
     "paths": {
         "/fiat/open": {
             "post": {
-                "description": "Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts\ntable.",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts table.",
                 "consumes": [
                     "application/json"
                 ],

@@ -116,9 +116,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: |-
-        Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts
-        table.
+      description: Creates a Fiat account for a specific currency for a user by creating
+        a row in the Fiat Accounts table.
       operationId: openFiat
       parameters:
       - description: Currency code for new account
@@ -146,6 +145,8 @@ paths:
           description: error message with any available details in payload
           schema:
             $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
       summary: Open a Fiat account.
       tags:
       - fiat currency open

@@ -17,12 +17,12 @@ import (
 // OpenFiat will handle an HTTP request to open a Fiat account.
 //
 //	@Summary		Open a Fiat account.
-//	@Description	Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts
-//	@Description	table.
+//	@Description	Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts table.
 //	@Tags			fiat currency open
 //	@Id				openFiat
 //	@Accept			json
 //	@Produce		json
+//	@Security		ApiKeyAuth
 //	@Param			user	body		models.HTTPOpenCurrencyAccount	true	"Currency code for new account"
 //	@Success		201		{object}	models.HTTPSuccess				"a message to confirm the creation of an account"
 //	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
