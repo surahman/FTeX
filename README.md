@@ -59,27 +59,27 @@ Details on the HTTP endpoints can be found in their respective packages below.
 
 ### REST
 
-The HTTP endpoint details are located in the [`http_rest`](pkg/http/rest) package. The model used for REST API calls can
-be found in the [`model_http`](pkg/model/http).
+The HTTP endpoint details are located in the [`rest`](pkg/rest) package. The model used for REST API calls can
+be found in the [`models`](pkg/models) package.
 
-To review the REST API request and response formats please see the readme in the [`http_handlers`](pkg/http/rest/handlers)
+To review the REST API request and response formats please see the readme in the [`REST handlers`](pkg/rest/handlers)
 package. The REST API server does also provide a Swagger UI to examine and test the API calls with details on request
 formats.
 
 The Swagger UI can be accessed using the provided default configurations through
-[http://localhost:44243/swagger/index.html](http://localhost:44243/swagger/index.html).
+[http://localhost:33723/swagger/index.html](http://localhost:33723/swagger/index.html).
 
 ### GraphQL
 
-GraphQL has been exposed through an HTTP endpoint [`graphql`](pkg/http/graph) package. The schema for the GraphQL queries
-and mutations can be found in [`model_http`](pkg/model/http).
+GraphQL has been exposed through an HTTP endpoint [`graphql`](pkg/graphql) package. The schema for the GraphQL queries
+and mutations can be found in [`models`](pkg/models) package.
 
-To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/http/graph/resolvers)
+To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/graphql/resolvers)
 package. The GraphQL server does also provide a Playground to examine and test the API calls with details on request
 formats.
 
 The Playground can be accessed using the provided default configurations through
-[http://localhost:44255/api/graphql/v1/playground](http://localhost:44255/api/graphql/v1/playground).
+[http://localhost:33723/api/graphql/v1/playground](http://localhost:33723/api/graphql/v1/playground).
 
 <br/>
 
