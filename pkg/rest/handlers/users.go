@@ -27,9 +27,9 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body		models.UserAccount		true	"Username, password, first and last name, email address of user"
-//	@Success		200		{object}	models.JWTAuthResponse	"a valid JWT token for the new account"
+//	@Success		201		{object}	models.JWTAuthResponse	"a valid JWT token for the new account"
 //	@Failure		400		{object}	models.HTTPError		"error message with any available details in payload"
-//	@Failure		409		{object}	models.HTTPError		"error message with any available details in payload"
+//	@Failure		404		{object}	models.HTTPError		"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError		"error message with any available details in payload"
 //	@Router			/user/register [post]
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
@@ -81,7 +81,7 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 			return
 		}
 
-		context.JSON(http.StatusOK, authToken)
+		context.JSON(http.StatusCreated, authToken)
 	}
 }
 
