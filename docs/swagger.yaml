@@ -2,6 +2,23 @@ basePath: /api/rest/v1
 consumes:
 - application/json
 definitions:
+  models.HTTPDeleteUserRequest:
+    properties:
+      confirmation:
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+      username:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - confirmation
+    - password
+    - username
+    type: object
   models.HTTPError:
     properties:
       message:
@@ -13,6 +30,64 @@ definitions:
       message:
         type: string
       payload: {}
+    type: object
+  models.JWTAuthResponse:
+    properties:
+      expires:
+        description: Expiration time as unix time stamp. Strictly used by client to
+          gauge when to refresh the token.
+        type: integer
+      threshold:
+        description: The window in seconds before expiration during which the token
+          can be refreshed.
+        type: integer
+      token:
+        description: JWT string sent to and validated by the server.
+        type: string
+    required:
+    - expires
+    - threshold
+    - token
+    type: object
+  models.UserAccount:
+    properties:
+      email:
+        maxLength: 64
+        type: string
+      firstName:
+        maxLength: 64
+        type: string
+      lastName:
+        maxLength: 64
+        type: string
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+      username:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    - username
+    type: object
+  models.UserLoginCredentials:
+    properties:
+      password:
+        maxLength: 32
+        minLength: 8
+        type: string
+      username:
+        maxLength: 32
+        minLength: 8
+        type: string
+    required:
+    - password
+    - username
     type: object
 host: localhost:33723
 info:
@@ -50,6 +125,148 @@ paths:
       summary: Healthcheck for service liveness.
       tags:
       - health healthcheck liveness
+  /user/delete:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        Deletes a user stored in the database by marking it as deleted. The user must supply their login
+        credentials as well as complete the following confirmation message:
+        "I understand the consequences, delete my user account USERNAME HERE"
+      operationId: deleteUser
+      parameters:
+      - description: The request payload for deleting an account
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPDeleteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message with a confirmation of a deleted user account
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Deletes a user. The user must supply their credentials as well as a
+        confirmation message.
+      tags:
+      - user users delete security
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user by validating credentials and returning a JWT.
+      operationId: loginUser
+      parameters:
+      - description: Username and password to login with
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginCredentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a valid JWT token for the new account
+          schema:
+            $ref: '#/definitions/models.JWTAuthResponse'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "409":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Login a user.
+      tags:
+      - user users login security
+  /user/refresh:
+    post:
+      description: |-
+        Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.
+        JWT must be expiring in under 60 seconds.
+      operationId: loginRefresh
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A new valid JWT
+          schema:
+            $ref: '#/definitions/models.JWTAuthResponse'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "510":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh a user's JWT by extending its expiration time.
+      tags:
+      - user users login refresh security
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a user account by inserting credentials into the database.
+        A hashed password is stored.
+      operationId: registerUser
+      parameters:
+      - description: Username, password, first and last name, email address of user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserAccount'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a valid JWT token for the new account
+          schema:
+            $ref: '#/definitions/models.JWTAuthResponse'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "409":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Register a user.
+      tags:
+      - user users register security
 produces:
 - application/json
 schemes:

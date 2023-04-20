@@ -7,9 +7,9 @@ RETURNING client_id;
 
 -- name: userGetInfo :one
 -- userGetInfo will retrieve a single users account information.
-SELECT first_name, last_name, email, client_id, is_deleted
+SELECT username, client_id, password, first_name, last_name, email, is_deleted
 FROM users
-WHERE username=$1
+WHERE client_id=$1
 LIMIT 1;
 
 -- name: userGetCredentials :one
@@ -30,4 +30,4 @@ LIMIT 1;
 -- userDelete will soft delete a users account.
 UPDATE users
 SET is_deleted=true
-WHERE username=$1 AND is_deleted=false;
+WHERE client_id=$1 AND is_deleted=false;

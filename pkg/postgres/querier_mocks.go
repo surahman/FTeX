@@ -218,7 +218,7 @@ func (mr *MockQuerierMockRecorder) userCreate(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // userDelete mocks base method.
-func (m *MockQuerier) userDelete(arg0 context.Context, arg1 string) (pgconn.CommandTag, error) {
+func (m *MockQuerier) userDelete(arg0 context.Context, arg1 uuid.UUID) (pgconn.CommandTag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "userDelete", arg0, arg1)
 	ret0, _ := ret[0].(pgconn.CommandTag)
@@ -263,7 +263,7 @@ func (mr *MockQuerierMockRecorder) userGetCredentials(arg0, arg1 interface{}) *g
 }
 
 // userGetInfo mocks base method.
-func (m *MockQuerier) userGetInfo(arg0 context.Context, arg1 string) (userGetInfoRow, error) {
+func (m *MockQuerier) userGetInfo(arg0 context.Context, arg1 uuid.UUID) (userGetInfoRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "userGetInfo", arg0, arg1)
 	ret0, _ := ret[0].(userGetInfoRow)

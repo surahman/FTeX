@@ -7,7 +7,9 @@ package mocks
 import (
 	reflect "reflect"
 
+	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
+	models "github.com/surahman/FTeX/pkg/models/postgres"
 )
 
 // MockPostgres is a mock of Postgres interface.
@@ -73,4 +75,64 @@ func (m *MockPostgres) Open() error {
 func (mr *MockPostgresMockRecorder) Open() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockPostgres)(nil).Open))
+}
+
+// UserCredentials mocks base method.
+func (m *MockPostgres) UserCredentials(arg0 string) (uuid.UUID, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserCredentials", arg0)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// UserCredentials indicates an expected call of UserCredentials.
+func (mr *MockPostgresMockRecorder) UserCredentials(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCredentials", reflect.TypeOf((*MockPostgres)(nil).UserCredentials), arg0)
+}
+
+// UserDelete mocks base method.
+func (m *MockPostgres) UserDelete(arg0 uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserDelete", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UserDelete indicates an expected call of UserDelete.
+func (mr *MockPostgresMockRecorder) UserDelete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserDelete", reflect.TypeOf((*MockPostgres)(nil).UserDelete), arg0)
+}
+
+// UserGetInfo mocks base method.
+func (m *MockPostgres) UserGetInfo(arg0 uuid.UUID) (models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserGetInfo", arg0)
+	ret0, _ := ret[0].(models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserGetInfo indicates an expected call of UserGetInfo.
+func (mr *MockPostgresMockRecorder) UserGetInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserGetInfo", reflect.TypeOf((*MockPostgres)(nil).UserGetInfo), arg0)
+}
+
+// UserRegister mocks base method.
+func (m *MockPostgres) UserRegister(arg0 *models.UserAccount) (uuid.UUID, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserRegister", arg0)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserRegister indicates an expected call of UserRegister.
+func (mr *MockPostgresMockRecorder) UserRegister(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserRegister", reflect.TypeOf((*MockPostgres)(nil).UserRegister), arg0)
 }

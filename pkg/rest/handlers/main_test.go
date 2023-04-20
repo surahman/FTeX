@@ -13,6 +13,9 @@ import (
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
+// testUserData is the test user account data.
+var testUserData = getTestUsers()
+
 func TestMain(m *testing.M) {
 	var err error
 	// Configure logger.

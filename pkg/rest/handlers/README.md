@@ -9,6 +9,12 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [Authorization Response](#authorization-response)
 - [Error Response](#error-response)
 - [Success Response](#success-response)
+- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
+- [User Endpoints `/user/`](#user-endpoints-user)
+  - [Register](#register)
+  - [Login](#login)
+  - [Refresh](#refresh)
+  - [Delete](#delete)
 
 <br/>
 
@@ -68,3 +74,60 @@ the container.
 _Healthy Response:_ HTTP 200 OK
 
 _Unhealthy Response:_ HTTP 503 Service Unavailable
+
+
+<br/>
+
+### User Endpoints `/user/`
+
+#### Register
+
+_Request:_ All fields are required.
+_Response:_ A valid JWT will be returned as an authorization response.
+
+```json
+{
+  "email": "string",
+  "first_name": "string",
+  "last_name": "string",
+  "password": "string",
+  "username": "string"
+}
+```
+
+#### Login
+
+_Request:_ All fields are required.
+_Response:_ A valid JWT will be returned as an authorization response.
+
+```json
+{
+  "password": "string",
+  "username": "string"
+}
+```
+#### Refresh
+
+_Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it.
+_Response:_ A valid JWT will be returned as an authorization response.
+
+```json
+{
+  "expires": "expiration time string",
+  "token": "token string"
+}
+```
+
+#### Delete
+
+_Request:_ All fields are required and a valid JWT must be provided in the header. The user must supply their login
+credentials as well as complete the confirmation message `I understand the consequences, delete my user
+account **USERNAME HERE**`
+_Response:_ A confirmation message will be returned as a success response.
+
+```json
+{
+  "confirmation": "I understand the consequences, delete my user account <USERNAME HERE>",
+  "password": "password string",
+  "username": "username string"
+}

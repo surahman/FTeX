@@ -1,5 +1,7 @@
 package models
 
+import models "github.com/surahman/FTeX/pkg/models/postgres"
+
 // JWTAuthResponse is the response to a successful login and token refresh. The expires field is used on by the client to
 // know when to refresh the token.
 //
@@ -20,4 +22,11 @@ type HTTPError struct {
 type HTTPSuccess struct {
 	Message string `json:"message,omitempty" yaml:"message,omitempty"`
 	Payload any    `json:"payload,omitempty" yaml:"payload,omitempty"`
+}
+
+// HTTPDeleteUserRequest is the request to mark a user account as deleted. The user must supply their login credentials
+// as well as a confirmation message.
+type HTTPDeleteUserRequest struct {
+	models.UserLoginCredentials
+	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }

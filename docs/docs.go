@@ -56,9 +56,240 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a user stored in the database by marking it as deleted. The user must supply their login\ncredentials as well as complete the following confirmation message:\n\"I understand the consequences, delete my user account USERNAME HERE\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user users delete security"
+                ],
+                "summary": "Deletes a user. The user must supply their credentials as well as a confirmation message.",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "description": "The request payload for deleting an account",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPDeleteUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message with a confirmation of a deleted user account",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/login": {
+            "post": {
+                "description": "Logs in a user by validating credentials and returning a JWT.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user users login security"
+                ],
+                "summary": "Login a user.",
+                "operationId": "loginUser",
+                "parameters": [
+                    {
+                        "description": "Username and password to login with",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UserLoginCredentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a valid JWT token for the new account",
+                        "schema": {
+                            "$ref": "#/definitions/models.JWTAuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/refresh": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.\nJWT must be expiring in under 60 seconds.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user users login refresh security"
+                ],
+                "summary": "Refresh a user's JWT by extending its expiration time.",
+                "operationId": "loginRefresh",
+                "responses": {
+                    "200": {
+                        "description": "A new valid JWT",
+                        "schema": {
+                            "$ref": "#/definitions/models.JWTAuthResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "510": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/register": {
+            "post": {
+                "description": "Creates a user account by inserting credentials into the database. A hashed password is stored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user users register security"
+                ],
+                "summary": "Register a user.",
+                "operationId": "registerUser",
+                "parameters": [
+                    {
+                        "description": "Username, password, first and last name, email address of user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UserAccount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a valid JWT token for the new account",
+                        "schema": {
+                            "$ref": "#/definitions/models.JWTAuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "models.HTTPDeleteUserRequest": {
+            "type": "object",
+            "required": [
+                "confirmation",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "confirmation": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                }
+            }
+        },
         "models.HTTPError": {
             "type": "object",
             "properties": {
@@ -75,6 +306,81 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.JWTAuthResponse": {
+            "type": "object",
+            "required": [
+                "expires",
+                "threshold",
+                "token"
+            ],
+            "properties": {
+                "expires": {
+                    "description": "Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.",
+                    "type": "integer"
+                },
+                "threshold": {
+                    "description": "The window in seconds before expiration during which the token can be refreshed.",
+                    "type": "integer"
+                },
+                "token": {
+                    "description": "JWT string sent to and validated by the server.",
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserAccount": {
+            "type": "object",
+            "required": [
+                "email",
+                "firstName",
+                "lastName",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "firstName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "lastName": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                }
+            }
+        },
+        "models.UserLoginCredentials": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 8
+                }
             }
         }
     },

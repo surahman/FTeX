@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,21 +59,23 @@ func TestPostgres_DeleteUser(t *testing.T) {
 	}
 
 	// Insert initial set of test users.
-	insertTestUsers(t)
+	clientIDs := insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
 
 	defer cancel()
 
 	// Non-existent user.
-	result, err := connection.Query.userDelete(ctx, "non-existent-user")
+	invalidID, err := uuid.NewV1()
+	require.NoError(t, err, "dailed to generate invalid client id.")
+	result, err := connection.Query.userDelete(ctx, invalidID)
 	require.NoError(t, err, "failed to execute delete for non-existent user.")
 	require.Equal(t, int64(0), result.RowsAffected(), "deleted a non-existent user.")
 
 	// Remove all inserted users.
-	for key, testCase := range getTestUsers() {
-		t.Run(fmt.Sprintf("Deleting User: %s", key), func(t *testing.T) {
-			result, err := connection.Query.userDelete(ctx, testCase.Username)
+	for _, clientID := range clientIDs {
+		t.Run(fmt.Sprintf("Deleting User: %s", clientID.String()), func(t *testing.T) {
+			result, err := connection.Query.userDelete(ctx, clientID)
 			require.NoError(t, err, "failed to execute delete on user.")
 			require.Equal(t, int64(1), result.RowsAffected(), "failed to execute delete on user.")
 		})
@@ -144,31 +147,38 @@ func TestGetInfoUser(t *testing.T) {
 	}
 
 	// Insert initial set of test users.
-	insertTestUsers(t)
+	clientIDs := insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
 
 	defer cancel()
 
+	invalidID, err := uuid.NewV1()
+	require.NoError(t, err, "failed to generate invalid id.")
+
 	// Non-existent user.
-	result, err := connection.Query.userGetInfo(ctx, "non-existent-user")
+	result, err := connection.Query.userGetInfo(ctx, invalidID)
 	require.Error(t, err, "got credentials for non-existent user.")
+	require.Equal(t, 0, len(result.Username), "got username for a non-existent user.")
 	require.True(t, result.ClientID.IsNil(), "client id for a non-existent user is valid.")
-	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
 	require.Equal(t, 0, len(result.FirstName), "got first name for a non-existent user.")
 	require.Equal(t, 0, len(result.LastName), "got last name for a non-existent user.")
 	require.Equal(t, 0, len(result.Email), "got email address for a non-existent user.")
+	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
 
 	// Get Client IDs for all inserted users.
-	for key, testCase := range getTestUsers() {
-		t.Run(fmt.Sprintf("Getting user information: %s", key), func(t *testing.T) {
-			result, err = connection.Query.userGetInfo(ctx, testCase.Username)
+	testUsers := getTestUsers()
+
+	for _, clientID := range clientIDs {
+		t.Run(fmt.Sprintf("Getting user information: %s", clientID.String()), func(t *testing.T) {
+			result, err = connection.Query.userGetInfo(ctx, clientID)
 			require.NoError(t, err, "failed to get client id for user.")
+			expected := testUsers[result.Username]
 			require.False(t, result.ClientID.IsNil(), "invalid client id for user.")
 			require.False(t, result.IsDeleted, "deleted flag for user is set.")
-			require.Equal(t, testCase.FirstName, result.FirstName, "first name mismatch.")
-			require.Equal(t, testCase.LastName, result.LastName, "last name mismatch.")
-			require.Equal(t, testCase.Email, result.Email, "email address mismatch.")
+			require.Equal(t, expected.FirstName, result.FirstName, "first name mismatch.")
+			require.Equal(t, expected.LastName, result.LastName, "last name mismatch.")
+			require.Equal(t, expected.Email, result.Email, "email address mismatch.")
 		})
 	}
 }

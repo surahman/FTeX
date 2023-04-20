@@ -94,6 +94,16 @@ func (s *Server) initialize() {
 	_ = authMiddleware
 
 	api.GET("/health", restHandlers.Healthcheck(s.logger, s.db, s.cache))
+
+	userGroup := api.Group("/user")
+	userGroup.POST("/register", restHandlers.RegisterUser(s.logger, s.auth, s.db))
+	userGroup.POST("/login", restHandlers.LoginUser(s.logger, s.auth, s.db))
+	userGroup.
+		Use(authMiddleware).
+		POST("/refresh", restHandlers.LoginRefresh(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	userGroup.
+		Use(authMiddleware).
+		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.
