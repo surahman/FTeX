@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
+	"go.uber.org/zap"
 )
 
 // UserRegister is the interface through which external methods can create a user.
@@ -24,6 +25,8 @@ func (p *postgresImpl) UserRegister(userDetails *modelsPostgres.UserAccount) (uu
 
 	clientID, err := p.Query.userCreate(ctx, &params)
 	if err != nil {
+		p.logger.Error("failed to register user", zap.Error(err))
+
 		return uuid.UUID{}, ErrRegisterUser
 	}
 
@@ -38,6 +41,8 @@ func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, erro
 
 	credentials, err := p.Query.userGetCredentials(ctx, username)
 	if err != nil {
+		p.logger.Error("failed to register user", zap.Error(err))
+
 		return uuid.UUID{}, "", ErrLoginUser
 	}
 
@@ -52,6 +57,8 @@ func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, err
 
 	userAccount, err := p.Query.userGetInfo(ctx, clientID)
 	if err != nil {
+		p.logger.Error("failed to register user", zap.Error(err))
+
 		return modelsPostgres.User{}, ErrNotFoundUser
 	}
 
@@ -79,6 +86,8 @@ func (p *postgresImpl) UserDelete(clientID uuid.UUID) error {
 
 	status, err := p.Query.userDelete(ctx, clientID)
 	if err != nil || status.RowsAffected() != int64(1) {
+		p.logger.Error("failed to register user", zap.Error(err))
+
 		return ErrNotFoundUser
 	}
 
