@@ -19,6 +19,12 @@ func TestModels_CurrencyScan(t *testing.T) {
 		require.NoError(t, err, "valid string")
 	})
 
+	t.Run("Valid string, invalid currency", func(t *testing.T) {
+		var curr Currency
+		err := curr.Scan("UVW")
+		require.NoError(t, err, "valid string")
+	})
+
 	t.Run("Invalid Type", func(t *testing.T) {
 		var curr Currency
 		err := curr.Scan(123)
