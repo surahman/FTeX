@@ -147,8 +147,7 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 // LoginRefresh validates a JWT token and issues a fresh token.
 //
 //	@Summary		Refresh a user's JWT by extending its expiration time.
-//	@Description	Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.
-//	@Description	JWT must be expiring in under 60 seconds.
+//	@Description	Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time. JWT must be expiring in under 60 seconds.
 //	@Tags			user users login refresh security
 //	@Id				loginRefresh
 //	@Produce		json
@@ -215,8 +214,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 // DeleteUser will mark a user as deleted in the database.
 //
 //	@Summary		Deletes a user. The user must supply their credentials as well as a confirmation message.
-//	@Description	Deletes a user stored in the database by marking it as deleted. The user must supply their login
-//	@Description	credentials as well as complete the following confirmation message:
+//	@Description	Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message:
 //	@Description	"I understand the consequences, delete my user account USERNAME HERE"
 //	@Tags			user users delete security
 //	@Id				deleteUser

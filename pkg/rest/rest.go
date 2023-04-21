@@ -63,8 +63,7 @@ func (s *Server) initialize() {
 	//	@title						FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
 	//	@version					1.0.0
 	//	@description				FTeX Fiat and Cryptocurrency Banking API.
-	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are
-	//	@description				retrieved from real-time quote providers.
+	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
 	//
 	//	@schemes					http
 	//	@host						localhost:33723

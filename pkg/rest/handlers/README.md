@@ -82,6 +82,8 @@ _Unhealthy Response:_ HTTP 503 Service Unavailable
 
 #### Register
 
+Register a new user account.
+
 _Request:_ All fields are required.
 _Response:_ A valid JWT will be returned as an authorization response.
 
@@ -97,6 +99,8 @@ _Response:_ A valid JWT will be returned as an authorization response.
 
 #### Login
 
+Log into a valid user account by providing valid user credentials.
+
 _Request:_ All fields are required.
 _Response:_ A valid JWT will be returned as an authorization response.
 
@@ -107,6 +111,9 @@ _Response:_ A valid JWT will be returned as an authorization response.
 }
 ```
 #### Refresh
+
+Refresh a valid but expiring JWT within the refresh threshold window. The client must refresh the token before
+expiration but within the refresh threshold specified in the `JWT` authorization response.
 
 _Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it.
 _Response:_ A valid JWT will be returned as an authorization response.
@@ -120,6 +127,9 @@ _Response:_ A valid JWT will be returned as an authorization response.
 
 #### Delete
 
+Soft-delete an active and valid user account by completing the acknowledgment confirmation correctly and providing
+valid user credentials.
+
 _Request:_ All fields are required and a valid JWT must be provided in the header. The user must supply their login
 credentials as well as complete the confirmation message `I understand the consequences, delete my user
 account **USERNAME HERE**`
@@ -131,3 +141,26 @@ _Response:_ A confirmation message will be returned as a success response.
   "password": "password string",
   "username": "username string"
 }
+```
+
+
+<br/>
+
+### Fiat Accounts Endpoints `/fiat/`
+
+Fiat accounts endpoints provide access to deposit money into and across Fiat accounts belonging to the same client.
+
+#### Open
+
+Open a Fiat account with an empty balance for a logged-in user in a specific currency. The
+[`ISO 4217`](https://www.iso.org/iso-4217-currency-codes.html) currency code for the new account to be opened must be
+provided in the request.
+
+_Request:_ All fields are required.
+_Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was set up for.
+
+```json
+{
+  "currency": "string"
+}
+```
