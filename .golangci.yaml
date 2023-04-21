@@ -54,4 +54,4 @@ issues:
     # Exclude `lll` issues for long lines with `go:generate`.
     - linters:
         - lll
-      source: "^//go:generate "
+      source: "^( |\t)*//(go:generate |( |\t)*@)"
