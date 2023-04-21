@@ -82,3 +82,7 @@ func TestGetDeleteUserAccountConfirmation(t *testing.T) {
 	require.Equal(t, deleteUserAccountConfirmation, GetDeleteUserAccountConfirmation(),
 		"Incorrect user account deletion confirmation message.")
 }
+
+func TestGetDecimalPlacesFiat(t *testing.T) {
+	require.Equal(t, decimalPlacesFiat, GetDecimalPlacesFiat(), "Incorrect Fiat currency decimal places.")
+}
