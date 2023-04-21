@@ -19,6 +19,16 @@ definitions:
     - password
     - username
     type: object
+  models.HTTPDepositCurrency:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+    required:
+    - amount
+    - currency
+    type: object
   models.HTTPError:
     properties:
       message:
@@ -104,14 +114,51 @@ info:
     url: https://www.linkedin.com/in/saad-ur-rahman/
   description: |-
     FTeX Fiat and Cryptocurrency Banking API.
-    Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are
-    retrieved from real-time quote providers.
+    Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
   license:
     name: GPL-3.0
     url: https://opensource.org/licenses/GPL-3.0
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
+  /fiat/deposit:
+    post:
+      consumes:
+      - application/json
+      description: Deposit funds into a Fiat account in a specific currency for a
+        user. The amount must be a positive number with at most two decimal places.
+      operationId: depositFiat
+      parameters:
+      - description: currency code and amount to be deposited
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPDepositCurrency'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: a message to confirm the creation of an account
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Deposit funds into a Fiat account.
+      tags:
+      - fiat currency deposit
   /fiat/open:
     post:
       consumes:
@@ -120,7 +167,7 @@ paths:
         a row in the Fiat Accounts table.
       operationId: openFiat
       parameters:
-      - description: Currency code for new account
+      - description: currency code for new account
         in: body
         name: user
         required: true
@@ -175,8 +222,7 @@ paths:
       consumes:
       - application/json
       description: |-
-        Deletes a user stored in the database by marking it as deleted. The user must supply their login
-        credentials as well as complete the following confirmation message:
+        Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message:
         "I understand the consequences, delete my user account USERNAME HERE"
       operationId: deleteUser
       parameters:
@@ -248,9 +294,8 @@ paths:
       - user users login security
   /user/refresh:
     post:
-      description: |-
-        Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.
-        JWT must be expiring in under 60 seconds.
+      description: Refreshes a user's JWT by validating it and then issuing a fresh
+        JWT with an extended validity time. JWT must be expiring in under 60 seconds.
       operationId: loginRefresh
       produces:
       - application/json

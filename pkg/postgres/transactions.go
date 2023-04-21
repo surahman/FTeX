@@ -221,7 +221,7 @@ func (p *postgresImpl) FiatInternalTransfer(
 	parentCtx context.Context,
 	src,
 	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
-	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(parentCtx, 3*time.Second) //nolint:gomnd
 
 	defer cancel()
 

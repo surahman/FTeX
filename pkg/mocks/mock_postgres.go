@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	uuid "github.com/gofrs/uuid"
@@ -62,6 +63,21 @@ func (m *MockPostgres) FiatCreateAccount(arg0 uuid.UUID, arg1 postgres.Currency)
 func (mr *MockPostgresMockRecorder) FiatCreateAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatCreateAccount", reflect.TypeOf((*MockPostgres)(nil).FiatCreateAccount), arg0, arg1)
+}
+
+// FiatExternalTransfer mocks base method.
+func (m *MockPostgres) FiatExternalTransfer(arg0 context.Context, arg1 *postgres.FiatTransactionDetails) (*postgres.FiatAccountTransferResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatExternalTransfer", arg0, arg1)
+	ret0, _ := ret[0].(*postgres.FiatAccountTransferResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FiatExternalTransfer indicates an expected call of FiatExternalTransfer.
+func (mr *MockPostgresMockRecorder) FiatExternalTransfer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatExternalTransfer", reflect.TypeOf((*MockPostgres)(nil).FiatExternalTransfer), arg0, arg1)
 }
 
 // Healthcheck mocks base method.

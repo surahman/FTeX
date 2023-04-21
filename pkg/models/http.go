@@ -1,6 +1,9 @@
 package models
 
-import models "github.com/surahman/FTeX/pkg/models/postgres"
+import (
+	"github.com/shopspring/decimal"
+	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
+)
 
 // JWTAuthResponse is the response to a successful login and token refresh. The expires field is used on by the client to
 // know when to refresh the token.
@@ -27,11 +30,17 @@ type HTTPSuccess struct {
 // HTTPDeleteUserRequest is the request to mark a user account as deleted. The user must supply their login credentials
 // as well as a confirmation message.
 type HTTPDeleteUserRequest struct {
-	models.UserLoginCredentials
+	modelsPostgres.UserLoginCredentials
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }
 
 // HTTPOpenCurrencyAccount is a request to open an account in a specified Fiat or Cryptocurrency.
 type HTTPOpenCurrencyAccount struct {
 	Currency string `json:"currency" yaml:"currency" validate:"required"`
+}
+
+// HTTPDepositCurrency is a request to deposit currency in to a specified Fiat or Cryptocurrency.
+type HTTPDepositCurrency struct {
+	Amount   decimal.Decimal `json:"amount" yaml:"amount" validate:"required,gt=0"`
+	Currency string          `json:"currency" yaml:"currency" validate:"required"`
 }

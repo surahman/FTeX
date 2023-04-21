@@ -46,8 +46,12 @@ type Postgres interface {
 	// UserDelete will delete the account information associated with a Client ID.
 	UserDelete(uuid.UUID) error
 
-	// FiatCreateAccount will an account associated with a Client ID for a specific currency.
+	// FiatCreateAccount will open an account associated with a Client ID for a specific currency.
 	FiatCreateAccount(uuid.UUID, Currency) error
+
+	// FiatExternalTransfer will transfer Fiat funds into an account associated with a Client ID for a specific
+	// currency.
+	FiatExternalTransfer(context.Context, *FiatTransactionDetails) (*FiatAccountTransferResult, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

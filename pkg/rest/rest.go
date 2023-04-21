@@ -105,6 +105,9 @@ func (s *Server) initialize() {
 	fiatGroup.
 		Use(authMiddleware).
 		POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.
+		Use(authMiddleware).
+		POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

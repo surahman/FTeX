@@ -33,7 +33,7 @@ import (
 //	@Failure		500		{object}	models.HTTPError		"error message with any available details in payload"
 //	@Router			/user/register [post]
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(ginCtx *gin.Context) {
 		var (
 			authToken *models.JWTAuthResponse
 			clientID  uuid.UUID
@@ -41,21 +41,21 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 			user      modelsPostgres.UserAccount
 		)
 
-		if err = context.ShouldBindJSON(&user); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
+		if err = ginCtx.ShouldBindJSON(&user); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
 		if err = validator.ValidateStruct(&user); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
 
 			return
 		}
 
 		if user.Password, err = auth.HashPassword(user.Password); err != nil {
 			logger.Error("failure hashing password", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
@@ -64,24 +64,24 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 			var registerErr *postgres.Error
 			if !errors.As(err, &registerErr) {
 				logger.Warn("failed to extract create user account error", zap.Error(err))
-				context.AbortWithStatusJSON(http.StatusInternalServerError, "account creation failed, please try again later")
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, "account creation failed, please try again later")
 
 				return
 			}
 
-			context.AbortWithStatusJSON(registerErr.Code, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(registerErr.Code, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
 		if authToken, err = auth.GenerateJWT(clientID); err != nil {
 			logger.Error("failure generating JWT during account creation", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
-		context.JSON(http.StatusCreated, authToken)
+		ginCtx.JSON(http.StatusCreated, authToken)
 	}
 }
 
@@ -100,7 +100,7 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 //	@Failure		500			{object}	models.HTTPError			"error message with any available details in payload"
 //	@Router			/user/login [post]
 func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(ginCtx *gin.Context) {
 		var (
 			err            error
 			authToken      *models.JWTAuthResponse
@@ -109,38 +109,38 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 			hashedPassword string
 		)
 
-		if err = context.ShouldBindJSON(&loginRequest); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
+		if err = ginCtx.ShouldBindJSON(&loginRequest); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
 		if err = validator.ValidateStruct(&loginRequest); err != nil {
-			context.JSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
+			ginCtx.JSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
 
 			return
 		}
 
 		if clientID, hashedPassword, err = db.UserCredentials(loginRequest.Username); err != nil {
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
 
 			return
 		}
 
 		if err = auth.CheckPassword(hashedPassword, loginRequest.Password); err != nil {
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
 
 			return
 		}
 
 		if authToken, err = auth.GenerateJWT(clientID); err != nil {
 			logger.Error("failure generating JWT during login", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
-		context.JSON(http.StatusOK, authToken)
+		ginCtx.JSON(http.StatusOK, authToken)
 	}
 }
 
@@ -158,18 +158,18 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 //	@Failure		510	{object}	models.HTTPError		"error message with any available details in payload"
 //	@Router			/user/refresh [post]
 func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(ginCtx *gin.Context) {
 		var (
 			err           error
 			freshToken    *models.JWTAuthResponse
 			clientID      uuid.UUID
 			accountInfo   modelsPostgres.User
 			expiresAt     int64
-			originalToken = context.GetHeader(authHeaderKey)
+			originalToken = ginCtx.GetHeader(authHeaderKey)
 		)
 
 		if clientID, expiresAt, err = auth.ValidateJWT(originalToken); err != nil {
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
@@ -177,7 +177,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 		if accountInfo, err = db.UserGetInfo(clientID); err != nil {
 			logger.Warn("failed to read user record for a valid JWT",
 				zap.String("username", accountInfo.Username), zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError,
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
 				&models.HTTPError{Message: "please retry your request later"})
 
 			return
@@ -185,7 +185,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 
 		if accountInfo.IsDeleted {
 			logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("clientID", accountInfo.Username))
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid token"})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid token"})
 
 			return
 		}
@@ -194,7 +194,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 		// this handler but expired ones would be rejected during token validation. Thus, it is not necessary to
 		// re-check expiration.
 		if expiresAt-time.Now().Unix() > auth.RefreshThreshold() {
-			context.AbortWithStatusJSON(http.StatusNotExtended,
+			ginCtx.AbortWithStatusJSON(http.StatusNotExtended,
 				&models.HTTPError{Message: fmt.Sprintf("JWT is still valid for more than %d seconds", auth.RefreshThreshold())})
 
 			return
@@ -202,12 +202,12 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 
 		if freshToken, err = auth.GenerateJWT(clientID); err != nil {
 			logger.Error("failure generating JWT during token refresh", zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
-		context.JSON(http.StatusOK, freshToken)
+		ginCtx.JSON(http.StatusOK, freshToken)
 	}
 }
 
@@ -228,24 +228,24 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 //	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Router			/user/delete [delete]
 func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(ginCtx *gin.Context) {
 		var (
 			clientID      uuid.UUID
 			deleteRequest models.HTTPDeleteUserRequest
 			err           error
 			userAccount   modelsPostgres.User
-			jwt           = context.GetHeader(authHeaderKey)
+			jwt           = ginCtx.GetHeader(authHeaderKey)
 		)
 
 		// Get the delete request from the message body and validate it.
-		if err = context.ShouldBindJSON(&deleteRequest); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
+		if err = ginCtx.ShouldBindJSON(&deleteRequest); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
 		if err = validator.ValidateStruct(&deleteRequest); err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "validation", Payload: err})
 
 			return
 		}
@@ -253,14 +253,14 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 		// Validate the JWT and extract the username. Compare the username against the deletion request login
 		// credentials.
 		if clientID, _, err = auth.ValidateJWT(jwt); err != nil {
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
 		// Get user account information to validate against.
 		if userAccount, err = db.UserGetInfo(clientID); err != nil {
-			context.AbortWithStatusJSON(http.StatusInternalServerError,
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
 				&models.HTTPError{Message: "please retry your request later"})
 
 			return
@@ -268,14 +268,14 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 
 		// Validate if the user account is already deleted.
 		if userAccount.Username != deleteRequest.Username {
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid deletion request"})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid deletion request"})
 
 			return
 		}
 
 		// Check confirmation message.
 		if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
-			context.AbortWithStatusJSON(http.StatusBadRequest,
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				&models.HTTPError{Message: "incorrect or incomplete deletion request confirmation"})
 
 			return
@@ -284,13 +284,13 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 		// Check to make sure the account is not already deleted.
 		if userAccount.IsDeleted {
 			logger.Warn("attempt to delete an already deleted user account", zap.String("username", userAccount.Username))
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "user account is already deleted"})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "user account is already deleted"})
 
 			return
 		}
 
 		if err = auth.CheckPassword(userAccount.Password, deleteRequest.Password); err != nil {
-			context.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
 
 			return
 		}
@@ -298,12 +298,12 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 		// Mark account as deleted.
 		if err = db.UserDelete(clientID); err != nil {
 			logger.Warn("failed to mark a user record as deleted", zap.String("username", userAccount.Username), zap.Error(err))
-			context.AbortWithStatusJSON(http.StatusInternalServerError,
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
 				&models.HTTPError{Message: "please retry your request later"})
 
 			return
 		}
 
-		context.JSON(http.StatusOK, models.HTTPSuccess{Message: "account successfully deleted"})
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account successfully deleted"})
 	}
 }
