@@ -67,10 +67,9 @@ func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetai
 
 	// Begin transaction.
 	if tx, err = p.pool.Begin(ctx); err != nil {
-		msg := "external transfer Fiat transaction block setup failed"
-		p.logger.Warn(msg, zap.Error(err))
+		p.logger.Warn("external transfer Fiat transaction block setup failed", zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, ErrTransactFiat
 	}
 
 	// Set rollback in case of failure.
@@ -88,18 +87,16 @@ func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetai
 
 	// Handoff to external fiat transaction core logic.
 	if txReceipt, err = fiatExternalTransfer(ctx, p.logger, queryTx, xferDetails); err != nil {
-		msg := "failed to complete external Fiat transfer transaction"
-		p.logger.Warn(msg, zap.Error(err))
+		p.logger.Warn("failed to complete external Fiat transfer transaction", zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, ErrTransactFiat
 	}
 
 	// Commit transaction.
 	if err = tx.Commit(ctx); err != nil {
-		msg := "failed to commit external Fiat account transfer"
-		p.logger.Warn(msg, zap.Error(err))
+		p.logger.Warn("failed to commit external Fiat account transfer", zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, ErrTransactFiat
 	}
 
 	return txReceipt, nil
