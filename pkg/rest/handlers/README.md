@@ -15,6 +15,9 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
   - [Login](#login)
   - [Refresh](#refresh)
   - [Delete](#delete)
+- [Fiat Accounts Endpoints `/fiat/`](#fiat-accounts-endpoints-fiat)
+  - [Open](#open)
+  - [Deposit](#deposit)
 
 <br/>
 
