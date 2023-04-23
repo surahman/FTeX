@@ -157,10 +157,45 @@ Open a Fiat account with an empty balance for a logged-in user in a specific cur
 provided in the request.
 
 _Request:_ All fields are required.
-_Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was set up for.
-
 ```json
 {
-  "currency": "string"
+  "currency": "USD"
+}
+```
+_Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was set up for.
+```json
+{
+  "message": "account created",
+  "payload": [
+    "cbe0d46b-7668-45f4-8519-6f291914b14c",
+    "USD"
+  ]
+}
+```
+
+#### Deposit
+
+Deposit money into a Fiat account for a specific currency and amount. An account for the currency must already be opened for the deposit to succeed.
+
+_Request:_ All fields are required.
+```json
+{
+  "currency": "USD",
+  "amount": 1337.89
+}
+```
+
+_Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was set up for.
+```json
+{
+  "message": "funds successfully transferred",
+  "payload": {
+    "txId": "41667ba2-745f-471f-be37-d7878577e472",
+    "clientId": "cbe0d46b-7668-45f4-8519-6f291914b14c",
+    "txTimestamp": "2023-04-23T10:12:38.780246-04:00",
+    "balance": "1337.89",
+    "lastTx": "1337.89",
+    "currency": "USD"
+  }
 }
 ```

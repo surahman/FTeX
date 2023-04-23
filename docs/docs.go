@@ -61,7 +61,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "a message to confirm the creation of an account",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"

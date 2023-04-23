@@ -97,7 +97,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			user	body		models.HTTPDepositCurrency	true	"currency code and amount to be deposited"
-//	@Success		201		{object}	models.HTTPSuccess			"a message to confirm the creation of an account"
+//	@Success		200		{object}	models.HTTPSuccess			"a message to confirm the creation of an account"
 //	@Failure		400		{object}	models.HTTPError			"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError			"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError			"error message with any available details in payload"
@@ -134,9 +134,9 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 		}
 
 		// Check for correct decimal places.
-		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) {
+		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || !request.Amount.IsPositive() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "too many decimal places", Payload: request.Amount.String()})
+				models.HTTPError{Message: "invalid amount", Payload: request.Amount.String()})
 
 			return
 		}
@@ -166,6 +166,6 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			return
 		}
 
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds successfully transferred", Payload: transferReceipt})
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds successfully transferred", Payload: *transferReceipt})
 	}
 }

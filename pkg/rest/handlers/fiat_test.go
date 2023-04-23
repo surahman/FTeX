@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
@@ -101,8 +102,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
-			openRequest := test.request
-			openReqJSON, err := json.Marshal(&openRequest)
+			openReqJSON, err := json.Marshal(&test.request)
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
@@ -123,6 +123,149 @@ func TestHandlers_OpenFiat(t *testing.T) {
 
 			// Verify responses
 			require.Equal(t, test.expectedStatus, w.Code, "expected status codes do not match")
+		})
+	}
+}
+
+func TestHandlers_DepositFiat(t *testing.T) {
+	t.Parallel()
+
+	router := getTestRouter()
+
+	testCases := []struct {
+		name               string
+		expectedMsg        string
+		path               string
+		expectedStatus     int
+		request            *models.HTTPDepositCurrency
+		authValidateJWTErr error
+		authValidateTimes  int
+		extTransferErr     error
+		extTransferTimes   int
+	}{
+		{
+			name:               "empty request",
+			expectedMsg:        "validation",
+			path:               "/deposit/empty-request",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPDepositCurrency{},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			extTransferErr:     nil,
+			extTransferTimes:   0,
+		}, {
+			name:               "invalid currency",
+			expectedMsg:        "currency",
+			path:               "/deposit/invalid-currency",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPDepositCurrency{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			extTransferErr:     nil,
+			extTransferTimes:   0,
+		}, {
+			name:               "too many decimal places",
+			expectedMsg:        "amount",
+			path:               "/deposit/too-many-decimal-places",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			extTransferErr:     nil,
+			extTransferTimes:   0,
+		}, {
+			name:               "negative",
+			expectedMsg:        "amount",
+			path:               "/deposit/negative",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			extTransferErr:     nil,
+			extTransferTimes:   0,
+		}, {
+			name:               "invalid jwt",
+			expectedMsg:        "invalid jwt",
+			path:               "/deposit/invalid-jwt",
+			expectedStatus:     http.StatusForbidden,
+			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authValidateTimes:  1,
+			extTransferErr:     nil,
+			extTransferTimes:   0,
+		}, {
+			name:               "unknown xfer error",
+			expectedMsg:        "retry",
+			path:               "/deposit/unknown-xfer-error",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			extTransferErr:     errors.New("unknown error"),
+			extTransferTimes:   1,
+		}, {
+			name:               "xfer error",
+			expectedMsg:        "could not complete",
+			path:               "/deposit/xfer-error",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			extTransferErr:     postgres.ErrTransactFiat,
+			extTransferTimes:   1,
+		}, {
+			name:               "valid",
+			expectedMsg:        "successfully",
+			path:               "/deposit/valid",
+			expectedStatus:     http.StatusOK,
+			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			extTransferErr:     nil,
+			extTransferTimes:   1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			depositReqJSON, err := json.Marshal(&test.request)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().FiatExternalTransfer(gomock.Any(), gomock.Any()).
+					Return(&postgres.FiatAccountTransferResult{}, test.extTransferErr).
+					Times(test.extTransferTimes),
+			)
+
+			// Endpoint setup for test.
+			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack success response.")
+
+			errorMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
 		})
 	}
 }
