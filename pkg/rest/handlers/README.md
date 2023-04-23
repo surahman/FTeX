@@ -85,8 +85,6 @@ _Unhealthy Response:_ HTTP 503 Service Unavailable
 Register a new user account.
 
 _Request:_ All fields are required.
-_Response:_ A valid JWT will be returned as an authorization response.
-
 ```json
 {
   "email": "string",
@@ -97,19 +95,22 @@ _Response:_ A valid JWT will be returned as an authorization response.
 }
 ```
 
+_Response:_ A valid JWT will be returned as an authorization response.
+
 #### Login
 
 Log into a valid user account by providing valid user credentials.
 
 _Request:_ All fields are required.
-_Response:_ A valid JWT will be returned as an authorization response.
-
 ```json
 {
   "password": "string",
   "username": "string"
 }
 ```
+
+_Response:_ A valid JWT will be returned as an authorization response.
+
 #### Refresh
 
 Refresh a valid but expiring JWT within the refresh threshold window. The client must refresh the token before
@@ -117,7 +118,6 @@ expiration but within the refresh threshold specified in the `JWT` authorization
 
 _Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it.
 _Response:_ A valid JWT will be returned as an authorization response.
-
 ```json
 {
   "expires": "expiration time string",
@@ -133,8 +133,6 @@ valid user credentials.
 _Request:_ All fields are required and a valid JWT must be provided in the header. The user must supply their login
 credentials as well as complete the confirmation message `I understand the consequences, delete my user
 account **USERNAME HERE**`
-_Response:_ A confirmation message will be returned as a success response.
-
 ```json
 {
   "confirmation": "I understand the consequences, delete my user account <USERNAME HERE>",
@@ -142,6 +140,8 @@ _Response:_ A confirmation message will be returned as a success response.
   "username": "username string"
 }
 ```
+
+_Response:_ A confirmation message will be returned as a success response.
 
 
 <br/>
@@ -181,20 +181,20 @@ _Request:_ All fields are required.
 ```json
 {
   "currency": "USD",
-  "amount": 1337.89
+  "amount": 1921.68
 }
 ```
 
-_Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was set up for.
+_Response:_ A confirmation of the transaction with the particulars of the transfer.
 ```json
 {
   "message": "funds successfully transferred",
   "payload": {
-    "txId": "41667ba2-745f-471f-be37-d7878577e472",
+    "txId": "f9a3bfe1-de43-47cc-a634-508181652d75",
     "clientId": "cbe0d46b-7668-45f4-8519-6f291914b14c",
-    "txTimestamp": "2023-04-23T10:12:38.780246-04:00",
-    "balance": "1337.89",
-    "lastTx": "1337.89",
+    "txTimestamp": "2023-04-23T11:09:07.468161-04:00",
+    "balance": "3259.57",
+    "lastTx": "1921.68",
     "currency": "USD"
   }
 }
