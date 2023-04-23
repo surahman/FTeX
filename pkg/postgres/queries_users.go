@@ -84,8 +84,8 @@ func (p *postgresImpl) UserDelete(clientID uuid.UUID) error {
 
 	defer cancel()
 
-	status, err := p.Query.userDelete(ctx, clientID)
-	if err != nil || status.RowsAffected() != int64(1) {
+	rowsAffected, err := p.Query.userDelete(ctx, clientID)
+	if err != nil || rowsAffected != int64(1) {
 		p.logger.Error("failed to register user", zap.Error(err))
 
 		return ErrNotFoundUser

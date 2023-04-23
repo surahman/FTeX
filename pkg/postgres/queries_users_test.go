@@ -58,9 +58,9 @@ func TestQueries_UserCredentials(t *testing.T) {
 	require.True(t, len(hashedPass) > 0, "retrieved an invalid password.")
 
 	// Deleted account.
-	response, err := connection.Query.userDelete(context.TODO(), clientID)
+	rowsAffected, err := connection.Query.userDelete(context.TODO(), clientID)
 	require.NoError(t, err, "errored whilst trying to delete user.")
-	require.Equal(t, response.RowsAffected(), int64(1), "no users were deleted.")
+	require.Equal(t, rowsAffected, int64(1), "no users were deleted.")
 
 	clientID, hashedPass, err = connection.UserCredentials(uname)
 	require.Error(t, err, "retrieved deleted user credentials.")

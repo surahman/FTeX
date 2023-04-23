@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const userCreate = `-- name: userCreate :one
@@ -40,15 +39,19 @@ func (q *Queries) userCreate(ctx context.Context, arg *userCreateParams) (uuid.U
 	return client_id, err
 }
 
-const userDelete = `-- name: userDelete :execresult
+const userDelete = `-- name: userDelete :execrows
 UPDATE users
 SET is_deleted=true
 WHERE client_id=$1 AND is_deleted=false
 `
 
 // userDelete will soft delete a users account.
-func (q *Queries) userDelete(ctx context.Context, clientID uuid.UUID) (pgconn.CommandTag, error) {
-	return q.db.Exec(ctx, userDelete, clientID)
+func (q *Queries) userDelete(ctx context.Context, clientID uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, userDelete, clientID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const userGetClientId = `-- name: userGetClientId :one

@@ -57,7 +57,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 		}, {
 			name:            "valid user",
 			path:            "/register/valid-user",
-			expectedStatus:  http.StatusOK,
+			expectedStatus:  http.StatusCreated,
 			user:            testUserData["username1"],
 			authHashPass:    "hashed password",
 			authHashErr:     nil,
@@ -112,7 +112,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 
-		t.Run(testCase.name, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			// Mock configurations.

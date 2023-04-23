@@ -30,6 +30,122 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/fiat/deposit": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deposit funds into a Fiat account in a specific currency for a user. The amount must be a positive number with at most two decimal places.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency deposit"
+                ],
+                "summary": "Deposit funds into a Fiat account.",
+                "operationId": "depositFiat",
+                "parameters": [
+                    {
+                        "description": "currency code and amount to be deposited",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPDepositCurrency"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the creation of an account",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/fiat/open": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a Fiat account for a specific currency for a user by creating a row in the Fiat Accounts table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency open"
+                ],
+                "summary": "Open a Fiat account.",
+                "operationId": "openFiat",
+                "parameters": [
+                    {
+                        "description": "currency code for new account",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPOpenCurrencyAccount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "a message to confirm the creation of an account",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "This endpoint is exposed to allow load balancers etc. to check the health of the service.\nThis is achieved by the service pinging the data tier comprised of Postgres and Redis.",
@@ -64,7 +180,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Deletes a user stored in the database by marking it as deleted. The user must supply their login\ncredentials as well as complete the following confirmation message:\n\"I understand the consequences, delete my user account USERNAME HERE\"",
+                "description": "Deletes a user stored in the database by marking it as deleted. The user must supply their login credentials as well as complete the following confirmation message:\n\"I understand the consequences, delete my user account USERNAME HERE\"",
                 "consumes": [
                     "application/json"
                 ],
@@ -175,7 +291,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time.\nJWT must be expiring in under 60 seconds.",
+                "description": "Refreshes a user's JWT by validating it and then issuing a fresh JWT with an extended validity time. JWT must be expiring in under 60 seconds.",
                 "produces": [
                     "application/json"
                 ],
@@ -238,7 +354,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "a valid JWT token for the new account",
                         "schema": {
                             "$ref": "#/definitions/models.JWTAuthResponse"
@@ -250,7 +366,7 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.HTTPError"
                         }
                     },
-                    "409": {
+                    "404": {
                         "description": "error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
@@ -290,6 +406,21 @@ const docTemplate = `{
                 }
             }
         },
+        "models.HTTPDepositCurrency": {
+            "type": "object",
+            "required": [
+                "amount",
+                "currency"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            }
+        },
         "models.HTTPError": {
             "type": "object",
             "properties": {
@@ -297,6 +428,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.HTTPOpenCurrencyAccount": {
+            "type": "object",
+            "required": [
+                "currency"
+            ],
+            "properties": {
+                "currency": {
+                    "type": "string"
+                }
             }
         },
         "models.HTTPSuccess": {
@@ -400,7 +542,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/rest/v1",
 	Schemes:          []string{"http"},
 	Title:            "FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)",
-	Description:      "FTeX Fiat and Cryptocurrency Banking API.\nBank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are\nretrieved from real-time quote providers.",
+	Description:      "FTeX Fiat and Cryptocurrency Banking API.\nBank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

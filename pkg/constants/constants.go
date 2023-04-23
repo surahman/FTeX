@@ -27,6 +27,7 @@ const (
 	postgresDSN                   = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
 	testDatabaseName              = "ftex_db_test"
 	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
+	decimalPlacesFiat             = int32(2)
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -122,4 +123,9 @@ func GetHTTPRESTPrefix() string {
 // GetDeleteUserAccountConfirmation is the format string template confirmation message used to delete a user account.
 func GetDeleteUserAccountConfirmation() string {
 	return deleteUserAccountConfirmation
+}
+
+// GetDecimalPlacesFiat the number of decimal places Fiat currency can have.
+func GetDecimalPlacesFiat() int32 {
+	return decimalPlacesFiat
 }

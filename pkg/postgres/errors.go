@@ -44,9 +44,11 @@ func (e *Error) SetStatus(code int) *Error {
 // Generic error variables.
 // Errors to be returned by the Postgres Queries exposed through the interface for various failure conditions.
 var (
-	ErrRegisterUser = errorRegisterUser() // ErrorRegisterUser is returned if user registration fails.
-	ErrLoginUser    = errorLoginUser()    // ErrLoginUser is returned if user credentials are not found.
-	ErrNotFoundUser = errorNotFoundUser() // ErrNotFoundUser is returned if a user account is not found.
+	ErrRegisterUser = errorRegisterUser()    // ErrorRegisterUser is returned if user registration fails.
+	ErrLoginUser    = errorLoginUser()       // ErrLoginUser is returned if user credentials are not found.
+	ErrNotFoundUser = errorNotFoundUser()    // ErrNotFoundUser is returned if a user account is not found.
+	ErrCreateFiat   = errorCreateFiat()      // ErrCreateFiat is returned if a Fiat account could not be opened.
+	ErrTransactFiat = errorTransactionFiat() // ErrTransactFiat is returned is a Fiat transaction fails.
 )
 
 func errorRegisterUser() error {
@@ -67,5 +69,19 @@ func errorNotFoundUser() error {
 	return &Error{
 		Message: "invalid username or password",
 		Code:    http.StatusNotFound,
+	}
+}
+
+func errorCreateFiat() error {
+	return &Error{
+		Message: "could not open Fiat account",
+		Code:    http.StatusConflict,
+	}
+}
+
+func errorTransactionFiat() error {
+	return &Error{
+		Message: "could not complete Fiat transaction",
+		Code:    http.StatusInternalServerError,
 	}
 }
