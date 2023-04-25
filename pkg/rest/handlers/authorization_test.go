@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -27,8 +28,6 @@ func TestAuthMiddleware(t *testing.T) {
 func TestAuthMiddleware_Handler(t *testing.T) {
 	t.Parallel()
 
-	router := getTestRouter()
-
 	testCases := []struct {
 		name              string
 		path              string
@@ -41,7 +40,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 	}{
 		{
 			name:              "no token",
-			path:              "/no-token",
+			path:              "/auth-middleware/no-token",
 			token:             "",
 			expectedStatus:    http.StatusUnauthorized,
 			authJWTUUID:       uuid.UUID{},
@@ -50,7 +49,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			authJWTTimes:      0,
 		}, {
 			name:              "invalid token",
-			path:              "/invalid-token",
+			path:              "/auth-middleware/invalid-token",
 			token:             "invalid-token",
 			expectedStatus:    http.StatusForbidden,
 			authJWTUUID:       uuid.UUID{},
@@ -59,7 +58,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			authJWTTimes:      1,
 		}, {
 			name:              "valid token",
-			path:              "/valid-token",
+			path:              "/auth-middleware/valid-token",
 			token:             "valid-token",
 			expectedStatus:    http.StatusOK,
 			authJWTUUID:       uuid.UUID{},
@@ -68,6 +67,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			authJWTTimes:      1,
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 
@@ -87,6 +87,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 				).Times(test.authJWTTimes)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.POST(test.path, AuthMiddleware(mockAuth, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
 			req.Header.Set("Authorization", test.token)
