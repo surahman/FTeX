@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
@@ -20,8 +21,6 @@ import (
 
 func TestHandlers_OpenFiat(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	testCases := []struct {
 		name               string
@@ -116,6 +115,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.POST(test.path, OpenFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
@@ -129,8 +129,6 @@ func TestHandlers_OpenFiat(t *testing.T) {
 
 func TestHandlers_DepositFiat(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	testCases := []struct {
 		name               string
@@ -146,7 +144,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		{
 			name:               "empty request",
 			expectedMsg:        "validation",
-			path:               "/deposit/empty-request",
+			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrency{},
 			authValidateJWTErr: nil,
@@ -156,7 +154,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "invalid currency",
 			expectedMsg:        "currency",
-			path:               "/deposit/invalid-currency",
+			path:               "/fiat-deposit/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrency{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
 			authValidateJWTErr: nil,
@@ -166,7 +164,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "too many decimal places",
 			expectedMsg:        "amount",
-			path:               "/deposit/too-many-decimal-places",
+			path:               "/fiat-deposit/too-many-decimal-places",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
 			authValidateJWTErr: nil,
@@ -176,7 +174,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "negative",
 			expectedMsg:        "amount",
-			path:               "/deposit/negative",
+			path:               "/fiat-deposit/negative",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
 			authValidateJWTErr: nil,
@@ -186,7 +184,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "invalid jwt",
 			expectedMsg:        "invalid jwt",
-			path:               "/deposit/invalid-jwt",
+			path:               "/fiat-deposit/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: errors.New("invalid jwt"),
@@ -196,7 +194,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "unknown xfer error",
 			expectedMsg:        "retry",
-			path:               "/deposit/unknown-xfer-error",
+			path:               "/fiat-deposit/unknown-xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: nil,
@@ -206,7 +204,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "xfer error",
 			expectedMsg:        "could not complete",
-			path:               "/deposit/xfer-error",
+			path:               "/fiat-deposit/xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: nil,
@@ -216,7 +214,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		}, {
 			name:               "valid",
 			expectedMsg:        "successfully",
-			path:               "/deposit/valid",
+			path:               "/fiat-deposit/valid",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: nil,
@@ -252,6 +250,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
 			recorder := httptest.NewRecorder()
