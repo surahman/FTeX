@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/mocks"
@@ -17,8 +18,6 @@ import (
 
 func TestHealthcheck(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	testCases := []struct {
 		name                string
@@ -84,7 +83,9 @@ func TestHealthcheck(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.GET(test.path, Healthcheck(zapLogger, mockPostgres, mockRedis))
+
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, test.path, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

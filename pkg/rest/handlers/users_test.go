@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/rs/xid"
@@ -24,8 +25,6 @@ import (
 
 func TestHandlers_UserRegister(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	testCases := []struct {
 		name            string
@@ -43,7 +42,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 	}{
 		{
 			name:            "empty user",
-			path:            "/register/empty-user",
+			path:            "/user-register/empty-user",
 			expectedStatus:  http.StatusBadRequest,
 			user:            &modelsPostgres.UserAccount{},
 			authHashPass:    "",
@@ -56,7 +55,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			authGenJWTTimes: 0,
 		}, {
 			name:            "valid user",
-			path:            "/register/valid-user",
+			path:            "/user-register/valid-user",
 			expectedStatus:  http.StatusCreated,
 			user:            testUserData["username1"],
 			authHashPass:    "hashed password",
@@ -69,7 +68,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			authGenJWTTimes: 1,
 		}, {
 			name:            "password hash failure",
-			path:            "/register/pwd-hash-failure",
+			path:            "/user-register/pwd-hash-failure",
 			expectedStatus:  http.StatusInternalServerError,
 			user:            testUserData["username1"],
 			authHashPass:    "",
@@ -82,7 +81,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			authGenJWTTimes: 0,
 		}, {
 			name:            "database failure",
-			path:            "/register/database-failure",
+			path:            "/user-register/database-failure",
 			expectedStatus:  http.StatusConflict,
 			user:            testUserData["username1"],
 			authHashPass:    "hashed password",
@@ -95,7 +94,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			authGenJWTTimes: 0,
 		}, {
 			name:            "auth token failure",
-			path:            "/register/auth-token-failure",
+			path:            "/user-register/auth-token-failure",
 			expectedStatus:  http.StatusInternalServerError,
 			user:            testUserData["username1"],
 			authHashPass:    "hashed password",
@@ -140,6 +139,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.POST(test.path, RegisterUser(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
 			w := httptest.NewRecorder()
@@ -153,8 +153,6 @@ func TestHandlers_UserRegister(t *testing.T) {
 
 func TestHandlers_UserCredentials(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	testCases := []struct {
 		name               string
@@ -170,7 +168,7 @@ func TestHandlers_UserCredentials(t *testing.T) {
 	}{
 		{
 			name:               "empty user",
-			path:               "/login/empty-user",
+			path:               "/user-login/empty-user",
 			expectedStatus:     http.StatusBadRequest,
 			user:               &modelsPostgres.UserLoginCredentials{},
 			userCredsErr:       nil,
@@ -181,7 +179,7 @@ func TestHandlers_UserCredentials(t *testing.T) {
 			authGenJWTTimes:    0,
 		}, {
 			name:               "valid user",
-			path:               "/login/valid-user",
+			path:               "/user-login/valid-user",
 			expectedStatus:     http.StatusOK,
 			user:               &testUserData["username1"].UserLoginCredentials,
 			userCredsErr:       nil,
@@ -192,7 +190,7 @@ func TestHandlers_UserCredentials(t *testing.T) {
 			authGenJWTTimes:    1,
 		}, {
 			name:               "database failure",
-			path:               "/login/database-failure",
+			path:               "/user-login/database-failure",
 			expectedStatus:     http.StatusForbidden,
 			user:               &testUserData["username1"].UserLoginCredentials,
 			userCredsErr:       errors.New("database failure"),
@@ -203,7 +201,7 @@ func TestHandlers_UserCredentials(t *testing.T) {
 			authGenJWTTimes:    0,
 		}, {
 			name:               "password check failure",
-			path:               "/login/pwd-check-failure",
+			path:               "/user-login/pwd-check-failure",
 			expectedStatus:     http.StatusForbidden,
 			user:               &testUserData["username1"].UserLoginCredentials,
 			userCredsErr:       nil,
@@ -214,7 +212,7 @@ func TestHandlers_UserCredentials(t *testing.T) {
 			authGenJWTTimes:    0,
 		}, {
 			name:               "auth token failure",
-			path:               "/login/auth-token-failure",
+			path:               "/user-login/auth-token-failure",
 			expectedStatus:     http.StatusInternalServerError,
 			user:               &testUserData["username1"].UserLoginCredentials,
 			authCheckPassErr:   nil,
@@ -257,6 +255,7 @@ func TestHandlers_UserCredentials(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.POST(test.path, LoginUser(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
 			w := httptest.NewRecorder()
@@ -269,8 +268,6 @@ func TestHandlers_UserCredentials(t *testing.T) {
 }
 func TestLoginRefresh(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	testCases := []struct {
 		name                 string
@@ -289,7 +286,7 @@ func TestLoginRefresh(t *testing.T) {
 	}{
 		{
 			name:                 "empty token",
-			path:                 "/refresh/empty-token",
+			path:                 "/user-refresh/empty-token",
 			expectedStatus:       http.StatusForbidden,
 			authValidateJWTErr:   errors.New("invalid token"),
 			authValidateJWTExp:   time.Now().Unix(),
@@ -303,7 +300,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:      0,
 		}, {
 			name:                 "valid token",
-			path:                 "/refresh/valid-token",
+			path:                 "/user-refresh/valid-token",
 			expectedStatus:       http.StatusOK,
 			authValidateJWTErr:   nil,
 			authValidateJWTExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
@@ -317,7 +314,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:      1,
 		}, {
 			name:                 "valid token not expiring",
-			path:                 "/refresh/valid-token-not-expiring",
+			path:                 "/user-refresh/valid-token-not-expiring",
 			expectedStatus:       http.StatusNotExtended,
 			authValidateJWTErr:   nil,
 			authValidateJWTExp:   time.Now().Add(time.Duration(90) * time.Second).Unix(),
@@ -331,7 +328,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:      0,
 		}, {
 			name:                 "invalid token",
-			path:                 "/refresh/invalid-token",
+			path:                 "/user-refresh/invalid-token",
 			expectedStatus:       http.StatusForbidden,
 			authValidateJWTErr:   errors.New("validate JWT failure"),
 			authValidateJWTExp:   time.Now().Unix(),
@@ -345,7 +342,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:      0,
 		}, {
 			name:                 "db failure",
-			path:                 "/refresh/db-failure",
+			path:                 "/user-refresh/db-failure",
 			expectedStatus:       http.StatusInternalServerError,
 			authValidateJWTErr:   nil,
 			authValidateJWTExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
@@ -363,7 +360,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:   0,
 		}, {
 			name:                 "deleted user",
-			path:                 "/refresh/deleted-user",
+			path:                 "/user-refresh/deleted-user",
 			expectedStatus:       http.StatusForbidden,
 			authValidateJWTErr:   nil,
 			authValidateJWTExp:   time.Now().Unix(),
@@ -382,7 +379,7 @@ func TestLoginRefresh(t *testing.T) {
 			authGenJWTTimes:   0,
 		}, {
 			name:                 "token generation failure",
-			path:                 "/refresh/token-generation-failure",
+			path:                 "/user-refresh/token-generation-failure",
 			expectedStatus:       http.StatusInternalServerError,
 			authValidateJWTErr:   nil,
 			authValidateJWTExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
@@ -428,6 +425,7 @@ func TestLoginRefresh(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.POST(test.path, LoginRefresh(zapLogger, mockAuth, mockPostgres, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
 			w := httptest.NewRecorder()
@@ -441,8 +439,6 @@ func TestLoginRefresh(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	t.Parallel()
-
-	router := getTestRouter()
 
 	userAccount := &modelsPostgres.UserAccount{
 		UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -480,7 +476,7 @@ func TestDeleteUser(t *testing.T) {
 	}{
 		{
 			name:                 "empty request",
-			path:                 "/delete/empty-request",
+			path:                 "/user-delete/empty-request",
 			expectedStatus:       http.StatusBadRequest,
 			deleteRequest:        &models.HTTPDeleteUserRequest{},
 			authValidateJWTErr:   nil,
@@ -494,7 +490,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "valid token",
-			path:           "/delete/valid-request",
+			path:           "/user-delete/valid-request",
 			expectedStatus: http.StatusOK,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -514,7 +510,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      1,
 		}, {
 			name:           "invalid token",
-			path:           "/delete/invalid-token",
+			path:           "/user-delete/invalid-token",
 			expectedStatus: http.StatusForbidden,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -534,7 +530,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "token and request username mismatch",
-			path:           "/delete/token-and-request-username-mismatch",
+			path:           "/user-delete/token-and-request-username-mismatch",
 			expectedStatus: http.StatusForbidden,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -554,7 +550,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "db read failure",
-			path:           "/delete/db-read-failure",
+			path:           "/user-delete/db-read-failure",
 			expectedStatus: http.StatusInternalServerError,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -574,7 +570,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "already deleted",
-			path:           "/delete/already-deleted",
+			path:           "/user-delete/already-deleted",
 			expectedStatus: http.StatusForbidden,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -594,7 +590,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "db delete failure",
-			path:           "/delete/db-delete-failure",
+			path:           "/user-delete/db-delete-failure",
 			expectedStatus: http.StatusInternalServerError,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -614,7 +610,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      1,
 		}, {
 			name:           "bad deletion confirmation",
-			path:           "/delete/bad-deletion-confirmation",
+			path:           "/user-delete/bad-deletion-confirmation",
 			expectedStatus: http.StatusBadRequest,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -634,7 +630,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "invalid password",
-			path:           "/delete/valid-password",
+			path:           "/user-delete/valid-password",
 			expectedStatus: http.StatusForbidden,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
@@ -691,6 +687,7 @@ func TestDeleteUser(t *testing.T) {
 			)
 
 			// Endpoint setup for test.
+			router := gin.Default()
 			router.DELETE(test.path, DeleteUser(zapLogger, mockAuth, mockPostgres, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodDelete, test.path, bytes.NewBuffer(requestJSON))
 			req.Header.Set("Authorization", authToken)

@@ -33,6 +33,7 @@ jobs:
     needs: [ lint ]
     env:
       GITHUB_ACTIONS_CI: true
+      GIN_MODE: test
       QUOTES_FIATCURRENCY.APIKEY: ${{ secrets.FIATCURRENCY_APIKEY }}
       QUOTES_CRYPTOCURRENCY.APIKEY: ${{ secrets.CRYPTOCURRENCY_APIKEY }}
 

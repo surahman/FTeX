@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -50,11 +49,4 @@ func setup() error {
 // tearDown will delete the test clusters keyspace.
 func tearDown() error {
 	return nil
-}
-
-// getTestRouter creates a gin router testing instance.
-func getTestRouter() *gin.Engine {
-	gin.SetMode(gin.TestMode)
-
-	return gin.Default()
 }
