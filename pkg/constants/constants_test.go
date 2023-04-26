@@ -84,5 +84,13 @@ func TestGetDeleteUserAccountConfirmation(t *testing.T) {
 }
 
 func TestGetDecimalPlacesFiat(t *testing.T) {
-	require.Equal(t, decimalPlacesFiat, GetDecimalPlacesFiat(), "Incorrect Fiat currency decimal places.")
+	require.Equal(t, fiatDecimalPlaces, GetDecimalPlacesFiat(), "Incorrect Fiat currency decimal places.")
+}
+
+func TestGetFiatOfferTTL(t *testing.T) {
+	require.Equal(t, fiatOfferTTL, GetFiatOfferTTL(), "Incorrect Fiat offer TTL.")
+}
+
+func TestGetCryptoOfferTTL(t *testing.T) {
+	require.Equal(t, cryptoOfferTTL, GetCryptoOfferTTL(), "Incorrect Crypto offer TTL.")
 }
