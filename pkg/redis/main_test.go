@@ -22,6 +22,9 @@ var invalidServerAddr = "127.0.0.1:7777"
 // configFileKey is the redis configuration key name that is loaded based on whether the test is run locally or on GHA.
 var configFileKey string
 
+// conf is the Redis client configuration.
+var conf config
+
 // connection pool to Redis cluster.
 var connection Redis
 
@@ -73,7 +76,6 @@ func setup() error {
 		zapLogger.Info("Integration Test running on Github CI runner.")
 	}
 
-	conf := config{}
 	if err := yaml.Unmarshal([]byte(redisConfigTestData[configFileKey]), &conf); err != nil {
 		return fmt.Errorf("failed to parse test suite Redis configs %w", err)
 	}

@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -217,13 +218,13 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 			value: xid.New().String(),
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
 			// Write to Redis.
-			require.NoError(t, connection.Set(test.key, test.value), "failed to write to Redis")
-			time.Sleep(time.Second) // Allow cache propagation.
+			require.NoError(t, connection.Set(test.key, test.value, time.Duration(2)), "failed to write to Redis")
 
 			// Get data and validate it.
 			retrieved := ""
@@ -233,7 +234,6 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 
 			// Remove data from Redis server.
 			require.NoError(t, connection.Del(test.key), "failed to remove key from Redis server")
-			time.Sleep(time.Second) // Allow cache propagation.
 
 			// Check to see if data has been removed.
 			var deleted *string
@@ -245,4 +245,30 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 			require.Error(t, connection.Del(test.key), "removing a nonexistent key from Redis server should fail")
 		})
 	}
+
+	// Sleep to allow cache expiration.
+	time.Sleep(2 * time.Second)
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(fmt.Sprintf("Expiration check: %s", test.name), func(t *testing.T) {
+			var deleted *string
+			err := connection.Get(test.key, deleted)
+			require.Nil(t, deleted, "returned data from a deleted record should be nil")
+			require.Error(t, err, "deleted record should not be found on redis Redis server")
+		})
+	}
+}
+
+func TestRedisImpl_FiatTTL(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, conf.Data.FiatTTL, connection.FiatTTL(), "incorrect Fiat TTL returned.")
+}
+
+func TestRedisImpl_CryptoTTL(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, conf.Data.CryptoTTL, connection.CryptoTTL(), "incorrect Crypto TTL returned.")
 }

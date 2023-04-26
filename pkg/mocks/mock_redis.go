@@ -6,6 +6,7 @@ package mocks
 
 import (
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -47,6 +48,20 @@ func (mr *MockRedisMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockRedis)(nil).Close))
 }
 
+// CryptoTTL mocks base method.
+func (m *MockRedis) CryptoTTL() time.Duration {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CryptoTTL")
+	ret0, _ := ret[0].(time.Duration)
+	return ret0
+}
+
+// CryptoTTL indicates an expected call of CryptoTTL.
+func (mr *MockRedisMockRecorder) CryptoTTL() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoTTL", reflect.TypeOf((*MockRedis)(nil).CryptoTTL))
+}
+
 // Del mocks base method.
 func (m *MockRedis) Del(arg0 ...string) error {
 	m.ctrl.T.Helper()
@@ -63,6 +78,20 @@ func (m *MockRedis) Del(arg0 ...string) error {
 func (mr *MockRedisMockRecorder) Del(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Del", reflect.TypeOf((*MockRedis)(nil).Del), arg0...)
+}
+
+// FiatTTL mocks base method.
+func (m *MockRedis) FiatTTL() time.Duration {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatTTL")
+	ret0, _ := ret[0].(time.Duration)
+	return ret0
+}
+
+// FiatTTL indicates an expected call of FiatTTL.
+func (mr *MockRedisMockRecorder) FiatTTL() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTTL", reflect.TypeOf((*MockRedis)(nil).FiatTTL))
 }
 
 // Get mocks base method.
@@ -108,15 +137,15 @@ func (mr *MockRedisMockRecorder) Open() *gomock.Call {
 }
 
 // Set mocks base method.
-func (m *MockRedis) Set(arg0 string, arg1 interface{}) error {
+func (m *MockRedis) Set(arg0 string, arg1 interface{}, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", arg0, arg1)
+	ret := m.ctrl.Call(m, "Set", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockRedisMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) Set(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockRedis)(nil).Set), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockRedis)(nil).Set), arg0, arg1, arg2)
 }

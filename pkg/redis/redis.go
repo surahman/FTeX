@@ -32,13 +32,19 @@ type Redis interface {
 	Healthcheck() error
 
 	// Set will place a key with a given value in the cache with a TTL, if specified in the configurations.
-	Set(string, any) error
+	Set(string, any, time.Duration) error
 
 	// Get will retrieve a value associated with a provided key.
 	Get(string, any) error
 
 	// Del will remove all keys provided as a set of keys.
 	Del(...string) error
+
+	// FiatTTL will return the TTL of a Fiat record stored in Redis.
+	FiatTTL() time.Duration
+
+	// CryptoTTL will return the TTL of a Crypto record stored in Redis.
+	CryptoTTL() time.Duration
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -175,7 +181,7 @@ func (r *redisImpl) Healthcheck() error {
 }
 
 // Set will place a key with a given value in the Redis cache server with a TTL, if specified in the configurations.
-func (r *redisImpl) Set(key string, value any) error {
+func (r *redisImpl) Set(key string, value any, expiration time.Duration) error {
 	// Write value to byte array.
 	buffer := bytes.Buffer{}
 	encoder := gob.NewEncoder(&buffer)
@@ -184,9 +190,7 @@ func (r *redisImpl) Set(key string, value any) error {
 		return NewError(err.Error())
 	}
 
-	if err := r.redisDB.Set(context.Background(), key, buffer.Bytes(),
-		time.Duration(r.conf.Data.TTL)*time.Second).
-		Err(); err != nil {
+	if err := r.redisDB.Set(context.Background(), key, buffer.Bytes(), expiration).Err(); err != nil {
 		r.logger.Error("failed to place item in Redis cache", zap.String("key", key), zap.Error(err))
 
 		return NewError(err.Error()).errorCacheSet()
@@ -234,4 +238,14 @@ func (r *redisImpl) Del(keys ...string) error {
 	}
 
 	return nil
+}
+
+// FiatTTL will return the TTL of a Fiat record stored in Redis.
+func (r *redisImpl) FiatTTL() time.Duration {
+	return r.conf.Data.FiatTTL
+}
+
+// CryptoTTL will return the TTL of a Crypto record stored in Redis.
+func (r *redisImpl) CryptoTTL() time.Duration {
+	return r.conf.Data.CryptoTTL
 }
