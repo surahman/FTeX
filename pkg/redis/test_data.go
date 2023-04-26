@@ -17,7 +17,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"username_empty": `
 authentication:
@@ -31,7 +32,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"password_empty": `
 authentication:
@@ -45,7 +47,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"no_addr": `
 authentication:
@@ -59,7 +62,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"invalid_max_retries": `
 authentication:
@@ -73,7 +77,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"invalid_pool_size": `
 authentication:
@@ -87,7 +92,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"invalid_min_idle_conns": `
 authentication:
@@ -101,7 +107,8 @@ connection:
   minIdleConns: 0
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"no_max_idle_conns": `
 authentication:
@@ -115,7 +122,8 @@ connection:
   minIdleConns: 10
   maxIdleConns:
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"invalid_min_ttl": `
 authentication:
@@ -129,7 +137,21 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 59`,
+  fiatTtl: 59s
+  cryptoTtl: 59s`,
+
+		"no_ttl": `
+authentication:
+  username: root
+  password: root
+connection:
+  addr: 127.0.0.1:7379
+  maxConnAttempts: 5
+  maxRetries: 3
+  poolSize: 4
+  minIdleConns: 1
+  maxIdleConns: 20
+data:`,
 
 		"test_suite": `
 authentication:
@@ -143,7 +165,8 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 
 		"github-ci-runner": `
 authentication:
@@ -157,6 +180,7 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900`,
+  fiatTtl: 120s
+  cryptoTtl: 120s`,
 	}
 }

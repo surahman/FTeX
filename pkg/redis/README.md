@@ -62,20 +62,21 @@ The configuration loader will search for the configurations in the following ord
 
 The expected file name is `RedisConfig.yaml`. Unless otherwise specified, all the configuration items below are _required_.
 
-| Name                 | Environment Variable Key | Type   | Description                                                                                       |
-|----------------------|--------------------------|--------|---------------------------------------------------------------------------------------------------|
-| **_Authentication_** | `REDIS_AUTHENTICATION`   |        | **_Parent key for authentication information._**                                                  |
-| ↳ username           | ↳ `.USERNAME`            | string | Username for Redis session login.                                                                 |
-| ↳ password           | ↳ `.PASSWORD`            | string | Password for Redis session login.                                                                 |
-| **_Connection_**     | `REDIS_CONNECTION`       |        | **_Parent key for connection configuration._**                                                    |
-| ↳ addr               | ↳ `.ADDR`                | string | The cluster IPs to bootstrap the connection. Must contain the port number.                        |
-| ↳ maxConnAttempts    | ↳ `.MAXCONNATTEMPTS`     | int    | The maximum number of times to try to establish a connection.                                     |
-| ↳ maxRetries         | ↳ `.MAXRETRIES`          | int    | The maximum number of times to try an operation.                                                  |
-| ↳ poolSize           | ↳ `.POOLSIZE`            | int    | The connection pool size on a per cluster basis.                                                  |
-| ↳ minIdleConns       | ↳ `.MINIDLECONNS`        | int    | The number of minimum idle connections per client.                                                |
-| ↳ maxIdleConns       | ↳ `.MAXIDLECONNS`        | int    | The maximum number idle connections per client.                                                   |
-| **_Data_**           | `REDIS_DATA`             |        | **_Parent key for data configuration._**                                                          |
-| ↳ ttl                | ↳ `.TTL`                 | int    | The maximum time in seconds tha an item can remain in the cache before it is evicted. _Optional._ |
+| Name                 | Environment Variable Key | Type          | Description                                                                               |
+|----------------------|--------------------------|---------------|-------------------------------------------------------------------------------------------|
+| **_Authentication_** | `REDIS_AUTHENTICATION`   |               | **_Parent key for authentication information._**                                          |
+| ↳ username           | ↳ `.USERNAME`            | string        | Username for Redis session login.                                                         |
+| ↳ password           | ↳ `.PASSWORD`            | string        | Password for Redis session login.                                                         |
+| **_Connection_**     | `REDIS_CONNECTION`       |               | **_Parent key for connection configuration._**                                            |
+| ↳ addr               | ↳ `.ADDR`                | string        | The cluster IPs to bootstrap the connection. Must contain the port number.                |
+| ↳ maxConnAttempts    | ↳ `.MAXCONNATTEMPTS`     | int           | The maximum number of times to try to establish a connection.                             |
+| ↳ maxRetries         | ↳ `.MAXRETRIES`          | int           | The maximum number of times to try an operation.                                          |
+| ↳ poolSize           | ↳ `.POOLSIZE`            | int           | The connection pool size on a per cluster basis.                                          |
+| ↳ minIdleConns       | ↳ `.MINIDLECONNS`        | int           | The number of minimum idle connections per client.                                        |
+| ↳ maxIdleConns       | ↳ `.MAXIDLECONNS`        | int           | The maximum number idle connections per client.                                           |
+| **_Data_**           | `REDIS_DATA`             |               | **_Parent key for data configuration._**                                                  |
+| ↳ fiatTtl            | ↳ `.FIATTTL`             | time.Duration | The maximum time a Fiat offer can remain in the cache before it is evicted. _Optional._   |
+| ↳ cryptoTtl          | ↳ `.CRYPTOTTL`           | time.Duration | The maximum time a Crypto offer can remain in the cache before it is evicted. _Optional._ |
 
 #### Example Configuration File
 
@@ -91,12 +92,13 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900
+  fiatTtl: 120s
+  cryptoTtl: 120s
 ```
 
 #### Example Environment Variables
 
 ```bash
 export REDIS_AUTHENTICATION.PASSWORD=root
-export REDIS_CONNECTION.TTL=28800
+export REDIS_CONNECTION.FIATTTL=28800
 ```

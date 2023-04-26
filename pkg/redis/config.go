@@ -2,6 +2,7 @@ package redis
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/configloader"
@@ -36,8 +37,11 @@ type connectionConfig struct {
 }
 
 // dataConfig contains the Redis data storage related information.
+//
+//nolint:lll
 type dataConfig struct {
-	TTL int64 `json:"ttl,omitempty" yaml:"ttl,omitempty" mapstructure:"ttl" validate:"omitempty,min=60"`
+	FiatTTL   time.Duration `json:"fiatTtl,omitempty" yaml:"fiatTtl,omitempty" mapstructure:"fiatTtl" validate:"min=120000000000"`
+	CryptoTTL time.Duration `json:"cryptoTtl,omitempty" yaml:"cryptoTtl,omitempty" mapstructure:"cryptoTtl" validate:"min=120000000000"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

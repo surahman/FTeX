@@ -9,4 +9,5 @@ connection:
   minIdleConns: 1
   maxIdleConns: 20
 data:
-  ttl: 900
+  fiatTtl: 120s
+  cryptoTtl: 120s

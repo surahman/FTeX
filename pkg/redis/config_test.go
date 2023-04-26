@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/rs/xid"
 	"github.com/spf13/afero"
@@ -23,11 +24,10 @@ func TestRedisConfigs_Load(t *testing.T) {
 		expectErrCnt int
 		expectErr    require.ErrorAssertionFunc
 	}{
-		// ----- test cases start ----- //
 		{
 			name:         "empty - etc dir",
 			input:        redisConfigTestData["empty"],
-			expectErrCnt: 6,
+			expectErrCnt: 8,
 			expectErr:    require.Error,
 		}, {
 			name:         "valid - etc dir",
@@ -77,11 +77,16 @@ func TestRedisConfigs_Load(t *testing.T) {
 		}, {
 			name:         "invalid min TTL - etc dir",
 			input:        redisConfigTestData["invalid_min_ttl"],
-			expectErrCnt: 1,
+			expectErrCnt: 2,
+			expectErr:    require.Error,
+		}, {
+			name:         "no TTL - etc dir",
+			input:        redisConfigTestData["no_ttl"],
+			expectErrCnt: 2,
 			expectErr:    require.Error,
 		},
-		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
@@ -122,8 +127,10 @@ func TestRedisConfigs_Load(t *testing.T) {
 			t.Setenv(envConnKey+"MINIDLECONNS", strconv.Itoa(minIdleConns))
 			t.Setenv(envConnKey+"MAXIDLECONNS", strconv.Itoa(maxIdleConns))
 
-			ttl := 999
-			t.Setenv(envDataKey+"TTL", strconv.Itoa(ttl))
+			fiatTTL := time.Duration(999000000000)
+			cryptoTTL := time.Duration(555000000000)
+			t.Setenv(envDataKey+"FIATTTL", "999s")
+			t.Setenv(envDataKey+"CRYPTOTTL", cryptoTTL.String())
 
 			err = actual.Load(fs)
 			require.NoErrorf(t, actual.Load(fs), "failed to load configurations file: %v", err)
@@ -139,7 +146,8 @@ func TestRedisConfigs_Load(t *testing.T) {
 			require.Equal(t, minIdleConns, actual.Connection.MinIdleConns, "failed to load min idle conns.")
 			require.Equal(t, maxIdleConns, actual.Connection.MaxIdleConns, "failed to load max idle conns.")
 
-			require.Equal(t, int64(ttl), actual.Data.TTL, "failed to load ttl.")
+			require.Equal(t, fiatTTL, actual.Data.FiatTTL, "failed to load Fiat TTL.")
+			require.Equal(t, cryptoTTL, actual.Data.CryptoTTL, "failed to load Crypto TTL.")
 		})
 	}
 }
