@@ -260,15 +260,3 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 		})
 	}
 }
-
-func TestRedisImpl_FiatTTL(t *testing.T) {
-	t.Parallel()
-
-	require.Equal(t, conf.Data.FiatTTL, connection.FiatTTL(), "incorrect Fiat TTL returned.")
-}
-
-func TestRedisImpl_CryptoTTL(t *testing.T) {
-	t.Parallel()
-
-	require.Equal(t, conf.Data.CryptoTTL, connection.CryptoTTL(), "incorrect Crypto TTL returned.")
-}

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/rs/xid"
 	"github.com/spf13/afero"
@@ -16,7 +15,6 @@ import (
 func TestRedisConfigs_Load(t *testing.T) {
 	envAuthKey := constants.GetRedisPrefix() + "_AUTHENTICATION."
 	envConnKey := constants.GetRedisPrefix() + "_CONNECTION."
-	envDataKey := constants.GetRedisPrefix() + "_DATA."
 
 	testCases := []struct {
 		name         string
@@ -27,7 +25,7 @@ func TestRedisConfigs_Load(t *testing.T) {
 		{
 			name:         "empty - etc dir",
 			input:        redisConfigTestData["empty"],
-			expectErrCnt: 8,
+			expectErrCnt: 6,
 			expectErr:    require.Error,
 		}, {
 			name:         "valid - etc dir",
@@ -74,16 +72,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 			input:        redisConfigTestData["no_max_idle_conns"],
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
-		}, {
-			name:         "invalid min TTL - etc dir",
-			input:        redisConfigTestData["invalid_min_ttl"],
-			expectErrCnt: 2,
-			expectErr:    require.Error,
-		}, {
-			name:         "no TTL - etc dir",
-			input:        redisConfigTestData["no_ttl"],
-			expectErrCnt: 2,
-			expectErr:    require.Error,
 		},
 	}
 
@@ -127,11 +115,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 			t.Setenv(envConnKey+"MINIDLECONNS", strconv.Itoa(minIdleConns))
 			t.Setenv(envConnKey+"MAXIDLECONNS", strconv.Itoa(maxIdleConns))
 
-			fiatTTL := time.Duration(999000000000)
-			cryptoTTL := time.Duration(555000000000)
-			t.Setenv(envDataKey+"FIATTTL", "999s")
-			t.Setenv(envDataKey+"CRYPTOTTL", cryptoTTL.String())
-
 			err = actual.Load(fs)
 			require.NoErrorf(t, actual.Load(fs), "failed to load configurations file: %v", err)
 
@@ -145,9 +128,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 			require.Equal(t, poolSize, actual.Connection.PoolSize, "failed to load pool size.")
 			require.Equal(t, minIdleConns, actual.Connection.MinIdleConns, "failed to load min idle conns.")
 			require.Equal(t, maxIdleConns, actual.Connection.MaxIdleConns, "failed to load max idle conns.")
-
-			require.Equal(t, fiatTTL, actual.Data.FiatTTL, "failed to load Fiat TTL.")
-			require.Equal(t, cryptoTTL, actual.Data.CryptoTTL, "failed to load Crypto TTL.")
 		})
 	}
 }

@@ -39,12 +39,6 @@ type Redis interface {
 
 	// Del will remove all keys provided as a set of keys.
 	Del(...string) error
-
-	// FiatTTL will return the TTL of a Fiat record stored in Redis.
-	FiatTTL() time.Duration
-
-	// CryptoTTL will return the TTL of a Crypto record stored in Redis.
-	CryptoTTL() time.Duration
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -238,14 +232,4 @@ func (r *redisImpl) Del(keys ...string) error {
 	}
 
 	return nil
-}
-
-// FiatTTL will return the TTL of a Fiat record stored in Redis.
-func (r *redisImpl) FiatTTL() time.Duration {
-	return r.conf.Data.FiatTTL
-}
-
-// CryptoTTL will return the TTL of a Crypto record stored in Redis.
-func (r *redisImpl) CryptoTTL() time.Duration {
-	return r.conf.Data.CryptoTTL
 }

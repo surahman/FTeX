@@ -8,6 +8,3 @@ connection:
   poolSize: 4
   minIdleConns: 1
   maxIdleConns: 20
-data:
-  fiatTtl: 120s
-  cryptoTtl: 120s

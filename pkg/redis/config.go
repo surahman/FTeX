@@ -2,7 +2,6 @@ package redis
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/configloader"
@@ -15,7 +14,6 @@ import (
 type config struct {
 	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
 	Connection     connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
-	Data           dataConfig           `json:"data,omitempty" yaml:"data,omitempty" mapstructure:"data"`
 }
 
 // authenticationConfig contains the Redis session authentication information.
@@ -34,14 +32,6 @@ type connectionConfig struct {
 	PoolSize        int    `json:"poolSize,omitempty" yaml:"poolSize,omitempty" mapstructure:"poolSize" validate:"required,min=1"`
 	MinIdleConns    int    `json:"minIdleConns,omitempty" yaml:"minIdleConns,omitempty" mapstructure:"minIdleConns" validate:"required,min=1"`
 	MaxIdleConns    int    `json:"maxIdleConns,omitempty" yaml:"maxIdleConns,omitempty" mapstructure:"maxIdleConns"`
-}
-
-// dataConfig contains the Redis data storage related information.
-//
-//nolint:lll
-type dataConfig struct {
-	FiatTTL   time.Duration `json:"fiatTtl,omitempty" yaml:"fiatTtl,omitempty" mapstructure:"fiatTtl" validate:"min=120000000000"`
-	CryptoTTL time.Duration `json:"cryptoTtl,omitempty" yaml:"cryptoTtl,omitempty" mapstructure:"cryptoTtl" validate:"min=120000000000"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

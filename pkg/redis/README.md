@@ -74,9 +74,6 @@ The expected file name is `RedisConfig.yaml`. Unless otherwise specified, all th
 | ↳ poolSize           | ↳ `.POOLSIZE`            | int           | The connection pool size on a per cluster basis.                                          |
 | ↳ minIdleConns       | ↳ `.MINIDLECONNS`        | int           | The number of minimum idle connections per client.                                        |
 | ↳ maxIdleConns       | ↳ `.MAXIDLECONNS`        | int           | The maximum number idle connections per client.                                           |
-| **_Data_**           | `REDIS_DATA`             |               | **_Parent key for data configuration._**                                                  |
-| ↳ fiatTtl            | ↳ `.FIATTTL`             | time.Duration | The maximum time a Fiat offer can remain in the cache before it is evicted. _Optional._   |
-| ↳ cryptoTtl          | ↳ `.CRYPTOTTL`           | time.Duration | The maximum time a Crypto offer can remain in the cache before it is evicted. _Optional._ |
 
 #### Example Configuration File
 
@@ -91,14 +88,11 @@ connection:
   poolSize: 4
   minIdleConns: 1
   maxIdleConns: 20
-data:
-  fiatTtl: 120s
-  cryptoTtl: 120s
 ```
 
 #### Example Environment Variables
 
 ```bash
+export REDIS_AUTHENTICATION.USERNAME=admin
 export REDIS_AUTHENTICATION.PASSWORD=root
-export REDIS_CONNECTION.FIATTTL=28800
 ```

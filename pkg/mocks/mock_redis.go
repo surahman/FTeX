@@ -48,20 +48,6 @@ func (mr *MockRedisMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockRedis)(nil).Close))
 }
 
-// CryptoTTL mocks base method.
-func (m *MockRedis) CryptoTTL() time.Duration {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CryptoTTL")
-	ret0, _ := ret[0].(time.Duration)
-	return ret0
-}
-
-// CryptoTTL indicates an expected call of CryptoTTL.
-func (mr *MockRedisMockRecorder) CryptoTTL() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoTTL", reflect.TypeOf((*MockRedis)(nil).CryptoTTL))
-}
-
 // Del mocks base method.
 func (m *MockRedis) Del(arg0 ...string) error {
 	m.ctrl.T.Helper()
@@ -78,20 +64,6 @@ func (m *MockRedis) Del(arg0 ...string) error {
 func (mr *MockRedisMockRecorder) Del(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Del", reflect.TypeOf((*MockRedis)(nil).Del), arg0...)
-}
-
-// FiatTTL mocks base method.
-func (m *MockRedis) FiatTTL() time.Duration {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatTTL")
-	ret0, _ := ret[0].(time.Duration)
-	return ret0
-}
-
-// FiatTTL indicates an expected call of FiatTTL.
-func (mr *MockRedisMockRecorder) FiatTTL() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTTL", reflect.TypeOf((*MockRedis)(nil).FiatTTL))
 }
 
 // Get mocks base method.
