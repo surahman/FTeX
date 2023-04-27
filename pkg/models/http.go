@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
 )
@@ -43,4 +44,18 @@ type HTTPOpenCurrencyAccount struct {
 type HTTPDepositCurrency struct {
 	Amount   decimal.Decimal `json:"amount" yaml:"amount" validate:"required,gt=0"`
 	Currency string          `json:"currency" yaml:"currency" validate:"required"`
+}
+
+// HTTPFiatConversionRequest is a request to convert a source to destination currency in the source currency amount.
+type HTTPFiatConversionRequest struct {
+	SourceCurrency      string          `json:"sourceCurrency" yaml:"sourceCurrency" validate:"required"`
+	DestinationCurrency string          `json:"destinationCurrency" yaml:"destinationCurrency" validate:"required"`
+	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`
+}
+
+// HTTPFiatConversionOffer is an offer to convert a source to destination currency in the source currency amount.
+type HTTPFiatConversionOffer struct {
+	Offer   PriceQuote `json:"offer" yaml:"offer"`
+	OfferID uuid.UUID  `json:"offerId" yaml:"offerId"`
+	Expires int64      `json:"expires" yaml:"expires"`
 }
