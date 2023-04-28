@@ -134,12 +134,12 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
-  /fiat/convert/request:
+  /fiat/convert/quote:
     post:
       consumes:
       - application/json
-      description: Conversion request for Fiat funds between two Fiat currencies.
-        The amount must be a positive number with at most two decimal places and both
+      description: Conversion quote for Fiat funds between two Fiat currencies. The
+        amount must be a positive number with at most two decimal places and both
         currency accounts must be opened.
       operationId: convertRequestFiat
       parameters:
@@ -170,7 +170,7 @@ paths:
             $ref: '#/definitions/models.HTTPError'
       security:
       - ApiKeyAuth: []
-      summary: Conversion request for Fiat funds between two Fiat currencies.
+      summary: Conversion quote for Fiat funds between two Fiat currencies.
       tags:
       - fiat currency convert transfer
   /fiat/deposit:

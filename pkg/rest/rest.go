@@ -113,8 +113,8 @@ func (s *Server) initialize() {
 		POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.
 		Use(authMiddleware).
-		POST("/fiat/convert/request ",
-			restHandlers.ConvertRequestFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
+		POST("/fiat/convert/quote",
+			restHandlers.ConvertQuoteFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

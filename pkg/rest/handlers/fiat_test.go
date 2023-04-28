@@ -511,7 +511,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ConvertRequestFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			router.POST(test.path, ConvertQuoteFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(conversionReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

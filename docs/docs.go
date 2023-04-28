@@ -30,14 +30,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/fiat/convert/request": {
+        "/fiat/convert/quote": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Conversion request for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.",
+                "description": "Conversion quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.",
                 "consumes": [
                     "application/json"
                 ],
@@ -47,7 +47,7 @@ const docTemplate = `{
                 "tags": [
                     "fiat currency convert transfer"
                 ],
-                "summary": "Conversion request for Fiat funds between two Fiat currencies.",
+                "summary": "Conversion quote for Fiat funds between two Fiat currencies.",
                 "operationId": "convertRequestFiat",
                 "parameters": [
                     {

@@ -174,10 +174,10 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 	}
 }
 
-// ConvertRequestFiat will handle an HTTP request to get a conversion offer of funds between two Fiat currencies.
+// ConvertQuoteFiat will handle an HTTP request to get a conversion offer of funds between two Fiat currencies.
 //
-//	@Summary		Conversion request for Fiat funds between two Fiat currencies.
-//	@Description	Conversion request for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.
+//	@Summary		Conversion quote for Fiat funds between two Fiat currencies.
+//	@Description	Conversion quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.
 //	@Tags			fiat currency convert transfer
 //	@Id				convertRequestFiat
 //	@Accept			json
@@ -188,10 +188,10 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 //	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Router			/fiat/convert/request [post]
+//	@Router			/fiat/convert/quote [post]
 //
 //nolint:cyclop
-func ConvertRequestFiat(
+func ConvertQuoteFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
 	cache redis.Redis,
