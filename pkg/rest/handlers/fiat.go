@@ -223,14 +223,14 @@ func ConvertRequestFiat(
 		// Extract and validate the currency.
 		if err = srcCurrency.Scan(request.SourceCurrency); err != nil || !srcCurrency.Valid() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: request.SourceCurrency})
+				models.HTTPError{Message: "invalid source currency", Payload: request.SourceCurrency})
 
 			return
 		}
 
 		if err = dstCurrency.Scan(request.DestinationCurrency); err != nil || !dstCurrency.Valid() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: request.DestinationCurrency})
+				models.HTTPError{Message: "invalid destination currency", Payload: request.DestinationCurrency})
 
 			return
 		}
@@ -264,6 +264,7 @@ func ConvertRequestFiat(
 		offer.DestinationAcc = request.DestinationCurrency
 		offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
 
+		// Encrypt offer ID before returning to client.
 		if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
 			logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
 			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,

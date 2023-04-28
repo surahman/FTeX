@@ -17,6 +17,7 @@ import (
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 )
 
 func TestHandlers_OpenFiat(t *testing.T) {
@@ -253,6 +254,265 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			router := gin.Default()
 			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack success response.")
+
+			errorMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
+		})
+	}
+}
+func TestHandlers_ConvertRequestFiat(t *testing.T) {
+	t.Parallel()
+
+	amountValid, err := decimal.NewFromString("999")
+	require.NoError(t, err, "failed to convert valid amount")
+
+	amountInvalidDecimal, err := decimal.NewFromString("999.999")
+	require.NoError(t, err, "failed to convert invalid decimal amount")
+
+	amountInvalidNegative, err := decimal.NewFromString("-999")
+	require.NoError(t, err, "failed to convert invalid negative amount")
+
+	testCases := []struct {
+		name               string
+		expectedMsg        string
+		path               string
+		expectedStatus     int
+		request            *models.HTTPFiatConversionRequest
+		authValidateJWTErr error
+		authValidateTimes  int
+		quotesErr          error
+		quotesTimes        int
+		authEncryptErr     error
+		authEncryptTimes   int
+		redisErr           error
+		redisTimes         int
+	}{
+		{
+			name:               "empty request",
+			expectedMsg:        "validation",
+			path:               "/fiat-conversion-request/empty-request",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPFiatConversionRequest{},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "invalid source currency",
+			expectedMsg:    "source currency",
+			path:           "/fiat-conversion-request/invalid-src-currency",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "INVALID",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "invalid destination currency",
+			expectedMsg:    "destination currency",
+			path:           "/fiat-conversion-request/invalid-dst-currency",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "INVALID",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "too many decimal places",
+			expectedMsg:    "amount",
+			path:           "/fiat-conversion-request/too-many-decimal-places",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountInvalidDecimal,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "negative",
+			expectedMsg:    "amount",
+			path:           "/fiat-conversion-request/negative",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountInvalidNegative,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "invalid jwt",
+			expectedMsg:    "invalid jwt",
+			path:           "/fiat-conversion-request/invalid-jwt",
+			expectedStatus: http.StatusForbidden,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "fiat conversion error",
+			expectedMsg:    "retry",
+			path:           "/fiat-conversion-request/fiat-conversion-error",
+			expectedStatus: http.StatusInternalServerError,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          errors.New(""),
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "encryption error",
+			expectedMsg:    "retry",
+			path:           "/fiat-conversion-request/encryption-error",
+			expectedStatus: http.StatusInternalServerError,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesTimes:        1,
+			authEncryptErr:     errors.New(""),
+			authEncryptTimes:   1,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "redis error",
+			expectedMsg:    "retry",
+			path:           "/fiat-conversion-request/redis-error",
+			expectedStatus: http.StatusInternalServerError,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   1,
+			redisErr:           errors.New(""),
+			redisTimes:         1,
+		}, {
+			name:           "valid",
+			expectedMsg:    "",
+			path:           "/fiat-conversion-request/valid",
+			expectedStatus: http.StatusOK,
+			request: &models.HTTPFiatConversionRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "USD",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   1,
+			redisErr:           nil,
+			redisTimes:         1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl)
+
+			conversionReqJSON, err := json.Marshal(&test.request)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockQuotes.EXPECT().FiatConversion(gomock.Any(), gomock.Any(), gomock.Any(), nil).
+					Return(amountValid, amountValid, test.quotesErr).
+					Times(test.quotesTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("OFFER-ID", test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					Times(test.redisTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.POST(test.path, ConvertRequestFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(conversionReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
