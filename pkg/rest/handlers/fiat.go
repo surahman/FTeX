@@ -29,11 +29,11 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPOpenCurrencyAccount	true	"currency code for new account"
-//	@Success		201		{object}	models.HTTPSuccess				"a message to confirm the creation of an account"
-//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Param			user	body		models.HTTPOpenCurrencyAccountRequest	true	"currency code for new account"
+//	@Success		201		{object}	models.HTTPSuccess						"a message to confirm the creation of an account"
+//	@Failure		400		{object}	models.HTTPError						"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Router			/fiat/open [post]
 func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
@@ -42,7 +42,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 			currency      postgres.Currency
 			err           error
 			originalToken = ginCtx.GetHeader(authHeaderKey)
-			request       models.HTTPOpenCurrencyAccount
+			request       models.HTTPOpenCurrencyAccountRequest
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -100,11 +100,11 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPDepositCurrency	true	"currency code and amount to be deposited"
-//	@Success		200		{object}	models.HTTPSuccess			"a message to confirm the deposit of funds"
-//	@Failure		400		{object}	models.HTTPError			"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError			"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Param			user	body		models.HTTPDepositCurrencyRequest	true	"currency code and amount to be deposited"
+//	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the deposit of funds"
+//	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Router			/fiat/deposit [post]
 func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
@@ -113,7 +113,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			currency        postgres.Currency
 			err             error
 			originalToken   = ginCtx.GetHeader(authHeaderKey)
-			request         models.HTTPDepositCurrency
+			request         models.HTTPDepositCurrencyRequest
 			transferReceipt *postgres.FiatAccountTransferResult
 		)
 
@@ -174,24 +174,24 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 	}
 }
 
-// ConvertQuoteFiat will handle an HTTP request to get a conversion offer of funds between two Fiat currencies.
+// ExchangeOfferFiat will handle an HTTP request to get an exchange offer of funds between two Fiat currencies.
 //
-//	@Summary		Conversion quote for Fiat funds between two Fiat currencies.
-//	@Description	Conversion quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.
-//	@Tags			fiat currency convert transfer
-//	@Id				convertQuoteFiat
+//	@Summary		Exchange quote for Fiat funds between two Fiat currencies.
+//	@Description	Exchange quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.
+//	@Tags			fiat currency exchange convert offer transfer
+//	@Id				exchangeOfferFiat
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPFiatConversionRequest	true	"the two currency code and amount to be converted"
+//	@Param			user	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
 //	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the conversion of funds"
 //	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Router			/fiat/convert/quote [post]
+//	@Router			/fiat/exchange/offer [post]
 //
 //nolint:cyclop
-func ConvertQuoteFiat(
+func ExchangeOfferFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
 	cache redis.Redis,
@@ -203,8 +203,8 @@ func ConvertQuoteFiat(
 			dstCurrency   postgres.Currency
 			err           error
 			originalToken = ginCtx.GetHeader(authHeaderKey)
-			request       models.HTTPFiatConversionRequest
-			offer         models.HTTPFiatConversionOffer
+			request       models.HTTPFiatExchangeOfferRequest
+			offer         models.HTTPFiatExchangeOfferResponse
 			offerID       = xid.New().String()
 		)
 

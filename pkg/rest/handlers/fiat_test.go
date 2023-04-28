@@ -27,7 +27,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 		name               string
 		path               string
 		expectedStatus     int
-		request            *models.HTTPOpenCurrencyAccount
+		request            *models.HTTPOpenCurrencyAccountRequest
 		authValidateJWTErr error
 		authValidateTimes  int
 		fiatCreateAccErr   error
@@ -37,7 +37,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			name:               "valid",
 			path:               "/open/valid",
 			expectedStatus:     http.StatusCreated,
-			request:            &models.HTTPOpenCurrencyAccount{Currency: "USD"},
+			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			fiatCreateAccErr:   nil,
@@ -46,7 +46,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			name:               "validation",
 			path:               "/open/validation",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPOpenCurrencyAccount{},
+			request:            &models.HTTPOpenCurrencyAccountRequest{},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			fiatCreateAccErr:   nil,
@@ -55,7 +55,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			name:               "invalid currency",
 			path:               "/open/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPOpenCurrencyAccount{Currency: "UVW"},
+			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "UVW"},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			fiatCreateAccErr:   nil,
@@ -64,7 +64,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			name:               "invalid jwt",
 			path:               "/open/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
-			request:            &models.HTTPOpenCurrencyAccount{Currency: "USD"},
+			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
 			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
 			fiatCreateAccErr:   nil,
@@ -73,7 +73,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			name:               "db failure",
 			path:               "/open/db-failure",
 			expectedStatus:     http.StatusConflict,
-			request:            &models.HTTPOpenCurrencyAccount{Currency: "USD"},
+			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			fiatCreateAccErr:   postgres.ErrCreateFiat,
@@ -82,7 +82,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			name:               "db failure unknown",
 			path:               "/open/db-failure-unknown",
 			expectedStatus:     http.StatusInternalServerError,
-			request:            &models.HTTPOpenCurrencyAccount{Currency: "USD"},
+			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			fiatCreateAccErr:   errors.New("unknown server error"),
@@ -136,7 +136,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		expectedMsg        string
 		path               string
 		expectedStatus     int
-		request            *models.HTTPDepositCurrency
+		request            *models.HTTPDepositCurrencyRequest
 		authValidateJWTErr error
 		authValidateTimes  int
 		extTransferErr     error
@@ -147,7 +147,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "validation",
 			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPDepositCurrency{},
+			request:            &models.HTTPDepositCurrencyRequest{},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			extTransferErr:     nil,
@@ -157,7 +157,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "currency",
 			path:               "/fiat-deposit/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPDepositCurrency{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			extTransferErr:     nil,
@@ -167,7 +167,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "amount",
 			path:               "/fiat-deposit/too-many-decimal-places",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			extTransferErr:     nil,
@@ -177,7 +177,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "amount",
 			path:               "/fiat-deposit/negative",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			extTransferErr:     nil,
@@ -187,7 +187,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "invalid jwt",
 			path:               "/fiat-deposit/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
-			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
 			extTransferErr:     nil,
@@ -197,7 +197,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "retry",
 			path:               "/fiat-deposit/unknown-xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
-			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			extTransferErr:     errors.New("unknown error"),
@@ -207,7 +207,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "could not complete",
 			path:               "/fiat-deposit/xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
-			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			extTransferErr:     postgres.ErrTransactFiat,
@@ -217,7 +217,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedMsg:        "successfully",
 			path:               "/fiat-deposit/valid",
 			expectedStatus:     http.StatusOK,
-			request:            &models.HTTPDepositCurrency{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			extTransferErr:     nil,
@@ -286,7 +286,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		expectedMsg        string
 		path               string
 		expectedStatus     int
-		request            *models.HTTPFiatConversionRequest
+		request            *models.HTTPFiatExchangeOfferRequest
 		authValidateJWTErr error
 		authValidateTimes  int
 		quotesErr          error
@@ -301,7 +301,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:        "validation",
 			path:               "/fiat-conversion-request/empty-request",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPFiatConversionRequest{},
+			request:            &models.HTTPFiatExchangeOfferRequest{},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
@@ -315,7 +315,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "source currency",
 			path:           "/fiat-conversion-request/invalid-src-currency",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "INVALID",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -333,7 +333,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "destination currency",
 			path:           "/fiat-conversion-request/invalid-dst-currency",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "INVALID",
 				SourceAmount:        amountValid,
@@ -351,7 +351,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "amount",
 			path:           "/fiat-conversion-request/too-many-decimal-places",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidDecimal,
@@ -369,7 +369,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "amount",
 			path:           "/fiat-conversion-request/negative",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidNegative,
@@ -387,7 +387,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "invalid jwt",
 			path:           "/fiat-conversion-request/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -405,7 +405,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "retry",
 			path:           "/fiat-conversion-request/fiat-conversion-error",
 			expectedStatus: http.StatusInternalServerError,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -423,7 +423,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "retry",
 			path:           "/fiat-conversion-request/encryption-error",
 			expectedStatus: http.StatusInternalServerError,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -441,7 +441,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "retry",
 			path:           "/fiat-conversion-request/redis-error",
 			expectedStatus: http.StatusInternalServerError,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -459,7 +459,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			expectedMsg:    "",
 			path:           "/fiat-conversion-request/valid",
 			expectedStatus: http.StatusOK,
-			request: &models.HTTPFiatConversionRequest{
+			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -511,7 +511,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ConvertQuoteFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(conversionReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

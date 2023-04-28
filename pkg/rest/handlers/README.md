@@ -211,7 +211,7 @@ The workflow will involve getting a conversion rate quote, referred to as an `Of
 only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
 must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
 
-##### Quote `/fiat/convert/quote`
+##### Quote `/fiat/exchange/offer`
 
 _Request:_ All fields are required.
 ```json
@@ -239,3 +239,5 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
   }
 }
 ```
+
+##### Convert `/fiat/exchange/convert`

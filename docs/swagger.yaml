@@ -19,7 +19,7 @@ definitions:
     - password
     - username
     type: object
-  models.HTTPDepositCurrency:
+  models.HTTPDepositCurrencyRequest:
     properties:
       amount:
         type: number
@@ -35,7 +35,7 @@ definitions:
         type: string
       payload: {}
     type: object
-  models.HTTPFiatConversionRequest:
+  models.HTTPFiatExchangeOfferRequest:
     properties:
       destinationCurrency:
         type: string
@@ -48,7 +48,7 @@ definitions:
     - sourceAmount
     - sourceCurrency
     type: object
-  models.HTTPOpenCurrencyAccount:
+  models.HTTPOpenCurrencyAccountRequest:
     properties:
       currency:
         type: string
@@ -134,45 +134,6 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
-  /fiat/convert/quote:
-    post:
-      consumes:
-      - application/json
-      description: Conversion quote for Fiat funds between two Fiat currencies. The
-        amount must be a positive number with at most two decimal places and both
-        currency accounts must be opened.
-      operationId: convertQuoteFiat
-      parameters:
-      - description: the two currency code and amount to be converted
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.HTTPFiatConversionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: a message to confirm the conversion of funds
-          schema:
-            $ref: '#/definitions/models.HTTPSuccess'
-        "400":
-          description: error message with any available details in payload
-          schema:
-            $ref: '#/definitions/models.HTTPError'
-        "403":
-          description: error message with any available details in payload
-          schema:
-            $ref: '#/definitions/models.HTTPError'
-        "500":
-          description: error message with any available details in payload
-          schema:
-            $ref: '#/definitions/models.HTTPError'
-      security:
-      - ApiKeyAuth: []
-      summary: Conversion quote for Fiat funds between two Fiat currencies.
-      tags:
-      - fiat currency convert transfer
   /fiat/deposit:
     post:
       consumes:
@@ -186,7 +147,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPDepositCurrency'
+          $ref: '#/definitions/models.HTTPDepositCurrencyRequest'
       produces:
       - application/json
       responses:
@@ -211,6 +172,45 @@ paths:
       summary: Deposit funds into a Fiat account.
       tags:
       - fiat currency deposit
+  /fiat/exchange/offer:
+    post:
+      consumes:
+      - application/json
+      description: Exchange quote for Fiat funds between two Fiat currencies. The
+        amount must be a positive number with at most two decimal places and both
+        currency accounts must be opened.
+      operationId: exchangeOfferFiat
+      parameters:
+      - description: the two currency code and amount to be converted
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPFiatExchangeOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Exchange quote for Fiat funds between two Fiat currencies.
+      tags:
+      - fiat currency exchange convert offer transfer
   /fiat/open:
     post:
       consumes:
@@ -224,7 +224,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPOpenCurrencyAccount'
+          $ref: '#/definitions/models.HTTPOpenCurrencyAccountRequest'
       produces:
       - application/json
       responses:

@@ -30,64 +30,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/fiat/convert/quote": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Conversion quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "fiat currency convert transfer"
-                ],
-                "summary": "Conversion quote for Fiat funds between two Fiat currencies.",
-                "operationId": "convertQuoteFiat",
-                "parameters": [
-                    {
-                        "description": "the two currency code and amount to be converted",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPFiatConversionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "a message to confirm the conversion of funds",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPSuccess"
-                        }
-                    },
-                    "400": {
-                        "description": "error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "403": {
-                        "description": "error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "error message with any available details in payload",
-                        "schema": {
-                            "$ref": "#/definitions/models.HTTPError"
-                        }
-                    }
-                }
-            }
-        },
         "/fiat/deposit": {
             "post": {
                 "security": [
@@ -114,13 +56,71 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPDepositCurrency"
+                            "$ref": "#/definitions/models.HTTPDepositCurrencyRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "a message to confirm the deposit of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/fiat/exchange/offer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exchange quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency exchange convert offer transfer"
+                ],
+                "summary": "Exchange quote for Fiat funds between two Fiat currencies.",
+                "operationId": "exchangeOfferFiat",
+                "parameters": [
+                    {
+                        "description": "the two currency code and amount to be converted",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPFiatExchangeOfferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
                         }
@@ -172,7 +172,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPOpenCurrencyAccount"
+                            "$ref": "#/definitions/models.HTTPOpenCurrencyAccountRequest"
                         }
                     }
                 ],
@@ -464,7 +464,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.HTTPDepositCurrency": {
+        "models.HTTPDepositCurrencyRequest": {
             "type": "object",
             "required": [
                 "amount",
@@ -488,7 +488,7 @@ const docTemplate = `{
                 "payload": {}
             }
         },
-        "models.HTTPFiatConversionRequest": {
+        "models.HTTPFiatExchangeOfferRequest": {
             "type": "object",
             "required": [
                 "destinationCurrency",
@@ -507,7 +507,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.HTTPOpenCurrencyAccount": {
+        "models.HTTPOpenCurrencyAccountRequest": {
             "type": "object",
             "required": [
                 "currency"
