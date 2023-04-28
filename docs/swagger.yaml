@@ -35,6 +35,19 @@ definitions:
         type: string
       payload: {}
     type: object
+  models.HTTPFiatConversionRequest:
+    properties:
+      destinationCurrency:
+        type: string
+      sourceAmount:
+        type: number
+      sourceCurrency:
+        type: string
+    required:
+    - destinationCurrency
+    - sourceAmount
+    - sourceCurrency
+    type: object
   models.HTTPOpenCurrencyAccount:
     properties:
       currency:
@@ -121,6 +134,45 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
+  /fiat/convert/request:
+    post:
+      consumes:
+      - application/json
+      description: Conversion request for Fiat funds between two Fiat currencies.
+        The amount must be a positive number with at most two decimal places and both
+        currency accounts must be opened.
+      operationId: convertRequestFiat
+      parameters:
+      - description: the two currency code and amount to be converted
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPFiatConversionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Conversion request for Fiat funds between two Fiat currencies.
+      tags:
+      - fiat currency convert transfer
   /fiat/deposit:
     post:
       consumes:
@@ -139,7 +191,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: a message to confirm the creation of an account
+          description: a message to confirm the deposit of funds
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
         "400":

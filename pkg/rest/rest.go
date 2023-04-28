@@ -15,6 +15,7 @@ import (
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
 	restHandlers "github.com/surahman/FTeX/pkg/rest/handlers"
 	swaggerfiles "github.com/swaggo/files"
@@ -30,6 +31,7 @@ type Server struct {
 	auth   auth.Auth
 	cache  redis.Redis
 	db     postgres.Postgres
+	quotes quotes.Quotes
 	conf   *config
 	logger *logger.Logger
 	router *gin.Engine
@@ -37,7 +39,7 @@ type Server struct {
 }
 
 // NewServer will create a new REST server instance in a non-running state.
-func NewServer(fs *afero.Fs, auth auth.Auth, postgres postgres.Postgres, redis redis.Redis,
+func NewServer(fs *afero.Fs, auth auth.Auth, postgres postgres.Postgres, redis redis.Redis, quotes quotes.Quotes,
 	logger *logger.Logger, wg *sync.WaitGroup) (server *Server, err error) {
 	// Load configurations.
 	conf := newConfig()
@@ -50,6 +52,7 @@ func NewServer(fs *afero.Fs, auth auth.Auth, postgres postgres.Postgres, redis r
 			auth:   auth,
 			cache:  redis,
 			db:     postgres,
+			quotes: quotes,
 			logger: logger,
 			wg:     wg,
 		},
@@ -108,6 +111,10 @@ func (s *Server) initialize() {
 	fiatGroup.
 		Use(authMiddleware).
 		POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.
+		Use(authMiddleware).
+		POST("/fiat/convert/request ",
+			restHandlers.ConvertRequestFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

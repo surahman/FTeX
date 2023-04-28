@@ -17,9 +17,6 @@ import (
 // Mock Quotes interface stub generation. This is local to the Quotes package.
 //go:generate mockgen -destination=quotes_mocks.go -package=quotes github.com/surahman/FTeX/pkg/quotes Quotes
 
-// Mock Quotes interface stub generation.
-//go:generate mockgen -destination=../mocks/mock_quotes.go -package=mocks github.com/surahman/FTeX/pkg/quotes Quotes
-
 // Quotes is the interface through which the currency quote services can be accessed. Created to support mock testing.
 type Quotes interface {
 	// fiatQuote will retrieve a quote for a Fiat currency price.

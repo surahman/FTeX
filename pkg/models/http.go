@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
 )
@@ -55,7 +54,7 @@ type HTTPFiatConversionRequest struct {
 
 // HTTPFiatConversionOffer is an offer to convert a source to destination currency in the source currency amount.
 type HTTPFiatConversionOffer struct {
-	Offer   PriceQuote `json:"offer" yaml:"offer"`
-	OfferID uuid.UUID  `json:"offerId" yaml:"offerId"`
-	Expires int64      `json:"expires" yaml:"expires"`
+	PriceQuote `json:"offer" yaml:"offer"`
+	OfferID    string `json:"offerId" yaml:"offerId"`
+	Expires    int64  `json:"expires" yaml:"expires"`
 }

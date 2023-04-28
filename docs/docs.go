@@ -30,6 +30,64 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/fiat/convert/request": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Conversion request for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency convert transfer"
+                ],
+                "summary": "Conversion request for Fiat funds between two Fiat currencies.",
+                "operationId": "convertRequestFiat",
+                "parameters": [
+                    {
+                        "description": "the two currency code and amount to be converted",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPFiatConversionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/fiat/deposit": {
             "post": {
                 "security": [
@@ -62,7 +120,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "a message to confirm the creation of an account",
+                        "description": "a message to confirm the deposit of funds",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
                         }
@@ -428,6 +486,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.HTTPFiatConversionRequest": {
+            "type": "object",
+            "required": [
+                "destinationCurrency",
+                "sourceAmount",
+                "sourceCurrency"
+            ],
+            "properties": {
+                "destinationCurrency": {
+                    "type": "string"
+                },
+                "sourceAmount": {
+                    "type": "number"
+                },
+                "sourceCurrency": {
+                    "type": "string"
+                }
             }
         },
         "models.HTTPOpenCurrencyAccount": {
