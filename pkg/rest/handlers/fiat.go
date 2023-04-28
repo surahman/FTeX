@@ -179,7 +179,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 //	@Summary		Conversion quote for Fiat funds between two Fiat currencies.
 //	@Description	Conversion quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.
 //	@Tags			fiat currency convert transfer
-//	@Id				convertRequestFiat
+//	@Id				convertQuoteFiat
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth

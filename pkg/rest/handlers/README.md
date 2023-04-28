@@ -202,3 +202,40 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
   }
 }
 ```
+
+### Convert
+
+To convert between Fiat currencies, the user must maintain open accounts in both the source and destination Fiat currencies.
+
+The workflow will involve getting a conversion rate quote, referred to as an `Offer`. The returned rate quote `Offer` will
+only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
+must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
+
+##### Quote `/fiat/convert/quote`
+
+_Request:_ All fields are required.
+```json
+{
+  "destinationCurrency": "CAD",
+  "sourceAmount": 1000,
+  "sourceCurrency": "USD"
+}
+```
+
+_Response:_ A rate quote with an encrypted `Offer ID`.
+```json
+{
+  "message": "conversion rate offer",
+  "payload": {
+    "offer": {
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "sourceAcc": "USD",
+      "destinationAcc": "CAD",
+      "rate": "1.35463",
+      "amount": "1354.63"
+    },
+    "offerId": "8nXnmfvKTNL5dgxNIjmnPNO7e7vcBxCL6iHcqwGxdE1VOPhfTWwMblZk-kAJiWhc",
+    "expires": 1682716375000
+  }
+}
+```

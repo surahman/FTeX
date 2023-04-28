@@ -48,7 +48,7 @@ const docTemplate = `{
                     "fiat currency convert transfer"
                 ],
                 "summary": "Conversion quote for Fiat funds between two Fiat currencies.",
-                "operationId": "convertRequestFiat",
+                "operationId": "convertQuoteFiat",
                 "parameters": [
                     {
                         "description": "the two currency code and amount to be converted",

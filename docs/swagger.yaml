@@ -141,7 +141,7 @@ paths:
       description: Conversion quote for Fiat funds between two Fiat currencies. The
         amount must be a positive number with at most two decimal places and both
         currency accounts must be opened.
-      operationId: convertRequestFiat
+      operationId: convertQuoteFiat
       parameters:
       - description: the two currency code and amount to be converted
         in: body
