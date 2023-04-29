@@ -115,6 +115,10 @@ func (s *Server) initialize() {
 		Use(authMiddleware).
 		POST("/exchange/offer",
 			restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
+	fiatGroup.
+		Use(authMiddleware).
+		POST("/exchange/transfer",
+			restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

@@ -177,7 +177,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 }
 
 // validateSourceDestinationAmount will validate the source and destination accounts as well as the source amount.
-func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal, ginCtx *gin.Context) (
+func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal) (
 	postgres.Currency, postgres.Currency, error) {
 	var (
 		err         error
@@ -187,25 +187,16 @@ func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decim
 
 	// Extract and validate the currency.
 	if err = source.Scan(src); err != nil || !source.Valid() {
-		ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-			models.HTTPError{Message: "invalid source currency", Payload: src})
-
-		return source, destination, fmt.Errorf("invalid source currency")
+		return source, destination, fmt.Errorf("invalid source currency %s", src)
 	}
 
 	if err = destination.Scan(dst); err != nil || !destination.Valid() {
-		ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-			models.HTTPError{Message: "invalid destination currency", Payload: dst})
-
-		return source, destination, fmt.Errorf("invalid destination currency")
+		return source, destination, fmt.Errorf("invalid destination currency %s", dst)
 	}
 
 	// Check for correct decimal places.
 	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || !sourceAmount.IsPositive() {
-		ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-			models.HTTPError{Message: "invalid amount", Payload: sourceAmount.String()})
-
-		return source, destination, fmt.Errorf("invalid source amount")
+		return source, destination, fmt.Errorf("invalid source amount %s", sourceAmount.String())
 	}
 
 	return source, destination, nil
@@ -226,8 +217,6 @@ func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decim
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Router			/fiat/exchange/offer [post]
-//
-//nolint:cyclop
 func ExchangeOfferFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
@@ -236,8 +225,6 @@ func ExchangeOfferFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			srcCurrency   postgres.Currency
-			dstCurrency   postgres.Currency
 			err           error
 			originalToken = ginCtx.GetHeader(authHeaderKey)
 			request       models.HTTPFiatExchangeOfferRequest
@@ -258,25 +245,10 @@ func ExchangeOfferFiat(
 		}
 
 		// Extract and validate the currency.
-		if err = srcCurrency.Scan(request.SourceCurrency); err != nil || !srcCurrency.Valid() {
+		if _, _, err = validateSourceDestinationAmount(
+			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid source currency", Payload: request.SourceCurrency})
-
-			return
-		}
-
-		if err = dstCurrency.Scan(request.DestinationCurrency); err != nil || !dstCurrency.Valid() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid destination currency", Payload: request.DestinationCurrency})
-
-			return
-		}
-
-		// Check for correct decimal places.
-		if !request.SourceAmount.Equal(request.SourceAmount.Truncate(constants.GetDecimalPlacesFiat())) ||
-			!request.SourceAmount.IsPositive() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid amount", Payload: request.SourceAmount.String()})
+				models.HTTPError{Message: "invalid request", Payload: err.Error()})
 
 			return
 		}
@@ -421,11 +393,10 @@ func ExchangeTransferFiat(
 
 		// Get currency codes.
 		if srcCurrency, dstCurrency, err = validateSourceDestinationAmount(
-			offer.SourceAcc, offer.DestinationAcc, offer.Amount, ginCtx); err != nil {
+			offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
 			logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
-				zap.Any("offer", offer))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
+				zap.Error(err))
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
 			return
 		}

@@ -128,6 +128,85 @@ func TestHandlers_OpenFiat(t *testing.T) {
 	}
 }
 
+func TestHandlers_ValidateSourceDestinationAmount(t *testing.T) {
+	t.Parallel()
+
+	amountValid, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid amount.")
+
+	amountInvalidNegative, err := decimal.NewFromString("-10101.11")
+	require.NoError(t, err, "failed to parse invalid negative amount")
+
+	amountInvalidDecimal, err := decimal.NewFromString("10101.111")
+	require.NoError(t, err, "failed to parse invalid decimal amount")
+
+	testCases := []struct {
+		name         string
+		expectErrMsg string
+		srcCurrency  string
+		dstCurrency  string
+		amount       decimal.Decimal
+		expectErr    require.ErrorAssertionFunc
+	}{
+		{
+			name:         "valid",
+			expectErrMsg: "",
+			srcCurrency:  "USD",
+			dstCurrency:  "CAD",
+			amount:       amountValid,
+			expectErr:    require.NoError,
+		}, {
+			name:         "invalid source currency",
+			expectErrMsg: "source currency",
+			srcCurrency:  "INVALID",
+			dstCurrency:  "CAD",
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid destination currency",
+			expectErrMsg: "destination currency",
+			srcCurrency:  "USD",
+			dstCurrency:  "INVALID",
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid negative amount",
+			expectErrMsg: "source amount",
+			srcCurrency:  "USD",
+			dstCurrency:  "CAD",
+			amount:       amountInvalidNegative,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid decimal amount",
+			expectErrMsg: "source amount",
+			srcCurrency:  "USD",
+			dstCurrency:  "CAD",
+			amount:       amountInvalidDecimal,
+			expectErr:    require.Error,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			src, dst, err := validateSourceDestinationAmount(test.srcCurrency, test.dstCurrency, test.amount)
+			test.expectErr(t, err, "error expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+
+				return
+			}
+
+			require.Equal(t, src, postgres.Currency(test.srcCurrency), "source currency mismatched.")
+			require.Equal(t, dst, postgres.Currency(test.dstCurrency), "destination currency mismatched.")
+		})
+	}
+}
+
 func TestHandlers_DepositFiat(t *testing.T) {
 	t.Parallel()
 
@@ -269,7 +348,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		})
 	}
 }
-func TestHandlers_ConvertRequestFiat(t *testing.T) {
+
+func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	amountValid, err := decimal.NewFromString("999")
@@ -299,7 +379,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		{
 			name:               "empty request",
 			expectedMsg:        "validation",
-			path:               "/fiat-conversion-request/empty-request",
+			path:               "/exchange-offer-fiat/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPFiatExchangeOfferRequest{},
 			authValidateJWTErr: nil,
@@ -313,7 +393,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "invalid source currency",
 			expectedMsg:    "source currency",
-			path:           "/fiat-conversion-request/invalid-src-currency",
+			path:           "/exchange-offer-fiat/invalid-src-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "INVALID",
@@ -331,7 +411,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "invalid destination currency",
 			expectedMsg:    "destination currency",
-			path:           "/fiat-conversion-request/invalid-dst-currency",
+			path:           "/exchange-offer-fiat/invalid-dst-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -349,7 +429,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "too many decimal places",
 			expectedMsg:    "amount",
-			path:           "/fiat-conversion-request/too-many-decimal-places",
+			path:           "/exchange-offer-fiat/too-many-decimal-places",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -367,7 +447,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "negative",
 			expectedMsg:    "amount",
-			path:           "/fiat-conversion-request/negative",
+			path:           "/exchange-offer-fiat/negative",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -385,7 +465,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "invalid jwt",
 			expectedMsg:    "invalid jwt",
-			path:           "/fiat-conversion-request/invalid-jwt",
+			path:           "/exchange-offer-fiat/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -403,7 +483,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "fiat conversion error",
 			expectedMsg:    "retry",
-			path:           "/fiat-conversion-request/fiat-conversion-error",
+			path:           "/exchange-offer-fiat/fiat-conversion-error",
 			expectedStatus: http.StatusInternalServerError,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -421,7 +501,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "encryption error",
 			expectedMsg:    "retry",
-			path:           "/fiat-conversion-request/encryption-error",
+			path:           "/exchange-offer-fiat/encryption-error",
 			expectedStatus: http.StatusInternalServerError,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -439,7 +519,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "redis error",
 			expectedMsg:    "retry",
-			path:           "/fiat-conversion-request/redis-error",
+			path:           "/exchange-offer-fiat/redis-error",
 			expectedStatus: http.StatusInternalServerError,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -457,7 +537,7 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 		}, {
 			name:           "valid",
 			expectedMsg:    "",
-			path:           "/fiat-conversion-request/valid",
+			path:           "/exchange-offer-fiat/valid",
 			expectedStatus: http.StatusOK,
 			request: &models.HTTPFiatExchangeOfferRequest{
 				SourceCurrency:      "USD",
@@ -520,11 +600,19 @@ func TestHandlers_ConvertRequestFiat(t *testing.T) {
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
 			var resp map[string]interface{}
-			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack success response.")
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
 			errorMessage, ok := resp["message"].(string)
 			require.True(t, ok, "failed to extract response message.")
-			require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
+
+			// Check for invalid currency codes and amount.
+			if errorMessage == "invalid request" {
+				payload, ok := resp["payload"].(string)
+				require.True(t, ok, "failed to extract payload from response.")
+				require.Contains(t, payload, test.expectedMsg)
+			} else {
+				require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
+			}
 		})
 	}
 }
