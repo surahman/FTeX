@@ -18,6 +18,7 @@ import (
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
+	"github.com/surahman/FTeX/pkg/redis"
 )
 
 func TestHandlers_OpenFiat(t *testing.T) {
@@ -568,7 +569,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockQuotes := quotes.NewMockQuotes(mockCtrl)
 
-			conversionReqJSON, err := json.Marshal(&test.request)
+			offerReqJSON, err := json.Marshal(&test.request)
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
@@ -592,7 +593,267 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(conversionReqJSON))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			errorMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+
+			// Check for invalid currency codes and amount.
+			if errorMessage == "invalid request" {
+				payload, ok := resp["payload"].(string)
+				require.True(t, ok, "failed to extract payload from response.")
+				require.Contains(t, payload, test.expectedMsg)
+			} else {
+				require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
+			}
+		})
+	}
+}
+
+func TestHandler_ExchangeTransferFiat(t *testing.T) {
+	t.Parallel()
+
+	validDecimal, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid decimal.")
+
+	validClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate valid client id.")
+
+	invalidClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate invalid client id.")
+
+	validOfferID := []byte("VALID")
+	validOffer := models.HTTPFiatExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	invalidOfferClientID := models.HTTPFiatExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       invalidClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	invalidOfferSource := models.HTTPFiatExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "INVALID",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	testCases := []struct {
+		name               string
+		path               string
+		expectedMsg        string
+		expectedStatus     int
+		request            models.HTTPFiatTransferRequest
+		authValidateJWTErr error
+		authValidateTimes  int
+		authDecryptErr     error
+		authDecryptTimes   int
+		redisData          models.HTTPFiatExchangeOfferResponse
+		redisErr           error
+		redisTimes         int
+		internalXferErr    error
+		internalXferTimes  int
+	}{
+		{
+			name:               "empty request",
+			path:               "/exchange-xfer-fiat/empty-request",
+			expectedMsg:        "validation",
+			expectedStatus:     http.StatusBadRequest,
+			request:            models.HTTPFiatTransferRequest{},
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			authDecryptErr:     nil,
+			authDecryptTimes:   0,
+			redisData:          validOffer,
+			redisErr:           nil,
+			redisTimes:         0,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "invalid JWT",
+			path:               "/exchange-xfer-fiat/invalid-jwt",
+			expectedMsg:        "bad auth",
+			expectedStatus:     http.StatusForbidden,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: errors.New("bad auth"),
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   0,
+			redisData:          validOffer,
+			redisErr:           nil,
+			redisTimes:         0,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "decrypt offer ID",
+			path:               "/exchange-xfer-fiat/decrypt-offer-id",
+			expectedMsg:        "retry",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     errors.New("decrypt offer id"),
+			authDecryptTimes:   1,
+			redisData:          validOffer,
+			redisErr:           nil,
+			redisTimes:         0,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "cache unknown error",
+			path:               "/exchange-xfer-fiat/cache-unknown-error",
+			expectedMsg:        "retry",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisData:          validOffer,
+			redisErr:           errors.New("unknown error"),
+			redisTimes:         1,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "cache expired",
+			path:               "/exchange-xfer-fiat/cache-expired",
+			expectedMsg:        "expired",
+			expectedStatus:     http.StatusRequestTimeout,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisData:          validOffer,
+			redisErr:           redis.ErrCacheMiss,
+			redisTimes:         1,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "client id mismatch",
+			path:               "/exchange-xfer-fiat/client-id-mismatch",
+			expectedMsg:        "retry",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisData:          invalidOfferClientID,
+			redisErr:           nil,
+			redisTimes:         1,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "invalid source destination amount",
+			path:               "/exchange-xfer-fiat/invalid-source-destination-amount",
+			expectedMsg:        "invalid",
+			expectedStatus:     http.StatusBadRequest,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisData:          invalidOfferSource,
+			redisErr:           nil,
+			redisTimes:         1,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "transaction failure",
+			path:               "/exchange-xfer-fiat/transaction-failure",
+			expectedMsg:        "both currency accounts and enough funds",
+			expectedStatus:     http.StatusBadRequest,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisData:          validOffer,
+			redisErr:           nil,
+			redisTimes:         1,
+			internalXferErr:    errors.New("transaction failure"),
+			internalXferTimes:  1,
+		}, {
+			name:               "valid",
+			path:               "/exchange-xfer-fiat/valid",
+			expectedMsg:        "successful",
+			expectedStatus:     http.StatusOK,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisData:          validOffer,
+			redisErr:           nil,
+			redisTimes:         1,
+			internalXferErr:    nil,
+			internalXferTimes:  1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			xferReqJSON, err := json.Marshal(&test.request)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(validClientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return(validOfferID, test.authDecryptErr).
+					Times(test.authDecryptTimes),
+
+				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					SetArg(1, test.redisData).
+					Times(test.redisTimes),
+
+				mockDB.EXPECT().FiatInternalTransfer(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, nil, test.internalXferErr).
+					Times(test.internalXferTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.POST(test.path, ExchangeTransferFiat(zapLogger, mockAuth, mockCache, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(xferReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
