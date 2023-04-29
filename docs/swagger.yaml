@@ -48,6 +48,13 @@ definitions:
     - sourceAmount
     - sourceCurrency
     type: object
+  models.HTTPFiatTransferRequest:
+    properties:
+      offerId:
+        type: string
+    required:
+    - offerId
+    type: object
   models.HTTPOpenCurrencyAccountRequest:
     properties:
       currency:
@@ -211,6 +218,49 @@ paths:
       summary: Exchange quote for Fiat funds between two Fiat currencies.
       tags:
       - fiat currency exchange convert offer transfer
+  /fiat/exchange/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Transfer Fiat funds between two Fiat currencies. The Offer ID must
+        be valid and have expired.
+      operationId: exchangeTransferFiat
+      parameters:
+      - description: the two currency code and amount to be converted
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPFiatTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "408":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Transfer Fiat funds between two Fiat currencies using a valid Offer
+        ID.
+      tags:
+      - fiat currency exchange convert offer transfer execute
   /fiat/open:
     post:
       consumes:

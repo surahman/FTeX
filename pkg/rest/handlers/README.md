@@ -241,3 +241,35 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 ```
 
 ##### Convert `/fiat/exchange/convert`
+
+_Request:_ All fields are required.
+```json
+{
+  "offerId": "omtJtAd0bsNHsRpTsV2HFJZjfXhmBTj2uxHPq0mCLV--6sCFPzSIpWWq7tXMkmmt"
+}
+```
+
+_Response:_ A rate quote with an encrypted `Offer ID`.
+```json
+{
+  "message": "fiat transfer successful",
+  "payload": {
+    "sourceReceipt": {
+      "txId": "88e98496-37f1-4d25-a5d4-dbba0dd82c76",
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txTimestamp": "2023-04-29T16:31:07.344558-04:00",
+      "balance": "21567.47",
+      "lastTx": "1365.25",
+      "currency": "USD"
+    },
+    "destinationReceipt": {
+      "txId": "88e98496-37f1-4d25-a5d4-dbba0dd82c76",
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txTimestamp": "2023-04-29T16:31:07.344558-04:00",
+      "balance": "1365.25",
+      "lastTx": "1365.25",
+      "currency": "CAD"
+    }
+  }
+}
+```

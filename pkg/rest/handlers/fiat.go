@@ -304,13 +304,15 @@ func ExchangeOfferFiat(
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPFiatExchangeRequest	true	"the two currency code and amount to be converted"
-//	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the conversion of funds"
-//	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		408		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Param			user	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
+//	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the conversion of funds"
+//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		408		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Router			/fiat/exchange/transfer [post]
+//
+//nolint:cyclop
 func ExchangeTransferFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
@@ -379,6 +381,20 @@ func ExchangeTransferFiat(
 				&models.HTTPError{Message: "please retry your request later"})
 
 			return
+		}
+
+		// Remove the offer from Redis.
+		if err = cache.Del(offerID); err != nil {
+			var redisErr *redis.Error
+
+			// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
+			if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
+				logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					&models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
 		}
 
 		// Verify that the client IDs match.
