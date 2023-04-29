@@ -1,6 +1,8 @@
 package redis
 
-import "errors"
+import (
+	"errors"
+)
 
 // Error codes.
 const (
@@ -58,4 +60,41 @@ func (e *Error) errorCacheDel() *Error {
 	e.Code = ErrorCacheDel
 
 	return e
+}
+
+// Generic error variables.
+// Errors to be returned by the Postgres Queries exposed through the interface for various failure conditions.
+var (
+	ErrCacheUnknown = errorCacheUnknown() // ErrCacheUnknown is returned if an unknown error occurs in the cache.
+	ErrCacheMiss    = errorCacheMiss()    // ErrCacheMiss is returned when a cache miss occurs.
+	ErrCacheSet     = errorCacheSet()     // ErrCacheSet is returned if a key-value pair cannot be placed in the cache.
+	ErrCacheDel     = errorCacheDel()     // ErrCacheDel is returned if a key-value pair cannot be deleted from the cache.
+)
+
+func errorCacheUnknown() error {
+	return &Error{
+		Message: "unknown Redis cache error",
+		Code:    ErrorUnknown,
+	}
+}
+
+func errorCacheMiss() error {
+	return &Error{
+		Message: "Redis cache miss",
+		Code:    ErrorCacheMiss,
+	}
+}
+
+func errorCacheSet() error {
+	return &Error{
+		Message: "Redis cache Set failure",
+		Code:    ErrorCacheSet,
+	}
+}
+
+func errorCacheDel() error {
+	return &Error{
+		Message: "Redis cache Del failure",
+		Code:    ErrorCacheDel,
+	}
 }
