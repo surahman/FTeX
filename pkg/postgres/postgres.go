@@ -52,6 +52,11 @@ type Postgres interface {
 	// FiatExternalTransfer will transfer Fiat funds into an account associated with a Client ID for a specific
 	// currency.
 	FiatExternalTransfer(context.Context, *FiatTransactionDetails) (*FiatAccountTransferResult, error)
+
+	// FiatInternalTransfer will transfer Fiat funds for a specific Client ID between two Fiat currency accounts for
+	// that client.
+	FiatInternalTransfer(context.Context, *FiatTransactionDetails, *FiatTransactionDetails) (
+		*FiatAccountTransferResult, *FiatAccountTransferResult, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

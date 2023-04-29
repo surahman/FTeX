@@ -80,6 +80,22 @@ func (mr *MockPostgresMockRecorder) FiatExternalTransfer(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatExternalTransfer", reflect.TypeOf((*MockPostgres)(nil).FiatExternalTransfer), arg0, arg1)
 }
 
+// FiatInternalTransfer mocks base method.
+func (m *MockPostgres) FiatInternalTransfer(arg0 context.Context, arg1, arg2 *postgres.FiatTransactionDetails) (*postgres.FiatAccountTransferResult, *postgres.FiatAccountTransferResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatInternalTransfer", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*postgres.FiatAccountTransferResult)
+	ret1, _ := ret[1].(*postgres.FiatAccountTransferResult)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// FiatInternalTransfer indicates an expected call of FiatInternalTransfer.
+func (mr *MockPostgresMockRecorder) FiatInternalTransfer(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatInternalTransfer", reflect.TypeOf((*MockPostgres)(nil).FiatInternalTransfer), arg0, arg1, arg2)
+}
+
 // Healthcheck mocks base method.
 func (m *MockPostgres) Healthcheck() error {
 	m.ctrl.T.Helper()

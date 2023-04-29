@@ -60,13 +60,13 @@ type HTTPFiatExchangeOfferResponse struct {
 	Expires    int64  `json:"expires" yaml:"expires"`
 }
 
-// HTTPFiatConvertRequest is the request to accept and execute an existing exchange offer.
-type HTTPFiatConvertRequest struct {
+// HTTPFiatTransferRequest is the request to accept and execute an existing exchange offer.
+type HTTPFiatTransferRequest struct {
 	OfferID string `json:"offerId" yaml:"offerId" validate:"required"`
 }
 
-// HTTPFiatConvertResponse is the response to a successful exchange conversion request.
-type HTTPFiatConvertResponse struct {
-	SrcTxReceipt postgres.FiatAccountTransferResult `json:"sourceReceipt" yaml:"sourceReceipt"`
-	DstTxReceipt postgres.FiatAccountTransferResult `json:"destinationReceipt" yaml:"destinationReceipt"`
+// HTTPFiatTransferResponse is the response to a successful exchange conversion request.
+type HTTPFiatTransferResponse struct {
+	SrcTxReceipt *postgres.FiatAccountTransferResult `json:"sourceReceipt" yaml:"sourceReceipt"`
+	DstTxReceipt *postgres.FiatAccountTransferResult `json:"destinationReceipt" yaml:"destinationReceipt"`
 }
