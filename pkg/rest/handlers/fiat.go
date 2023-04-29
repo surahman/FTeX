@@ -3,12 +3,14 @@ package rest
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/rs/xid"
+	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
@@ -172,6 +174,41 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds successfully transferred", Payload: *transferReceipt})
 	}
+}
+
+// validateSourceDestinationAmount will validate the source and destination accounts as well as the source amount.
+func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal, ginCtx *gin.Context) (
+	postgres.Currency, postgres.Currency, error) {
+	var (
+		err         error
+		source      postgres.Currency
+		destination postgres.Currency
+	)
+
+	// Extract and validate the currency.
+	if err = source.Scan(src); err != nil || !source.Valid() {
+		ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+			models.HTTPError{Message: "invalid source currency", Payload: src})
+
+		return source, destination, fmt.Errorf("invalid source currency")
+	}
+
+	if err = destination.Scan(dst); err != nil || !destination.Valid() {
+		ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+			models.HTTPError{Message: "invalid destination currency", Payload: dst})
+
+		return source, destination, fmt.Errorf("invalid destination currency")
+	}
+
+	// Check for correct decimal places.
+	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || !sourceAmount.IsPositive() {
+		ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+			models.HTTPError{Message: "invalid amount", Payload: sourceAmount.String()})
+
+		return source, destination, fmt.Errorf("invalid source amount")
+	}
+
+	return source, destination, nil
 }
 
 // ExchangeOfferFiat will handle an HTTP request to get an exchange offer of funds between two Fiat currencies.
