@@ -140,7 +140,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 		}
 
 		// Check for correct decimal places.
-		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || !request.Amount.IsPositive() {
+		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || request.Amount.IsNegative() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: "invalid amount", Payload: request.Amount.String()})
 
@@ -195,7 +195,7 @@ func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decim
 	}
 
 	// Check for correct decimal places.
-	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || !sourceAmount.IsPositive() {
+	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || sourceAmount.IsNegative() {
 		return source, destination, fmt.Errorf("invalid source amount %s", sourceAmount.String())
 	}
 
