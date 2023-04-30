@@ -55,9 +55,10 @@ type HTTPFiatExchangeOfferRequest struct {
 
 // HTTPFiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
 type HTTPFiatExchangeOfferResponse struct {
-	PriceQuote `json:"offer" yaml:"offer"`
-	OfferID    string `json:"offerId" yaml:"offerId"`
-	Expires    int64  `json:"expires" yaml:"expires"`
+	PriceQuote  `json:"offer" yaml:"offer"`
+	DebitAmount decimal.Decimal `json:"debitAmount" yaml:"debitAmount"`
+	OfferID     string          `json:"offerId" yaml:"offerId"`
+	Expires     int64           `json:"expires" yaml:"expires"`
 }
 
 // HTTPFiatTransferRequest is the request to accept and execute an existing exchange offer.

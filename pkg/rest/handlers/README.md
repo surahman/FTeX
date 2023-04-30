@@ -229,13 +229,14 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
   "payload": {
     "offer": {
       "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "sourceAcc": "USD",
-      "destinationAcc": "CAD",
-      "rate": "1.35463",
-      "amount": "1354.63"
+      "sourceAcc": "CAD",
+      "destinationAcc": "USD",
+      "rate": "0.732467",
+      "amount": "73.44"
     },
-    "offerId": "8nXnmfvKTNL5dgxNIjmnPNO7e7vcBxCL6iHcqwGxdE1VOPhfTWwMblZk-kAJiWhc",
-    "expires": 1682716375000
+    "debitAmount": "100.26",
+    "offerId": "m45QsqDVbzi2bVasVzWJ3cKPKy98BUDhyicK4cOwIbZXdydUXXMzW9PFx82OAz7y",
+    "expires": 1682878564
   }
 }
 ```
@@ -245,7 +246,7 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 _Request:_ All fields are required.
 ```json
 {
-  "offerId": "omtJtAd0bsNHsRpTsV2HFJZjfXhmBTj2uxHPq0mCLV--6sCFPzSIpWWq7tXMkmmt"
+  "offerId": "m45QsqDVbzi2bVasVzWJ3cKPKy98BUDhyicK4cOwIbZXdydUXXMzW9PFx82OAz7y"
 }
 ```
 
@@ -255,20 +256,20 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
   "message": "fiat transfer successful",
   "payload": {
     "sourceReceipt": {
-      "txId": "88e98496-37f1-4d25-a5d4-dbba0dd82c76",
+      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
       "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txTimestamp": "2023-04-29T16:31:07.344558-04:00",
-      "balance": "21567.47",
-      "lastTx": "1365.25",
-      "currency": "USD"
+      "txTimestamp": "2023-04-30T14:06:54.654345-04:00",
+      "balance": "1338.43",
+      "lastTx": "-100.26",
+      "currency": "CAD"
     },
     "destinationReceipt": {
-      "txId": "88e98496-37f1-4d25-a5d4-dbba0dd82c76",
+      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
       "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txTimestamp": "2023-04-29T16:31:07.344558-04:00",
-      "balance": "1365.25",
-      "lastTx": "1365.25",
-      "currency": "CAD"
+      "txTimestamp": "2023-04-30T14:06:54.654345-04:00",
+      "balance": "21714.35",
+      "lastTx": "73.44",
+      "currency": "USD"
     }
   }
 }

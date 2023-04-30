@@ -271,6 +271,7 @@ func ExchangeOfferFiat(
 
 		offer.SourceAcc = request.SourceCurrency
 		offer.DestinationAcc = request.DestinationCurrency
+		offer.DebitAmount = request.SourceAmount
 		offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
 
 		// Encrypt offer ID before returning to client.
@@ -435,7 +436,7 @@ func ExchangeTransferFiat(
 		srcTxDetails := &postgres.FiatTransactionDetails{
 			ClientID: offer.ClientID,
 			Currency: srcCurrency,
-			Amount:   offer.PriceQuote.Amount,
+			Amount:   offer.DebitAmount.Mul(decimal.NewFromFloat(-1.0)),
 		}
 		dstTxDetails := &postgres.FiatTransactionDetails{
 			ClientID: offer.ClientID,

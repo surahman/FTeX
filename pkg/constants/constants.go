@@ -30,7 +30,7 @@ const (
 	testDatabaseName              = "ftex_db_test"
 	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
 	fiatDecimalPlaces             = int32(2)
-	fiatOfferTTL                  = 10 * time.Minute
+	fiatOfferTTL                  = 2 * time.Minute
 	cryptoOfferTTL                = 2 * time.Minute
 )
 
