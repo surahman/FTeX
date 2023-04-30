@@ -8,19 +8,27 @@ import (
 	"github.com/imroc/req/v3"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/afero"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"go.uber.org/zap"
 )
 
-// Mock Quotes interface stub generation.
-//go:generate mockgen -destination=../mocks/mock_quotes.go -package=mocks github.com/surahman/FTeX/pkg/quotes Quotes
+// Mock Quotes interface stub generation. This is local to the Quotes package.
+//go:generate mockgen -destination=quotes_mocks.go -package=quotes github.com/surahman/FTeX/pkg/quotes Quotes
 
 // Quotes is the interface through which the currency quote services can be accessed. Created to support mock testing.
 type Quotes interface {
-	// FiatQuote will retrieve a quote for a fiat currency price.
-	FiatQuote(source, destination string, sourceAmount decimal.Decimal) (models.FiatQuote, error)
-	CryptoQuote(source, destination string) (models.CryptoQuote, error)
+	// fiatQuote will retrieve a quote for a Fiat currency price.
+	fiatQuote(source, destination string, sourceAmount decimal.Decimal) (models.FiatQuote, error)
+
+	// cryptoQuote will retrieve a quote for a Cryptocurrency price.
+	cryptoQuote(source, destination string) (models.CryptoQuote, error)
+
+	// FiatConversion will convert a source currency, in a given amount, to the destination currency.
+	FiatConversion(source, destination string, amount decimal.Decimal,
+		fiatQuote func(source, destination string, amount decimal.Decimal) (models.FiatQuote, error)) (
+		decimal.Decimal, decimal.Decimal, error)
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -98,7 +106,7 @@ func configCryptoClient(conf *config) (*req.Client, error) {
 }
 
 // FiatQuote will access the Fiat currency price quote service and get the latest exchange rate.
-func (q *quotesImpl) FiatQuote(source, destination string, sourceAmount decimal.Decimal) (models.FiatQuote, error) {
+func (q *quotesImpl) fiatQuote(source, destination string, sourceAmount decimal.Decimal) (models.FiatQuote, error) {
 	result := models.FiatQuote{}
 
 	_, err := q.clientFiat.R().
@@ -124,8 +132,41 @@ func (q *quotesImpl) FiatQuote(source, destination string, sourceAmount decimal.
 	return result, nil
 }
 
+// FiatConversion will convert a source currency, in a given amount, to the destination currency.
+func (q *quotesImpl) FiatConversion(
+	source,
+	destination string,
+	amount decimal.Decimal,
+	fiatQuote func(source, destination string, amount decimal.Decimal) (models.FiatQuote, error)) (
+	decimal.Decimal, decimal.Decimal, error) {
+	var (
+		err      error
+		rawQuote models.FiatQuote
+	)
+
+	// The fiatQuote parameter is exposed for stub injection used for testing.
+	if fiatQuote == nil {
+		fiatQuote = q.fiatQuote
+	}
+
+	rawQuote, err = fiatQuote(source, destination, amount)
+	if err != nil {
+		q.logger.Warn("failed to convert Fiat currency", zap.Error(err))
+
+		return decimal.Decimal{}, decimal.Decimal{}, fmt.Errorf("%w", err)
+	}
+
+	// For precision related concerns the amount to be posted will be recalculated here. We only rely on the quote
+	// provider for rate quote's precision and not the amount converted precision.
+	convertedAmount := rawQuote.Info.Rate.
+		Mul(amount).
+		RoundBank(constants.GetDecimalPlacesFiat())
+
+	return rawQuote.Info.Rate, convertedAmount, nil
+}
+
 // CryptoQuote will access the Fiat currency price quote service and get the latest exchange rate.
-func (q *quotesImpl) CryptoQuote(source, destination string) (models.CryptoQuote, error) {
+func (q *quotesImpl) cryptoQuote(source, destination string) (models.CryptoQuote, error) {
 	result := models.CryptoQuote{}
 
 	resp, err := q.clientCrypto.R().

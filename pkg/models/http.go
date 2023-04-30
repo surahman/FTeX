@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/shopspring/decimal"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
+	"github.com/surahman/FTeX/pkg/postgres"
 )
 
 // JWTAuthResponse is the response to a successful login and token refresh. The expires field is used on by the client to
@@ -34,13 +35,39 @@ type HTTPDeleteUserRequest struct {
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }
 
-// HTTPOpenCurrencyAccount is a request to open an account in a specified Fiat or Cryptocurrency.
-type HTTPOpenCurrencyAccount struct {
+// HTTPOpenCurrencyAccountRequest is a request to open an account in a specified Fiat or Cryptocurrency.
+type HTTPOpenCurrencyAccountRequest struct {
 	Currency string `json:"currency" yaml:"currency" validate:"required"`
 }
 
-// HTTPDepositCurrency is a request to deposit currency in to a specified Fiat or Cryptocurrency.
-type HTTPDepositCurrency struct {
+// HTTPDepositCurrencyRequest is a request to deposit currency in to a specified Fiat or Cryptocurrency.
+type HTTPDepositCurrencyRequest struct {
 	Amount   decimal.Decimal `json:"amount" yaml:"amount" validate:"required,gt=0"`
 	Currency string          `json:"currency" yaml:"currency" validate:"required"`
+}
+
+// HTTPFiatExchangeOfferRequest is a request to convert a source to destination currency in the source currency amount.
+type HTTPFiatExchangeOfferRequest struct {
+	SourceCurrency      string          `json:"sourceCurrency" yaml:"sourceCurrency" validate:"required"`
+	DestinationCurrency string          `json:"destinationCurrency" yaml:"destinationCurrency" validate:"required"`
+	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`
+}
+
+// HTTPFiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type HTTPFiatExchangeOfferResponse struct {
+	PriceQuote  `json:"offer" yaml:"offer"`
+	DebitAmount decimal.Decimal `json:"debitAmount" yaml:"debitAmount"`
+	OfferID     string          `json:"offerId" yaml:"offerId"`
+	Expires     int64           `json:"expires" yaml:"expires"`
+}
+
+// HTTPFiatTransferRequest is the request to accept and execute an existing exchange offer.
+type HTTPFiatTransferRequest struct {
+	OfferID string `json:"offerId" yaml:"offerId" validate:"required"`
+}
+
+// HTTPFiatTransferResponse is the response to a successful exchange conversion request.
+type HTTPFiatTransferResponse struct {
+	SrcTxReceipt *postgres.FiatAccountTransferResult `json:"sourceReceipt" yaml:"sourceReceipt"`
+	DstTxReceipt *postgres.FiatAccountTransferResult `json:"destinationReceipt" yaml:"destinationReceipt"`
 }

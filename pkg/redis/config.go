@@ -14,7 +14,6 @@ import (
 type config struct {
 	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
 	Connection     connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
-	Data           dataConfig           `json:"data,omitempty" yaml:"data,omitempty" mapstructure:"data"`
 }
 
 // authenticationConfig contains the Redis session authentication information.
@@ -33,11 +32,6 @@ type connectionConfig struct {
 	PoolSize        int    `json:"poolSize,omitempty" yaml:"poolSize,omitempty" mapstructure:"poolSize" validate:"required,min=1"`
 	MinIdleConns    int    `json:"minIdleConns,omitempty" yaml:"minIdleConns,omitempty" mapstructure:"minIdleConns" validate:"required,min=1"`
 	MaxIdleConns    int    `json:"maxIdleConns,omitempty" yaml:"maxIdleConns,omitempty" mapstructure:"maxIdleConns"`
-}
-
-// dataConfig contains the Redis data storage related information.
-type dataConfig struct {
-	TTL int64 `json:"ttl,omitempty" yaml:"ttl,omitempty" mapstructure:"ttl" validate:"omitempty,min=60"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

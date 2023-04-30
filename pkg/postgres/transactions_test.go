@@ -364,6 +364,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 		balanceClientID2 = decimal.NewFromFloat(1921.68)
 		amount20k        = decimal.NewFromFloat(20987.65)
 		amount1k         = decimal.NewFromFloat(1234.56)
+		amountNegative   = decimal.NewFromFloat(-1010.11)
 		txTimestamp      = pgtype.Timestamptz{}
 	)
 
@@ -396,12 +397,14 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	// Test grid.
 	testCases := []struct {
 		name           string
+		expectErrMsg   string
 		source         FiatTransactionDetails
 		destination    FiatTransactionDetails
 		errExpectation require.ErrorAssertionFunc
 	}{
 		{
-			name: "Client1USD 20k, Client2AED 1k",
+			name:         "Client1USD 20k, Client2AED 1k",
+			expectErrMsg: "insufficient balance",
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
@@ -414,7 +417,8 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			},
 			errExpectation: require.NoError,
 		}, {
-			name: "Client2AED 1k, Client1USD 20k",
+			name:         "Client2AED 1k, Client1USD 20k",
+			expectErrMsg: "insufficient balance",
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
@@ -427,7 +431,8 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			},
 			errExpectation: require.NoError,
 		}, {
-			name: "Client1USD 1k, Client2AED 20k",
+			name:         "Client1USD 1k, Client2AED 20k",
+			expectErrMsg: "insufficient balance",
 			source: FiatTransactionDetails{
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
@@ -440,7 +445,8 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			},
 			errExpectation: require.Error,
 		}, {
-			name: "Client2AED 20k, Client1USD 1k",
+			name:         "Client2AED 20k, Client1USD 1k",
+			expectErrMsg: "insufficient balance",
 			source: FiatTransactionDetails{
 				ClientID: clientID2,
 				Currency: CurrencyAED,
@@ -450,6 +456,34 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 				ClientID: clientID1,
 				Currency: CurrencyUSD,
 				Amount:   amount1k,
+			},
+			errExpectation: require.Error,
+		}, {
+			name:         "Client1USD Negative, Client2AED 1k",
+			expectErrMsg: "negative",
+			source: FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   amountNegative,
+			},
+			destination: FiatTransactionDetails{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amount1k,
+			},
+			errExpectation: require.Error,
+		}, {
+			name:         "Client1USD 20k, Client2AED Negative",
+			expectErrMsg: "negative",
+			source: FiatTransactionDetails{
+				ClientID: clientID1,
+				Currency: CurrencyUSD,
+				Amount:   amount20k,
+			},
+			destination: FiatTransactionDetails{
+				ClientID: clientID2,
+				Currency: CurrencyAED,
+				Amount:   amountNegative,
 			},
 			errExpectation: require.Error,
 		},
@@ -473,7 +507,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 			test.errExpectation(t, err, "failed error expectation")
 
 			if err != nil {
-				require.Contains(t, err.Error(), "insufficient", "failure not related to balance.")
+				require.Contains(t, err.Error(), test.expectErrMsg, "failure not related to balance.")
 			}
 		})
 	}
@@ -592,8 +626,8 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	var (
-		expectedTotalClientID1 = decimal.NewFromFloat(616115.59)
-		expectedTotalClientID2 = decimal.NewFromFloat(284321.37)
+		expectedTotalClientID1 = decimal.NewFromFloat(517306.27)
+		expectedTotalClientID2 = decimal.NewFromFloat(190859.81)
 		balanceClientID1       = decimal.NewFromFloat(521459.77)
 		balanceClientID2       = decimal.NewFromFloat(192103.68)
 		txTimestamp            = pgtype.Timestamptz{}

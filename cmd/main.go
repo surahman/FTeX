@@ -8,6 +8,7 @@ import (
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
 	"github.com/surahman/FTeX/pkg/rest"
 	_ "go.uber.org/automaxprocs"
@@ -33,14 +34,15 @@ func (c *callbacks) callback(logger *logger.Logger) {
 
 func main() {
 	var (
-		authorization auth.Auth
-		cache         redis.Redis
-		cleanup       callbacks
-		database      postgres.Postgres
-		err           error
-		logging       *logger.Logger
-		serverREST    *rest.Server
-		waitGroup     sync.WaitGroup
+		authorization   auth.Auth
+		cache           redis.Redis
+		cleanup         callbacks
+		database        postgres.Postgres
+		err             error
+		logging         *logger.Logger
+		conversionRates quotes.Quotes
+		serverREST      *rest.Server
+		waitGroup       sync.WaitGroup
 	)
 
 	// File system setup.
@@ -78,6 +80,12 @@ func main() {
 
 	cleanup.add(cache.Close)
 
+	// Quotes setup.
+	if conversionRates, err = quotes.NewQuote(&fs, logging); err != nil {
+		cleanup.callback(logging)
+		logging.Panic("failed to configure Quotes module", zap.Error(err))
+	}
+
 	// Authorization setup.
 	if authorization, err = auth.NewAuth(&fs, logging); err != nil {
 		cleanup.callback(logging)
@@ -90,7 +98,8 @@ func main() {
 	// Setup REST server and start it.
 	waitGroup.Add(1)
 
-	if serverREST, err = rest.NewServer(&fs, authorization, database, cache, logging, &waitGroup); err != nil {
+	if serverREST, err = rest.
+		NewServer(&fs, authorization, database, cache, conversionRates, logging, &waitGroup); err != nil {
 		logging.Panic("failed to create the REST server", zap.Error(err))
 	}
 

@@ -1,5 +1,7 @@
 package constants
 
+import "time"
+
 const (
 	// Configuration file directories.
 	configEtcDir  = "/etc/FTeX.conf/"
@@ -27,7 +29,9 @@ const (
 	postgresDSN                   = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
 	testDatabaseName              = "ftex_db_test"
 	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
-	decimalPlacesFiat             = int32(2)
+	fiatDecimalPlaces             = int32(2)
+	fiatOfferTTL                  = 2 * time.Minute
+	cryptoOfferTTL                = 2 * time.Minute
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -127,5 +131,15 @@ func GetDeleteUserAccountConfirmation() string {
 
 // GetDecimalPlacesFiat the number of decimal places Fiat currency can have.
 func GetDecimalPlacesFiat() int32 {
-	return decimalPlacesFiat
+	return fiatDecimalPlaces
+}
+
+// GetFiatOfferTTL is the time duration that a Fiat conversion rate offer will be valid for.
+func GetFiatOfferTTL() time.Duration {
+	return fiatOfferTTL
+}
+
+// GetCryptoOfferTTL is the time duration that a Crypto conversion rate offer will be valid for.
+func GetCryptoOfferTTL() time.Duration {
+	return cryptoOfferTTL
 }

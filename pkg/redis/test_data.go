@@ -15,9 +15,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"username_empty": `
 authentication:
@@ -29,9 +27,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"password_empty": `
 authentication:
@@ -43,9 +39,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"no_addr": `
 authentication:
@@ -57,9 +51,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"invalid_max_retries": `
 authentication:
@@ -71,9 +63,7 @@ connection:
   maxRetries: 0
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"invalid_pool_size": `
 authentication:
@@ -85,9 +75,7 @@ connection:
   maxRetries: 3
   poolSize: 0
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"invalid_min_idle_conns": `
 authentication:
@@ -99,9 +87,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 0
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"no_max_idle_conns": `
 authentication:
@@ -113,23 +99,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 10
-  maxIdleConns:
-data:
-  ttl: 900`,
-
-		"invalid_min_ttl": `
-authentication:
-  username: root
-  password: root
-connection:
-  addr: 127.0.0.1:7379
-  maxConnAttempts: 5
-  maxRetries: 3
-  poolSize: 4
-  minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 59`,
+  maxIdleConns:`,
 
 		"test_suite": `
 authentication:
@@ -141,9 +111,7 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 
 		"github-ci-runner": `
 authentication:
@@ -155,8 +123,6 @@ connection:
   maxRetries: 3
   poolSize: 4
   minIdleConns: 1
-  maxIdleConns: 20
-data:
-  ttl: 900`,
+  maxIdleConns: 20`,
 	}
 }

@@ -6,6 +6,7 @@ package mocks
 
 import (
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -108,15 +109,15 @@ func (mr *MockRedisMockRecorder) Open() *gomock.Call {
 }
 
 // Set mocks base method.
-func (m *MockRedis) Set(arg0 string, arg1 interface{}) error {
+func (m *MockRedis) Set(arg0 string, arg1 interface{}, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", arg0, arg1)
+	ret := m.ctrl.Call(m, "Set", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockRedisMockRecorder) Set(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) Set(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockRedis)(nil).Set), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockRedis)(nil).Set), arg0, arg1, arg2)
 }

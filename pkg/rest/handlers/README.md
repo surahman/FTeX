@@ -202,3 +202,77 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
   }
 }
 ```
+
+### Convert
+
+To convert between Fiat currencies, the user must maintain open accounts in both the source and destination Fiat currencies.
+The amount specified will be in the source currency and the amount to deposit into the destination account will be calculated
+based on the exchange rate.
+
+The workflow will involve getting a conversion rate quote, referred to as an `Offer`. The returned rate quote `Offer` will
+only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
+must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
+
+##### Quote `/fiat/exchange/offer`
+
+_Request:_ All fields are required.
+```json
+{
+  "destinationCurrency": "CAD",
+  "sourceAmount": 1000,
+  "sourceCurrency": "USD"
+}
+```
+
+_Response:_ A rate quote with an encrypted `Offer ID`.
+```json
+{
+  "message": "conversion rate offer",
+  "payload": {
+    "offer": {
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "sourceAcc": "CAD",
+      "destinationAcc": "USD",
+      "rate": "0.732467",
+      "amount": "73.44"
+    },
+    "debitAmount": "100.26",
+    "offerId": "m45QsqDVbzi2bVasVzWJ3cKPKy98BUDhyicK4cOwIbZXdydUXXMzW9PFx82OAz7y",
+    "expires": 1682878564
+  }
+}
+```
+
+##### Convert `/fiat/exchange/convert`
+
+_Request:_ All fields are required.
+```json
+{
+  "offerId": "m45QsqDVbzi2bVasVzWJ3cKPKy98BUDhyicK4cOwIbZXdydUXXMzW9PFx82OAz7y"
+}
+```
+
+_Response:_ A rate quote with an encrypted `Offer ID`.
+```json
+{
+  "message": "funds exchange transfer successful",
+  "payload": {
+    "sourceReceipt": {
+      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txTimestamp": "2023-04-30T14:06:54.654345-04:00",
+      "balance": "1338.43",
+      "lastTx": "-100.26",
+      "currency": "CAD"
+    },
+    "destinationReceipt": {
+      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txTimestamp": "2023-04-30T14:06:54.654345-04:00",
+      "balance": "21714.35",
+      "lastTx": "73.44",
+      "currency": "USD"
+    }
+  }
+}
+```

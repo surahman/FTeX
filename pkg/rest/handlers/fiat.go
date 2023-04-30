@@ -3,15 +3,21 @@ package rest
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"github.com/rs/xid"
+	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
+	"github.com/surahman/FTeX/pkg/redis"
 	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -25,11 +31,11 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPOpenCurrencyAccount	true	"currency code for new account"
-//	@Success		201		{object}	models.HTTPSuccess				"a message to confirm the creation of an account"
-//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Param			user	body		models.HTTPOpenCurrencyAccountRequest	true	"currency code for new account"
+//	@Success		201		{object}	models.HTTPSuccess						"a message to confirm the creation of an account"
+//	@Failure		400		{object}	models.HTTPError						"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Router			/fiat/open [post]
 func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
@@ -38,7 +44,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 			currency      postgres.Currency
 			err           error
 			originalToken = ginCtx.GetHeader(authHeaderKey)
-			request       models.HTTPOpenCurrencyAccount
+			request       models.HTTPOpenCurrencyAccountRequest
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -96,11 +102,11 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPDepositCurrency	true	"currency code and amount to be deposited"
-//	@Success		200		{object}	models.HTTPSuccess			"a message to confirm the creation of an account"
-//	@Failure		400		{object}	models.HTTPError			"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError			"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Param			user	body		models.HTTPDepositCurrencyRequest	true	"currency code and amount to be deposited"
+//	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the deposit of funds"
+//	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Router			/fiat/deposit [post]
 func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
@@ -109,7 +115,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			currency        postgres.Currency
 			err             error
 			originalToken   = ginCtx.GetHeader(authHeaderKey)
-			request         models.HTTPDepositCurrency
+			request         models.HTTPDepositCurrencyRequest
 			transferReceipt *postgres.FiatAccountTransferResult
 		)
 
@@ -134,7 +140,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 		}
 
 		// Check for correct decimal places.
-		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || !request.Amount.IsPositive() {
+		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || request.Amount.IsNegative() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: "invalid amount", Payload: request.Amount.String()})
 
@@ -167,5 +173,288 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 		}
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds successfully transferred", Payload: *transferReceipt})
+	}
+}
+
+// validateSourceDestinationAmount will validate the source and destination accounts as well as the source amount.
+func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal) (
+	postgres.Currency, postgres.Currency, error) {
+	var (
+		err         error
+		source      postgres.Currency
+		destination postgres.Currency
+	)
+
+	// Extract and validate the currency.
+	if err = source.Scan(src); err != nil || !source.Valid() {
+		return source, destination, fmt.Errorf("invalid source currency %s", src)
+	}
+
+	if err = destination.Scan(dst); err != nil || !destination.Valid() {
+		return source, destination, fmt.Errorf("invalid destination currency %s", dst)
+	}
+
+	// Check for correct decimal places.
+	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || sourceAmount.IsNegative() {
+		return source, destination, fmt.Errorf("invalid source amount %s", sourceAmount.String())
+	}
+
+	return source, destination, nil
+}
+
+// ExchangeOfferFiat will handle an HTTP request to get an exchange offer of funds between two Fiat currencies.
+//
+//	@Summary		Exchange quote for Fiat funds between two Fiat currencies.
+//	@Description	Exchange quote for Fiat funds between two Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.
+//	@Tags			fiat currency exchange convert offer transfer
+//	@Id				exchangeOfferFiat
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			user	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
+//	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the conversion of funds"
+//	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Router			/fiat/exchange/offer [post]
+func ExchangeOfferFiat(
+	logger *logger.Logger,
+	auth auth.Auth,
+	cache redis.Redis,
+	quotes quotes.Quotes,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			err           error
+			originalToken = ginCtx.GetHeader(authHeaderKey)
+			request       models.HTTPFiatExchangeOfferRequest
+			offer         models.HTTPFiatExchangeOfferResponse
+			offerID       = xid.New().String()
+		)
+
+		if err = ginCtx.ShouldBindJSON(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if err = validator.ValidateStruct(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
+
+			return
+		}
+
+		// Extract and validate the currency.
+		if _, _, err = validateSourceDestinationAmount(
+			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: "invalid request", Payload: err.Error()})
+
+			return
+		}
+
+		if offer.ClientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Compile exchange rate offer.
+		if offer.Rate, offer.Amount, err = quotes.FiatConversion(
+			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, nil); err != nil {
+			logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		offer.SourceAcc = request.SourceCurrency
+		offer.DestinationAcc = request.DestinationCurrency
+		offer.DebitAmount = request.SourceAmount
+		offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+
+		// Encrypt offer ID before returning to client.
+		if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
+			logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		// Store the offer in Redis.
+		if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+			logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "conversion rate offer", Payload: offer})
+	}
+}
+
+// getCachedOffer will retrieve and then evict an offer from the Redis cache.
+func getCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
+	models.HTTPFiatExchangeOfferResponse, int, string, error) {
+	var (
+		err   error
+		offer models.HTTPFiatExchangeOfferResponse
+	)
+
+	// Retrieve the offer from Redis.
+	if err = cache.Get(offerID, &offer); err != nil {
+		var redisErr *redis.Error
+
+		// If we have a valid Redis package error AND the error is that the key is not found.
+		if errors.As(err, &redisErr) && redisErr.Is(redis.ErrCacheMiss) {
+			return offer, http.StatusRequestTimeout, "Fiat exchange rate offer has expired", fmt.Errorf("%w", err)
+		}
+
+		logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+
+		return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+	}
+
+	// Remove the offer from Redis.
+	if err = cache.Del(offerID); err != nil {
+		var redisErr *redis.Error
+
+		// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
+		if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
+			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+
+			return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+		}
+	}
+
+	return offer, http.StatusOK, "", nil
+}
+
+// ExchangeTransferFiat will handle an HTTP request to execute and complete a Fiat currency exchange offer.
+//
+//	@Summary		Transfer Fiat funds between two Fiat currencies using a valid Offer ID.
+//	@Description	Transfer Fiat funds between two Fiat currencies. The Offer ID must be valid and have expired.
+//	@Tags			fiat currency exchange convert offer transfer execute
+//	@Id				exchangeTransferFiat
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			user	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
+//	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the conversion of funds"
+//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		408		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Router			/fiat/exchange/transfer [post]
+func ExchangeTransferFiat(
+	logger *logger.Logger,
+	auth auth.Auth,
+	cache redis.Redis,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			err           error
+			clientID      uuid.UUID
+			originalToken = ginCtx.GetHeader(authHeaderKey)
+			request       models.HTTPFiatTransferRequest
+			offer         models.HTTPFiatExchangeOfferResponse
+			receipt       models.HTTPFiatTransferResponse
+			offerID       string
+			srcCurrency   postgres.Currency
+			dstCurrency   postgres.Currency
+		)
+
+		if err = ginCtx.ShouldBindJSON(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if err = validator.ValidateStruct(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Extract Offer ID from request.
+		{
+			var rawOfferID []byte
+			if rawOfferID, err = auth.DecryptFromString(request.OfferID); err != nil {
+				logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					&models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			offerID = string(rawOfferID)
+		}
+
+		// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
+		// the offer. If a database update fails below this point the user will need to re-request an offer.
+		{
+			var (
+				status int
+				msg    string
+			)
+			if offer, status, msg, err = getCachedOffer(cache, logger, offerID); err != nil {
+				ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: msg})
+
+				return
+			}
+		}
+
+		// Verify that the client IDs match.
+		if clientID != offer.ClientID {
+			logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
+				zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
+			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		// Get currency codes.
+		if srcCurrency, dstCurrency, err = validateSourceDestinationAmount(
+			offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
+			logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
+				zap.Error(err))
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Execute exchange.
+		srcTxDetails := &postgres.FiatTransactionDetails{
+			ClientID: offer.ClientID,
+			Currency: srcCurrency,
+			Amount:   offer.DebitAmount,
+		}
+		dstTxDetails := &postgres.FiatTransactionDetails{
+			ClientID: offer.ClientID,
+			Currency: dstCurrency,
+			Amount:   offer.Amount,
+		}
+
+		if receipt.SrcTxReceipt, receipt.DstTxReceipt, err = db.
+			FiatInternalTransfer(context.Background(), srcTxDetails, dstTxDetails); err != nil {
+			logger.Warn("failed to complete internal Fiat transfer", zap.Error(err))
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				&models.HTTPError{Message: "please check you have both currency accounts and enough funds."})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds exchange transfer successful", Payload: receipt})
 	}
 }

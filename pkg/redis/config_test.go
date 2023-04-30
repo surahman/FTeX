@@ -15,7 +15,6 @@ import (
 func TestRedisConfigs_Load(t *testing.T) {
 	envAuthKey := constants.GetRedisPrefix() + "_AUTHENTICATION."
 	envConnKey := constants.GetRedisPrefix() + "_CONNECTION."
-	envDataKey := constants.GetRedisPrefix() + "_DATA."
 
 	testCases := []struct {
 		name         string
@@ -23,7 +22,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 		expectErrCnt int
 		expectErr    require.ErrorAssertionFunc
 	}{
-		// ----- test cases start ----- //
 		{
 			name:         "empty - etc dir",
 			input:        redisConfigTestData["empty"],
@@ -74,14 +72,9 @@ func TestRedisConfigs_Load(t *testing.T) {
 			input:        redisConfigTestData["no_max_idle_conns"],
 			expectErrCnt: 0,
 			expectErr:    require.NoError,
-		}, {
-			name:         "invalid min TTL - etc dir",
-			input:        redisConfigTestData["invalid_min_ttl"],
-			expectErrCnt: 1,
-			expectErr:    require.Error,
 		},
-		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
@@ -122,9 +115,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 			t.Setenv(envConnKey+"MINIDLECONNS", strconv.Itoa(minIdleConns))
 			t.Setenv(envConnKey+"MAXIDLECONNS", strconv.Itoa(maxIdleConns))
 
-			ttl := 999
-			t.Setenv(envDataKey+"TTL", strconv.Itoa(ttl))
-
 			err = actual.Load(fs)
 			require.NoErrorf(t, actual.Load(fs), "failed to load configurations file: %v", err)
 
@@ -138,8 +128,6 @@ func TestRedisConfigs_Load(t *testing.T) {
 			require.Equal(t, poolSize, actual.Connection.PoolSize, "failed to load pool size.")
 			require.Equal(t, minIdleConns, actual.Connection.MinIdleConns, "failed to load min idle conns.")
 			require.Equal(t, maxIdleConns, actual.Connection.MaxIdleConns, "failed to load max idle conns.")
-
-			require.Equal(t, int64(ttl), actual.Data.TTL, "failed to load ttl.")
 		})
 	}
 }

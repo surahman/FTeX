@@ -19,7 +19,7 @@ definitions:
     - password
     - username
     type: object
-  models.HTTPDepositCurrency:
+  models.HTTPDepositCurrencyRequest:
     properties:
       amount:
         type: number
@@ -35,7 +35,27 @@ definitions:
         type: string
       payload: {}
     type: object
-  models.HTTPOpenCurrencyAccount:
+  models.HTTPFiatExchangeOfferRequest:
+    properties:
+      destinationCurrency:
+        type: string
+      sourceAmount:
+        type: number
+      sourceCurrency:
+        type: string
+    required:
+    - destinationCurrency
+    - sourceAmount
+    - sourceCurrency
+    type: object
+  models.HTTPFiatTransferRequest:
+    properties:
+      offerId:
+        type: string
+    required:
+    - offerId
+    type: object
+  models.HTTPOpenCurrencyAccountRequest:
     properties:
       currency:
         type: string
@@ -134,12 +154,12 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPDepositCurrency'
+          $ref: '#/definitions/models.HTTPDepositCurrencyRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: a message to confirm the creation of an account
+          description: a message to confirm the deposit of funds
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
         "400":
@@ -159,6 +179,88 @@ paths:
       summary: Deposit funds into a Fiat account.
       tags:
       - fiat currency deposit
+  /fiat/exchange/offer:
+    post:
+      consumes:
+      - application/json
+      description: Exchange quote for Fiat funds between two Fiat currencies. The
+        amount must be a positive number with at most two decimal places and both
+        currency accounts must be opened.
+      operationId: exchangeOfferFiat
+      parameters:
+      - description: the two currency code and amount to be converted
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPFiatExchangeOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Exchange quote for Fiat funds between two Fiat currencies.
+      tags:
+      - fiat currency exchange convert offer transfer
+  /fiat/exchange/transfer:
+    post:
+      consumes:
+      - application/json
+      description: Transfer Fiat funds between two Fiat currencies. The Offer ID must
+        be valid and have expired.
+      operationId: exchangeTransferFiat
+      parameters:
+      - description: the two currency code and amount to be converted
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPFiatTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "408":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Transfer Fiat funds between two Fiat currencies using a valid Offer
+        ID.
+      tags:
+      - fiat currency exchange convert offer transfer execute
   /fiat/open:
     post:
       consumes:
@@ -172,7 +274,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPOpenCurrencyAccount'
+          $ref: '#/definitions/models.HTTPOpenCurrencyAccountRequest'
       produces:
       - application/json
       responses:
