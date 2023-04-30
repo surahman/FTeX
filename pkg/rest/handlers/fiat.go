@@ -295,6 +295,43 @@ func ExchangeOfferFiat(
 	}
 }
 
+// getCachedOffer will retrieve and then evict an offer from the Redis cache.
+func getCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
+	models.HTTPFiatExchangeOfferResponse, int, string, error) {
+	var (
+		err   error
+		offer models.HTTPFiatExchangeOfferResponse
+	)
+
+	// Retrieve the offer from Redis.
+	if err = cache.Get(offerID, &offer); err != nil {
+		var redisErr *redis.Error
+
+		// If we have a valid Redis package error AND the error is that the key is not found.
+		if errors.As(err, &redisErr) && redisErr.Is(redis.ErrCacheMiss) {
+			return offer, http.StatusRequestTimeout, "Fiat exchange rate offer has expired", fmt.Errorf("%w", err)
+		}
+
+		logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+
+		return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+	}
+
+	// Remove the offer from Redis.
+	if err = cache.Del(offerID); err != nil {
+		var redisErr *redis.Error
+
+		// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
+		if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
+			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+
+			return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+		}
+	}
+
+	return offer, http.StatusOK, "", nil
+}
+
 // ExchangeTransferFiat will handle an HTTP request to execute and complete a Fiat currency exchange offer.
 //
 //	@Summary		Transfer Fiat funds between two Fiat currencies using a valid Offer ID.
@@ -311,8 +348,6 @@ func ExchangeOfferFiat(
 //	@Failure		408		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Router			/fiat/exchange/transfer [post]
-//
-//nolint:cyclop
 func ExchangeTransferFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
@@ -364,34 +399,13 @@ func ExchangeTransferFiat(
 			offerID = string(rawOfferID)
 		}
 
-		// Retrieve the offer from Redis.
-		if err = cache.Get(offerID, &offer); err != nil {
-			var redisErr *redis.Error
-
-			// If we have a valid Redis package error AND the error is that the key is not found.
-			if errors.As(err, &redisErr) && redisErr.Is(redis.ErrCacheMiss) {
-				ginCtx.AbortWithStatusJSON(http.StatusRequestTimeout,
-					&models.HTTPError{Message: "Fiat exchange rate offer has expired"})
-
-				return
-			}
-
-			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		// Remove the offer from Redis.
-		if err = cache.Del(offerID); err != nil {
-			var redisErr *redis.Error
-
-			// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
-			if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
-				logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					&models.HTTPError{Message: "please retry your request later"})
+		// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
+		// the offer. If a database update fails below this point the user will need to re-request an offer.
+		{
+			status := 0
+			msg := ""
+			if offer, status, msg, err = getCachedOffer(cache, logger, offerID); err != nil {
+				ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: msg})
 
 				return
 			}

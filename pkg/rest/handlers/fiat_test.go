@@ -618,7 +618,124 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_ExchangeTransferFiat(t *testing.T) {
+func TestHandlers_GetCachedOffer(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name          string
+		expectErrMsg  string
+		expectStatus  int
+		expectErr     require.ErrorAssertionFunc
+		redisGetErr   error
+		redisGetData  models.HTTPFiatExchangeOfferResponse
+		redisGetTimes int
+		redisDelErr   error
+		redisDelTimes int
+	}{
+		{
+			name:          "get unknown error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   errors.New("unknown error"),
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 0,
+		}, {
+			name:          "get unknown package error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   redis.ErrCacheUnknown,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 0,
+		}, {
+			name:          "get package error",
+			expectErrMsg:  "expired",
+			expectStatus:  http.StatusRequestTimeout,
+			expectErr:     require.Error,
+			redisGetErr:   redis.ErrCacheMiss,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 0,
+		}, {
+			name:          "del unknown error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   errors.New("unknown error"),
+			redisDelTimes: 1,
+		}, {
+			name:          "del unknown package error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   redis.ErrCacheUnknown,
+			redisDelTimes: 1,
+		}, {
+			name:          "del cache miss",
+			expectErrMsg:  "",
+			expectStatus:  http.StatusOK,
+			expectErr:     require.NoError,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   redis.ErrCacheMiss,
+			redisDelTimes: 1,
+		}, {
+			name:          "valid",
+			expectErrMsg:  "",
+			expectStatus:  http.StatusOK,
+			expectErr:     require.NoError,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockCache := mocks.NewMockRedis(mockCtrl)
+
+			gomock.InOrder(
+				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(test.redisGetErr).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockCache.EXPECT().Del(gomock.Any()).
+					Return(test.redisDelErr).
+					Times(test.redisDelTimes),
+			)
+
+			_, status, msg, err := getCachedOffer(mockCache, zapLogger, "SOME-OFFER-ID")
+			test.expectErr(t, err, "error expectation failed.")
+			require.Equal(t, test.expectStatus, status, "expected and actual status codes did not match.")
+			require.Contains(t, msg, test.expectErrMsg, "expected error message did not match.")
+		})
+	}
+}
+
+func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	validDecimal, err := decimal.NewFromString("10101.11")
@@ -671,9 +788,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 		authValidateTimes  int
 		authDecryptErr     error
 		authDecryptTimes   int
-		redisData          models.HTTPFiatExchangeOfferResponse
-		redisErr           error
-		redisTimes         int
+		redisGetData       models.HTTPFiatExchangeOfferResponse
+		redisGetErr        error
+		redisGetTimes      int
+		redisDelErr        error
+		redisDelTimes      int
 		internalXferErr    error
 		internalXferTimes  int
 	}{
@@ -687,9 +806,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  0,
 			authDecryptErr:     nil,
 			authDecryptTimes:   0,
-			redisData:          validOffer,
-			redisErr:           nil,
-			redisTimes:         0,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      0,
+			redisDelErr:        nil,
+			redisDelTimes:      0,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
 		}, {
@@ -702,9 +823,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   0,
-			redisData:          validOffer,
-			redisErr:           nil,
-			redisTimes:         0,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      0,
+			redisDelErr:        nil,
+			redisDelTimes:      0,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
 		}, {
@@ -717,9 +840,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     errors.New("decrypt offer id"),
 			authDecryptTimes:   1,
-			redisData:          validOffer,
-			redisErr:           nil,
-			redisTimes:         0,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      0,
+			redisDelErr:        nil,
+			redisDelTimes:      0,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
 		}, {
@@ -732,9 +857,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
-			redisData:          validOffer,
-			redisErr:           errors.New("unknown error"),
-			redisTimes:         1,
+			redisGetData:       validOffer,
+			redisGetErr:        errors.New("unknown error"),
+			redisGetTimes:      1,
+			redisDelErr:        nil,
+			redisDelTimes:      0,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
 		}, {
@@ -747,11 +874,47 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
-			redisData:          validOffer,
-			redisErr:           redis.ErrCacheMiss,
-			redisTimes:         1,
+			redisGetData:       validOffer,
+			redisGetErr:        redis.ErrCacheMiss,
+			redisGetTimes:      1,
+			redisDelErr:        nil,
+			redisDelTimes:      0,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
+		}, {
+			name:               "cache del failure",
+			path:               "/exchange-xfer-fiat/cache-del-failure",
+			expectedMsg:        "retry",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      1,
+			redisDelErr:        redis.ErrCacheUnknown,
+			redisDelTimes:      1,
+			internalXferErr:    nil,
+			internalXferTimes:  0,
+		}, {
+			name:               "cache del expired",
+			path:               "/exchange-xfer-fiat/cache-del-expired",
+			expectedMsg:        "successful",
+			expectedStatus:     http.StatusOK,
+			request:            models.HTTPFiatTransferRequest{OfferID: "VALID"},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			authDecryptErr:     nil,
+			authDecryptTimes:   1,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      1,
+			redisDelErr:        redis.ErrCacheMiss,
+			redisDelTimes:      1,
+			internalXferErr:    nil,
+			internalXferTimes:  1,
 		}, {
 			name:               "client id mismatch",
 			path:               "/exchange-xfer-fiat/client-id-mismatch",
@@ -762,9 +925,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
-			redisData:          invalidOfferClientID,
-			redisErr:           nil,
-			redisTimes:         1,
+			redisGetData:       invalidOfferClientID,
+			redisGetErr:        nil,
+			redisGetTimes:      1,
+			redisDelErr:        nil,
+			redisDelTimes:      1,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
 		}, {
@@ -777,9 +942,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
-			redisData:          invalidOfferSource,
-			redisErr:           nil,
-			redisTimes:         1,
+			redisGetData:       invalidOfferSource,
+			redisGetErr:        nil,
+			redisGetTimes:      1,
+			redisDelErr:        nil,
+			redisDelTimes:      1,
 			internalXferErr:    nil,
 			internalXferTimes:  0,
 		}, {
@@ -792,9 +959,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
-			redisData:          validOffer,
-			redisErr:           nil,
-			redisTimes:         1,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      1,
+			redisDelErr:        nil,
+			redisDelTimes:      1,
 			internalXferErr:    errors.New("transaction failure"),
 			internalXferTimes:  1,
 		}, {
@@ -807,9 +976,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 			authValidateTimes:  1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
-			redisData:          validOffer,
-			redisErr:           nil,
-			redisTimes:         1,
+			redisGetData:       validOffer,
+			redisGetErr:        nil,
+			redisGetTimes:      1,
+			redisDelErr:        nil,
+			redisDelTimes:      1,
 			internalXferErr:    nil,
 			internalXferTimes:  1,
 		},
@@ -841,9 +1012,13 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) {
 					Times(test.authDecryptTimes),
 
 				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
-					Return(test.redisErr).
-					SetArg(1, test.redisData).
-					Times(test.redisTimes),
+					Return(test.redisGetErr).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockCache.EXPECT().Del(gomock.Any()).
+					Return(test.redisDelErr).
+					Times(test.redisDelTimes),
 
 				mockDB.EXPECT().FiatInternalTransfer(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, nil, test.internalXferErr).
