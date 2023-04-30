@@ -403,8 +403,10 @@ func ExchangeTransferFiat(
 		// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
 		// the offer. If a database update fails below this point the user will need to re-request an offer.
 		{
-			status := 0
-			msg := ""
+			var (
+				status int
+				msg    string
+			)
 			if offer, status, msg, err = getCachedOffer(cache, logger, offerID); err != nil {
 				ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: msg})
 
