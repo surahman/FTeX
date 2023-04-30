@@ -179,6 +179,11 @@ func fiatTransactionRowLockAndBalanceCheck(
 	queryTx Querier,
 	src,
 	dst *FiatTransactionDetails) error {
+	// Check for negative values.
+	if src.Amount.IsNegative() || dst.Amount.IsNegative() {
+		return fmt.Errorf("amounts contains negative value")
+	}
+
 	// Order locks.
 	lockFirst, lockSecond := src.Less(dst)
 
@@ -333,7 +338,7 @@ func fiatInternalTransfer(
 	if postDebitRow, err = queryTx.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
 		ClientID: src.ClientID,
 		Currency: src.Currency,
-		Amount:   src.Amount,
+		Amount:   src.Amount.Mul(decimal.NewFromFloat(-1.0)),
 		LastTxTs: journalRow.TransactedAt,
 	}); err != nil {
 		msg := "failed to debit Fiat account balance for internal transfer"

@@ -436,7 +436,7 @@ func ExchangeTransferFiat(
 		srcTxDetails := &postgres.FiatTransactionDetails{
 			ClientID: offer.ClientID,
 			Currency: srcCurrency,
-			Amount:   offer.DebitAmount.Mul(decimal.NewFromFloat(-1.0)),
+			Amount:   offer.DebitAmount,
 		}
 		dstTxDetails := &postgres.FiatTransactionDetails{
 			ClientID: offer.ClientID,
