@@ -206,6 +206,8 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
 ### Convert
 
 To convert between Fiat currencies, the user must maintain open accounts in both the source and destination Fiat currencies.
+The amount specified will be in the source currency and the amount to deposit into the destination account will be calculated
+based on the exchange rate.
 
 The workflow will involve getting a conversion rate quote, referred to as an `Offer`. The returned rate quote `Offer` will
 only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
@@ -253,7 +255,7 @@ _Request:_ All fields are required.
 _Response:_ A rate quote with an encrypted `Offer ID`.
 ```json
 {
-  "message": "fiat transfer successful",
+  "message": "funds exchange transfer successful",
   "payload": {
     "sourceReceipt": {
       "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",

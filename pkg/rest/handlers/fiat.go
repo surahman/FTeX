@@ -453,6 +453,6 @@ func ExchangeTransferFiat(
 			return
 		}
 
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "fiat transfer successful", Payload: receipt})
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds exchange transfer successful", Payload: receipt})
 	}
 }
