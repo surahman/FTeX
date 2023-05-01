@@ -302,6 +302,47 @@ paths:
       summary: Retrieve balance for a specific currency.
       tags:
       - fiat currency balance
+  /fiat/info/transaction/{transactionID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the transaction details for a specific transactionID.
+        The transaction ID must be supplied as a query parameter.
+      operationId: txDetailsCurrencyFiat
+      parameters:
+      - description: the transaction ID to retrieve the details for
+        in: path
+        name: transactionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve transaction details for a specific transactionID.
+      tags:
+      - fiat transactionID transaction details
   /fiat/open:
     post:
       consumes:

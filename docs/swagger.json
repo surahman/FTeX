@@ -268,6 +268,68 @@
                 }
             }
         },
+        "/fiat/info/transaction/{transactionID}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the transaction details for a specific transactionID. The transaction ID must be supplied as a query parameter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat transactionID transaction details"
+                ],
+                "summary": "Retrieve transaction details for a specific transactionID.",
+                "operationId": "txDetailsCurrencyFiat",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the transaction ID to retrieve the details for",
+                        "name": "transactionID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/fiat/open": {
             "post": {
                 "security": [

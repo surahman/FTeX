@@ -522,3 +522,67 @@ func BalanceCurrencyFiat(
 			models.HTTPSuccess{Message: "account balance", Payload: accDetails})
 	}
 }
+
+// TxDetailsCurrencyFiat will handle an HTTP request to retrieve information on a specific transaction.
+//
+//	@Summary		Retrieve transaction details for a specific transactionID.
+//	@Description	Retrieves the transaction details for a specific transactionID. The transaction ID must be supplied as a query parameter.
+//	@Tags			fiat transactionID transaction details
+//	@Id				txDetailsCurrencyFiat
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			transactionID	path		string				true	"the transaction ID to retrieve the details for"
+//	@Success		200				{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/transaction/{transactionID} [get]
+func TxDetailsCurrencyFiat(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			accDetails    []postgres.FiatJournal
+			clientID      uuid.UUID
+			transactionID uuid.UUID
+			err           error
+			originalToken = ginCtx.GetHeader(authHeaderKey)
+		)
+
+		// Extract and validate the transactionID.
+		if transactionID, err = uuid.FromString(ginCtx.Param("transactionID")); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: "invalid transaction ID", Payload: ginCtx.Param("transactionID")})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if accDetails, err = db.FiatTxDetailsCurrency(clientID, transactionID); err != nil {
+			var balanceErr *postgres.Error
+			if !errors.As(err, &balanceErr) {
+				logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK,
+			models.HTTPSuccess{Message: "transaction details", Payload: accDetails})
+	}
+}
