@@ -1116,7 +1116,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -1166,11 +1166,14 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 	txID, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate new UUID.")
 
+	journalEntries := []postgres.FiatJournal{{}}
+
 	testCases := []struct {
 		name               string
 		transactionID      string
 		expectedMsg        string
 		expectedStatus     int
+		journalEntries     []postgres.FiatJournal
 		authValidateJWTErr error
 		authValidateTimes  int
 		fiatTxDetailsErr   error
@@ -1181,6 +1184,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 			transactionID:      "INVALID",
 			expectedMsg:        "invalid transaction ID",
 			expectedStatus:     http.StatusBadRequest,
+			journalEntries:     journalEntries,
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			fiatTxDetailsErr:   nil,
@@ -1190,6 +1194,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 			transactionID:      txID.String(),
 			expectedMsg:        "invalid JWT",
 			expectedStatus:     http.StatusForbidden,
+			journalEntries:     journalEntries,
 			authValidateJWTErr: errors.New("invalid JWT"),
 			authValidateTimes:  1,
 			fiatTxDetailsErr:   nil,
@@ -1199,6 +1204,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 			transactionID:      txID.String(),
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
+			journalEntries:     journalEntries,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			fiatTxDetailsErr:   errors.New("unknown error"),
@@ -1208,14 +1214,26 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 			transactionID:      txID.String(),
 			expectedMsg:        "account not found",
 			expectedStatus:     http.StatusNotFound,
+			journalEntries:     journalEntries,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			fiatTxDetailsErr:   postgres.ErrNotFound,
 			fiatTxDetailsTimes: 1,
 		}, {
+			name:               "transaction id not found",
+			transactionID:      txID.String(),
+			expectedMsg:        "transaction id not found",
+			journalEntries:     nil,
+			expectedStatus:     http.StatusNotFound,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			fiatTxDetailsErr:   nil,
+			fiatTxDetailsTimes: 1,
+		}, {
 			name:               "valid",
 			transactionID:      txID.String(),
 			expectedMsg:        "transaction details",
+			journalEntries:     journalEntries,
 			expectedStatus:     http.StatusOK,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
@@ -1224,7 +1242,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -1242,7 +1260,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 					Times(test.authValidateTimes),
 
 				mockDB.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
-					Return(nil, test.fiatTxDetailsErr).
+					Return(test.journalEntries, test.fiatTxDetailsErr).
 					Times(test.fiatTxDetailsTimes),
 			)
 

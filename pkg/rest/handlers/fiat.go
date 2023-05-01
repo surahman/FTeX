@@ -546,11 +546,11 @@ func TxDetailsCurrencyFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			accDetails    []postgres.FiatJournal
-			clientID      uuid.UUID
-			transactionID uuid.UUID
-			err           error
-			originalToken = ginCtx.GetHeader(authHeaderKey)
+			journalEntries []postgres.FiatJournal
+			clientID       uuid.UUID
+			transactionID  uuid.UUID
+			err            error
+			originalToken  = ginCtx.GetHeader(authHeaderKey)
 		)
 
 		// Extract and validate the transactionID.
@@ -567,7 +567,7 @@ func TxDetailsCurrencyFiat(
 			return
 		}
 
-		if accDetails, err = db.FiatTxDetailsCurrency(clientID, transactionID); err != nil {
+		if journalEntries, err = db.FiatTxDetailsCurrency(clientID, transactionID); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {
 				logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
@@ -582,7 +582,12 @@ func TxDetailsCurrencyFiat(
 			return
 		}
 
-		ginCtx.JSON(http.StatusOK,
-			models.HTTPSuccess{Message: "transaction details", Payload: accDetails})
+		if len(journalEntries) == 0 {
+			ginCtx.AbortWithStatusJSON(http.StatusNotFound, models.HTTPError{Message: "transaction id not found"})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "transaction details", Payload: journalEntries})
 	}
 }
