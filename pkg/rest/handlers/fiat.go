@@ -31,7 +31,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPOpenCurrencyAccountRequest	true	"currency code for new account"
+//	@Param			request	body		models.HTTPOpenCurrencyAccountRequest	true	"currency code for new account"
 //	@Success		201		{object}	models.HTTPSuccess						"a message to confirm the creation of an account"
 //	@Failure		400		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
@@ -102,7 +102,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPDepositCurrencyRequest	true	"currency code and amount to be deposited"
+//	@Param			request	body		models.HTTPDepositCurrencyRequest	true	"currency code and amount to be deposited"
 //	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the deposit of funds"
 //	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
@@ -211,7 +211,7 @@ func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decim
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
+//	@Param			request	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
 //	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the conversion of funds"
 //	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
@@ -342,7 +342,7 @@ func getCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
+//	@Param			offerID	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
 //	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the conversion of funds"
 //	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"

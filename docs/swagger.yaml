@@ -151,7 +151,7 @@ paths:
       parameters:
       - description: currency code and amount to be deposited
         in: body
-        name: user
+        name: request
         required: true
         schema:
           $ref: '#/definitions/models.HTTPDepositCurrencyRequest'
@@ -190,7 +190,7 @@ paths:
       parameters:
       - description: the two currency code and amount to be converted
         in: body
-        name: user
+        name: request
         required: true
         schema:
           $ref: '#/definitions/models.HTTPFiatExchangeOfferRequest'
@@ -228,7 +228,7 @@ paths:
       parameters:
       - description: the two currency code and amount to be converted
         in: body
-        name: user
+        name: offerID
         required: true
         schema:
           $ref: '#/definitions/models.HTTPFiatTransferRequest'
@@ -312,7 +312,7 @@ paths:
       parameters:
       - description: currency code for new account
         in: body
-        name: user
+        name: request
         required: true
         schema:
           $ref: '#/definitions/models.HTTPOpenCurrencyAccountRequest'

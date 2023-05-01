@@ -52,7 +52,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "currency code and amount to be deposited",
-                        "name": "user",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -110,7 +110,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "the two currency code and amount to be converted",
-                        "name": "user",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -168,7 +168,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "the two currency code and amount to be converted",
-                        "name": "user",
+                        "name": "offerID",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -294,7 +294,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "currency code for new account",
-                        "name": "user",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
