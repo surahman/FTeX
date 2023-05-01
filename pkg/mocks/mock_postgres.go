@@ -51,6 +51,21 @@ func (mr *MockPostgresMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockPostgres)(nil).Close))
 }
 
+// FiatBalanceCurrency mocks base method.
+func (m *MockPostgres) FiatBalanceCurrency(arg0 uuid.UUID, arg1 postgres.Currency) (*postgres.FiatAccount, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatBalanceCurrency", arg0, arg1)
+	ret0, _ := ret[0].(*postgres.FiatAccount)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FiatBalanceCurrency indicates an expected call of FiatBalanceCurrency.
+func (mr *MockPostgresMockRecorder) FiatBalanceCurrency(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatBalanceCurrency", reflect.TypeOf((*MockPostgres)(nil).FiatBalanceCurrency), arg0, arg1)
+}
+
 // FiatCreateAccount mocks base method.
 func (m *MockPostgres) FiatCreateAccount(arg0 uuid.UUID, arg1 postgres.Currency) error {
 	m.ctrl.T.Helper()

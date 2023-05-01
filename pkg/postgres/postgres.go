@@ -24,6 +24,8 @@ import (
 //go:generate mockgen -destination=../mocks/mock_postgres.go -package=mocks github.com/surahman/FTeX/pkg/postgres Postgres
 
 // Postgres is the interface through which the queries will be executed on the database.
+//
+//nolint:interfacebloat
 type Postgres interface {
 	// Open will establish a pooled connection to the Postgres database and ping it to ensure the connection is open.
 	Open() error
@@ -57,6 +59,10 @@ type Postgres interface {
 	// that client.
 	FiatInternalTransfer(context.Context, *FiatTransactionDetails, *FiatTransactionDetails) (
 		*FiatAccountTransferResult, *FiatAccountTransferResult, error)
+
+	// FiatBalanceCurrency is the interface through which external methods can retrieve a Fiat account balance for a
+	// specific currency.
+	FiatBalanceCurrency(uuid.UUID, Currency) (*FiatAccount, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

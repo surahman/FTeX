@@ -49,6 +49,7 @@ var (
 	ErrNotFoundUser = errorNotFoundUser()    // ErrNotFoundUser is returned if a user account is not found.
 	ErrCreateFiat   = errorCreateFiat()      // ErrCreateFiat is returned if a Fiat account could not be opened.
 	ErrTransactFiat = errorTransactionFiat() // ErrTransactFiat is returned is a Fiat transaction fails.
+	ErrNotFound     = errorNotFound()        // ErrNotFound is returned as a generic not found error.
 )
 
 func errorRegisterUser() error {
@@ -83,5 +84,12 @@ func errorTransactionFiat() error {
 	return &Error{
 		Message: "could not complete Fiat transaction",
 		Code:    http.StatusInternalServerError,
+	}
+}
+
+func errorNotFound() error {
+	return &Error{
+		Message: "account not found",
+		Code:    http.StatusNotFound,
 	}
 }
