@@ -38,3 +38,18 @@ func (p *postgresImpl) FiatBalanceCurrency(clientID uuid.UUID, currency Currency
 
 	return &balance, nil
 }
+
+// FiatTxDetailsCurrency is the interface through which external methods can retrieve a Fiat transaction details for a
+// specific transaction.
+func (p *postgresImpl) FiatTxDetailsCurrency(clientID uuid.UUID, transactionID uuid.UUID) ([]FiatJournal, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	journal, err := p.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{clientID, transactionID})
+	if err != nil {
+		return nil, ErrNotFound
+	}
+
+	return journal, nil
+}

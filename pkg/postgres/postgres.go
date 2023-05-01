@@ -63,6 +63,10 @@ type Postgres interface {
 	// FiatBalanceCurrency is the interface through which external methods can retrieve a Fiat account balance for a
 	// specific currency.
 	FiatBalanceCurrency(uuid.UUID, Currency) (*FiatAccount, error)
+
+	// FiatTxDetailsCurrency is the interface through which external methods can retrieve a Fiat transaction details for a
+	// specific transaction.
+	FiatTxDetailsCurrency(uuid.UUID, uuid.UUID) ([]FiatJournal, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

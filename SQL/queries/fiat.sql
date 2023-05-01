@@ -92,7 +92,7 @@ RETURNING tx_id, transacted_at;
 -- fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 SELECT *
 FROM fiat_journal
-WHERE tx_id = $1;
+WHERE client_id = $1 AND tx_id = $2;
 
 -- name: fiatGetJournalTransactionForAccount :many
 -- fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
