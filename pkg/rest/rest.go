@@ -104,21 +104,15 @@ func (s *Server) initialize() {
 		Use(authMiddleware).
 		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
-	fiatGroup := api.Group("/fiat")
-	fiatGroup.
-		Use(authMiddleware).
-		POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.
-		Use(authMiddleware).
-		POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.
-		Use(authMiddleware).
-		POST("/exchange/offer",
-			restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
-	fiatGroup.
-		Use(authMiddleware).
-		POST("/exchange/transfer",
-			restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup := api.Group("/fiat").Use(authMiddleware)
+	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.POST("/exchange/offer",
+		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
+	fiatGroup.POST("/exchange/transfer",
+		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.GET("/info/balance/:currencyCode",
+		restHandlers.BalanceCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

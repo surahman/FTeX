@@ -1052,3 +1052,108 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		})
 	}
 }
+
+func TestHandler_BalanceCurrencyFiat(t *testing.T) {
+	t.Parallel()
+
+	const basePath = "/fiat/balance/currency/"
+
+	testCases := []struct {
+		name               string
+		currency           string
+		expectedMsg        string
+		expectedStatus     int
+		authValidateJWTErr error
+		authValidateTimes  int
+		fiatBalanceErr     error
+		fiatBalanceTimes   int
+	}{
+		{
+			name:               "invalid currency",
+			currency:           "INVALID",
+			expectedMsg:        "invalid currency",
+			expectedStatus:     http.StatusBadRequest,
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			fiatBalanceErr:     nil,
+			fiatBalanceTimes:   0,
+		}, {
+			name:               "invalid JWT",
+			currency:           "EUR",
+			expectedMsg:        "invalid JWT",
+			expectedStatus:     http.StatusForbidden,
+			authValidateJWTErr: errors.New("invalid JWT"),
+			authValidateTimes:  1,
+			fiatBalanceErr:     nil,
+			fiatBalanceTimes:   0,
+		}, {
+			name:               "unknown db error",
+			currency:           "AED",
+			expectedMsg:        "retry",
+			expectedStatus:     http.StatusInternalServerError,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			fiatBalanceErr:     errors.New("unknown error"),
+			fiatBalanceTimes:   1,
+		}, {
+			name:               "known db error",
+			currency:           "CAD",
+			expectedMsg:        "account not found",
+			expectedStatus:     http.StatusNotFound,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			fiatBalanceErr:     postgres.ErrNotFound,
+			fiatBalanceTimes:   1,
+		}, {
+			name:               "valid",
+			currency:           "USD",
+			expectedMsg:        "account balance",
+			expectedStatus:     http.StatusOK,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			fiatBalanceErr:     nil,
+			fiatBalanceTimes:   1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockDB.EXPECT().FiatBalanceCurrency(gomock.Any(), gomock.Any()).
+					Return(nil, test.fiatBalanceErr).
+					Times(test.fiatBalanceTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.GET(basePath+":currencyCode", BalanceCurrencyFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			actualMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, actualMessage, test.expectedMsg, "response message mismatch.")
+		})
+	}
+}

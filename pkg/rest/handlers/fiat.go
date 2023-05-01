@@ -458,3 +458,67 @@ func ExchangeTransferFiat(
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds exchange transfer successful", Payload: receipt})
 	}
 }
+
+// BalanceCurrencyFiat will handle an HTTP request to retrieve a balance for a specific currency.
+//
+//	@Summary		Retrieve balance for a specific currency.
+//	@Description	Retrieves the balance for a specific currency. The currency code must be supplied as a query parameter.
+//	@Tags			fiat currency balance
+//	@Id				balanceCurrencyFiat
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			currencyCode	path		string				true	"the currency code to retrieve the balance for"
+//	@Success		200				{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/balance/{currencyCode} [get]
+func BalanceCurrencyFiat(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			accDetails    *postgres.FiatAccount
+			clientID      uuid.UUID
+			currency      postgres.Currency
+			err           error
+			originalToken = ginCtx.GetHeader(authHeaderKey)
+		)
+
+		// Extract and validate the currency.
+		if err = currency.Scan(ginCtx.Param("currencyCode")); err != nil || !currency.Valid() {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: "invalid currency", Payload: ginCtx.Param("currencyCode")})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if accDetails, err = db.FiatBalanceCurrency(clientID, currency); err != nil {
+			var balanceErr *postgres.Error
+			if !errors.As(err, &balanceErr) {
+				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK,
+			models.HTTPSuccess{Message: "account balance", Payload: accDetails})
+	}
+}
