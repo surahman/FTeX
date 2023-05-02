@@ -227,17 +227,19 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 				require.True(t, transferResult.TxTS.Valid, "invalid transaction timestamp returned.")
 
 				// Check for journal entries.
-				_, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+				journalEntry, err := connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
 					ClientID: test.accountDetails.ClientID,
 					TxID:     transferResult.TxID,
 				})
-				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
+				require.NoError(t, err, "failed to retrieve journal entries for deposit.")
+				require.Equal(t, len(journalEntry), 1, "incorrect journal entry for deposit.")
 
-				_, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+				journalEntry, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
 					ClientID: ftexID,
 					TxID:     transferResult.TxID,
 				})
-				require.NoError(t, err, "failed to retrieve internal journal entries for transaction.")
+				require.NoError(t, err, "failed to retrieve internal journal entries for internal.")
+				require.Equal(t, len(journalEntry), 1, "incorrect journal entry for internal.")
 			})
 		}()
 	}
