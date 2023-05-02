@@ -48,7 +48,7 @@
                 "parameters": [
                     {
                         "description": "currency code and amount to be deposited",
-                        "name": "user",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -106,7 +106,7 @@
                 "parameters": [
                     {
                         "description": "the two currency code and amount to be converted",
-                        "name": "user",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -164,7 +164,7 @@
                 "parameters": [
                     {
                         "description": "the two currency code and amount to be converted",
-                        "name": "user",
+                        "name": "offerID",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -206,6 +206,130 @@
                 }
             }
         },
+        "/fiat/info/balance/{currencyCode}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the balance for a specific currency. The currency code must be supplied as a query parameter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency balance"
+                ],
+                "summary": "Retrieve balance for a specific currency.",
+                "operationId": "balanceCurrencyFiat",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the currency code to retrieve the balance for",
+                        "name": "currencyCode",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/fiat/info/transaction/{transactionID}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the transaction details for a specific transactionID. The transaction ID must be supplied as a query parameter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat transactionID transaction details"
+                ],
+                "summary": "Retrieve transaction details for a specific transactionID.",
+                "operationId": "txDetailsCurrencyFiat",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the transaction ID to retrieve the details for",
+                        "name": "transactionID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/fiat/open": {
             "post": {
                 "security": [
@@ -228,7 +352,7 @@
                 "parameters": [
                     {
                         "description": "currency code for new account",
-                        "name": "user",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {

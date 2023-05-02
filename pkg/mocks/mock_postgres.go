@@ -51,6 +51,21 @@ func (mr *MockPostgresMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockPostgres)(nil).Close))
 }
 
+// FiatBalanceCurrency mocks base method.
+func (m *MockPostgres) FiatBalanceCurrency(arg0 uuid.UUID, arg1 postgres.Currency) (*postgres.FiatAccount, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatBalanceCurrency", arg0, arg1)
+	ret0, _ := ret[0].(*postgres.FiatAccount)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FiatBalanceCurrency indicates an expected call of FiatBalanceCurrency.
+func (mr *MockPostgresMockRecorder) FiatBalanceCurrency(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatBalanceCurrency", reflect.TypeOf((*MockPostgres)(nil).FiatBalanceCurrency), arg0, arg1)
+}
+
 // FiatCreateAccount mocks base method.
 func (m *MockPostgres) FiatCreateAccount(arg0 uuid.UUID, arg1 postgres.Currency) error {
 	m.ctrl.T.Helper()
@@ -94,6 +109,21 @@ func (m *MockPostgres) FiatInternalTransfer(arg0 context.Context, arg1, arg2 *po
 func (mr *MockPostgresMockRecorder) FiatInternalTransfer(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatInternalTransfer", reflect.TypeOf((*MockPostgres)(nil).FiatInternalTransfer), arg0, arg1, arg2)
+}
+
+// FiatTxDetailsCurrency mocks base method.
+func (m *MockPostgres) FiatTxDetailsCurrency(arg0, arg1 uuid.UUID) ([]postgres.FiatJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatTxDetailsCurrency", arg0, arg1)
+	ret0, _ := ret[0].([]postgres.FiatJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FiatTxDetailsCurrency indicates an expected call of FiatTxDetailsCurrency.
+func (mr *MockPostgresMockRecorder) FiatTxDetailsCurrency(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTxDetailsCurrency", reflect.TypeOf((*MockPostgres)(nil).FiatTxDetailsCurrency), arg0, arg1)
 }
 
 // Healthcheck mocks base method.

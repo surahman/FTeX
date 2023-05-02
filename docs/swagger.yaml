@@ -151,7 +151,7 @@ paths:
       parameters:
       - description: currency code and amount to be deposited
         in: body
-        name: user
+        name: request
         required: true
         schema:
           $ref: '#/definitions/models.HTTPDepositCurrencyRequest'
@@ -190,7 +190,7 @@ paths:
       parameters:
       - description: the two currency code and amount to be converted
         in: body
-        name: user
+        name: request
         required: true
         schema:
           $ref: '#/definitions/models.HTTPFiatExchangeOfferRequest'
@@ -228,7 +228,7 @@ paths:
       parameters:
       - description: the two currency code and amount to be converted
         in: body
-        name: user
+        name: offerID
         required: true
         schema:
           $ref: '#/definitions/models.HTTPFiatTransferRequest'
@@ -261,6 +261,88 @@ paths:
         ID.
       tags:
       - fiat currency exchange convert offer transfer execute
+  /fiat/info/balance/{currencyCode}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the balance for a specific currency. The currency code
+        must be supplied as a query parameter.
+      operationId: balanceCurrencyFiat
+      parameters:
+      - description: the currency code to retrieve the balance for
+        in: path
+        name: currencyCode
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve balance for a specific currency.
+      tags:
+      - fiat currency balance
+  /fiat/info/transaction/{transactionID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the transaction details for a specific transactionID.
+        The transaction ID must be supplied as a query parameter.
+      operationId: txDetailsCurrencyFiat
+      parameters:
+      - description: the transaction ID to retrieve the details for
+        in: path
+        name: transactionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve transaction details for a specific transactionID.
+      tags:
+      - fiat transactionID transaction details
   /fiat/open:
     post:
       consumes:
@@ -271,7 +353,7 @@ paths:
       parameters:
       - description: currency code for new account
         in: body
-        name: user
+        name: request
         required: true
         schema:
           $ref: '#/definitions/models.HTTPOpenCurrencyAccountRequest'

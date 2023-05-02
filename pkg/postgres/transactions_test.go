@@ -202,6 +202,9 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 
 	defer cancel()
 
+	ftexID, err := connection.queries.userGetClientId(ctx, "deposit-fiat")
+	require.NoError(t, err, "failed to retrieve FTeX internal ID.")
+
 	for _, testCase := range testCases {
 		test := testCase
 
@@ -224,9 +227,19 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 				require.True(t, transferResult.TxTS.Valid, "invalid transaction timestamp returned.")
 
 				// Check for journal entries.
-				journalRow, err := connection.Query.fiatGetJournalTransaction(ctx, transferResult.TxID)
-				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
-				require.Equal(t, 2, len(journalRow), "incorrect number of journal entries.")
+				journalEntry, err := connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+					ClientID: test.accountDetails.ClientID,
+					TxID:     transferResult.TxID,
+				})
+				require.NoError(t, err, "failed to retrieve journal entries for deposit.")
+				require.Equal(t, len(journalEntry), 1, "incorrect journal entry for deposit.")
+
+				journalEntry, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+					ClientID: ftexID,
+					TxID:     transferResult.TxID,
+				})
+				require.NoError(t, err, "failed to retrieve internal journal entries for internal.")
+				require.Equal(t, len(journalEntry), 1, "incorrect journal entry for internal.")
 			})
 		}()
 	}
@@ -610,7 +623,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck_mock(t *testing.T) {
 	}
 }
 
-func TestTransactions_FiatInternalTransfer(t *testing.T) {
+func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -842,9 +855,19 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) {
 				require.True(t, dstResult.TxTS.Valid, "destination transaction timestamp is invalid.")
 
 				// Check for journal entries.
-				journalRow, err := connection.Query.fiatGetJournalTransaction(ctx, dstResult.TxID)
+				journalEntry, err := connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+					ClientID: test.source.ClientID,
+					TxID:     dstResult.TxID,
+				})
 				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
-				require.Equal(t, 2, len(journalRow), "incorrect number of journal entries.")
+				require.Equal(t, len(journalEntry), 1, "incorrect row count retrieved for source.")
+
+				journalEntry, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+					ClientID: test.destination.ClientID,
+					TxID:     dstResult.TxID,
+				})
+				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
+				require.Equal(t, len(journalEntry), 1, "incorrect row count retrieved for destination.")
 			})
 		}()
 	}

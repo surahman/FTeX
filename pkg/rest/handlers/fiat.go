@@ -31,7 +31,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPOpenCurrencyAccountRequest	true	"currency code for new account"
+//	@Param			request	body		models.HTTPOpenCurrencyAccountRequest	true	"currency code for new account"
 //	@Success		201		{object}	models.HTTPSuccess						"a message to confirm the creation of an account"
 //	@Failure		400		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
@@ -102,7 +102,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPDepositCurrencyRequest	true	"currency code and amount to be deposited"
+//	@Param			request	body		models.HTTPDepositCurrencyRequest	true	"currency code and amount to be deposited"
 //	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the deposit of funds"
 //	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
@@ -211,7 +211,7 @@ func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decim
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
+//	@Param			request	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
 //	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the conversion of funds"
 //	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
@@ -342,7 +342,7 @@ func getCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
+//	@Param			offerID	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
 //	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the conversion of funds"
 //	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
@@ -456,5 +456,138 @@ func ExchangeTransferFiat(
 		}
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds exchange transfer successful", Payload: receipt})
+	}
+}
+
+// BalanceCurrencyFiat will handle an HTTP request to retrieve a balance for a specific currency.
+//
+//	@Summary		Retrieve balance for a specific currency.
+//	@Description	Retrieves the balance for a specific currency. The currency code must be supplied as a query parameter.
+//	@Tags			fiat currency balance
+//	@Id				balanceCurrencyFiat
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			currencyCode	path		string				true	"the currency code to retrieve the balance for"
+//	@Success		200				{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/balance/{currencyCode} [get]
+func BalanceCurrencyFiat(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			accDetails    *postgres.FiatAccount
+			clientID      uuid.UUID
+			currency      postgres.Currency
+			err           error
+			originalToken = ginCtx.GetHeader(authHeaderKey)
+		)
+
+		// Extract and validate the currency.
+		if err = currency.Scan(ginCtx.Param("currencyCode")); err != nil || !currency.Valid() {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: "invalid currency", Payload: ginCtx.Param("currencyCode")})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if accDetails, err = db.FiatBalanceCurrency(clientID, currency); err != nil {
+			var balanceErr *postgres.Error
+			if !errors.As(err, &balanceErr) {
+				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK,
+			models.HTTPSuccess{Message: "account balance", Payload: accDetails})
+	}
+}
+
+// TxDetailsCurrencyFiat will handle an HTTP request to retrieve information on a specific transaction.
+//
+//	@Summary		Retrieve transaction details for a specific transactionID.
+//	@Description	Retrieves the transaction details for a specific transactionID. The transaction ID must be supplied as a query parameter.
+//	@Tags			fiat transactionID transaction details
+//	@Id				txDetailsCurrencyFiat
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			transactionID	path		string				true	"the transaction ID to retrieve the details for"
+//	@Success		200				{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/transaction/{transactionID} [get]
+func TxDetailsCurrencyFiat(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			journalEntries []postgres.FiatJournal
+			clientID       uuid.UUID
+			transactionID  uuid.UUID
+			err            error
+			originalToken  = ginCtx.GetHeader(authHeaderKey)
+		)
+
+		// Extract and validate the transactionID.
+		if transactionID, err = uuid.FromString(ginCtx.Param("transactionID")); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: "invalid transaction ID", Payload: ginCtx.Param("transactionID")})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if journalEntries, err = db.FiatTxDetailsCurrency(clientID, transactionID); err != nil {
+			var balanceErr *postgres.Error
+			if !errors.As(err, &balanceErr) {
+				logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+
+			return
+		}
+
+		if len(journalEntries) == 0 {
+			ginCtx.AbortWithStatusJSON(http.StatusNotFound, models.HTTPError{Message: "transaction id not found"})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "transaction details", Payload: journalEntries})
 	}
 }

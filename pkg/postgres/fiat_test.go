@@ -295,26 +295,26 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 		t.Run(fmt.Sprintf("Retrieving %s", key), func(t *testing.T) {
 			tx := testCases[key]
 
-			result, err := connection.Query.fiatGetJournalTransaction(ctx, param.TxID)
+			srcRecord, err := connection.Query.fiatGetJournalTransaction(ctx,
+				&fiatGetJournalTransactionParams{
+					ClientID: tx.SourceAccount,
+					TxID:     param.TxID,
+				})
 			require.NoError(t, err, "error expectation condition failed.")
-			require.Equal(t, 2, len(result), "incorrect row count returned.")
 
-			var (
-				srcRecord = result[0]
-				dstRecord = result[1]
-			)
+			dstRecord, err := connection.Query.fiatGetJournalTransaction(ctx,
+				&fiatGetJournalTransactionParams{
+					ClientID: tx.DestinationAccount,
+					TxID:     param.TxID,
+				})
+			require.NoError(t, err, "error expectation condition failed.")
 
-			if srcRecord.Currency != tx.SourceCurrency {
-				srcRecord = result[1]
-				dstRecord = result[0]
-			}
-
-			require.Equal(t, srcRecord.Currency, tx.SourceCurrency, "source currency mismatch.")
-			require.Equal(t, dstRecord.Currency, tx.DestinationCurrency, "destination currency mismatch.")
-			require.Equal(t, srcRecord.ClientID, tx.SourceAccount, "source client id mismatch.")
-			require.Equal(t, dstRecord.ClientID, tx.DestinationAccount, "destination client id mismatch.")
-			require.Equal(t, srcRecord.Amount, tx.DebitAmount, "source amount mismatch.")
-			require.Equal(t, dstRecord.Amount, tx.CreditAmount, "destination amount mismatch.")
+			require.Equal(t, srcRecord[0].Currency, tx.SourceCurrency, "source currency mismatch.")
+			require.Equal(t, dstRecord[0].Currency, tx.DestinationCurrency, "destination currency mismatch.")
+			require.Equal(t, srcRecord[0].ClientID, tx.SourceAccount, "source client id mismatch.")
+			require.Equal(t, dstRecord[0].ClientID, tx.DestinationAccount, "destination client id mismatch.")
+			require.Equal(t, srcRecord[0].Amount, tx.DebitAmount, "source amount mismatch.")
+			require.Equal(t, dstRecord[0].Amount, tx.CreditAmount, "destination amount mismatch.")
 		})
 	}
 }

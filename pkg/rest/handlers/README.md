@@ -10,14 +10,22 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 - [Error Response](#error-response)
 - [Success Response](#success-response)
 - [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
-- [User Endpoints `/user/`](#user-endpoints-user)
-  - [Register](#register)
-  - [Login](#login)
-  - [Refresh](#refresh)
-  - [Delete](#delete)
-- [Fiat Accounts Endpoints `/fiat/`](#fiat-accounts-endpoints-fiat)
-  - [Open](#open)
-  - [Deposit](#deposit)
+- [User Endpoints `/user`](#user-endpoints-user)
+  - [Register `/register`](#register-register)
+  - [Login `/login`](#login-login)
+  - [Refresh `/refresh`](#refresh-refresh)
+  - [Delete `/delete`](#delete-delete)
+- [Fiat Accounts Endpoints `/fiat`](#fiat-accounts-endpoints-fiat)
+  - [Open `/open`](#open-open)
+  - [Deposit `/deposit`](#deposit-deposit)
+  - [Exchange `/exchange`](#exchange-exchange)
+    - [Quote `/offer`](#quote-offer)
+    - [Convert `/convert`](#convert-convert)
+  - [Info `/info`](#info-info)
+    - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
+    - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
+      - [Deposit](#deposit)
+      - [Exchange](#exchange)
 
 <br/>
 
@@ -81,9 +89,9 @@ _Unhealthy Response:_ HTTP 503 Service Unavailable
 
 <br/>
 
-### User Endpoints `/user/`
+### User Endpoints `/user`
 
-#### Register
+#### Register `/register`
 
 Register a new user account.
 
@@ -100,7 +108,7 @@ _Request:_ All fields are required.
 
 _Response:_ A valid JWT will be returned as an authorization response.
 
-#### Login
+#### Login `/login`
 
 Log into a valid user account by providing valid user credentials.
 
@@ -114,7 +122,7 @@ _Request:_ All fields are required.
 
 _Response:_ A valid JWT will be returned as an authorization response.
 
-#### Refresh
+#### Refresh `/refresh`
 
 Refresh a valid but expiring JWT within the refresh threshold window. The client must refresh the token before
 expiration but within the refresh threshold specified in the `JWT` authorization response.
@@ -128,7 +136,7 @@ _Response:_ A valid JWT will be returned as an authorization response.
 }
 ```
 
-#### Delete
+#### Delete `/delete`
 
 Soft-delete an active and valid user account by completing the acknowledgment confirmation correctly and providing
 valid user credentials.
@@ -149,11 +157,11 @@ _Response:_ A confirmation message will be returned as a success response.
 
 <br/>
 
-### Fiat Accounts Endpoints `/fiat/`
+### Fiat Accounts Endpoints `/fiat`
 
 Fiat accounts endpoints provide access to deposit money into and across Fiat accounts belonging to the same client.
 
-#### Open
+#### Open `/open`
 
 Open a Fiat account with an empty balance for a logged-in user in a specific currency. The
 [`ISO 4217`](https://www.iso.org/iso-4217-currency-codes.html) currency code for the new account to be opened must be
@@ -176,7 +184,7 @@ _Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was
 }
 ```
 
-#### Deposit
+#### Deposit `/deposit`
 
 Deposit money into a Fiat account for a specific currency and amount. An account for the currency must already be opened for the deposit to succeed.
 
@@ -195,7 +203,7 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
   "payload": {
     "txId": "f9a3bfe1-de43-47cc-a634-508181652d75",
     "clientId": "cbe0d46b-7668-45f4-8519-6f291914b14c",
-    "txTimestamp": "2023-04-23T11:09:07.468161-04:00",
+    "txTimestamp": "2023-04-23T17:09:07.468161-04:00",
     "balance": "3259.57",
     "lastTx": "1921.68",
     "currency": "USD"
@@ -203,7 +211,7 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
 }
 ```
 
-### Convert
+#### Exchange `/exchange`
 
 To convert between Fiat currencies, the user must maintain open accounts in both the source and destination Fiat currencies.
 The amount specified will be in the source currency and the amount to deposit into the destination account will be calculated
@@ -213,7 +221,7 @@ The workflow will involve getting a conversion rate quote, referred to as an `Of
 only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
 must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
 
-##### Quote `/fiat/exchange/offer`
+##### Quote `/offer`
 
 _Request:_ All fields are required.
 ```json
@@ -243,7 +251,7 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 }
 ```
 
-##### Convert `/fiat/exchange/convert`
+##### Convert `/convert`
 
 _Request:_ All fields are required.
 ```json
@@ -252,7 +260,7 @@ _Request:_ All fields are required.
 }
 ```
 
-_Response:_ A rate quote with an encrypted `Offer ID`.
+_Response:_ A transaction receipt with the details of the source and destination accounts and transaction details.
 ```json
 {
   "message": "funds exchange transfer successful",
@@ -260,7 +268,7 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
     "sourceReceipt": {
       "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
       "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txTimestamp": "2023-04-30T14:06:54.654345-04:00",
+      "txTimestamp": "2023-04-30T17:06:54.654345-04:00",
       "balance": "1338.43",
       "lastTx": "-100.26",
       "currency": "CAD"
@@ -268,11 +276,79 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
     "destinationReceipt": {
       "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
       "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txTimestamp": "2023-04-30T14:06:54.654345-04:00",
+      "txTimestamp": "2023-04-30T17:06:54.654345-04:00",
       "balance": "21714.35",
       "lastTx": "73.44",
       "currency": "USD"
     }
   }
+}
+```
+
+#### Info `/info`
+
+##### Balance for a Specific Currency `/balance/{currencyCode}`
+
+_Request:_ A valid currency code must be provided as a path parameter.
+
+_Response:_ Account balance related details associated with the currency.
+```json
+{
+  "message": "account balance",
+  "payload": {
+    "currency": "USD",
+    "balance": "22813.05",
+    "lastTx": "1098.7",
+    "lastTxTs": "2023-04-30T17:15:43.605776-04:00",
+    "createdAt": "2023-04-28T17:24:11.540235-04:00",
+    "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32"
+  }
+}
+```
+
+##### Transaction Details for a Specific Transaction `/transaction/{transactionID}`
+
+_Request:_ A valid `Transaction ID` must be provided as a path parameter.
+
+_Response:_ Transaction-related details for a specific transaction. In the event of an external deposit, there will be
+a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
+one for the source and the other for the destination accounts.
+
+###### Deposit
+```json
+{
+  "message": "transaction details",
+  "payload": [
+    {
+      "currency": "USD",
+      "amount": "10101.11",
+      "transactedAt": "2023-04-28T17:24:53.396603-04:00",
+      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txID": "de7456cb-1dde-4b73-941d-252a1fb1d337"
+    }
+  ]
+}
+```
+
+###### Exchange
+```json
+{
+  "message": "transaction details",
+  "payload": [
+    {
+      "currency": "CAD",
+      "amount": "-100.26",
+      "transactedAt": "2023-04-30T17:06:54.654345-04:00",
+      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
+    },
+    {
+      "currency": "USD",
+      "amount": "73.44",
+      "transactedAt": "2023-04-30T17:06:54.654345-04:00",
+      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
+    }
+  ]
 }
 ```
