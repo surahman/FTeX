@@ -489,9 +489,9 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteErr:        nil,
 			userDeleteTimes:      0,
 		}, {
-			name:           "valid token",
+			name:           "valid",
 			path:           "/user-delete/valid-request",
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
 					Username: "username1",
@@ -630,7 +630,7 @@ func TestDeleteUser(t *testing.T) {
 			userDeleteTimes:      0,
 		}, {
 			name:           "invalid password",
-			path:           "/user-delete/valid-password",
+			path:           "/user-delete/invalid-password",
 			expectedStatus: http.StatusForbidden,
 			deleteRequest: &models.HTTPDeleteUserRequest{
 				UserLoginCredentials: modelsPostgres.UserLoginCredentials{

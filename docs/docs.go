@@ -450,7 +450,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "message with a confirmation of a deleted user account",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
