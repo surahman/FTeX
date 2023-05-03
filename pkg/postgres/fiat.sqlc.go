@@ -115,12 +115,20 @@ func (q *Queries) fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams)
 const fiatGetAllAccounts = `-- name: fiatGetAllAccounts :many
 SELECT currency, balance, last_tx, last_tx_ts, created_at, client_id
 FROM fiat_accounts
-WHERE client_id=$1
+WHERE client_id=$1 AND currency >= $2
+ORDER BY currency
+LIMIT $3
 `
 
+type fiatGetAllAccountsParams struct {
+	ClientID uuid.UUID `json:"clientID"`
+	Currency Currency  `json:"currency"`
+	Limit    int32     `json:"limit"`
+}
+
 // fiatGetAllAccounts will retrieve all accounts associated with a specific user.
-func (q *Queries) fiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error) {
-	rows, err := q.db.Query(ctx, fiatGetAllAccounts, clientID)
+func (q *Queries) fiatGetAllAccounts(ctx context.Context, arg *fiatGetAllAccountsParams) ([]FiatAccount, error) {
+	rows, err := q.db.Query(ctx, fiatGetAllAccounts, arg.ClientID, arg.Currency, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

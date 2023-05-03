@@ -82,7 +82,7 @@ func (mr *MockQuerierMockRecorder) fiatGetAccount(arg0, arg1 interface{}) *gomoc
 }
 
 // fiatGetAllAccounts mocks base method.
-func (m *MockQuerier) fiatGetAllAccounts(arg0 context.Context, arg1 uuid.UUID) ([]FiatAccount, error) {
+func (m *MockQuerier) fiatGetAllAccounts(arg0 context.Context, arg1 *fiatGetAllAccountsParams) ([]FiatAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "fiatGetAllAccounts", arg0, arg1)
 	ret0, _ := ret[0].([]FiatAccount)

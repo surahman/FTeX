@@ -121,4 +121,6 @@ WHERE client_id=$1 AND currency=$2;
 -- fiatGetAllAccounts will retrieve all accounts associated with a specific user.
 SELECT *
 FROM fiat_accounts
-WHERE client_id=$1;
+WHERE client_id=$1 AND currency >= $2
+ORDER BY currency
+LIMIT $3;

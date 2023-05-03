@@ -19,7 +19,7 @@ type Querier interface {
 	// fiatGetAccount will retrieve a specific user's account for a given currency.
 	fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error)
 	// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
-	fiatGetAllAccounts(ctx context.Context, clientID uuid.UUID) ([]FiatAccount, error)
+	fiatGetAllAccounts(ctx context.Context, arg *fiatGetAllAccountsParams) ([]FiatAccount, error)
 	// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 	fiatGetJournalTransaction(ctx context.Context, arg *fiatGetJournalTransactionParams) ([]FiatJournal, error)
 	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
