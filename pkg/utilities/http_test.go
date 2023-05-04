@@ -10,9 +10,6 @@ import (
 func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	t.Parallel()
 
-	encEmpty, err := testAuth.EncryptToString([]byte(""))
-	require.NoError(t, err, "failed to encrypt empty currency.")
-
 	encAED, err := testAuth.EncryptToString([]byte("AED"))
 	require.NoError(t, err, "failed to encrypt AED currency.")
 
@@ -31,7 +28,7 @@ func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	}{
 		{
 			name:           "empty currency",
-			currencyStr:    encEmpty,
+			currencyStr:    "",
 			limitStr:       "5",
 			expectCurrency: postgres.CurrencyAED,
 			expectLimit:    5,
@@ -64,6 +61,18 @@ func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 			currencyStr:    encEUR,
 			limitStr:       "999",
 			expectCurrency: postgres.CurrencyEUR,
+			expectLimit:    999,
+		}, {
+			name:           "empty request",
+			currencyStr:    "",
+			limitStr:       "",
+			expectCurrency: postgres.CurrencyAED,
+			expectLimit:    10,
+		}, {
+			name:           "empty currency",
+			currencyStr:    "",
+			limitStr:       "999",
+			expectCurrency: postgres.CurrencyAED,
 			expectLimit:    999,
 		},
 	}

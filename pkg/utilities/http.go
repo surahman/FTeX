@@ -19,12 +19,12 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 	)
 
 	// Decrypt currency string and covert to currency struct.
-	if decrypted, err = auth.DecryptFromString(currencyStr); err != nil {
-		return currency, -1, fmt.Errorf("failed to decrypt next currency")
-	}
+	decrypted = []byte("AED")
 
-	if len(decrypted) == 0 {
-		decrypted = []byte("AED")
+	if len(currencyStr) > 0 {
+		if decrypted, err = auth.DecryptFromString(currencyStr); err != nil {
+			return currency, -1, fmt.Errorf("failed to decrypt next currency")
+		}
 	}
 
 	if err = currency.Scan(string(decrypted)); err != nil {
@@ -32,8 +32,10 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 	}
 
 	// Convert record limit to int and set base bound for bad input.
-	if limit, err = strconv.ParseInt(limitStr, 10, 32); err != nil {
-		return currency, -1, fmt.Errorf("failed to parse record limit")
+	if len(limitStr) > 0 {
+		if limit, err = strconv.ParseInt(limitStr, 10, 32); err != nil {
+			return currency, -1, fmt.Errorf("failed to parse record limit")
+		}
 	}
 
 	if limit < 1 {
