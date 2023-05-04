@@ -18,6 +18,7 @@ import (
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
+	"github.com/surahman/FTeX/pkg/utilities"
 	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -40,11 +41,10 @@ import (
 func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			clientID      uuid.UUID
-			currency      postgres.Currency
-			err           error
-			originalToken = ginCtx.GetHeader(authHeaderKey)
-			request       models.HTTPOpenCurrencyAccountRequest
+			clientID uuid.UUID
+			currency postgres.Currency
+			err      error
+			request  models.HTTPOpenCurrencyAccountRequest
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -67,7 +67,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 			return
 		}
 
-		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
 
 			return
@@ -114,7 +114,6 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			clientID        uuid.UUID
 			currency        postgres.Currency
 			err             error
-			originalToken   = ginCtx.GetHeader(authHeaderKey)
 			request         models.HTTPDepositCurrencyRequest
 			transferReceipt *postgres.FiatAccountTransferResult
 		)
@@ -147,7 +146,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			return
 		}
 
-		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
@@ -225,11 +224,10 @@ func ExchangeOfferFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err           error
-			originalToken = ginCtx.GetHeader(authHeaderKey)
-			request       models.HTTPFiatExchangeOfferRequest
-			offer         models.HTTPFiatExchangeOfferResponse
-			offerID       = xid.New().String()
+			err     error
+			request models.HTTPFiatExchangeOfferRequest
+			offer   models.HTTPFiatExchangeOfferResponse
+			offerID = xid.New().String()
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -253,7 +251,7 @@ func ExchangeOfferFiat(
 			return
 		}
 
-		if offer.ClientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+		if offer.ClientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
@@ -357,15 +355,14 @@ func ExchangeTransferFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err           error
-			clientID      uuid.UUID
-			originalToken = ginCtx.GetHeader(authHeaderKey)
-			request       models.HTTPFiatTransferRequest
-			offer         models.HTTPFiatExchangeOfferResponse
-			receipt       models.HTTPFiatTransferResponse
-			offerID       string
-			srcCurrency   postgres.Currency
-			dstCurrency   postgres.Currency
+			err         error
+			clientID    uuid.UUID
+			request     models.HTTPFiatTransferRequest
+			offer       models.HTTPFiatExchangeOfferResponse
+			receipt     models.HTTPFiatTransferResponse
+			offerID     string
+			srcCurrency postgres.Currency
+			dstCurrency postgres.Currency
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -380,7 +377,7 @@ func ExchangeTransferFiat(
 			return
 		}
 
-		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
@@ -482,11 +479,10 @@ func BalanceCurrencyFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			accDetails    *postgres.FiatAccount
-			clientID      uuid.UUID
-			currency      postgres.Currency
-			err           error
-			originalToken = ginCtx.GetHeader(authHeaderKey)
+			accDetails postgres.FiatAccount
+			clientID   uuid.UUID
+			currency   postgres.Currency
+			err        error
 		)
 
 		// Extract and validate the currency.
@@ -497,7 +493,7 @@ func BalanceCurrencyFiat(
 			return
 		}
 
-		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
 
 			return
@@ -518,8 +514,7 @@ func BalanceCurrencyFiat(
 			return
 		}
 
-		ginCtx.JSON(http.StatusOK,
-			models.HTTPSuccess{Message: "account balance", Payload: accDetails})
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balance", Payload: accDetails})
 	}
 }
 
@@ -550,7 +545,6 @@ func TxDetailsCurrencyFiat(
 			clientID       uuid.UUID
 			transactionID  uuid.UUID
 			err            error
-			originalToken  = ginCtx.GetHeader(authHeaderKey)
 		)
 
 		// Extract and validate the transactionID.
@@ -561,7 +555,7 @@ func TxDetailsCurrencyFiat(
 			return
 		}
 
-		if clientID, _, err = auth.ValidateJWT(originalToken); err != nil {
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
 
 			return
@@ -589,5 +583,98 @@ func TxDetailsCurrencyFiat(
 		}
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "transaction details", Payload: journalEntries})
+	}
+}
+
+// BalanceCurrencyFiatPaginated will handle an HTTP request to retrieve a balance for all currency accounts held by a
+// single client.
+//
+// If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
+// available to for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
+//
+//	@Summary		Retrieve all the currency balances for a specific client.
+//	@Description	Retrieves all the currency balances for a specific client. The initial request will only contain (optionally) the page size. Subsequent requests will require a cursors to the next page will be returned in a previous call to the endpoint. The user may choose to change the page size in any sequence of calls.
+//	@Tags			fiat currency balance
+//	@Id				balanceCurrencyFiatPaginated
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			pageCursor	query		string				false	"The page cursor into the query results records."
+//	@Param			pageSize	query		int					false	"The number of records to retrieve on this page."
+//	@Success		200			{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/balance [get]
+func BalanceCurrencyFiatPaginated(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			accDetails []postgres.FiatAccount
+			clientID   uuid.UUID
+			currency   postgres.Currency
+			err        error
+			nextPage   string
+			pageSize   int32
+		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Extract and assemble the page cursor and page size.
+		if currency, pageSize, err = utilities.HTTPFiatBalancePaginatedRequest(
+			auth,
+			ginCtx.Query("pageCursor"),
+			ginCtx.Query("pageSize")); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "invalid page cursor or page size"})
+
+			return
+		}
+
+		if accDetails, err = db.FiatBalanceCurrencyPaginated(clientID, currency, pageSize+1); err != nil {
+			var balanceErr *postgres.Error
+			if !errors.As(err, &balanceErr) {
+				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+
+			return
+		}
+
+		// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
+		lastRecordIdx := int(pageSize)
+		if len(accDetails) == lastRecordIdx+1 {
+			// Generate next page link.
+			if nextPage, err = auth.EncryptToString([]byte(accDetails[pageSize].Currency)); err != nil {
+				logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			// Remove last element.
+			accDetails = accDetails[:pageSize]
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances",
+			Payload: models.HTTPFiatDetailsPaginated{
+				AccountBalances: accDetails,
+				Links: models.HTTPLinks{
+					NextPage: nextPage,
+				},
+			}})
 	}
 }

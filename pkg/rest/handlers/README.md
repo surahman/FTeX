@@ -23,6 +23,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Convert `/convert`](#convert-convert)
   - [Info `/info`](#info-info)
     - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
+    - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
     - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
       - [Deposit](#deposit)
       - [Exchange](#exchange)
@@ -302,6 +303,83 @@ _Response:_ Account balance related details associated with the currency.
     "lastTxTs": "2023-04-30T17:15:43.605776-04:00",
     "createdAt": "2023-04-28T17:24:11.540235-04:00",
     "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32"
+  }
+}
+```
+
+##### Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`
+
+_Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
+subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
+
+> fiat/info/balance/?pageCursor=QW9bg6pXqXdwegEf7PVEuqoPzAJ28tO0r4TSh-t8qQ==&pageSize=3
+
+
+_Response:_ Account balances for the Client will be limited to the `Page Size` specified and is `10` by default. A
+`Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the `links.nextPage` JSON
+field.
+
+```json
+{
+  "message": "account balances",
+  "payload": {
+    "accountBalances": [
+      {
+        "currency": "AED",
+        "balance": "0",
+        "lastTx": "0",
+        "lastTxTs": "2023-05-04T16:23:04.133525-04:00",
+        "createdAt": "2023-05-04T16:23:04.133525-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+      },
+      {
+        "currency": "CAD",
+        "balance": "0",
+        "lastTx": "0",
+        "lastTxTs": "2023-05-04T16:23:00.701807-04:00",
+        "createdAt": "2023-05-04T16:23:00.701807-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+      },
+      {
+        "currency": "EUR",
+        "balance": "0",
+        "lastTx": "0",
+        "lastTxTs": "2023-05-04T16:23:08.725994-04:00",
+        "createdAt": "2023-05-04T16:23:08.725994-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+      }
+    ],
+    "links": {
+      "nextPage": "o8VWoMJ-FsVnLmfweM2eUyJshLzDp4SjTOG45mS5Vg=="
+    }
+  }
+}
+```
+```json
+{
+  "message": "account balances",
+  "payload": {
+    "accountBalances": [
+      {
+        "currency": "GBP",
+        "balance": "0",
+        "lastTx": "0",
+        "lastTxTs": "2023-05-04T16:23:14.045362-04:00",
+        "createdAt": "2023-05-04T16:23:14.045362-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+      },
+      {
+        "currency": "USD",
+        "balance": "0",
+        "lastTx": "0",
+        "lastTxTs": "2023-05-04T16:22:54.953269-04:00",
+        "createdAt": "2023-05-04T16:22:54.953269-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+      }
+    ],
+    "links": {
+      "nextPage": ""
+    }
   }
 }
 ```

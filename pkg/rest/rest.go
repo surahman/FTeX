@@ -115,6 +115,8 @@ func (s *Server) initialize() {
 		restHandlers.BalanceCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/:transactionID",
 		restHandlers.TxDetailsCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.GET("/info/balance",
+		restHandlers.BalanceCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.
