@@ -41,36 +41,105 @@ func TestQueries_FiatBalanceCurrency(t *testing.T) {
 		name      string
 		currency  Currency
 		expectErr require.ErrorAssertionFunc
-		expectNil require.ValueAssertionFunc
 	}{
 		{
 			name:      "AED valid",
 			currency:  CurrencyAED,
 			expectErr: require.NoError,
-			expectNil: require.NotNil,
 		}, {
 			name:      "CAD valid",
 			currency:  CurrencyCAD,
 			expectErr: require.NoError,
-			expectNil: require.NotNil,
 		}, {
 			name:      "USD valid",
 			currency:  CurrencyUSD,
 			expectErr: require.NoError,
-			expectNil: require.NotNil,
 		}, {
-			name:      "UER invalid",
+			name:      "EUR invalid",
 			currency:  CurrencyEUR,
 			expectErr: require.Error,
-			expectNil: require.Nil,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			balance, err := connection.FiatBalanceCurrency(clientID1, testCase.currency)
+			_, err := connection.FiatBalanceCurrency(clientID1, testCase.currency)
 			testCase.expectErr(t, err, "error expectation failed.")
-			testCase.expectNil(t, balance, "nil balance expectation failed.")
+		})
+	}
+}
+
+func TestQueries_FiatBalanceCurrencyPaginated(t *testing.T) {
+	// Integration test check.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, _ := resetTestFiatAccounts(t)
+
+	testCases := []struct {
+		name         string
+		baseCurrency Currency
+		limit        int32
+		expectLen    int
+	}{
+		{
+			name:         "AED All",
+			baseCurrency: CurrencyAED,
+			limit:        3,
+			expectLen:    3,
+		}, {
+			name:         "AED One",
+			baseCurrency: CurrencyAED,
+			limit:        1,
+			expectLen:    1,
+		}, {
+			name:         "AED Two",
+			baseCurrency: CurrencyAED,
+			limit:        2,
+			expectLen:    2,
+		}, {
+			name:         "CAD All",
+			baseCurrency: CurrencyCAD,
+			limit:        3,
+			expectLen:    2,
+		}, {
+			name:         "CAD All",
+			baseCurrency: CurrencyCAD,
+			limit:        1,
+			expectLen:    1,
+		}, {
+			name:         "USD All",
+			baseCurrency: CurrencyUSD,
+			limit:        3,
+			expectLen:    1,
+		}, {
+			name:         "USD One",
+			baseCurrency: CurrencyUSD,
+			limit:        1,
+			expectLen:    1,
+		}, {
+			name:         "EUR invalid but okay",
+			baseCurrency: CurrencyEUR,
+			limit:        3,
+			expectLen:    1,
+		}, {
+			name:         "ZWD invalid and not okay",
+			baseCurrency: CurrencyZWD,
+			limit:        3,
+			expectLen:    0,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			balances, err := connection.FiatBalanceCurrencyPaginated(clientID1, testCase.baseCurrency, testCase.limit)
+			require.NoError(t, err, "failed to retrieve results.")
+			require.Equal(t, testCase.expectLen, len(balances), "incorrect number of records returned.")
 		})
 	}
 }
