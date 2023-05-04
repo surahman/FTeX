@@ -195,7 +195,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 	t.Run("JWT claim parsing tests", func(t *testing.T) {
 		t.Parallel()
 
-		testAuthImpl := getTestConfiguration()
+		testAuthImpl := testConfigurationImpl(zapLogger, expirationDuration, refreshThreshold)
 
 		_, _, err := testAuthImpl.ValidateJWT("")
 		require.Error(t, err, "parsing an empty token should fail")
@@ -241,7 +241,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 			t.Parallel()
 
 			// Adjust the authorization issuer name and expiration deadline for tests, if needed.
-			testAuthImpl := getTestConfiguration()
+			testAuthImpl := testConfigurationImpl(zapLogger, expirationDuration, refreshThreshold)
 			if test.issuerName != "" {
 				testAuthImpl.conf.JWTConfig.Issuer = test.issuerName
 			}
@@ -305,7 +305,7 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 			t.Parallel()
 
 			// Test authorization config and token generation.
-			testAuthImpl := getTestConfiguration()
+			testAuthImpl := testConfigurationImpl(zapLogger, expirationDuration, refreshThreshold)
 
 			testAuthImpl.conf.JWTConfig.ExpirationDuration = test.expirationDuration
 

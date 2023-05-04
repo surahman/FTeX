@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 //
 //nolint:unparam
 func setup() error {
-	testAuth = getTestConfiguration()
+	testAuth = testConfigurationImpl(zapLogger, expirationDuration, refreshThreshold)
 
 	return nil
 }
@@ -62,20 +62,4 @@ func setup() error {
 // tearDown will delete the test clusters keyspace.
 func tearDown() error {
 	return nil
-}
-
-// getTestConfiguration creates an Auth configuration for testing.
-func getTestConfiguration() *authImpl {
-	auth := &authImpl{
-		conf:   &config{},
-		logger: zapLogger,
-	}
-	auth.conf.JWTConfig.Key = "encryption key for test suite"
-	auth.conf.JWTConfig.Issuer = "issuer for test suite"
-	auth.conf.JWTConfig.ExpirationDuration = expirationDuration
-	auth.conf.JWTConfig.RefreshThreshold = refreshThreshold
-	auth.conf.General.BcryptCost = 4
-	auth.cryptoSecret = []byte("*****crypto key for testing*****")
-
-	return auth
 }
