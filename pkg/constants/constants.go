@@ -32,6 +32,7 @@ const (
 	fiatDecimalPlaces             = int32(2)
 	fiatOfferTTL                  = 2 * time.Minute
 	cryptoOfferTTL                = 2 * time.Minute
+	monthFormatString             = "%d-%02d-01T00:00:00%s" // YYYY-MM-DDTHH:MM:SS+HH:MM (last section is +/- timezone.)
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -142,4 +143,9 @@ func GetFiatOfferTTL() time.Duration {
 // GetCryptoOfferTTL is the time duration that a Crypto conversion rate offer will be valid for.
 func GetCryptoOfferTTL() time.Duration {
 	return cryptoOfferTTL
+}
+
+// GetMonthFormatString is the base RFC3339 format string for a configurable month, year, and timezone.
+func GetMonthFormatString() string {
+	return monthFormatString
 }
