@@ -1,9 +1,13 @@
 package utilities
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/postgres"
 )
 
@@ -86,6 +90,128 @@ func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 			require.NoError(t, err, "error returned from query unpacking")
 			require.Equal(t, test.expectCurrency, actualCurr, "currencies mismatched.")
 			require.Equal(t, test.expectLimit, actualLimit, "request limit size mismatched.")
+		})
+	}
+}
+
+func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		monthStr    string
+		yearStr     string
+		timezone    string
+		limit       string
+		expectStart string
+		expectEnd   string
+		expectErr   require.ErrorAssertionFunc
+		expectLimit int32
+	}{
+		{
+			name:        "valid - Before UTC",
+			monthStr:    "6",
+			yearStr:     "2023",
+			timezone:    "-04:00",
+			limit:       "4",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+			expectLimit: 4,
+			expectErr:   require.NoError,
+		}, {
+			name:        "valid - no timezone",
+			monthStr:    "6",
+			yearStr:     "2023",
+			timezone:    "",
+			limit:       "4",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+00:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+00:00"),
+			expectLimit: 4,
+			expectErr:   require.NoError,
+		}, {
+			name:        "invalid - 0 month",
+			monthStr:    "0",
+			yearStr:     "2023",
+			timezone:    "+04:00",
+			limit:       "4",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 0, "+04:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 0, "+04:00"),
+			expectLimit: 4,
+			expectErr:   require.Error,
+		}, {
+			name:        "valid - no limit",
+			monthStr:    "6",
+			yearStr:     "2023",
+			timezone:    "+04:00",
+			limit:       "",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
+			expectLimit: 10,
+			expectErr:   require.NoError,
+		}, {
+			name:        "valid - June",
+			monthStr:    "6",
+			yearStr:     "2023",
+			timezone:    "+04:00",
+			limit:       "4",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
+			expectLimit: 4,
+			expectErr:   require.NoError,
+		}, {
+			name:        "valid - December",
+			monthStr:    "12",
+			yearStr:     "2023",
+			timezone:    "+04:00",
+			limit:       "4",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 12, "+04:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2024, 1, "+04:00"),
+			expectLimit: 4,
+			expectErr:   require.NoError,
+		}, {
+			name:        "valid - January",
+			monthStr:    "1",
+			yearStr:     "2023",
+			timezone:    "+04:00",
+			limit:       "4",
+			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 1, "+04:00"),
+			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 2, "+04:00"),
+			expectLimit: 4,
+			expectErr:   require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			startTS, endTS, limit, err :=
+				HTTPFiatTransactionInfoPaginatedRequest(test.monthStr, test.yearStr, test.timezone, test.limit)
+			test.expectErr(t, err, "failed error expectation")
+
+			if err != nil {
+				return
+			}
+
+			require.Equal(t, test.expectLimit, limit, "limit mismatch.")
+
+			// Check start timestamp.
+			expectedStartTS, err := time.Parse(time.RFC3339, test.expectStart)
+			require.NoError(t, err, "failed to parse expected start time.")
+
+			expectedPgStart := pgtype.Timestamptz{}
+			require.NoError(t, expectedPgStart.Scan(expectedStartTS), "failed to scan start timestamp to pg.")
+			require.Equal(t, expectedPgStart, startTS, "start timestamp mismatch.")
+
+			// Check end timestamp.
+			expectedEndTS, err := time.Parse(time.RFC3339, test.expectEnd)
+			require.NoError(t, err, "failed to parse expected start time.")
+
+			expectedPgEnd := pgtype.Timestamptz{}
+			require.NoError(t, expectedPgEnd.Scan(expectedEndTS), "failed to scan start timestamp to pg.")
+			require.Equal(t, expectedPgEnd, endTS, "end timestamp mismatch.")
 		})
 	}
 }
