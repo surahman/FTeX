@@ -656,6 +656,17 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 				EndTime:   minuteAhead,
 			},
 		}, {
+			name:         "ClientID1 USD: Before-After, 3 items page 2",
+			expectedCont: 3,
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Currency:  "USD",
+				Offset:    1,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
 			name:         "ClientID1 USD: Before",
 			expectedCont: 0,
 			parameters: fiatGetAllJournalTransactionPaginatedParams{

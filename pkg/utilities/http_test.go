@@ -98,86 +98,114 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name        string
-		monthStr    string
-		yearStr     string
-		timezone    string
-		limit       string
-		expectStart string
-		expectEnd   string
-		expectErr   require.ErrorAssertionFunc
-		expectLimit int32
+		name         string
+		monthStr     string
+		yearStr      string
+		timezone     string
+		limit        string
+		offset       string
+		expectStart  string
+		expectEnd    string
+		expectErr    require.ErrorAssertionFunc
+		expectLimit  int32
+		expectOffset int32
 	}{
 		{
-			name:        "valid - Before UTC",
-			monthStr:    "6",
-			yearStr:     "2023",
-			timezone:    "-04:00",
-			limit:       "4",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
-			expectLimit: 4,
-			expectErr:   require.NoError,
+			name:         "valid - Before UTC",
+			monthStr:     "6",
+			yearStr:      "2023",
+			timezone:     "-04:00",
+			limit:        "4",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+			expectLimit:  4,
+			expectOffset: 9,
+			expectErr:    require.NoError,
 		}, {
-			name:        "valid - no timezone",
-			monthStr:    "6",
-			yearStr:     "2023",
-			timezone:    "",
-			limit:       "4",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+00:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+00:00"),
-			expectLimit: 4,
-			expectErr:   require.NoError,
+			name:         "valid - no timezone",
+			monthStr:     "6",
+			yearStr:      "2023",
+			timezone:     "",
+			limit:        "4",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+00:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+00:00"),
+			expectLimit:  4,
+			expectOffset: 9,
+			expectErr:    require.NoError,
 		}, {
-			name:        "invalid - 0 month",
-			monthStr:    "0",
-			yearStr:     "2023",
-			timezone:    "+04:00",
-			limit:       "4",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 0, "+04:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 0, "+04:00"),
-			expectLimit: 4,
-			expectErr:   require.Error,
+			name:         "invalid - 0 month",
+			monthStr:     "0",
+			yearStr:      "2023",
+			timezone:     "+04:00",
+			limit:        "4",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 0, "+04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 0, "+04:00"),
+			expectLimit:  4,
+			expectOffset: 9,
+			expectErr:    require.Error,
 		}, {
-			name:        "valid - no limit",
-			monthStr:    "6",
-			yearStr:     "2023",
-			timezone:    "+04:00",
-			limit:       "",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
-			expectLimit: 10,
-			expectErr:   require.NoError,
+			name:         "valid - no limit",
+			monthStr:     "6",
+			yearStr:      "2023",
+			timezone:     "+04:00",
+			limit:        "",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
+			expectLimit:  10,
+			expectOffset: 9,
+			expectErr:    require.NoError,
 		}, {
-			name:        "valid - June",
-			monthStr:    "6",
-			yearStr:     "2023",
-			timezone:    "+04:00",
-			limit:       "4",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
-			expectLimit: 4,
-			expectErr:   require.NoError,
+			name:         "valid - no offset",
+			monthStr:     "6",
+			yearStr:      "2023",
+			timezone:     "+04:00",
+			limit:        "10",
+			offset:       "",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
+			expectLimit:  10,
+			expectOffset: 0,
+			expectErr:    require.NoError,
 		}, {
-			name:        "valid - December",
-			monthStr:    "12",
-			yearStr:     "2023",
-			timezone:    "+04:00",
-			limit:       "4",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 12, "+04:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2024, 1, "+04:00"),
-			expectLimit: 4,
-			expectErr:   require.NoError,
+			name:         "valid - June",
+			monthStr:     "6",
+			yearStr:      "2023",
+			timezone:     "+04:00",
+			limit:        "4",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "+04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "+04:00"),
+			expectLimit:  4,
+			expectOffset: 9,
+			expectErr:    require.NoError,
 		}, {
-			name:        "valid - January",
-			monthStr:    "1",
-			yearStr:     "2023",
-			timezone:    "+04:00",
-			limit:       "4",
-			expectStart: fmt.Sprintf(constants.GetMonthFormatString(), 2023, 1, "+04:00"),
-			expectEnd:   fmt.Sprintf(constants.GetMonthFormatString(), 2023, 2, "+04:00"),
-			expectLimit: 4,
-			expectErr:   require.NoError,
+			name:         "valid - December",
+			monthStr:     "12",
+			yearStr:      "2023",
+			timezone:     "+04:00",
+			limit:        "4",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 12, "+04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2024, 1, "+04:00"),
+			expectLimit:  4,
+			expectOffset: 9,
+			expectErr:    require.NoError,
+		}, {
+			name:         "valid - January",
+			monthStr:     "1",
+			yearStr:      "2023",
+			timezone:     "+04:00",
+			limit:        "4",
+			offset:       "9",
+			expectStart:  fmt.Sprintf(constants.GetMonthFormatString(), 2023, 1, "+04:00"),
+			expectEnd:    fmt.Sprintf(constants.GetMonthFormatString(), 2023, 2, "+04:00"),
+			expectLimit:  4,
+			expectOffset: 9,
+			expectErr:    require.NoError,
 		},
 	}
 
@@ -187,8 +215,8 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			startTS, endTS, limit, err :=
-				HTTPFiatTransactionInfoPaginatedRequest(test.monthStr, test.yearStr, test.timezone, test.limit)
+			startTS, endTS, limit, offset, err :=
+				HTTPFiatTransactionInfoPaginatedRequest(test.monthStr, test.yearStr, test.timezone, test.limit, test.offset)
 			test.expectErr(t, err, "failed error expectation")
 
 			if err != nil {
@@ -196,6 +224,7 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 			}
 
 			require.Equal(t, test.expectLimit, limit, "limit mismatch.")
+			require.Equal(t, test.expectOffset, offset, "offset mismatch.")
 
 			// Check start timestamp.
 			expectedStartTS, err := time.Parse(time.RFC3339, test.expectStart)

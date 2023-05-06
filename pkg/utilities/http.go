@@ -50,10 +50,11 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 
 // HTTPFiatTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
 // parameters.
-func HTTPFiatTransactionInfoPaginatedRequest(monthStr, yearStr, timezoneStr, limitStr string) (
-	pgtype.Timestamptz, pgtype.Timestamptz, int32, error) {
+func HTTPFiatTransactionInfoPaginatedRequest(monthStr, yearStr, timezoneStr, limitStr, offsetStr string) (
+	pgtype.Timestamptz, pgtype.Timestamptz, int32, int32, error) {
 	var (
 		limit       int64
+		offset      int64
 		startYear   int64
 		startMonth  int64
 		endYear     int64
@@ -72,11 +73,11 @@ func HTTPFiatTransactionInfoPaginatedRequest(monthStr, yearStr, timezoneStr, lim
 
 	// Extract year and month.
 	if startYear, err = strconv.ParseInt(yearStr, 10, 32); err != nil {
-		return periodStart, periodEnd, -1, fmt.Errorf("invalid year")
+		return periodStart, periodEnd, -1, -1, fmt.Errorf("invalid year")
 	}
 
 	if startMonth, err = strconv.ParseInt(monthStr, 10, 32); err != nil {
-		return periodStart, periodEnd, -1, fmt.Errorf("invalid month")
+		return periodStart, periodEnd, -1, -1, fmt.Errorf("invalid month")
 	}
 
 	// Setup end year and month.
@@ -91,26 +92,26 @@ func HTTPFiatTransactionInfoPaginatedRequest(monthStr, yearStr, timezoneStr, lim
 	// Prepare Postgres timestamps.
 	if startTime, err = time.Parse(time.RFC3339,
 		fmt.Sprintf(constants.GetMonthFormatString(), startYear, startMonth, timezoneStr)); err != nil {
-		return periodStart, periodEnd, -1, fmt.Errorf("start date parse failure %w", err)
+		return periodStart, periodEnd, -1, -1, fmt.Errorf("start date parse failure %w", err)
 	}
 
 	if err = periodStart.Scan(startTime); err != nil {
-		return periodStart, periodEnd, -1, fmt.Errorf("invalid start date %w", err)
+		return periodStart, periodEnd, -1, -1, fmt.Errorf("invalid start date %w", err)
 	}
 
 	if endTime, err = time.Parse(time.RFC3339,
 		fmt.Sprintf(constants.GetMonthFormatString(), endYear, endMonth, timezoneStr)); err != nil {
-		return periodStart, periodEnd, -1, fmt.Errorf("end date parse failure %w", err)
+		return periodStart, periodEnd, -1, -1, fmt.Errorf("end date parse failure %w", err)
 	}
 
 	if err = periodEnd.Scan(endTime); err != nil {
-		return periodStart, periodEnd, -1, fmt.Errorf("end start date %w", err)
+		return periodStart, periodEnd, -1, -1, fmt.Errorf("end start date %w", err)
 	}
 
 	// Convert record limit to int and set base bound for bad input.
 	if len(limitStr) > 0 {
 		if limit, err = strconv.ParseInt(limitStr, 10, 32); err != nil {
-			return periodStart, periodEnd, -1, fmt.Errorf("failed to parse record limit %w", err)
+			return periodStart, periodEnd, -1, -1, fmt.Errorf("failed to parse record limit %w", err)
 		}
 	}
 
@@ -118,5 +119,17 @@ func HTTPFiatTransactionInfoPaginatedRequest(monthStr, yearStr, timezoneStr, lim
 		limit = 10
 	}
 
-	return periodStart, periodEnd, int32(limit), nil
+	// Extract offset.
+	if len(offsetStr) > 0 {
+		if offset, err = strconv.ParseInt(offsetStr, 10, 32); err != nil {
+			return periodStart, periodEnd, -1, -1, fmt.Errorf("failed to parse offset limit %w", err)
+		}
+	}
+
+	return periodStart, periodEnd, int32(limit), int32(offset), nil
+}
+
+// HTTPFiatTransactionGeneratePageCursor will generate the encrypted page cursor.
+func HTTPFiatTransactionGeneratePageCursor() {
+
 }
