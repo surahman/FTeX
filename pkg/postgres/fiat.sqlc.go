@@ -154,6 +154,63 @@ func (q *Queries) fiatGetAllAccounts(ctx context.Context, arg *fiatGetAllAccount
 	return items, nil
 }
 
+const fiatGetAllJournalTransactionPaginated = `-- name: fiatGetAllJournalTransactionPaginated :many
+SELECT currency, amount, transacted_at, client_id, tx_id
+FROM fiat_journal
+WHERE client_id = $1
+      AND currency = $2
+      AND transacted_at
+          BETWEEN $5::timestamptz
+              AND $6::timestamptz
+ORDER BY transacted_at DESC
+OFFSET $3
+LIMIT $4
+`
+
+type fiatGetAllJournalTransactionPaginatedParams struct {
+	ClientID  uuid.UUID          `json:"clientID"`
+	Currency  Currency           `json:"currency"`
+	Offset    int32              `json:"offset"`
+	Limit     int32              `json:"limit"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
+}
+
+// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+// in a date range.
+func (q *Queries) fiatGetAllJournalTransactionPaginated(ctx context.Context, arg *fiatGetAllJournalTransactionPaginatedParams) ([]FiatJournal, error) {
+	rows, err := q.db.Query(ctx, fiatGetAllJournalTransactionPaginated,
+		arg.ClientID,
+		arg.Currency,
+		arg.Offset,
+		arg.Limit,
+		arg.StartTime,
+		arg.EndTime,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FiatJournal
+	for rows.Next() {
+		var i FiatJournal
+		if err := rows.Scan(
+			&i.Currency,
+			&i.Amount,
+			&i.TransactedAt,
+			&i.ClientID,
+			&i.TxID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const fiatGetJournalTransaction = `-- name: fiatGetJournalTransaction :many
 SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
@@ -206,56 +263,6 @@ type fiatGetJournalTransactionForAccountParams struct {
 // fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
 func (q *Queries) fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error) {
 	rows, err := q.db.Query(ctx, fiatGetJournalTransactionForAccount, arg.ClientID, arg.Currency)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []FiatJournal
-	for rows.Next() {
-		var i FiatJournal
-		if err := rows.Scan(
-			&i.Currency,
-			&i.Amount,
-			&i.TransactedAt,
-			&i.ClientID,
-			&i.TxID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const fiatGetJournalTransactionForAccountBetweenDates = `-- name: fiatGetJournalTransactionForAccountBetweenDates :many
-SELECT currency, amount, transacted_at, client_id, tx_id
-FROM fiat_journal
-WHERE client_id = $1
-      AND currency = $2
-      AND transacted_at
-          BETWEEN $3::timestamptz
-              AND $4::timestamptz
-`
-
-type fiatGetJournalTransactionForAccountBetweenDatesParams struct {
-	ClientID  uuid.UUID          `json:"clientID"`
-	Currency  Currency           `json:"currency"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
-}
-
-// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
-// in a date range.
-func (q *Queries) fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
-	rows, err := q.db.Query(ctx, fiatGetJournalTransactionForAccountBetweenDates,
-		arg.ClientID,
-		arg.Currency,
-		arg.StartTime,
-		arg.EndTime,
-	)
 	if err != nil {
 		return nil, err
 	}

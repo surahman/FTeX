@@ -20,13 +20,13 @@ type Querier interface {
 	fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error)
 	// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
 	fiatGetAllAccounts(ctx context.Context, arg *fiatGetAllAccountsParams) ([]FiatAccount, error)
+	// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+	// in a date range.
+	fiatGetAllJournalTransactionPaginated(ctx context.Context, arg *fiatGetAllJournalTransactionPaginatedParams) ([]FiatJournal, error)
 	// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 	fiatGetJournalTransaction(ctx context.Context, arg *fiatGetJournalTransactionParams) ([]FiatJournal, error)
 	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.
 	fiatGetJournalTransactionForAccount(ctx context.Context, arg *fiatGetJournalTransactionForAccountParams) ([]FiatJournal, error)
-	// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
-	// in a date range.
-	fiatGetJournalTransactionForAccountBetweenDates(ctx context.Context, arg *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error)
 	// fiatInternalTransferJournalEntry will create both journal entries for fiat account internal transfers.
 	fiatInternalTransferJournalEntry(ctx context.Context, arg *fiatInternalTransferJournalEntryParams) (fiatInternalTransferJournalEntryRow, error)
 	// fiatRowLockAccount will acquire a row level lock without locks on the foreign keys.

@@ -96,6 +96,21 @@ func (mr *MockQuerierMockRecorder) fiatGetAllAccounts(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAllAccounts", reflect.TypeOf((*MockQuerier)(nil).fiatGetAllAccounts), arg0, arg1)
 }
 
+// fiatGetAllJournalTransactionPaginated mocks base method.
+func (m *MockQuerier) fiatGetAllJournalTransactionPaginated(arg0 context.Context, arg1 *fiatGetAllJournalTransactionPaginatedParams) ([]FiatJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "fiatGetAllJournalTransactionPaginated", arg0, arg1)
+	ret0, _ := ret[0].([]FiatJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// fiatGetAllJournalTransactionPaginated indicates an expected call of fiatGetAllJournalTransactionPaginated.
+func (mr *MockQuerierMockRecorder) fiatGetAllJournalTransactionPaginated(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAllJournalTransactionPaginated", reflect.TypeOf((*MockQuerier)(nil).fiatGetAllJournalTransactionPaginated), arg0, arg1)
+}
+
 // fiatGetJournalTransaction mocks base method.
 func (m *MockQuerier) fiatGetJournalTransaction(arg0 context.Context, arg1 *fiatGetJournalTransactionParams) ([]FiatJournal, error) {
 	m.ctrl.T.Helper()
@@ -124,21 +139,6 @@ func (m *MockQuerier) fiatGetJournalTransactionForAccount(arg0 context.Context, 
 func (mr *MockQuerierMockRecorder) fiatGetJournalTransactionForAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetJournalTransactionForAccount", reflect.TypeOf((*MockQuerier)(nil).fiatGetJournalTransactionForAccount), arg0, arg1)
-}
-
-// fiatGetJournalTransactionForAccountBetweenDates mocks base method.
-func (m *MockQuerier) fiatGetJournalTransactionForAccountBetweenDates(arg0 context.Context, arg1 *fiatGetJournalTransactionForAccountBetweenDatesParams) ([]FiatJournal, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "fiatGetJournalTransactionForAccountBetweenDates", arg0, arg1)
-	ret0, _ := ret[0].([]FiatJournal)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// fiatGetJournalTransactionForAccountBetweenDates indicates an expected call of fiatGetJournalTransactionForAccountBetweenDates.
-func (mr *MockQuerierMockRecorder) fiatGetJournalTransactionForAccountBetweenDates(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetJournalTransactionForAccountBetweenDates", reflect.TypeOf((*MockQuerier)(nil).fiatGetJournalTransactionForAccountBetweenDates), arg0, arg1)
 }
 
 // fiatInternalTransferJournalEntry mocks base method.

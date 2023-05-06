@@ -208,6 +208,14 @@ the `username` due to the unique constraint. This will facilitate username dedup
 A compound primary key has been created on the `ClientID` and `Currency`. Each user may only have one account in each currency.
 A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts belonging to a single user.
 
+The query to retrieve all Fiat account balances for a specific client leverages the index on the Fiat Accounts table.
+There are a finite number of supported Fiat currencies; the aggregate number of accounts that can be retrieved is
+finite. Since the index is a compound index on the `ClientID` and `Currency`, the sort operation in the query should
+have a minimal performance impact. The next page cursor is merely the encrypted currency. If a user requests `N`
+records, `N + 1` records are retrieved. The `N + 1`th record is used as the cursor to the following page. If only `N`
+records are returned by the query it indicates an end to the data set. This iteration method will mean that new accounts
+created in the currency range prior to the page cursor will not affect data contained in the pages that follow.
+
 <br/>
 
 ## Fiat Journal Table Schema
@@ -221,7 +229,13 @@ A B-Tree index has also been created on the `ClientID` to facilitate efficient q
 | TransactedAt  | pgtype.Timestamptz | transacted_at | Numeric(18,2) | Last transactions UTC timestamp.                                                                                                                       |
 
 A compound primary key has been configured on the `tx_id`, `client_id`, and `currency` which will enforce uniqueness. Two
-additional indices have been created on the `client_id` and `tx_id` to support efficient record retrieval.
+additional indices have been created on the `transacted_at` and `tx_id` to support efficient record retrieval.
+
+The query for Fiat Transaction retrieval will use the `Currency`, `Year`, `Month`, and `Timezone`. The data returned by
+the query will be for all transactions for the specified currency during the year and month in the specific timezone.
+The returned records will be sorted by transaction timestamps and will leverage the index on the `transacted_at` column.
+Data page iteration will adopt the offset-limit method. The anticipated number of transactions per month is not expected
+to exceed 1000, and the performance impact is expected to be negligible.
 
 <br/>
 

@@ -595,12 +595,10 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 		parameters := getTestFiatJournal(clientID1, clientID2)
 		for _, item := range parameters {
 			parameter := item
-			t.Run(fmt.Sprintf("Inserting %v - %s", parameter.ClientID, parameter.Currency), func(t *testing.T) {
-				for idx := 0; idx < 3; idx++ {
-					_, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameter)
-					require.NoError(t, err, "error expectation failed.")
-				}
-			})
+			for idx := 0; idx < 3; idx++ {
+				_, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameter)
+				require.NoError(t, err, "error expectation failed.")
+			}
 		}
 	}
 
@@ -622,21 +620,45 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 	testCases := []struct {
 		name         string
 		expectedCont int
-		parameters   fiatGetJournalTransactionForAccountBetweenDatesParams
+		parameters   fiatGetAllJournalTransactionPaginatedParams
 	}{
 		{
 			name:         "ClientID1 USD: Before-After",
 			expectedCont: 4,
-			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
+				Offset:    0,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 USD: Before-After, 2 items page 1",
+			expectedCont: 2,
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Currency:  "USD",
+				Offset:    0,
+				Limit:     2,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 USD: Before-After, 2 items page 2",
+			expectedCont: 2,
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Currency:  "USD",
+				Offset:    2,
+				Limit:     4,
 				StartTime: minuteBehind,
 				EndTime:   minuteAhead,
 			},
 		}, {
 			name:         "ClientID1 USD: Before",
 			expectedCont: 0,
-			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: hourBehind,
@@ -645,7 +667,7 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: After",
 			expectedCont: 0,
-			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				StartTime: minuteAhead,
@@ -654,16 +676,18 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 		}, {
 			name:         "ClientID2 - AED: Before-After",
 			expectedCont: 4,
-			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID2,
 				Currency:  "AED",
+				Offset:    0,
+				Limit:     4,
 				StartTime: minuteBehind,
 				EndTime:   minuteAhead,
 			},
 		}, {
 			name:         "ClientID2 - PKR: Before-After",
 			expectedCont: 0,
-			parameters: fiatGetJournalTransactionForAccountBetweenDatesParams{
+			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID2,
 				Currency:  "PKR",
 				StartTime: minuteBehind,
@@ -674,7 +698,7 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.fiatGetJournalTransactionForAccountBetweenDates(ctx, &testCase.parameters)
+			rows, err := connection.Query.fiatGetAllJournalTransactionPaginated(ctx, &testCase.parameters)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})
