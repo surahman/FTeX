@@ -215,8 +215,8 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			startTS, endTS, limit, offset, err :=
-				HTTPFiatTransactionInfoPaginatedRequest(test.monthStr, test.yearStr, test.timezone, test.limit, test.offset)
+			startTS, endTS, limit, offset, pageCursor, err := HTTPFiatTransactionInfoPaginatedRequest(
+				testAuth, test.monthStr, test.yearStr, test.timezone, test.limit, test.offset)
 			test.expectErr(t, err, "failed error expectation")
 
 			if err != nil {
@@ -225,6 +225,7 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 
 			require.Equal(t, test.expectLimit, limit, "limit mismatch.")
 			require.Equal(t, test.expectOffset, offset, "offset mismatch.")
+			require.True(t, len(pageCursor) > 100, "empty page cursor returned.")
 
 			// Check start timestamp.
 			expectedStartTS, err := time.Parse(time.RFC3339, test.expectStart)
