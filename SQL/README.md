@@ -234,8 +234,11 @@ additional indices have been created on the `transacted_at` and `tx_id` to suppo
 The query for Fiat Transaction retrieval will use the `Currency`, `Year`, `Month`, and `Timezone`. The data returned by
 the query will be for all transactions for the specified currency during the year and month in the specific timezone.
 The returned records will be sorted by transaction timestamps and will leverage the index on the `transacted_at` column.
-Data page iteration will adopt the offset-limit method. The anticipated number of transactions per month is not expected
-to exceed 1000, and the performance impact is expected to be negligible.
+Data page iteration will adopt the offset-limit method. If a user requests `N` records, `N + 1` records are retrieved.
+The `N + 1`th record is used to check if there are more records to be retrieved. If only `N` records are returned by the
+query it indicates an end to the data set. The anticipated number of transactions per month is not expected to exceed
+1000, and the performance impact should be negligible. The page cursor consists of the record `offset`, `Currency`,
+`start`, and `end` dates for the transactions and is encrypted.
 
 <br/>
 
