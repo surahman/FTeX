@@ -1134,7 +1134,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) {
 					Times(test.authValidateTimes),
 
 				mockDB.EXPECT().FiatBalanceCurrency(gomock.Any(), gomock.Any()).
-					Return(nil, test.fiatBalanceErr).
+					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 			)
 
