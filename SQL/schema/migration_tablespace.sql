@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     email      VARCHAR(64)          NOT NULL,
     username   VARCHAR(32)          UNIQUE NOT NULL,
     password   VARCHAR(128)         NOT NULL,
-    client_id  UUID                 PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+    client_id  UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
     is_deleted BOOLEAN              DEFAULT false NOT NULL
 ) TABLESPACE users_data;
 --rollback DROP TABLE users;
@@ -27,7 +27,7 @@ CREATE TYPE currency AS ENUM (
 'QAR','RON','RSD','RUB','RWF','SAR','SBD','SCR','SDG','SEK','SGD','SHP','SLL','SOS','SPL','SRD','STN','SVC','SYP',
 'SZL','THB','TJS','TMT','TND','TOP','TRY','TTD','TVD','TWD','TZS','UAH','UGX','USD','UYU','UZS','VEF','VND','VUV',
 'WST','XAF','XCD','XDR','XOF','XPF','YER','ZAR','ZMW','ZWD',
-'DEPOSIT');
+'DEPOSIT', 'CRYPTO');
 --rollback DROP TYPE currency;
 
 --changeset surahman:3
@@ -81,15 +81,52 @@ WHERE
 --changeset surahman:5
 --preconditions onFail:HALT onError:HALT
 --comment: Fiat currency accounts general ledger.
-CREATE TABLE IF NOT EXISTS fiat_general_ledger (
+CREATE TABLE IF NOT EXISTS fiat_journal (
     currency        CURRENCY        NOT NULL,
-    ammount         NUMERIC(18,2)   NOT NULL,
+    amount          NUMERIC(18,2)   NOT NULL,
     transacted_at   TIMESTAMPTZ     NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
     tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
     PRIMARY KEY(tx_id, client_id, currency)
 ) TABLESPACE fiat_general_ledger_data;
 
-CREATE INDEX IF NOT EXISTS fiat_general_ledger_client_idx ON fiat_general_ledger USING btree (client_id) TABLESPACE fiat_general_ledger_data;
-CREATE INDEX IF NOT EXISTS fiat_general_ledger_tx_idx ON fiat_general_ledger USING btree (tx_id) TABLESPACE fiat_general_ledger_data;
+CREATE INDEX IF NOT EXISTS fiat_journal_transacted_at_idx ON fiat_journal USING btree (transacted_at) TABLESPACE fiat_general_ledger_data;
+CREATE INDEX IF NOT EXISTS fiat_journal_tx_idx ON fiat_journal USING btree (tx_id) TABLESPACE fiat_general_ledger_data;
 --rollback DROP TABLE fiat_general_ledger CASCADE;
+
+--changeset surahman:6
+--preconditions onFail:HALT onError:HALT
+--comment: Rounds a number with arbitrary precision to a specified scale using the the Round Half-Even/Bankers' Algorithm.
+CREATE OR REPLACE FUNCTION round_half_even(num NUMERIC, scale INTEGER)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+    IMMUTABLE
+    STRICT
+    PARALLEL SAFE
+AS '
+    DECLARE
+        rounded     NUMERIC;
+        difference  NUMERIC;
+        multiplier  NUMERIC;
+    BEGIN
+        -- Check to see if rounding is needed.
+        IF SCALE(num) <= scale THEN
+            RETURN num;
+        END IF;
+
+        multiplier := (10::NUMERIC ^ scale);
+        rounded    := round(num, scale);
+        difference := rounded - num;
+
+        -- IF half-way between two integers AND even THEN round-down:
+        IF ABS(difference) * multiplier = 0.5::NUMERIC AND
+            (rounded * multiplier) % 2::NUMERIC != 0::NUMERIC
+        THEN
+            rounded := round(num - difference, scale);
+        END IF;
+
+        RETURN rounded;
+
+    END;
+';
+--rollback DROP FUNCTION round_half_even;
