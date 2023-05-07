@@ -94,6 +94,55 @@ func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	}
 }
 
+func TestUtilities_EncryptDecryptTransactionPageCursor(t *testing.T) {
+	t.Parallel()
+
+	startStr := fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00")
+	endStr := fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00")
+
+	startTS, err := time.Parse(time.RFC3339, startStr)
+	require.NoError(t, err, "failed to parse expected start time.")
+
+	pgStart := pgtype.Timestamptz{}
+	require.NoError(t, pgStart.Scan(startTS), "failed to scan start timestamp to pg.")
+
+	// Check end timestamp.
+	endTS, err := time.Parse(time.RFC3339, endStr)
+	require.NoError(t, err, "failed to parse expected start time.")
+
+	pgEnd := pgtype.Timestamptz{}
+	require.NoError(t, pgEnd.Scan(endTS), "failed to scan start timestamp to pg.")
+
+	t.Run("successful encryption-decryption", func(t *testing.T) {
+		t.Parallel()
+		encrypted, err := HTTPFiatTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
+		require.NoError(t, err, "failed to encrypt cursor.")
+		require.True(t, len(encrypted) > 0, "empty encrypted cursor returned.")
+
+		actualStart, actualEnd, actualOffset, err := HTTPFiatTransactionUnpackPageCursor(testAuth, encrypted)
+		require.NoError(t, err, "failed to decrypt page cursor.")
+		require.Equal(t, pgStart, actualStart, "start period mismatch.")
+		require.Equal(t, pgEnd, actualEnd, "end period mismatch.")
+		require.Equal(t, int32(10), actualOffset, "end period mismatch.")
+	})
+
+	t.Run("missing offset", func(t *testing.T) {
+		t.Parallel()
+		input, err := testAuth.EncryptToString([]byte("start,end"))
+		require.NoError(t, err, "failed to encrypt missing offset.")
+		_, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
+		require.Error(t, err, "decrypted invalid page cursor.")
+	})
+
+	t.Run("invalid offset", func(t *testing.T) {
+		t.Parallel()
+		input, err := testAuth.EncryptToString([]byte("start,end,invalid-offset"))
+		require.NoError(t, err, "failed to encrypt invalid offset.")
+		_, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
+		require.Error(t, err, "decrypted invalid page cursor.")
+	})
+}
+
 func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 	t.Parallel()
 
