@@ -117,12 +117,8 @@ func HTTPFiatTransactionInfoPaginatedRequest(
 	auth auth.Auth,
 	monthStr,
 	yearStr,
-	timezoneStr,
-	limitStr,
-	offsetStr string) (pgtype.Timestamptz, pgtype.Timestamptz, int32, int32, string, error) {
+	timezoneStr string) (pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
 	var (
-		limit          int64
-		offset         int64
 		pageCursor     string
 		periodStartStr string
 		periodEndStr   string
@@ -134,33 +130,15 @@ func HTTPFiatTransactionInfoPaginatedRequest(
 	// Generate timestamps.
 	if periodStart, periodStartStr, periodEnd, periodEndStr, err =
 		generateTimestampRange(monthStr, yearStr, timezoneStr); err != nil {
-		return periodStart, periodEnd, -1, -1, pageCursor, fmt.Errorf("failed to prepare time range %w", err)
-	}
-
-	// Convert record limit to int and set base bound for bad input.
-	if len(limitStr) > 0 {
-		if limit, err = strconv.ParseInt(limitStr, 10, 32); err != nil {
-			return periodStart, periodEnd, -1, -1, pageCursor, fmt.Errorf("failed to parse record limit %w", err)
-		}
-	}
-
-	if limit < 1 {
-		limit = 10
-	}
-
-	// Extract offset.
-	if len(offsetStr) > 0 {
-		if offset, err = strconv.ParseInt(offsetStr, 10, 32); err != nil {
-			return periodStart, periodEnd, -1, -1, pageCursor, fmt.Errorf("failed to parse offset limit %w", err)
-		}
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("failed to prepare time range %w", err)
 	}
 
 	// Prepare page cursor.
-	if pageCursor, err = HTTPFiatTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, offset); err != nil {
-		return periodStart, periodEnd, -1, -1, pageCursor, fmt.Errorf("failed to encrypt page cursor %w", err)
+	if pageCursor, err = HTTPFiatTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, 0); err != nil {
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("failed to encrypt page cursor %w", err)
 	}
 
-	return periodStart, periodEnd, int32(limit), int32(offset), pageCursor, nil
+	return periodStart, periodEnd, pageCursor, nil
 }
 
 // HTTPFiatTransactionGeneratePageCursor will generate the encrypted page cursor.
