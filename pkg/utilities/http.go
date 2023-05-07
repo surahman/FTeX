@@ -49,22 +49,29 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 	return currency, int32(limit), nil
 }
 
-// generateTimestampRange will generate the start and end timestamps with timezone information.
-func generateTimestampRange(monthStr, yearStr, timezoneStr string) (
-	pgtype.Timestamptz, string, pgtype.Timestamptz, string, error) {
+// HTTPFiatTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
+// parameters.
+func HTTPFiatTransactionInfoPaginatedRequest(
+	auth auth.Auth,
+	monthStr,
+	yearStr,
+	timezoneStr string) (pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
 	var (
-		startYear  int64
-		startMonth int64
-		endYear    int64
-		endMonth   int64
-		startTime  time.Time
-		endTime    time.Time
-		startTSStr string
-		startPGTS  pgtype.Timestamptz
-		endTSStr   string
-		endPGTS    pgtype.Timestamptz
-		err        error
+		startYear      int64
+		startMonth     int64
+		endYear        int64
+		endMonth       int64
+		startTime      time.Time
+		endTime        time.Time
+		pageCursor     string
+		periodStartStr string
+		periodEndStr   string
+		periodStart    pgtype.Timestamptz
+		periodEnd      pgtype.Timestamptz
+		err            error
 	)
+
+	// Generate timestamps.
 
 	// Configure empty timezone to Zulu/UTC.
 	if len(timezoneStr) == 0 {
@@ -73,11 +80,11 @@ func generateTimestampRange(monthStr, yearStr, timezoneStr string) (
 
 	// Extract year and month.
 	if startYear, err = strconv.ParseInt(yearStr, 10, 32); err != nil {
-		return startPGTS, startTSStr, endPGTS, endTSStr, fmt.Errorf("invalid year")
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("invalid year")
 	}
 
 	if startMonth, err = strconv.ParseInt(monthStr, 10, 32); err != nil {
-		return startPGTS, startTSStr, endPGTS, endTSStr, fmt.Errorf("invalid month")
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("invalid month")
 	}
 
 	// Setup end year and month.
@@ -90,47 +97,22 @@ func generateTimestampRange(monthStr, yearStr, timezoneStr string) (
 	}
 
 	// Prepare Postgres timestamps.
-	startTSStr = fmt.Sprintf(constants.GetMonthFormatString(), startYear, startMonth, timezoneStr)
-	if startTime, err = time.Parse(time.RFC3339, startTSStr); err != nil {
-		return startPGTS, startTSStr, endPGTS, endTSStr, fmt.Errorf("start date parse failure %w", err)
+	periodStartStr = fmt.Sprintf(constants.GetMonthFormatString(), startYear, startMonth, timezoneStr)
+	if startTime, err = time.Parse(time.RFC3339, periodStartStr); err != nil {
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("start date parse failure %w", err)
 	}
 
-	if err = startPGTS.Scan(startTime); err != nil {
-		return startPGTS, startTSStr, endPGTS, endTSStr, fmt.Errorf("invalid start date %w", err)
+	if err = periodStart.Scan(startTime); err != nil {
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("invalid start date %w", err)
 	}
 
-	endTSStr = fmt.Sprintf(constants.GetMonthFormatString(), endYear, endMonth, timezoneStr)
-	if endTime, err = time.Parse(time.RFC3339, endTSStr); err != nil {
-		return startPGTS, startTSStr, endPGTS, endTSStr, fmt.Errorf("end date parse failure %w", err)
+	periodEndStr = fmt.Sprintf(constants.GetMonthFormatString(), endYear, endMonth, timezoneStr)
+	if endTime, err = time.Parse(time.RFC3339, periodEndStr); err != nil {
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("end date parse failure %w", err)
 	}
 
-	if err = endPGTS.Scan(endTime); err != nil {
-		return startPGTS, startTSStr, endPGTS, endTSStr, fmt.Errorf("end start date %w", err)
-	}
-
-	return startPGTS, startTSStr, endPGTS, endTSStr, nil
-}
-
-// HTTPFiatTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
-// parameters.
-func HTTPFiatTransactionInfoPaginatedRequest(
-	auth auth.Auth,
-	monthStr,
-	yearStr,
-	timezoneStr string) (pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
-	var (
-		pageCursor     string
-		periodStartStr string
-		periodEndStr   string
-		periodStart    pgtype.Timestamptz
-		periodEnd      pgtype.Timestamptz
-		err            error
-	)
-
-	// Generate timestamps.
-	if periodStart, periodStartStr, periodEnd, periodEndStr, err =
-		generateTimestampRange(monthStr, yearStr, timezoneStr); err != nil {
-		return periodStart, periodEnd, pageCursor, fmt.Errorf("failed to prepare time range %w", err)
+	if err = periodEnd.Scan(endTime); err != nil {
+		return periodStart, periodEnd, pageCursor, fmt.Errorf("end start date %w", err)
 	}
 
 	// Prepare page cursor.
