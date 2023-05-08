@@ -79,6 +79,13 @@ type HTTPFiatDetailsPaginated struct {
 	Links           HTTPLinks              `json:"links"`
 }
 
+// HTTPFiatTransactionsPaginated is the response to paginated account transactions request. It returns a link to the
+// next page of information.
+type HTTPFiatTransactionsPaginated struct {
+	TransactionDetails []postgres.FiatJournal `json:"transactionDetails"`
+	Links              HTTPLinks              `json:"links"`
+}
+
 // HTTPLinks are links used in HTTP responses to retrieve pages of information.
 type HTTPLinks struct {
 	NextPage string `json:"nextPage"`
