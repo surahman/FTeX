@@ -119,18 +119,21 @@ func TestUtilities_EncryptDecryptTransactionPageCursor(t *testing.T) {
 		require.NoError(t, err, "failed to encrypt cursor.")
 		require.True(t, len(encrypted) > 0, "empty encrypted cursor returned.")
 
-		actualStart, actualEnd, actualOffset, err := HTTPFiatTransactionUnpackPageCursor(testAuth, encrypted)
+		actualStart, actualStartStr, actualEnd, actualEndStr, actualOffset, err :=
+			HTTPFiatTransactionUnpackPageCursor(testAuth, encrypted)
 		require.NoError(t, err, "failed to decrypt page cursor.")
 		require.Equal(t, pgStart, actualStart, "start period mismatch.")
+		require.Equal(t, startStr, actualStartStr, "start period string mismatch.")
 		require.Equal(t, pgEnd, actualEnd, "end period mismatch.")
-		require.Equal(t, int32(10), actualOffset, "end period mismatch.")
+		require.Equal(t, endStr, actualEndStr, "end period string mismatch.")
+		require.Equal(t, int32(10), actualOffset, "offset mismatch.")
 	})
 
 	t.Run("missing offset", func(t *testing.T) {
 		t.Parallel()
 		input, err := testAuth.EncryptToString([]byte("start,end"))
 		require.NoError(t, err, "failed to encrypt missing offset.")
-		_, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
+		_, _, _, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
 		require.Error(t, err, "decrypted invalid page cursor.")
 	})
 
@@ -138,7 +141,7 @@ func TestUtilities_EncryptDecryptTransactionPageCursor(t *testing.T) {
 		t.Parallel()
 		input, err := testAuth.EncryptToString([]byte("start,end,invalid-offset"))
 		require.NoError(t, err, "failed to encrypt invalid offset.")
-		_, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
+		_, _, _, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
 		require.Error(t, err, "decrypted invalid page cursor.")
 	})
 }

@@ -51,11 +51,8 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 
 // HTTPFiatTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
 // parameters.
-func HTTPFiatTransactionInfoPaginatedRequest(
-	auth auth.Auth,
-	monthStr,
-	yearStr,
-	timezoneStr string) (pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
+func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, timezoneStr string) (
+	pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
 	var (
 		startYear      int64
 		startMonth     int64
@@ -133,7 +130,7 @@ func HTTPFiatTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, perio
 
 // HTTPFiatTransactionUnpackPageCursor will unpack an encrypted page cursor to its component parts.
 func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
-	pgtype.Timestamptz, pgtype.Timestamptz, int32, error) {
+	pgtype.Timestamptz, string, pgtype.Timestamptz, string, int32, error) {
 	var (
 		startPGTS pgtype.Timestamptz
 		endPGTS   pgtype.Timestamptz
@@ -142,37 +139,37 @@ func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	)
 
 	if buffer, err = auth.DecryptFromString(pageCursor); err != nil {
-		return startPGTS, endPGTS, -1, fmt.Errorf("failed to decrypt page cursor %w", err)
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("failed to decrypt page cursor %w", err)
 	}
 
 	components := strings.Split(string(buffer), ",")
 	if len(components) != 3 { //nolint:gomnd
-		return startPGTS, endPGTS, -1, fmt.Errorf("decrypted page curror is invalid")
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("decrypted page curror is invalid")
 	}
 
 	offset, err := strconv.ParseInt(components[2], 10, 32)
 	if err != nil {
-		return startPGTS, endPGTS, -1, fmt.Errorf("failed to parse offset %w", err)
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("failed to parse offset %w", err)
 	}
 
 	// Prepare Postgres timestamps.
 	startTime, err := time.Parse(time.RFC3339, components[0])
 	if err != nil {
-		return startPGTS, endPGTS, -1, fmt.Errorf("start date parse failure %w", err)
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("start date parse failure %w", err)
 	}
 
 	if err = startPGTS.Scan(startTime); err != nil {
-		return startPGTS, endPGTS, -1, fmt.Errorf("invalid start date %w", err)
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("invalid start date %w", err)
 	}
 
 	endTime, err := time.Parse(time.RFC3339, components[1])
 	if err != nil {
-		return startPGTS, endPGTS, -1, fmt.Errorf("end date parse failure %w", err)
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("end date parse failure %w", err)
 	}
 
 	if err = endPGTS.Scan(endTime); err != nil {
-		return startPGTS, endPGTS, -1, fmt.Errorf("end start date %w", err)
+		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("end start date %w", err)
 	}
 
-	return startPGTS, endPGTS, int32(offset), nil
+	return startPGTS, components[0], endPGTS, components[1], int32(offset), nil
 }
