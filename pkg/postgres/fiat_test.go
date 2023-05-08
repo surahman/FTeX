@@ -570,7 +570,7 @@ func TestFiat_FiatGetAllAccounts(t *testing.T) {
 	}
 }
 
-func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
+func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return
@@ -672,6 +672,8 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
+				Offset:    0,
+				Limit:     4,
 				StartTime: hourBehind,
 				EndTime:   minuteBehind,
 			},
@@ -681,6 +683,8 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
+				Offset:    0,
+				Limit:     4,
 				StartTime: minuteAhead,
 				EndTime:   hourAhead,
 			},
@@ -701,6 +705,8 @@ func TestFiat_FiatGetJournalTransactionForAccountBetweenDates(t *testing.T) {
 			parameters: fiatGetAllJournalTransactionPaginatedParams{
 				ClientID:  clientID2,
 				Currency:  "PKR",
+				Offset:    0,
+				Limit:     4,
 				StartTime: minuteBehind,
 				EndTime:   minuteAhead,
 			},

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -71,6 +72,11 @@ type Postgres interface {
 	// FiatBalanceCurrencyPaginated is the interface through which external methods can retrieve all Fiat account balances
 	// for a specific client.
 	FiatBalanceCurrencyPaginated(uuid.UUID, Currency, int32) ([]FiatAccount, error)
+
+	// FiatTransactionsCurrencyPaginated is the interface through which external methods can retrieve transactions on a
+	// Fiat account for a specific client during a specific month.
+	FiatTransactionsCurrencyPaginated(uuid.UUID, Currency, int32, int32, pgtype.Timestamptz, pgtype.Timestamptz) (
+		[]FiatJournal, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

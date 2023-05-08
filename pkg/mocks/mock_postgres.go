@@ -10,6 +10,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
+	pgtype "github.com/jackc/pgx/v5/pgtype"
 	models "github.com/surahman/FTeX/pkg/models/postgres"
 	postgres "github.com/surahman/FTeX/pkg/postgres"
 )
@@ -124,6 +125,21 @@ func (m *MockPostgres) FiatInternalTransfer(arg0 context.Context, arg1, arg2 *po
 func (mr *MockPostgresMockRecorder) FiatInternalTransfer(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatInternalTransfer", reflect.TypeOf((*MockPostgres)(nil).FiatInternalTransfer), arg0, arg1, arg2)
+}
+
+// FiatTransactionsCurrencyPaginated mocks base method.
+func (m *MockPostgres) FiatTransactionsCurrencyPaginated(arg0 uuid.UUID, arg1 postgres.Currency, arg2, arg3 int32, arg4, arg5 pgtype.Timestamptz) ([]postgres.FiatJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiatTransactionsCurrencyPaginated", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].([]postgres.FiatJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FiatTransactionsCurrencyPaginated indicates an expected call of FiatTransactionsCurrencyPaginated.
+func (mr *MockPostgresMockRecorder) FiatTransactionsCurrencyPaginated(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTransactionsCurrencyPaginated", reflect.TypeOf((*MockPostgres)(nil).FiatTransactionsCurrencyPaginated), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // FiatTxDetailsCurrency mocks base method.
