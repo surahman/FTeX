@@ -6,27 +6,32 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 
 ## Table of contents
 
-- [Authorization Response](#authorization-response)
-- [Error Response](#error-response)
-- [Success Response](#success-response)
-- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
-- [User Endpoints `/user`](#user-endpoints-user)
-  - [Register `/register`](#register-register)
-  - [Login `/login`](#login-login)
-  - [Refresh `/refresh`](#refresh-refresh)
-  - [Delete `/delete`](#delete-delete)
-- [Fiat Accounts Endpoints `/fiat`](#fiat-accounts-endpoints-fiat)
-  - [Open `/open`](#open-open)
-  - [Deposit `/deposit`](#deposit-deposit)
-  - [Exchange `/exchange`](#exchange-exchange)
-    - [Quote `/offer`](#quote-offer)
-    - [Convert `/convert`](#convert-convert)
-  - [Info `/info`](#info-info)
-    - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
-    - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
-    - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
-      - [Deposit](#deposit)
-      - [Exchange](#exchange)
+- [HTTP REST API Endpoints](#http-rest-api-endpoints)
+  - [Table of contents](#table-of-contents)
+    - [Authorization Response](#authorization-response)
+    - [Error Response](#error-response)
+    - [Success Response](#success-response)
+    - [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
+    - [User Endpoints `/user`](#user-endpoints-user)
+      - [Register `/register`](#register-register)
+      - [Login `/login`](#login-login)
+      - [Refresh `/refresh`](#refresh-refresh)
+      - [Delete `/delete`](#delete-delete)
+    - [Fiat Accounts Endpoints `/fiat`](#fiat-accounts-endpoints-fiat)
+      - [Open `/open`](#open-open)
+      - [Deposit `/deposit`](#deposit-deposit)
+      - [Exchange `/exchange`](#exchange-exchange)
+        - [Quote `/offer`](#quote-offer)
+        - [Convert `/convert`](#convert-convert)
+      - [Info `/info`](#info-info)
+        - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
+        - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
+        - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
+          - [Initial Page](#initial-page)
+          - [Subsequent Page](#subsequent-page)
+        - [Transaction Details for a Specific Currency `/transaction/all/{currencyCode}`](#transaction-details-for-a-specific-currency-transactionallcurrencycode)
+          - [Initial Page](#initial-page)
+          - [Subsequent Page](#subsequent-page)
 
 <br/>
 
@@ -187,7 +192,8 @@ _Response:_ The Client ID and `ISO 4217` currency code that the Fiat account was
 
 #### Deposit `/deposit`
 
-Deposit money into a Fiat account for a specific currency and amount. An account for the currency must already be opened for the deposit to succeed.
+Deposit money into a Fiat account for a specific currency and amount. An account for the currency must already be opened
+for the deposit to succeed.
 
 _Request:_ All fields are required.
 ```json
@@ -392,7 +398,7 @@ _Response:_ Transaction-related details for a specific transaction. In the event
 a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
 one for the source and the other for the destination accounts.
 
-###### Deposit
+###### Initial Page
 ```json
 {
   "message": "transaction details",
@@ -408,7 +414,7 @@ one for the source and the other for the destination accounts.
 }
 ```
 
-###### Exchange
+###### Subsequent Page
 ```json
 {
   "message": "transaction details",
@@ -428,5 +434,94 @@ one for the source and the other for the destination accounts.
       "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
     }
   ]
+}
+```
+##### Transaction Details for a Specific Currency `/transaction/all/{currencyCode}`
+
+_Request:_ A valid `Currency Code` must be provided as a path parameter. The path parameters accepted are listed below.
+If a `pageCursor` is supplied, all other parameters except for the `pageSize` are ignored.
+
+Optional:
+* `pageCursor`: Defaults to 10.
+
+Initial Page (required):
+* `month`: Month for which the transactions are being requested.
+* `year`: Year for which the transactions are being requested.
+* `timezone`: Timezone for which the transactions are being requested.
+
+Subsequent Pages (required)
+* `pageCursor`: Hashed page cursor for the next page of data.
+
+_Response:_ All Transaction-related details for a specific currency in a given timezone and date are returned. In the
+event of an external deposit, there will be a single entry reporting the deposited amount. When querying for an internal
+transfer, two entries will be returned - one for the source and the other for the destination accounts.
+
+###### Initial Page
+```json
+{
+  "message": "account transactions",
+  "payload": {
+    "transactionDetails": [
+      {
+        "currency": "AED",
+        "amount": "10000",
+        "transactedAt": "2023-05-09T18:33:55.453689-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+      },
+      {
+        "currency": "AED",
+        "amount": "8180.74",
+        "transactedAt": "2023-05-09T18:32:16.38917-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "b6a760ba-a189-4222-9897-4a783c799953"
+      },
+      {
+        "currency": "AED",
+        "amount": "4396.12",
+        "transactedAt": "2023-05-09T18:32:16.004549-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "7108d3e5-257e-45a8-ace1-d7e86c84556e"
+      }
+    ],
+    "links": {
+      "nextPage": "mJdmw173tQdzxIU8lM6sGKS8riNC6fF7cx4MOCnHxTazqgUrbPlgbfSH9NMGGDWHxzph9EsnCvpHXNdU3X0jO26oQztUraC-sE_ykT2s0u2i"
+    }
+  }
+}
+```
+
+###### Subsequent Page
+```json
+{
+  "message": "account transactions",
+  "payload": {
+    "transactionDetails": [
+      {
+        "currency": "AED",
+        "amount": "4561.01",
+        "transactedAt": "2023-05-09T18:32:15.547456-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "525ea850-916b-4761-ae28-a34a63613212"
+      },
+      {
+        "currency": "AED",
+        "amount": "3323.22",
+        "transactedAt": "2023-05-09T18:32:15.137486-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "77278e19-5a1b-46fe-a106-d2f21ad72839"
+      },
+      {
+        "currency": "AED",
+        "amount": "4242.43",
+        "transactedAt": "2023-05-09T18:31:49.872366-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "6c930c8c-fef8-4711-8961-2d101bfb7a5e"
+      }
+    ],
+    "links": {
+      "nextPage": ""
+    }
+  }
 }
 ```
