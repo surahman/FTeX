@@ -2,6 +2,7 @@ package utilities
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -9,7 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
+	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"go.uber.org/zap"
 )
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit
@@ -172,4 +175,70 @@ func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	}
 
 	return startPGTS, components[0], endPGTS, components[1], int32(offset), nil
+}
+
+// HTTPFiatPaginatedTxParams contains the HTTP request as well as the database query parameters.
+type HTTPFiatPaginatedTxParams struct {
+	// HTTP request input parameters.
+	PageSizeStr   string
+	PageCursorStr string
+	TimezoneStr   string
+	MonthStr      string
+	YearStr       string
+
+	// Postgres query parameters.
+	Offset      int32
+	PageSize    int64
+	NextPage    string
+	PeriodStart pgtype.Timestamptz
+	PeriodEnd   pgtype.Timestamptz
+}
+
+// HTTPFiatTxParseQueryParams will parse the HTTP request input parameters in database query parameters for the
+// paginated Fiat transactions requests.
+func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPFiatPaginatedTxParams) (int, error) {
+	var (
+		err            error
+		periodStartStr string
+		periodEndStr   string
+	)
+
+	// Prepare page size.
+	if len(params.PageSizeStr) > 0 {
+		if params.PageSize, err = strconv.ParseInt(params.PageSizeStr, 10, 32); err != nil {
+			return http.StatusBadRequest, fmt.Errorf("invalid page size")
+		}
+	}
+
+	if params.PageSize < 1 {
+		params.PageSize = 10
+	}
+
+	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
+	if len(params.PageCursorStr) > 0 {
+		if params.PeriodStart, periodStartStr, params.PeriodEnd, periodEndStr, params.Offset, err =
+			HTTPFiatTransactionUnpackPageCursor(auth, params.PageCursorStr); err != nil {
+			return http.StatusBadRequest, fmt.Errorf("invalid next page")
+		}
+
+		// Adjust offset to move along to next record set.
+		params.Offset += int32(params.PageSize)
+
+		// Prepare next page cursor.
+		if params.NextPage, err = HTTPFiatTransactionGeneratePageCursor(
+			auth, periodStartStr, periodEndStr, int64(params.Offset)); err != nil {
+			logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
+
+			return http.StatusInternalServerError, fmt.Errorf("please retry your request later")
+		}
+	} else {
+		if params.PeriodStart, params.PeriodEnd, params.NextPage, err =
+			HTTPFiatTransactionInfoPaginatedRequest(auth, params.MonthStr, params.YearStr, params.TimezoneStr); err != nil {
+			logger.Info("failed to prepare time periods for paginated Fiat transaction details", zap.Error(err))
+
+			return http.StatusInternalServerError, fmt.Errorf("please retry your request later")
+		}
+	}
+
+	return 0, nil
 }

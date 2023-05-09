@@ -819,6 +819,9 @@ func TxDetailsCurrencyFiatPaginated(
 			return
 		}
 
+		// Add next page link if there are more pages and remove the last item from the retrieved records.
+		// ---
+
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances",
 			Payload: models.HTTPFiatTransactionsPaginated{
 				TransactionDetails: journalEntries,
