@@ -2,6 +2,7 @@ package utilities
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -256,6 +257,123 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 			expectedPgEnd := pgtype.Timestamptz{}
 			require.NoError(t, expectedPgEnd.Scan(expectedEndTS), "failed to scan start timestamp to pg.")
 			require.Equal(t, expectedPgEnd, endTS, "end timestamp mismatch.")
+		})
+	}
+}
+
+func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
+	t.Parallel()
+
+	// Timestamps for start and end of period.
+	startStr := fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00")
+	endStr := fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00")
+
+	startTS, err := time.Parse(time.RFC3339, startStr)
+	require.NoError(t, err, "failed to parse expected start time.")
+
+	pgStart := pgtype.Timestamptz{}
+	require.NoError(t, pgStart.Scan(startTS), "failed to scan start timestamp to pg.")
+
+	endTS, err := time.Parse(time.RFC3339, endStr)
+	require.NoError(t, err, "failed to parse expected start time.")
+
+	pgEnd := pgtype.Timestamptz{}
+	require.NoError(t, pgEnd.Scan(endTS), "failed to scan start timestamp to pg.")
+
+	// Encrypted page cursors.
+	cursorOffset10, err := HTTPFiatTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
+	require.NoError(t, err, "failed to create page cursor with offset 10.")
+
+	cursorOffset33, err := HTTPFiatTransactionGeneratePageCursor(testAuth, startStr, endStr, 33)
+	require.NoError(t, err, "failed to create page cursor with offset 33.")
+
+	testCases := []struct {
+		params         *HTTPFiatPaginatedTxParams
+		name           string
+		expectOffset   int32
+		expectPageSize int32
+		expectErrCode  int
+		expectErrMsg   string
+		expectErr      require.ErrorAssertionFunc
+	}{
+		{
+			name: "invalid page size",
+			params: &HTTPFiatPaginatedTxParams{
+				PageSizeStr:   "bad-input",
+				PageCursorStr: cursorOffset33,
+			},
+			expectOffset:   0,
+			expectPageSize: 0,
+			expectErrMsg:   "invalid page size",
+			expectErrCode:  http.StatusBadRequest,
+			expectErr:      require.Error,
+		}, {
+			name: "valid - page size na, offset 33 request",
+			params: &HTTPFiatPaginatedTxParams{
+				PageCursorStr: cursorOffset33,
+			},
+			expectOffset:   43,
+			expectPageSize: 10,
+			expectErrMsg:   "",
+			expectErrCode:  0,
+			expectErr:      require.NoError,
+		}, {
+			name: "valid - page size 7, offset 33 request",
+			params: &HTTPFiatPaginatedTxParams{
+				PageSizeStr:   "7",
+				PageCursorStr: cursorOffset33,
+			},
+			expectOffset:   40,
+			expectPageSize: 7,
+			expectErrMsg:   "",
+			expectErrCode:  0,
+			expectErr:      require.NoError,
+		}, {
+			name: "valid - page size 3, offset 10 request",
+			params: &HTTPFiatPaginatedTxParams{
+				PageSizeStr:   "3",
+				PageCursorStr: cursorOffset10,
+			},
+			expectOffset:   13,
+			expectPageSize: 3,
+			expectErrMsg:   "",
+			expectErrCode:  0,
+			expectErr:      require.NoError,
+		}, {
+			name: "valid - initial request",
+			params: &HTTPFiatPaginatedTxParams{
+				PageSizeStr:   "3",
+				PageCursorStr: "",
+				TimezoneStr:   "-04:00",
+				MonthStr:      "6",
+				YearStr:       "2023",
+			},
+			expectOffset:   0,
+			expectPageSize: 3,
+			expectErrMsg:   "",
+			expectErrCode:  0,
+			expectErr:      require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			code, err := HTTPFiatTxParseQueryParams(testAuth, zapLogger, test.params)
+			test.expectErr(t, err, "error expectation failed.")
+			require.Equal(t, test.expectErrCode, code, "error codes mismatched.")
+
+			if err != nil {
+				return
+			}
+
+			require.Equal(t, test.expectOffset, test.params.Offset, "offset mismatched.")
+			require.Equal(t, test.expectPageSize, test.params.PageSize, "page size mismatched.")
+			require.Equal(t, pgStart, test.params.PeriodStart, "start timestamp mismatched.")
+			require.Equal(t, pgEnd, test.params.PeriodEnd, "end timestamp mismatched.")
+			require.True(t, len(test.params.NextPage) > 100, "next page cursor is incorrect.")
 		})
 	}
 }

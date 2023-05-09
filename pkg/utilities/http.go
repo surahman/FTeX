@@ -126,7 +126,7 @@ func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, 
 // HTTPFiatTransactionGeneratePageCursor will generate the encrypted page cursor.
 //
 //nolint:wrapcheck
-func HTTPFiatTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int64) (
+func HTTPFiatTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int32) (
 	string, error) {
 	return auth.EncryptToString([]byte(fmt.Sprintf("%s,%s,%d", periodStartStr, periodEndStr, offset)))
 }
@@ -188,7 +188,7 @@ type HTTPFiatPaginatedTxParams struct {
 
 	// Postgres query parameters.
 	Offset      int32
-	PageSize    int64
+	PageSize    int32
 	NextPage    string
 	PeriodStart pgtype.Timestamptz
 	PeriodEnd   pgtype.Timestamptz
@@ -205,9 +205,13 @@ func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *H
 
 	// Prepare page size.
 	if len(params.PageSizeStr) > 0 {
-		if params.PageSize, err = strconv.ParseInt(params.PageSizeStr, 10, 32); err != nil {
+		var pageSize int64
+
+		if pageSize, err = strconv.ParseInt(params.PageSizeStr, 10, 32); err != nil {
 			return http.StatusBadRequest, fmt.Errorf("invalid page size")
 		}
+
+		params.PageSize = int32(pageSize)
 	}
 
 	if params.PageSize < 1 {
@@ -222,11 +226,11 @@ func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *H
 		}
 
 		// Adjust offset to move along to next record set.
-		params.Offset += int32(params.PageSize)
+		params.Offset += params.PageSize
 
 		// Prepare next page cursor.
 		if params.NextPage, err = HTTPFiatTransactionGeneratePageCursor(
-			auth, periodStartStr, periodEndStr, int64(params.Offset)); err != nil {
+			auth, periodStartStr, periodEndStr, params.Offset); err != nil {
 			logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
 
 			return http.StatusInternalServerError, fmt.Errorf("please retry your request later")
