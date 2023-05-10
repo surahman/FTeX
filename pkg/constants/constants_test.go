@@ -145,3 +145,8 @@ func TestGetMonthFormatString(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNextPageRESTFormatString(t *testing.T) {
+	require.Equal(t, nextPageRESTFormatString, GetNextPageRESTFormatString(),
+		"next page format strings mismatched.")
+}
