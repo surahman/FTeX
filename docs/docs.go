@@ -339,14 +339,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/fiat/info/transaction": {
+        "/fiat/info/transaction/all/{currencyCode}/": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves all the transaction details for currency a specific client during the specified month. The initial request will contain (optionally) the page size and, month, year, and timezone. Subsequent requests will require a cursors to the next page that will be returned in the previous call to the endpoint. The user may choose to change the page size in any sequence of calls.",
+                "description": "Retrieves all the transaction details for currency a specific client during the specified month. The initial request will contain (optionally) the page size and, month, year, and timezone (option, defaults to UTC). Subsequent requests will require a cursors to the next page that will be returned in the previous call to the endpoint. The user may choose to change the page size in any sequence of calls.",
                 "consumes": [
                     "application/json"
                 ],
@@ -359,6 +359,13 @@ const docTemplate = `{
                 "summary": "Retrieve all the transactions for a currency account for a specific client during a specified month.",
                 "operationId": "txDetailsCurrencyFiatPaginated",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the currency code to retrieve the transaction details for.",
+                        "name": "currencyCode",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "The page cursor into the query results records.",
@@ -410,6 +417,12 @@ const docTemplate = `{
                         }
                     },
                     "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "416": {
                         "description": "error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"

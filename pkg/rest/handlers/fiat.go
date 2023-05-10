@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
@@ -695,17 +693,18 @@ func BalanceCurrencyFiatPaginated(
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			currencyCode	path		string				true	"the currency code to retrieve the transaction details for."
-//	@Param			pageCursor	query		string				false	"The page cursor into the query results records."
-//	@Param			timezone	query		string				false	"The timezone for the month in question."
-//	@Param			month		query		int					false	"The month for which transaction records are being requested."
-//	@Param			year		query		int					false	"The year for the month for which transaction records are being requested."
-//	@Param			pageSize	query		int					false	"The number of records to retrieve on this page."
-//	@Success		200			{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
-//	@Failure		400			{object}	models.HTTPError	"error message with any available details in payload"
-//	@Failure		403			{object}	models.HTTPError	"error message with any available details in payload"
-//	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
-//	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
-//	@Router			/fiat/info/transaction/{currencyCode}/ [get]
+//	@Param			pageCursor		query		string				false	"The page cursor into the query results records."
+//	@Param			timezone		query		string				false	"The timezone for the month in question."
+//	@Param			month			query		int					false	"The month for which transaction records are being requested."
+//	@Param			year			query		int					false	"The year for the month for which transaction records are being requested."
+//	@Param			pageSize		query		int					false	"The number of records to retrieve on this page."
+//	@Success		200				{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		416				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/transaction/all/{currencyCode}/ [get]
 func TxDetailsCurrencyFiatPaginated(
 	logger *logger.Logger,
 	auth auth.Auth,
@@ -717,17 +716,14 @@ func TxDetailsCurrencyFiatPaginated(
 			clientID       uuid.UUID
 			currency       postgres.Currency
 			err            error
-			offset         int32
-			pageSize       int64
-			nextPage       string
-			periodStart    pgtype.Timestamptz
-			periodEnd      pgtype.Timestamptz
 
-			pageSizeStr   = ginCtx.Query("pageSize")
-			pageCursorStr = ginCtx.Query("pageCursor")
-			timezoneStr   = ginCtx.Query("timezone")
-			monthStr      = ginCtx.Query("month")
-			yearStr       = ginCtx.Query("year")
+			params = utilities.HTTPFiatPaginatedTxParams{
+				PageSizeStr:   ginCtx.Query("pageSize"),
+				PageCursorStr: ginCtx.Query("pageCursor"),
+				TimezoneStr:   ginCtx.Query("timezone"),
+				MonthStr:      ginCtx.Query("month"),
+				YearStr:       ginCtx.Query("year"),
+			}
 		)
 
 		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
@@ -745,66 +741,23 @@ func TxDetailsCurrencyFiatPaginated(
 		}
 
 		// Check for required parameters.
-		if len(pageCursorStr) == 0 && (len(monthStr) == 0 || len(yearStr) == 0) {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "missing required parameters."})
+		if len(params.PageCursorStr) == 0 && (len(params.MonthStr) == 0 || len(params.YearStr) == 0) {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "missing required parameters"})
 
 			return
 		}
 
-		// Prepare page size.
-		if len(pageSizeStr) > 0 {
-			if pageSize, err = strconv.ParseInt(pageSizeStr, 10, 32); err != nil {
-				ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "invalid page size."})
-
-				return
-			}
-		}
-
-		if pageSize < 1 {
-			pageSize = 10
-		}
-
 		// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
-		if len(pageCursorStr) > 0 {
-			var (
-				periodStartStr string
-				periodEndStr   string
-			)
+		httpCode, err := utilities.HTTPFiatTxParseQueryParams(auth, logger, &params)
+		if err != nil {
+			ginCtx.AbortWithStatusJSON(httpCode, models.HTTPError{Message: err.Error()})
 
-			if periodStart, periodStartStr, periodEnd, periodEndStr, offset, err =
-				utilities.HTTPFiatTransactionUnpackPageCursor(auth, pageCursorStr); err != nil {
-				ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "invalid next page"})
-
-				return
-			}
-
-			// Adjust offset to move along to next record set.
-			offset += int32(pageSize)
-
-			// Prepare next page cursor.
-			if nextPage, err = utilities.HTTPFiatTransactionGeneratePageCursor(
-				auth, periodStartStr, periodEndStr, int64(offset)); err != nil {
-				logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-		} else {
-			if periodStart, periodEnd, nextPage, err =
-				utilities.HTTPFiatTransactionInfoPaginatedRequest(auth, monthStr, yearStr, timezoneStr); err != nil {
-				logger.Info("failed to prepare time periods for paginated Fiat transaction details",
-					zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
+			return
 		}
 
 		// Retrieve transaction details page.
 		if journalEntries, err = db.FiatTransactionsCurrencyPaginated(
-			clientID, currency, int32(pageSize+1), offset, periodStart, periodEnd); err != nil {
+			clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {
 				logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
@@ -819,14 +772,25 @@ func TxDetailsCurrencyFiatPaginated(
 			return
 		}
 
-		// Add next page link if there are more pages and remove the last item from the retrieved records.
-		// ---
+		if len(journalEntries) == 0 {
+			ginCtx.AbortWithStatusJSON(http.StatusRequestedRangeNotSatisfiable,
+				models.HTTPError{Message: "no transactions"})
 
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances",
+			return
+		}
+
+		// Check if there are further pages of data. If not, set the next link to be empty.
+		if len(journalEntries) > int(params.PageSize) {
+			journalEntries = journalEntries[:int(params.PageSize)]
+		} else {
+			params.NextPage = ""
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account transactions",
 			Payload: models.HTTPFiatTransactionsPaginated{
 				TransactionDetails: journalEntries,
 				Links: models.HTTPLinks{
-					NextPage: nextPage,
+					NextPage: params.NextPage,
 				},
 			}})
 	}

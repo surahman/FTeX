@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
@@ -1098,7 +1100,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) {
 		}, {
 			name:               "known db error",
 			currency:           "CAD",
-			expectedMsg:        "account not found",
+			expectedMsg:        "records not found",
 			expectedStatus:     http.StatusNotFound,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
@@ -1212,7 +1214,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 		}, {
 			name:               "known db error",
 			transactionID:      txID.String(),
-			expectedMsg:        "account not found",
+			expectedMsg:        "records not found",
 			expectedStatus:     http.StatusNotFound,
 			journalEntries:     journalEntries,
 			authValidateJWTErr: nil,
@@ -1479,6 +1481,219 @@ func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) {
 			router := gin.Default()
 			router.GET(basePath+test.path, BalanceCurrencyFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			actualMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, actualMessage, test.expectedMsg, "response message mismatch.")
+		})
+	}
+}
+
+func TestHandler_TxDetailsCurrencyFiatPaginated(t *testing.T) {
+	t.Parallel()
+
+	const basePath = "/fiat/transaction/details-journal/paginated/"
+
+	decryptedCursor := fmt.Sprintf("%s,%s,%d",
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		10)
+
+	journalEntries := []postgres.FiatJournal{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                   string
+		path                   string
+		currency               string
+		querySegment           string
+		expectedMsg            string
+		expectedStatus         int
+		journalEntries         []postgres.FiatJournal
+		authValidateJWTErr     error
+		authValidateTimes      int
+		authDecryptCursorErr   error
+		authDecryptCursorTimes int
+		authEncryptCursorErr   error
+		authEncryptCursorTimes int
+		fiatTxPaginatedErr     error
+		fiatTxPaginatedTimes   int
+	}{
+		{
+			name:                   "auth failure",
+			path:                   "auth-failure/",
+			currency:               "USD",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "auth failure",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusForbidden,
+			authValidateJWTErr:     errors.New("auth failure"),
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name:                   "bad currency",
+			path:                   "bad-currency/",
+			currency:               "INVALID",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "invalid currency",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusBadRequest,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name:                   "no cursor or params",
+			path:                   "no-cursor-or-params/",
+			currency:               "USD",
+			querySegment:           "?",
+			expectedMsg:            "missing required parameters",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusBadRequest,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name:                   "db failure",
+			path:                   "db-failure/",
+			currency:               "USD",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "records not found",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusNotFound,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     postgres.ErrNotFound,
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name:                   "unknown db failure",
+			path:                   "unknown-db-failure/",
+			currency:               "USD",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "retry",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusInternalServerError,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     errors.New("db failure"),
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name:                   "no transactions",
+			path:                   "no-transactions/",
+			currency:               "USD",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "no transactions",
+			journalEntries:         []postgres.FiatJournal{},
+			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name:                   "valid with cursor",
+			path:                   "valid-with-cursor/",
+			currency:               "USD",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "account transactions",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusOK,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name:                   "valid with query",
+			path:                   "valid-with-query/",
+			currency:               "USD",
+			querySegment:           "?month=6&year=2023&timezone=%2B04:00&pageSize=3",
+			expectedMsg:            "account transactions",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusOK,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
+					Times(test.authDecryptCursorTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-cursor", test.authEncryptCursorErr).
+					Times(test.authEncryptCursorTimes),
+
+				mockDB.EXPECT().FiatTransactionsCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.journalEntries, test.fiatTxPaginatedErr).
+					Times(test.fiatTxPaginatedTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.GET(basePath+test.path+":currencyCode",
+				TxDetailsCurrencyFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+				basePath+test.path+test.currency+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 

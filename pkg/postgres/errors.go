@@ -89,7 +89,7 @@ func errorTransactionFiat() error {
 
 func errorNotFound() error {
 	return &Error{
-		Message: "account not found",
+		Message: "records not found",
 		Code:    http.StatusNotFound,
 	}
 }
