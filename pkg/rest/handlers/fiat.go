@@ -667,6 +667,9 @@ func BalanceCurrencyFiatPaginated(
 
 			// Remove last element.
 			accDetails = accDetails[:pageSize]
+
+			// Generate naked next page link.
+			nextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
 		}
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances",
@@ -778,6 +781,9 @@ func TxDetailsCurrencyFiatPaginated(
 
 			return
 		}
+
+		// Generate naked next page link.
+		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
 
 		// Check if there are further pages of data. If not, set the next link to be empty.
 		if len(journalEntries) > int(params.PageSize) {
