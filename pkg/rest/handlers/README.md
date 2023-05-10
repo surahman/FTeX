@@ -332,31 +332,31 @@ field.
     "accountBalances": [
       {
         "currency": "AED",
-        "balance": "0",
-        "lastTx": "0",
-        "lastTxTs": "2023-05-04T16:23:04.133525-04:00",
-        "createdAt": "2023-05-04T16:23:04.133525-04:00",
+        "balance": "30903.7",
+        "lastTx": "-10000",
+        "lastTxTs": "2023-05-09T18:33:55.453689-04:00",
+        "createdAt": "2023-05-09T18:29:16.74704-04:00",
         "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
       },
       {
         "currency": "CAD",
-        "balance": "0",
-        "lastTx": "0",
-        "lastTxTs": "2023-05-04T16:23:00.701807-04:00",
-        "createdAt": "2023-05-04T16:23:00.701807-04:00",
+        "balance": "368474.77",
+        "lastTx": "368474.77",
+        "lastTxTs": "2023-05-09T18:30:51.985719-04:00",
+        "createdAt": "2023-05-09T18:29:08.746285-04:00",
         "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
       },
       {
         "currency": "EUR",
-        "balance": "0",
-        "lastTx": "0",
-        "lastTxTs": "2023-05-04T16:23:08.725994-04:00",
-        "createdAt": "2023-05-04T16:23:08.725994-04:00",
+        "balance": "1536.45",
+        "lastTx": "1536.45",
+        "lastTxTs": "2023-05-09T18:31:32.213239-04:00",
+        "createdAt": "2023-05-09T18:29:21.365991-04:00",
         "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
       }
     ],
     "links": {
-      "nextPage": "o8VWoMJ-FsVnLmfweM2eUyJshLzDp4SjTOG45mS5Vg=="
+      "nextPage": "?pageCursor=zTrzwXDqdxG-9aQ6sWVCwfJNs--anH9mQEMVKlDsvA==&pageSize=3"
     }
   }
 }
@@ -367,19 +367,11 @@ field.
   "payload": {
     "accountBalances": [
       {
-        "currency": "GBP",
-        "balance": "0",
-        "lastTx": "0",
-        "lastTxTs": "2023-05-04T16:23:14.045362-04:00",
-        "createdAt": "2023-05-04T16:23:14.045362-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
-      },
-      {
         "currency": "USD",
-        "balance": "0",
-        "lastTx": "0",
-        "lastTxTs": "2023-05-04T16:22:54.953269-04:00",
-        "createdAt": "2023-05-04T16:22:54.953269-04:00",
+        "balance": "12824.35",
+        "lastTx": "2723.24",
+        "lastTxTs": "2023-05-09T18:33:55.453689-04:00",
+        "createdAt": "2023-05-09T18:29:04.345387-04:00",
         "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
       }
     ],
@@ -485,7 +477,7 @@ transfer, two entries will be returned - one for the source and the other for th
       }
     ],
     "links": {
-      "nextPage": "mJdmw173tQdzxIU8lM6sGKS8riNC6fF7cx4MOCnHxTazqgUrbPlgbfSH9NMGGDWHxzph9EsnCvpHXNdU3X0jO26oQztUraC-sE_ykT2s0u2i"
+      "nextPage": "?pageCursor=xft0C3AaJwShw6Du5tr0d8FKXYedyFd1cgPp13W2LvU9U8ii3svtRn2Tt7Pd3LI6nQvO3AUI0NioM18v6XGFXuC4jpFDA8AsqFnXqSZMwMSk&pageSize=3"
     }
   }
 }
