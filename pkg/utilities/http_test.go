@@ -233,14 +233,14 @@ func TestUtilities_HTTPFiatTransactionInfoPaginatedRequest(t *testing.T) {
 			t.Parallel()
 
 			startTS, endTS, pageCursor, err := HTTPFiatTransactionInfoPaginatedRequest(
-				testAuth, test.monthStr, test.yearStr, test.timezone)
+				testAuth, test.monthStr, test.yearStr, test.timezone, 3)
 			test.expectErr(t, err, "failed error expectation")
 
 			if err != nil {
 				return
 			}
 
-			require.True(t, len(pageCursor) > 0, "empty page cursor returned.")
+			require.True(t, len(pageCursor) > 100, "empty page cursor returned.")
 
 			// Check start timestamp.
 			expectedStartTS, err := time.Parse(time.RFC3339, test.expectStart)

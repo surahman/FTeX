@@ -54,7 +54,7 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 
 // HTTPFiatTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
 // parameters.
-func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, timezoneStr string) (
+func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, timezoneStr string, pageSize int32) (
 	pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
 	var (
 		startYear      int64
@@ -116,7 +116,7 @@ func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, 
 	}
 
 	// Prepare page cursor.
-	if pageCursor, err = HTTPFiatTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, 0); err != nil {
+	if pageCursor, err = HTTPFiatTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, pageSize); err != nil {
 		return periodStart, periodEnd, pageCursor, fmt.Errorf("failed to encrypt page cursor %w", err)
 	}
 
@@ -225,19 +225,17 @@ func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *H
 			return http.StatusBadRequest, fmt.Errorf("invalid next page")
 		}
 
-		// Adjust offset to move along to next record set.
-		params.Offset += params.PageSize
-
-		// Prepare next page cursor.
+		// Prepare next page cursor. Adjust offset to move along to next record set.
 		if params.NextPage, err = HTTPFiatTransactionGeneratePageCursor(
-			auth, periodStartStr, periodEndStr, params.Offset); err != nil {
+			auth, periodStartStr, periodEndStr, params.Offset+params.PageSize); err != nil {
 			logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
 
 			return http.StatusInternalServerError, fmt.Errorf("please retry your request later")
 		}
 	} else {
 		if params.PeriodStart, params.PeriodEnd, params.NextPage, err =
-			HTTPFiatTransactionInfoPaginatedRequest(auth, params.MonthStr, params.YearStr, params.TimezoneStr); err != nil {
+			HTTPFiatTransactionInfoPaginatedRequest(auth,
+				params.MonthStr, params.YearStr, params.TimezoneStr, params.PageSize); err != nil {
 			logger.Info("failed to prepare time periods for paginated Fiat transaction details", zap.Error(err))
 
 			return http.StatusInternalServerError, fmt.Errorf("please retry your request later")
