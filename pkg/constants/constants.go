@@ -158,8 +158,8 @@ func GetNextPageRESTFormatString() string {
 	return nextPageRESTFormatString
 }
 
-// GetGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
-func GetGraphQLFileName() string {
+// GetHTTPGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
+func GetHTTPGraphQLFileName() string {
 	return graphqlConfigFileName
 }
 

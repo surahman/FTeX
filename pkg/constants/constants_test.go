@@ -152,7 +152,7 @@ func TestGetNextPageRESTFormatString(t *testing.T) {
 }
 
 func TestGetGraphqlConfigFileName(t *testing.T) {
-	require.Equal(t, graphqlConfigFileName, GetGraphQLFileName(), "Incorrect HTTP GraphQL filename")
+	require.Equal(t, graphqlConfigFileName, GetHTTPGraphQLFileName(), "Incorrect HTTP GraphQL filename")
 }
 
 func TestGetHTTPGraphQLPrefix(t *testing.T) {
