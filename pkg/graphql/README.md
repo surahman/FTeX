@@ -39,6 +39,7 @@ The expected file name is `HTTPGraphQLConfig.yaml`. All the configuration items 
 | ↳ portNumber        | ↳ `.PORTNUMBER`          | int           | Service port for inbound and outbound connections.                                         |
 | ↳ basePath          | ↳ `.BASEPATH`            | string        | The service endpoints base path.                                                           |
 | ↳ playgroundPath    | ↳ `.PLAYGROUNDPATH`      | string        | The path through which the Playground UI will be accessible.                               |
+| ↳ queryPath         | ↳ `.QUERYPATH`           | string        | The path through which queries can be submitted.                                           |
 | ↳ shutdownDelay     | ↳ `.SHUTDOWNDELAY`       | time.Duration | The number of seconds to wait after a shutdown signal is received to terminate the server. |
 | ↳ readTimeout       | ↳ `.READTIMEOUT`         | time.Duration | The maximum duration to read an entire request with the body before timing out.            |
 | ↳ writeTimeout      | ↳ `.WRITETIMEOUT`        | time.Duration | The maximum duration to write entire response before timing out.                           |
@@ -54,6 +55,7 @@ server:
   portNumber: 47130
   basePath: api/graphql/v1
   playgroundPath: /playground
+  queryPath: /query
   shutdownDelay: 5s
   readTimeout: 3s
   writeTimeout: 3s

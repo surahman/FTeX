@@ -11,6 +11,7 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 3s
   writeTimeout: 3s
   readHeaderTimeout: 3s
@@ -23,6 +24,7 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s
@@ -35,6 +37,7 @@ server:
   shutdownDelay: 0s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 0s
   writeTimeout: 0s
   readHeaderTimeout: 0s
@@ -46,6 +49,7 @@ server:
   portNumber: 44243
   shutdownDelay: 5s
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s
@@ -57,9 +61,22 @@ server:
   portNumber: 44243
   shutdownDelay: 5s
   basePath: api/rest/v1
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s
+authorization:
+  headerKey: Authorization`,
+
+		"no query path": `
+server:
+  portNumber: 33723
+  shutdownDelay: 5s
+  basePath: api/rest/v1
+  playgroundPath: /playground
+  readTimeout: 3s
+  writeTimeout: 3s
+  readHeaderTimeout: 3s
 authorization:
   headerKey: Authorization`,
 
@@ -69,6 +86,7 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   writeTimeout: 1s
   readHeaderTimeout: 1s
 authorization:
@@ -80,6 +98,7 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   readHeaderTimeout: 1s
 authorization:
@@ -91,6 +110,7 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
 authorization:
@@ -102,6 +122,7 @@ server:
   shutdownDelay: 5s
   basePath: api/rest/v1
   playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s

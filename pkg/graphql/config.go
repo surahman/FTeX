@@ -23,6 +23,7 @@ type config struct {
 type serverConfig struct {
 	BasePath          string        `json:"basePath,omitempty" yaml:"basePath,omitempty" mapstructure:"basePath" validate:"required"`
 	PlaygroundPath    string        `json:"playgroundPath,omitempty" yaml:"playgroundPath,omitempty" mapstructure:"playgroundPath" validate:"required"`
+	QueryPath         string        `json:"queryPath,omitempty" yaml:"queryPath,omitempty" mapstructure:"queryPath" validate:"required"`
 	PortNumber        int           `json:"portNumber,omitempty" yaml:"portNumber,omitempty" mapstructure:"portNumber" validate:"required,min=1000"`
 	ShutdownDelay     time.Duration `json:"shutdownDelay,omitempty" yaml:"shutdownDelay,omitempty" mapstructure:"shutdownDelay" validate:"required,min=0"`
 	ReadTimeout       time.Duration `json:"readTimeout,omitempty" yaml:"readTimeout,omitempty" mapstructure:"readTimeout" validate:"required,min=1"`

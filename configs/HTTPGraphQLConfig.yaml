@@ -2,6 +2,7 @@ server:
   portNumber: 47130
   basePath: api/graphql/v1
   playgroundPath: /playground
+  queryPath: /query
   shutdownDelay: 5s
   readTimeout: 3s
   writeTimeout: 3s
