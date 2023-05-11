@@ -74,7 +74,7 @@ The Swagger UI can be accessed using the provided default configurations through
 GraphQL has been exposed through an HTTP endpoint [`graphql`](pkg/graphql) package. The schema for the GraphQL queries
 and mutations can be found in [`models`](pkg/models) package.
 
-To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/graphql/resolvers)
+To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/graph/resolvers)
 package. The GraphQL server does also provide a Playground to examine and test the API calls with details on request
 formats.
 

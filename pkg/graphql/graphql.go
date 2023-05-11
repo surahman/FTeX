@@ -63,8 +63,8 @@ func (s *Server) initialize() {
 	api := s.router.Group(s.conf.Server.BasePath)
 	_ = api //  REMOVE.
 
-	//	api.Use(graphql_resolvers.GinContextToContextMiddleware())
-	//
+	// api.Use(graphql.GinContextToContextMiddleware())
+
 	//	api.POST(s.conf.Server.QueryPath, graphql_resolvers.QueryHandler(s.conf.Authorization.HeaderKey, s.auth, s.cache, s.db, s.grading, s.logger))
 	//	api.GET(s.conf.Server.PlaygroundPath, graphql_resolvers.PlaygroundHandler(s.conf.Server.BasePath, s.conf.Server.QueryPath))
 }

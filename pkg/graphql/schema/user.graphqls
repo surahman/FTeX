@@ -1,0 +1,37 @@
+# User account information.
+input UserAccount {
+    firstname: String!
+    lastname: String!
+    email: String!
+    userLoginCredentials: UserLoginCredentials!
+}
+
+# Login credentials.
+input UserLoginCredentials {
+    username: String!
+    password: String!
+}
+
+# User account deletion request.
+input DeleteUserRequest {
+    username: String!
+    password: String!
+    confirmation: String!
+}
+
+# Requests that might alter the state of data in the database.
+type Mutation {
+    # Send a user registration request and receive a JWT authorization token in response.
+    registerUser(input: UserAccount): JWTAuthResponse!
+
+    # Send a user account deletion request.
+    deleteUser(input: DeleteUserRequest!): String!
+
+    # Send a user login request And receive a JWT authorization token in response. This has no side effects but is a
+    # mutation to force sequential execution. This stops operations such as delete and refresh from being run in
+    # parallel with a login.
+    loginUser(input: UserLoginCredentials!): JWTAuthResponse!
+
+    # Refreshes a users JWT if it is within the refresh time window.
+    refreshToken: JWTAuthResponse!
+}
