@@ -150,3 +150,11 @@ func TestGetNextPageRESTFormatString(t *testing.T) {
 	require.Equal(t, nextPageRESTFormatString, GetNextPageRESTFormatString(),
 		"next page format strings mismatched.")
 }
+
+func TestGetGraphqlConfigFileName(t *testing.T) {
+	require.Equal(t, graphqlConfigFileName, GetGraphQLFileName(), "Incorrect HTTP GraphQL filename")
+}
+
+func TestGetHTTPGraphQLPrefix(t *testing.T) {
+	require.Equal(t, graphQLPrefix, GetHTTPGraphQLPrefix(), "Incorrect HTTP GraphQL environment prefix")
+}

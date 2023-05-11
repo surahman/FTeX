@@ -15,6 +15,7 @@ const (
 	quotesConfigFileName   = "QuotesConfig.yaml"
 	authConfigFileName     = "AuthConfig.yaml"
 	restConfigFileName     = "HTTPRESTConfig.yaml"
+	graphqlConfigFileName  = "HTTPGraphQLConfig.yaml"
 
 	// Environment variables.
 	githubCIKey    = "GITHUB_ACTIONS_CI"
@@ -24,6 +25,7 @@ const (
 	quotesPrefix   = "QUOTES"
 	authPrefix     = "AUTH"
 	restPrefix     = "REST"
+	graphQLPrefix  = "GRAPHQL"
 
 	// Miscellaneous.
 	postgresDSN                   = "user=%s password=%s host=%s port=%d dbname=%s connect_timeout=%d sslmode=disable"
@@ -154,4 +156,14 @@ func GetMonthFormatString() string {
 // GetNextPageRESTFormatString is the format for the naked next page link for REST requests responses.
 func GetNextPageRESTFormatString() string {
 	return nextPageRESTFormatString
+}
+
+// GetGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
+func GetGraphQLFileName() string {
+	return graphqlConfigFileName
+}
+
+// GetHTTPGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
+func GetHTTPGraphQLPrefix() string {
+	return graphQLPrefix
 }
