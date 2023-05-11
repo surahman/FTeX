@@ -1,6 +1,7 @@
 package constants
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -93,4 +94,59 @@ func TestGetFiatOfferTTL(t *testing.T) {
 
 func TestGetCryptoOfferTTL(t *testing.T) {
 	require.Equal(t, cryptoOfferTTL, GetCryptoOfferTTL(), "Incorrect Crypto offer TTL.")
+}
+
+func TestGetMonthFormatString(t *testing.T) {
+	t.Parallel()
+
+	require.Equal(t, monthFormatString, GetMonthFormatString(), "Incorrect month format string.")
+
+	testCases := []struct {
+		name     string
+		timezone string
+		month    int
+		year     int
+	}{
+		{
+			name:     "2023-01-01T00:00:00-04:00",
+			timezone: "-04:00",
+			month:    1,
+			year:     2023,
+		}, {
+			name:     "2023-01-01T00:00:00+04:00",
+			timezone: "+04:00",
+			month:    1,
+			year:     2023,
+		}, {
+			name:     "2023-12-01T00:00:00+04:00",
+			timezone: "+04:00",
+			month:    12,
+			year:     2023,
+		}, {
+			name:     "2023-06-01T00:00:00+00:00",
+			timezone: "+00:00",
+			month:    06,
+			year:     2023,
+		}, {
+			name:     "9999-99-01T00:00:00+99:99",
+			timezone: "+99:99",
+			month:    99,
+			year:     9999,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := fmt.Sprintf(GetMonthFormatString(), test.year, test.month, test.timezone)
+			require.Equal(t, test.name, actual, "actual and expected time strings mismatch.")
+		})
+	}
+}
+
+func TestGetNextPageRESTFormatString(t *testing.T) {
+	require.Equal(t, nextPageRESTFormatString, GetNextPageRESTFormatString(),
+		"next page format strings mismatched.")
 }

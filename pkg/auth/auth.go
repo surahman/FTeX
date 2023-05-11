@@ -280,3 +280,24 @@ func (a *authImpl) DecryptFromString(ciphertext string) (plaintext []byte, err e
 
 	return a.decryptAES256(bytes)
 }
+
+// testConfigurationImpl creates an authImpl configuration for testing.
+func testConfigurationImpl(zapLogger *logger.Logger, expDuration, refThreshold int64) *authImpl {
+	auth := &authImpl{
+		conf:   &config{},
+		logger: zapLogger,
+	}
+	auth.conf.JWTConfig.Key = "encryption key for test suite"
+	auth.conf.JWTConfig.Issuer = "issuer for test suite"
+	auth.conf.JWTConfig.ExpirationDuration = expDuration
+	auth.conf.JWTConfig.RefreshThreshold = refThreshold
+	auth.conf.General.BcryptCost = 4
+	auth.cryptoSecret = []byte("*****crypto key for testing*****")
+
+	return auth
+}
+
+// TestAuth is a basic test Auth struct to be used in test suites.
+func TestAuth(zapLogger *logger.Logger, expDuration, refThreshold int64) Auth {
+	return testConfigurationImpl(zapLogger, expDuration, refThreshold)
+}

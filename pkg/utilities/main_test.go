@@ -1,19 +1,17 @@
-package auth
+package utilities
 
 import (
 	"log"
 	"os"
 	"testing"
 
+	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
 
 // testAuth is the Authorization object.
-var testAuth *authImpl
-
-// authConfigTestData is a map of Authentication configuration test data.
-var authConfigTestData = configTestData()
+var testAuth auth.Auth
 
 // expirationDuration is the time in seconds that a JWT will be valid for.
 var expirationDuration int64 = 10
@@ -54,7 +52,7 @@ func TestMain(m *testing.M) {
 //
 //nolint:unparam
 func setup() error {
-	testAuth = testConfigurationImpl(zapLogger, expirationDuration, refreshThreshold)
+	testAuth = auth.TestAuth(zapLogger, expirationDuration, refreshThreshold)
 
 	return nil
 }

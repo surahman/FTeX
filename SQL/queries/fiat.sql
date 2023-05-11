@@ -100,7 +100,7 @@ SELECT *
 FROM fiat_journal
 WHERE client_id = $1 AND currency = $2;
 
--- name: fiatGetJournalTransactionForAccountBetweenDates :many
+-- name: fiatGetAllJournalTransactionPaginated :many
 -- fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
 -- in a date range.
 SELECT *
@@ -109,7 +109,10 @@ WHERE client_id = $1
       AND currency = $2
       AND transacted_at
           BETWEEN @start_time::timestamptz
-              AND @end_time::timestamptz;
+              AND @end_time::timestamptz
+ORDER BY transacted_at DESC
+OFFSET $3
+LIMIT $4;
 
 -- name: fiatGetAccount :one
 -- fiatGetAccount will retrieve a specific user's account for a given currency.
@@ -121,4 +124,6 @@ WHERE client_id=$1 AND currency=$2;
 -- fiatGetAllAccounts will retrieve all accounts associated with a specific user.
 SELECT *
 FROM fiat_accounts
-WHERE client_id=$1;
+WHERE client_id=$1 AND currency >= $2
+ORDER BY currency
+LIMIT $3;

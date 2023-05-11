@@ -116,7 +116,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "a message to confirm the conversion of funds",
+                        "description": "a message to confirm the conversion rate for a currency",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
                         }
@@ -206,6 +206,73 @@
                 }
             }
         },
+        "/fiat/info/balance": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all the currency balances for a specific client. The initial request will only contain (optionally) the page size. Subsequent requests will require a cursors to the next page that will be returned in a previous call to the endpoint. The user may choose to change the page size in any sequence of calls.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency balance"
+                ],
+                "summary": "Retrieve all the currency balances for a specific client.",
+                "operationId": "balanceCurrencyFiatPaginated",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The page cursor into the query results records.",
+                        "name": "pageCursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The number of records to retrieve on this page.",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to with a page of account balances for the client's accounts",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/fiat/info/balance/{currencyCode}": {
             "get": {
                 "security": [
@@ -236,6 +303,98 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "the details for a specific currency account",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/fiat/info/transaction/all/{currencyCode}/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all the transaction details for currency a specific client during the specified month. The initial request will contain (optionally) the page size and, month, year, and timezone (option, defaults to UTC). Subsequent requests will require a cursors to the next page that will be returned in the previous call to the endpoint. The user may choose to change the page size in any sequence of calls.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat currency transaction"
+                ],
+                "summary": "Retrieve all the transactions for a currency account for a specific client during a specified month.",
+                "operationId": "txDetailsCurrencyFiatPaginated",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the currency code to retrieve the transaction details for.",
+                        "name": "currencyCode",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The page cursor into the query results records.",
+                        "name": "pageCursor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "The timezone for the month in question.",
+                        "name": "timezone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The month for which transaction records are being requested.",
+                        "name": "month",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The year for the month for which transaction records are being requested.",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The number of records to retrieve on this page.",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
                         "description": "a message to confirm the conversion of funds",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
@@ -254,6 +413,12 @@
                         }
                     },
                     "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "416": {
                         "description": "error message with any available details in payload",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
@@ -298,7 +463,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "a message to confirm the conversion of funds",
+                        "description": "the transaction details for a specific transaction ID",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
                         }
@@ -446,7 +611,7 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "message with a confirmation of a deleted user account",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"

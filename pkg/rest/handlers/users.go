@@ -222,7 +222,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			request	body		models.HTTPDeleteUserRequest	true	"The request payload for deleting an account"
-//	@Success		200		{object}	models.HTTPSuccess				"message with a confirmation of a deleted user account"
+//	@Success		204		{object}	models.HTTPSuccess				"message with a confirmation of a deleted user account"
 //	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
@@ -304,6 +304,6 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account successfully deleted"})
+		ginCtx.JSON(http.StatusNoContent, models.HTTPSuccess{Message: "account successfully deleted"})
 	}
 }

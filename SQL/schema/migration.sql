@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS fiat_journal (
     PRIMARY KEY(tx_id, client_id, currency)
 );
 
-CREATE INDEX IF NOT EXISTS fiat_journal_client_idx ON fiat_journal USING btree (client_id);
+CREATE INDEX IF NOT EXISTS fiat_journal_transacted_at_idx ON fiat_journal USING btree (transacted_at);
 CREATE INDEX IF NOT EXISTS fiat_journal_tx_idx ON fiat_journal USING btree (tx_id);
 --rollback DROP TABLE fiat_journal CASCADE;
 

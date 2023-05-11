@@ -198,7 +198,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: a message to confirm the conversion of funds
+          description: a message to confirm the conversion rate for a currency
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
         "400":
@@ -261,6 +261,54 @@ paths:
         ID.
       tags:
       - fiat currency exchange convert offer transfer execute
+  /fiat/info/balance:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all the currency balances for a specific client. The
+        initial request will only contain (optionally) the page size. Subsequent requests
+        will require a cursors to the next page that will be returned in a previous
+        call to the endpoint. The user may choose to change the page size in any sequence
+        of calls.
+      operationId: balanceCurrencyFiatPaginated
+      parameters:
+      - description: The page cursor into the query results records.
+        in: query
+        name: pageCursor
+        type: string
+      - description: The number of records to retrieve on this page.
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to with a page of account balances for the client's
+            accounts
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve all the currency balances for a specific client.
+      tags:
+      - fiat currency balance
   /fiat/info/balance/{currencyCode}:
     get:
       consumes:
@@ -278,7 +326,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: a message to confirm the conversion of funds
+          description: the details for a specific currency account
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
         "400":
@@ -319,7 +367,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: a message to confirm the conversion of funds
+          description: the transaction details for a specific transaction ID
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
         "400":
@@ -343,6 +391,77 @@ paths:
       summary: Retrieve transaction details for a specific transactionID.
       tags:
       - fiat transactionID transaction details
+  /fiat/info/transaction/all/{currencyCode}/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all the transaction details for currency a specific client
+        during the specified month. The initial request will contain (optionally)
+        the page size and, month, year, and timezone (option, defaults to UTC). Subsequent
+        requests will require a cursors to the next page that will be returned in
+        the previous call to the endpoint. The user may choose to change the page
+        size in any sequence of calls.
+      operationId: txDetailsCurrencyFiatPaginated
+      parameters:
+      - description: the currency code to retrieve the transaction details for.
+        in: path
+        name: currencyCode
+        required: true
+        type: string
+      - description: The page cursor into the query results records.
+        in: query
+        name: pageCursor
+        type: string
+      - description: The timezone for the month in question.
+        in: query
+        name: timezone
+        type: string
+      - description: The month for which transaction records are being requested.
+        in: query
+        name: month
+        type: integer
+      - description: The year for the month for which transaction records are being
+          requested.
+        in: query
+        name: year
+        type: integer
+      - description: The number of records to retrieve on this page.
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the conversion of funds
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "416":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve all the transactions for a currency account for a specific
+        client during a specified month.
+      tags:
+      - fiat currency transaction
   /fiat/open:
     post:
       consumes:
@@ -419,7 +538,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: message with a confirmation of a deleted user account
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
