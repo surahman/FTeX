@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gofrs/uuid"
+	"github.com/surahman/FTeX/pkg/constants"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
@@ -40,17 +41,15 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgr
 		var registerErr *postgres.Error
 		if !errors.As(err, &registerErr) {
 			r.logger.Warn("failed to extract create user account error", zap.Error(err))
-
-			return nil, fmt.Errorf("unknown account creation failure S%w", err)
 		}
 
-		return nil, fmt.Errorf("account creation failure S%w", err)
+		return nil, errors.New("account creation failed, please try again later")
 	}
 
 	if authToken, err = r.auth.GenerateJWT(clientID); err != nil {
 		r.logger.Error("failure generating JWT during account creation", zap.Error(err))
 
-		return nil, fmt.Errorf("unknown account creation failure S%w", err)
+		return nil, errors.New("account creation failed, please try again later")
 	}
 
 	return authToken, nil
@@ -58,7 +57,61 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgr
 
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDeleteUserRequest) (string, error) {
-	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
+	var (
+		clientID    uuid.UUID
+		err         error
+		userAccount modelsPostgres.User
+	)
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return "", fmt.Errorf("validation %w", err)
+	}
+
+	// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
+	// credentials.
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return "", err
+	}
+
+	// Get user account information to validate against.
+	if userAccount, err = r.db.UserGetInfo(clientID); err != nil {
+		r.logger.Warn("failed to read user record during an account deletion request",
+			zap.String("clientID", clientID.String()), zap.Error(err))
+
+		return "", errors.New("please retry your request later")
+	}
+
+	// Check Username and password.
+	if userAccount.Username != input.Username {
+		return "", errors.New("invalid deletion request")
+	}
+
+	if err = r.auth.CheckPassword(userAccount.Password, input.Password); err != nil {
+		return "", errors.New("invalid username or password")
+	}
+
+	// Check confirmation message.
+	if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), userAccount.Username) != input.Confirmation {
+		return "", errors.New("incorrect or incomplete deletion request confirmation")
+	}
+
+	// Check to make sure the account is not already deleted.
+	if userAccount.IsDeleted {
+		r.logger.Warn("attempt to delete an already deleted user account",
+			zap.String("username", userAccount.Username))
+
+		return "", errors.New("user account is already deleted")
+	}
+
+	// Mark account as deleted.
+	if err = r.db.UserDelete(clientID); err != nil {
+		r.logger.Warn("failed to mark a user record as deleted",
+			zap.String("username", userAccount.Username), zap.Error(err))
+
+		return "", errors.New("please retry your request later")
+	}
+
+	return "account successfully deleted", nil
 }
 
 // LoginUser is the resolver for the loginUser field.

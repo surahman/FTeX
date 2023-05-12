@@ -13,9 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
+	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
 )
@@ -96,6 +98,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 			authGenJWTTimes:   1,
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 
@@ -141,6 +144,248 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 			// Error is expected check to ensure one is set.
 			if test.expectErr {
 				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestMutationResolver_DeleteUser(t *testing.T) {
+	t.Parallel()
+
+	validUserAccount := modelsPostgres.User{
+		UserAccount: &modelsPostgres.UserAccount{
+			UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+				Username: "username1",
+				Password: "password",
+			},
+			FirstName: "",
+			LastName:  "",
+			Email:     "",
+		},
+		ClientID:  uuid.UUID{},
+		IsDeleted: false,
+	}
+
+	deletedUserAccount := modelsPostgres.User{
+		UserAccount: &modelsPostgres.UserAccount{
+			UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+				Username: "username1",
+				Password: "password",
+			},
+			FirstName: "",
+			LastName:  "",
+			Email:     "",
+		},
+		ClientID:  uuid.UUID{},
+		IsDeleted: true,
+	}
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		readUserErr          error
+		readUserTimes        int
+		readUserData         modelsPostgres.User
+		authCheckPassErr     error
+		authCheckPassTimes   int
+		deleteUserErr        error
+		deleteUserTimes      int
+	}{
+		{
+			name:                 "empty request",
+			path:                 "/delete/empty-request",
+			query:                fmt.Sprintf(testUserQuery["delete"], "", "", ""),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			readUserErr:          nil,
+			readUserData:         modelsPostgres.User{},
+			readUserTimes:        0,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   0,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "valid token",
+			path:                 "/delete/valid-request",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
+			expectErr:            false,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         validUserAccount,
+			readUserTimes:        1,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   1,
+			deleteUserErr:        nil,
+			deleteUserTimes:      1,
+		}, {
+			name:                 "invalid token",
+			path:                 "/delete/invalid-token-request",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   errors.New("JWT failed authorization check"),
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         modelsPostgres.User{},
+			readUserTimes:        0,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   0,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "db read failure",
+			path:                 "/delete/db-read-failure",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          postgres.ErrNotFound,
+			readUserData:         modelsPostgres.User{},
+			readUserTimes:        1,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   0,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "token and request username mismatch",
+			path:                 "/delete/token-and-request-username-mismatch",
+			query:                fmt.Sprintf(testUserQuery["delete"], "invalid username", "password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         validUserAccount,
+			readUserTimes:        1,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   0,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "invalid password",
+			path:                 "/delete/valid-password",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "incorrect password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         validUserAccount,
+			readUserTimes:        1,
+			authCheckPassErr:     errors.New("invalid password"),
+			authCheckPassTimes:   1,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name: "bad deletion confirmation",
+			path: "/delete/bad-deletion-confirmation",
+			query: fmt.Sprintf(testUserQuery["delete"],
+				"username1", "password", "incorrect and incomplete confirmation"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         validUserAccount,
+			readUserTimes:        1,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   1,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "already deleted",
+			path:                 "/delete/already-deleted",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         deletedUserAccount,
+			readUserTimes:        1,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   1,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "db delete failure",
+			path:                 "/delete/db-delete-failure",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			readUserErr:          nil,
+			readUserData:         validUserAccount,
+			readUserTimes:        1,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   1,
+			deleteUserErr:        postgres.ErrNotFound,
+			deleteUserTimes:      1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			authToken := xid.New().String()
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(authToken).
+					Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
+					Return(test.readUserData, test.readUserErr).
+					Times(test.readUserTimes),
+
+				mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).
+					Return(test.authCheckPassErr).
+					Times(test.authCheckPassTimes),
+
+				mockPostgres.EXPECT().UserDelete(gomock.Any()).
+					Return(test.deleteUserErr).
+					Times(test.deleteUserTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", authToken)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match.")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body.")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			} else {
+				// Auth token is expected.
+				data, ok := response["data"]
+				require.True(t, ok, "data key expected but not set.")
+				confirmation, ok := data.(map[string]any)["deleteUser"].(string)
+				require.True(t, ok, "failed to extract confirmation.")
+				require.Equal(t, "account successfully deleted", confirmation,
+					"confirmation message does not match expected.")
 			}
 		})
 	}

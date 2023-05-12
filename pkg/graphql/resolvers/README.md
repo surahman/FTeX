@@ -86,3 +86,90 @@ _Unhealthy Response:_
   "data": null
 }
 ```
+
+<br/>
+
+### User Mutations
+
+#### Register
+
+_Request:_ All fields are required.
+
+```graphql
+mutation {
+  registerUser(input: {
+    firstname: "first name"
+    lastname: "last name"
+    email: "email@address.com",
+    userLoginCredentials: {
+      username:"someusername",
+      password: "somepassword"
+    }
+  }) {
+  token,
+  expires,
+  threshold
+  }
+}
+```
+
+_Response:_ A valid JWT will be returned as an authorization response.
+
+
+#### Login
+
+_Request:_ All fields are required.
+
+```graphql
+mutation {
+  loginUser(input: {
+    username:"someusername",
+    password: "somepassword"
+  }) {
+    token,
+    expires,
+    threshold
+  }
+}
+```
+
+_Response:_ A valid JWT will be returned as an authorization response.
+
+
+#### Refresh
+
+_Request:_ A valid JWT must be provided in the request header and will be validated with a fresh token issued against it.
+
+```graphql
+mutation {
+  refreshToken() {
+    token
+    expires
+    threshold
+  }
+}
+```
+
+_Response:_ A valid JWT will be returned as an authorization response.
+
+
+#### Delete
+
+_Request:_ All fields are required and a valid JWT must be provided in the header. The user must supply their login
+credentials as well as complete the confirmation message `I understand the consequences, delete my user
+account **USERNAME HERE**`
+
+```graphql
+mutation {
+  deleteUser(input: {
+    username: "someusername"
+    password: "somepassword"
+    confirmation: "I understand the consequences, delete my user account <USERNAME HERE>"
+  })
+}
+```
+
+_Response:_ A confirmation message will be returned as a success response.
+
+
+<br/>
