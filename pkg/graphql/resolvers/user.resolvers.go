@@ -116,7 +116,32 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDele
 
 // LoginUser is the resolver for the loginUser field.
 func (r *mutationResolver) LoginUser(ctx context.Context, input modelsPostgres.UserLoginCredentials) (*models.JWTAuthResponse, error) {
-	panic(fmt.Errorf("not implemented: LoginUser - loginUser"))
+	var (
+		err            error
+		authToken      *models.JWTAuthResponse
+		clientID       uuid.UUID
+		hashedPassword string
+	)
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return nil, fmt.Errorf("validation %w", err)
+	}
+
+	if clientID, hashedPassword, err = r.db.UserCredentials(input.Username); err != nil {
+		return nil, errors.New("invalid username or password")
+	}
+
+	if err = r.auth.CheckPassword(hashedPassword, input.Password); err != nil {
+		return nil, errors.New("invalid username or password")
+	}
+
+	if authToken, err = r.auth.GenerateJWT(clientID); err != nil {
+		r.logger.Error("failure generating JWT during login", zap.Error(err))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	return authToken, nil
 }
 
 // RefreshToken is the resolver for the refreshToken field.

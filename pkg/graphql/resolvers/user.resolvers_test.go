@@ -390,3 +390,127 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 		})
 	}
 }
+
+func TestMutationResolver_LoginUser(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name                   string
+		path                   string
+		user                   string
+		expectErr              bool
+		userCredentialsReadErr error
+		userCredentialsTimes   int
+		authCheckPassErr       error
+		authCheckPassTimes     int
+		authGenJWTErr          error
+		authGenJWTTimes        int
+	}{
+		{
+			name:                   "empty user",
+			path:                   "/login/empty-user",
+			user:                   fmt.Sprintf(testUserQuery["login"], "", ""),
+			expectErr:              true,
+			userCredentialsReadErr: nil,
+			userCredentialsTimes:   0,
+			authCheckPassErr:       nil,
+			authCheckPassTimes:     0,
+			authGenJWTErr:          nil,
+			authGenJWTTimes:        0,
+		}, {
+			name:                   "valid user",
+			path:                   "/login/valid-user",
+			user:                   fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
+			expectErr:              false,
+			userCredentialsReadErr: nil,
+			userCredentialsTimes:   1,
+			authCheckPassErr:       nil,
+			authCheckPassTimes:     1,
+			authGenJWTErr:          nil,
+			authGenJWTTimes:        1,
+		},
+		{
+			name:                   "database failure",
+			path:                   "/login/database-failure",
+			user:                   fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
+			expectErr:              true,
+			userCredentialsReadErr: postgres.ErrNotFound,
+			userCredentialsTimes:   1,
+			authCheckPassErr:       nil,
+			authCheckPassTimes:     0,
+			authGenJWTErr:          nil,
+			authGenJWTTimes:        0,
+		}, {
+			name:                   "password check failure",
+			path:                   "/login/pwd-check-failure",
+			user:                   fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
+			expectErr:              true,
+			userCredentialsReadErr: nil,
+			userCredentialsTimes:   1,
+			authCheckPassErr:       errors.New("password hash error"),
+			authCheckPassTimes:     1,
+			authGenJWTErr:          nil,
+			authGenJWTTimes:        0,
+		}, {
+			name:                   "auth token failure",
+			path:                   "/login/auth-token-failure",
+			user:                   fmt.Sprintf(testUserQuery["login"], "username999", "password999"),
+			expectErr:              true,
+			userCredentialsReadErr: nil,
+			userCredentialsTimes:   1,
+			authCheckPassErr:       nil,
+			authCheckPassTimes:     1,
+			authGenJWTErr:          errors.New("auth token failure"),
+			authGenJWTTimes:        1,
+		},
+	}
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			gomock.InOrder(
+				mockPostgres.EXPECT().UserCredentials(gomock.Any()).
+					Return(uuid.UUID{}, "hashed-password", test.userCredentialsReadErr).
+					Times(test.userCredentialsTimes),
+
+				mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).
+					Return(test.authCheckPassErr).
+					Times(test.authCheckPassTimes),
+
+				mockAuth.EXPECT().GenerateJWT(gomock.Any()).
+					Return(&models.JWTAuthResponse{}, test.authGenJWTErr).
+					Times(test.authGenJWTTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(test.user))
+			req.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
