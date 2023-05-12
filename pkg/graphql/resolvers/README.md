@@ -57,13 +57,13 @@ the container.
 
 ```graphql
 query {
-  healthcheck()
+  healthcheck
 }
 ```
 
 _Healthy Response:_
 
-```graphql
+```json
 {
   "data": {
     "healthcheck": "OK"
@@ -73,7 +73,7 @@ _Healthy Response:_
 
 _Unhealthy Response:_
 
-```graphql
+```json
 {
   "errors": [
     {

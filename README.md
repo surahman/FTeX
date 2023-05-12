@@ -79,7 +79,7 @@ package. The GraphQL server does also provide a Playground to examine and test t
 formats.
 
 The Playground can be accessed using the provided default configurations through
-[http://localhost:33723/api/graphql/v1/playground](http://localhost:33723/api/graphql/v1/playground).
+[http://localhost:47130/api/graphql/v1/playground](http://localhost:47130/api/graphql/v1/playground).
 
 <br/>
 
