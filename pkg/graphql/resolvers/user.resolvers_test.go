@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
@@ -464,6 +465,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 			authGenJWTTimes:        1,
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 
@@ -498,6 +500,215 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(test.user))
 			req.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestMutationResolver_RefreshToken(t *testing.T) {
+	t.Parallel()
+
+	validUserAccount := modelsPostgres.User{
+		UserAccount: &modelsPostgres.UserAccount{
+			UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+				Username: "username1",
+				Password: "password",
+			},
+			FirstName: "",
+			LastName:  "",
+			Email:     "",
+		},
+		ClientID:  uuid.UUID{},
+		IsDeleted: false,
+	}
+
+	deletedUserAccount := modelsPostgres.User{
+		UserAccount: &modelsPostgres.UserAccount{
+			UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+				Username: "username1",
+				Password: "password",
+			},
+			FirstName: "",
+			LastName:  "",
+			Email:     "",
+		},
+		ClientID:  uuid.UUID{},
+		IsDeleted: true,
+	}
+
+	testCases := []struct {
+		name                  string
+		path                  string
+		expectErr             bool
+		authValidateJWTErr    error
+		authValidateJWTExp    int64
+		authValidateJWTTimes  int
+		userGetInfoErr        error
+		userGetInfoData       modelsPostgres.User
+		userGetInfoTimes      int
+		authRefThresholdTimes int
+		authRefThreshold      int64
+		authGenJWTErr         error
+		authGenJWTTimes       int
+	}{
+		{
+			name:                  "empty token",
+			path:                  "/refresh/empty-token",
+			expectErr:             true,
+			authValidateJWTErr:    errors.New("invalid token"),
+			authValidateJWTExp:    0,
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        nil,
+			userGetInfoData:       modelsPostgres.User{},
+			userGetInfoTimes:      0,
+			authRefThresholdTimes: 0,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       0,
+		}, {
+			name:                  "valid token",
+			path:                  "/refresh/valid-token",
+			expectErr:             false,
+			authValidateJWTErr:    nil,
+			authValidateJWTExp:    time.Now().Add(-time.Duration(30) * time.Second).Unix(),
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        nil,
+			userGetInfoData:       validUserAccount,
+			userGetInfoTimes:      1,
+			authRefThresholdTimes: 1,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       1,
+		}, {
+			name:                  "valid token not expiring",
+			path:                  "/refresh/valid-token-not-expiring",
+			expectErr:             true,
+			authValidateJWTErr:    nil,
+			authValidateJWTExp:    time.Now().Add(time.Duration(3) * time.Minute).Unix(),
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        nil,
+			userGetInfoData:       validUserAccount,
+			userGetInfoTimes:      1,
+			authRefThresholdTimes: 2,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       0,
+		}, {
+			name:                  "invalid token",
+			path:                  "/refresh/invalid-token",
+			expectErr:             true,
+			authValidateJWTErr:    errors.New("validate JWT failure"),
+			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        nil,
+			userGetInfoData:       validUserAccount,
+			userGetInfoTimes:      0,
+			authRefThresholdTimes: 0,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       0,
+		}, {
+			name:                  "db failure",
+			path:                  "/refresh/db-failure",
+			expectErr:             true,
+			authValidateJWTErr:    nil,
+			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        postgres.ErrNotFound,
+			userGetInfoData:       modelsPostgres.User{},
+			userGetInfoTimes:      1,
+			authRefThresholdTimes: 0,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       0,
+		}, {
+			name:                  "deleted user",
+			path:                  "/refresh/deleted-user",
+			expectErr:             true,
+			authValidateJWTErr:    nil,
+			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        nil,
+			userGetInfoData:       deletedUserAccount,
+			userGetInfoTimes:      1,
+			authRefThresholdTimes: 0,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       0,
+		}, {
+			name:                  "token generation failure",
+			path:                  "/refresh/token-generation-failure",
+			expectErr:             true,
+			authValidateJWTErr:    nil,
+			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authValidateJWTTimes:  1,
+			userGetInfoErr:        nil,
+			userGetInfoData:       validUserAccount,
+			userGetInfoTimes:      1,
+			authRefThresholdTimes: 1,
+			authRefThreshold:      60,
+			authGenJWTErr:         errors.New("failed to generate token"),
+			authGenJWTTimes:       1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			gomock.InOrder(
+				// JWT check.
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, test.authValidateJWTExp, test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				// Database call for user record.
+				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
+					Return(test.userGetInfoData, test.userGetInfoErr).
+					Times(test.userGetInfoTimes),
+
+				// Refresh threshold request.
+				mockAuth.EXPECT().RefreshThreshold().
+					Return(test.authRefThreshold).
+					Times(test.authRefThresholdTimes),
+
+				// Generate fresh JWT.
+				mockAuth.EXPECT().GenerateJWT(gomock.Any()).
+					Return(&models.JWTAuthResponse{}, test.authGenJWTErr).
+					Times(test.authGenJWTTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(testUserQuery["refresh"]))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 

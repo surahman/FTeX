@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/constants"
@@ -146,7 +147,47 @@ func (r *mutationResolver) LoginUser(ctx context.Context, input modelsPostgres.U
 
 // RefreshToken is the resolver for the refreshToken field.
 func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthResponse, error) {
-	panic(fmt.Errorf("not implemented: RefreshToken - refreshToken"))
+	var (
+		err         error
+		freshToken  *models.JWTAuthResponse
+		clientID    uuid.UUID
+		accountInfo modelsPostgres.User
+		expiresAt   int64
+	)
+
+	// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
+	// credentials.
+	if clientID, expiresAt, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return freshToken, err
+	}
+
+	if accountInfo, err = r.db.UserGetInfo(clientID); err != nil {
+		r.logger.Warn("failed to read user record for a valid JWT",
+			zap.String("username", accountInfo.Username), zap.Error(err))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	if accountInfo.IsDeleted {
+		r.logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("clientID", accountInfo.Username))
+
+		return nil, errors.New("invalid token")
+	}
+
+	// Do not refresh tokens that are outside the refresh threshold. Tokens could expire during the execution of
+	// this handler but expired ones would be rejected during token validation. Thus, it is not necessary to
+	// re-check expiration.
+	if expiresAt-time.Now().Unix() > r.auth.RefreshThreshold() {
+		return nil, fmt.Errorf("JWT is still valid for more than %d seconds", r.auth.RefreshThreshold())
+	}
+
+	if freshToken, err = r.auth.GenerateJWT(clientID); err != nil {
+		r.logger.Error("failure generating JWT during token refresh", zap.Error(err))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	return freshToken, nil
 }
 
 // Mutation returns graphql_generated.MutationResolver implementation.
