@@ -6,30 +6,68 @@ package graphql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/gofrs/uuid"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
-	models1 "github.com/surahman/FTeX/pkg/models"
-	models "github.com/surahman/FTeX/pkg/models/postgres"
+	"github.com/surahman/FTeX/pkg/models"
+	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
+	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/validator"
+	"go.uber.org/zap"
 )
 
 // RegisterUser is the resolver for the registerUser field.
-func (r *mutationResolver) RegisterUser(ctx context.Context, input *models.UserAccount) (*models1.JWTAuthResponse, error) {
-	panic(fmt.Errorf("not implemented: RegisterUser - registerUser"))
+func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgres.UserAccount) (*models.JWTAuthResponse, error) {
+	var (
+		authToken *models.JWTAuthResponse
+		clientID  uuid.UUID
+		err       error
+	)
+
+	if err = validator.ValidateStruct(input); err != nil {
+		return authToken, fmt.Errorf("validation %w", err)
+	}
+
+	if input.Password, err = r.auth.HashPassword(input.Password); err != nil {
+		r.logger.Error("failure hashing password", zap.Error(err))
+
+		return authToken, fmt.Errorf("validation %w", err)
+	}
+
+	if clientID, err = r.db.UserRegister(input); err != nil {
+		var registerErr *postgres.Error
+		if !errors.As(err, &registerErr) {
+			r.logger.Warn("failed to extract create user account error", zap.Error(err))
+
+			return nil, fmt.Errorf("unknown account creation failure S%w", err)
+		}
+
+		return nil, fmt.Errorf("account creation failure S%w", err)
+	}
+
+	if authToken, err = r.auth.GenerateJWT(clientID); err != nil {
+		r.logger.Error("failure generating JWT during account creation", zap.Error(err))
+
+		return nil, fmt.Errorf("unknown account creation failure S%w", err)
+	}
+
+	return authToken, nil
 }
 
 // DeleteUser is the resolver for the deleteUser field.
-func (r *mutationResolver) DeleteUser(ctx context.Context, input models1.HTTPDeleteUserRequest) (string, error) {
+func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDeleteUserRequest) (string, error) {
 	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
 }
 
 // LoginUser is the resolver for the loginUser field.
-func (r *mutationResolver) LoginUser(ctx context.Context, input models.UserLoginCredentials) (*models1.JWTAuthResponse, error) {
+func (r *mutationResolver) LoginUser(ctx context.Context, input modelsPostgres.UserLoginCredentials) (*models.JWTAuthResponse, error) {
 	panic(fmt.Errorf("not implemented: LoginUser - loginUser"))
 }
 
 // RefreshToken is the resolver for the refreshToken field.
-func (r *mutationResolver) RefreshToken(ctx context.Context) (*models1.JWTAuthResponse, error) {
+func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthResponse, error) {
 	panic(fmt.Errorf("not implemented: RefreshToken - refreshToken"))
 }
 

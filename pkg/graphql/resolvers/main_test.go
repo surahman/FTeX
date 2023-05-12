@@ -1,15 +1,12 @@
 package graphql
 
 import (
-	"encoding/json"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/logger"
-	"github.com/surahman/FTeX/pkg/models"
 	"go.uber.org/zap"
 )
 
@@ -18,6 +15,9 @@ var zapLogger *logger.Logger
 
 // testQuizData is the test quiz data.
 var testAuthHeaderKey = "Authorization"
+
+// testQuizData is the test user queries.
+var testUserQuery = getUsersQuery()
 
 func TestMain(m *testing.M) {
 	var err error
@@ -66,19 +66,4 @@ func verifyErrorReturned(t *testing.T, response map[string]any) {
 	value, ok = response["errors"]
 	require.True(t, ok, "error key expected but not set")
 	require.NotNil(t, value, "error value should not be nil")
-}
-
-// verifyJWTReturned will check an HTTP response from a resolver to ensure a correct JWT was returned.
-func verifyJWTReturned(t *testing.T, response map[string]any, functionName string,
-	expectedJWT *models.JWTAuthResponse) {
-	t.Helper()
-
-	data, ok := response["data"]
-	require.True(t, ok, "data key expected but not set")
-
-	authToken := models.JWTAuthResponse{}
-	jsonStr, err := json.Marshal(data.(map[string]any)[functionName])
-	require.NoError(t, err, "failed to generate JSON string")
-	require.NoError(t, json.Unmarshal(jsonStr, &authToken), "failed to unmarshall to JWT Auth Response")
-	require.True(t, reflect.DeepEqual(*expectedJWT, authToken), "auth tokens did not match")
 }
