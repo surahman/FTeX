@@ -50,6 +50,7 @@ var (
 	ErrCreateFiat   = errorCreateFiat()      // ErrCreateFiat is returned if a Fiat account could not be opened.
 	ErrTransactFiat = errorTransactionFiat() // ErrTransactFiat is returned is a Fiat transaction fails.
 	ErrNotFound     = errorNotFound()        // ErrNotFound is returned as a generic not found error.
+	ErrUnhealthy    = errorUnhealthy()       // ErrUnhealthy is returned if the database cannot be pinged.
 )
 
 func errorRegisterUser() error {
@@ -91,5 +92,12 @@ func errorNotFound() error {
 	return &Error{
 		Message: "records not found",
 		Code:    http.StatusNotFound,
+	}
+}
+
+func errorUnhealthy() error {
+	return &Error{
+		Message: "unhealthy",
+		Code:    http.StatusServiceUnavailable,
 	}
 }

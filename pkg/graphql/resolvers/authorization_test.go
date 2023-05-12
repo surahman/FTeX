@@ -115,11 +115,9 @@ func TestAuthorizationCheck(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 
-			mockAuth.EXPECT().ValidateJWT(gomock.Any()).Return(
-				uuid.UUID{},
-				int64(-1),
-				test.authValidateJWTErr,
-			).Times(test.authValidateJWTTimes)
+			mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+				Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
+				Times(test.authValidateJWTTimes)
 
 			_, _, err := AuthorizationCheck(test.ctx, mockAuth, zapLogger, testAuthHeaderKey)
 

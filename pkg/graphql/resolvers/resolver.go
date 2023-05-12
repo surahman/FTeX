@@ -13,10 +13,10 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	AuthHeaderKey string
-	Auth          auth.Auth
-	Cache         redis.Redis
-	DB            postgres.Postgres
-	Quotes        quotes.Quotes
-	Logger        *logger.Logger
+	authHeaderKey string
+	auth          auth.Auth
+	cache         redis.Redis
+	db            postgres.Postgres
+	quotes        quotes.Quotes
+	logger        *logger.Logger
 }

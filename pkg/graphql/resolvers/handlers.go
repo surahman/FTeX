@@ -21,12 +21,12 @@ func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db po
 	gqlHandler := handler.NewDefaultServer(graphql_generated.NewExecutableSchema(
 		graphql_generated.Config{
 			Resolvers: &Resolver{
-				AuthHeaderKey: authHeaderKey,
-				Auth:          auth,
-				Cache:         cache,
-				DB:            db,
-				Quotes:        quotes,
-				Logger:        logger,
+				authHeaderKey: authHeaderKey,
+				auth:          auth,
+				cache:         cache,
+				db:            db,
+				quotes:        quotes,
+				logger:        logger,
 			},
 		},
 	))
