@@ -10,6 +10,7 @@ const (
 	ErrorCacheMiss
 	ErrorCacheSet
 	ErrorCacheDel
+	ErrorUnhealthy
 )
 
 // Error is the base error type. The builder pattern is used to add specialization codes to the errors.
@@ -69,6 +70,7 @@ var (
 	ErrCacheMiss    = errorCacheMiss()    // ErrCacheMiss is returned when a cache miss occurs.
 	ErrCacheSet     = errorCacheSet()     // ErrCacheSet is returned if a key-value pair cannot be placed in the cache.
 	ErrCacheDel     = errorCacheDel()     // ErrCacheDel is returned if a key-value pair cannot be deleted from the cache.
+	ErrUnhealthy    = errorUnhealthy()    // ErrUnhealthy is returned if the cache is unreachable.
 )
 
 func errorCacheUnknown() error {
@@ -96,5 +98,12 @@ func errorCacheDel() error {
 	return &Error{
 		Message: "Redis cache Del failure",
 		Code:    ErrorCacheDel,
+	}
+}
+
+func errorUnhealthy() error {
+	return &Error{
+		Message: "unhealthy",
+		Code:    ErrorUnhealthy,
 	}
 }

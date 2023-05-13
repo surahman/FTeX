@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/graphql"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
@@ -41,6 +42,7 @@ func main() {
 		err             error
 		logging         *logger.Logger
 		conversionRates quotes.Quotes
+		serverGraphQL   *graphql.Server
 		serverREST      *rest.Server
 		waitGroup       sync.WaitGroup
 	)
@@ -104,6 +106,16 @@ func main() {
 	}
 
 	go serverREST.Run()
+
+	// Setup GraphQL server and start it.
+	waitGroup.Add(1)
+
+	if serverGraphQL, err = graphql.
+		NewServer(&fs, authorization, database, cache, conversionRates, logging, &waitGroup); err != nil {
+		logging.Panic("failed to create the GraphQL server", zap.Error(err))
+	}
+
+	go serverGraphQL.Run()
 
 	waitGroup.Wait()
 }

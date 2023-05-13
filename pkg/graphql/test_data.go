@@ -1,6 +1,6 @@
-package rest
+package graphql
 
-// configTestData will return a map of test data containing valid and invalid REST configs.
+// configTestData will return a map of test data containing valid and invalid GraphQL configs.
 func configTestData() map[string]string {
 	return map[string]string{
 		"empty": ``,
@@ -10,7 +10,8 @@ server:
   portNumber: 33723
   shutdownDelay: 5s
   basePath: api/rest/v1
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 3s
   writeTimeout: 3s
   readHeaderTimeout: 3s
@@ -22,7 +23,8 @@ server:
   portNumber: 99
   shutdownDelay: 5s
   basePath: api/rest/v1
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s
@@ -34,7 +36,8 @@ server:
   portNumber: 44243
   shutdownDelay: 0s
   basePath: api/rest/v1
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 0s
   writeTimeout: 0s
   readHeaderTimeout: 0s
@@ -45,21 +48,35 @@ authorization:
 server:
   portNumber: 44243
   shutdownDelay: 5s
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s
 authorization:
   headerKey: Authorization`,
 
-		"no swagger path": `
+		"no playground path": `
 server:
   portNumber: 44243
   shutdownDelay: 5s
   basePath: api/rest/v1
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s
+authorization:
+  headerKey: Authorization`,
+
+		"no query path": `
+server:
+  portNumber: 33723
+  shutdownDelay: 5s
+  basePath: api/rest/v1
+  playgroundPath: /playground
+  readTimeout: 3s
+  writeTimeout: 3s
+  readHeaderTimeout: 3s
 authorization:
   headerKey: Authorization`,
 
@@ -68,7 +85,8 @@ server:
   portNumber: 33723
   shutdownDelay: 5s
   basePath: api/rest/v1
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   writeTimeout: 1s
   readHeaderTimeout: 1s
 authorization:
@@ -79,7 +97,8 @@ server:
   portNumber: 33723
   shutdownDelay: 5s
   basePath: api/rest/v1
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   readHeaderTimeout: 1s
 authorization:
@@ -90,7 +109,8 @@ server:
   portNumber: 33723
   shutdownDelay: 5s
   basePath: api/rest/v1
-  swaggerPath: /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
 authorization:
@@ -101,7 +121,8 @@ server:
   portNumber: 44243
   shutdownDelay: 5s
   basePath: api/rest/v1
-  swaggerPath:  /swagger/*any
+  playgroundPath: /playground
+  queryPath: /query
   readTimeout: 1s
   writeTimeout: 1s
   readHeaderTimeout: 1s

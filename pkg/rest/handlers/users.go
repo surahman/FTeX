@@ -250,7 +250,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		// Validate the JWT and extract the username. Compare the username against the deletion request login
+		// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
 		// credentials.
 		if clientID, _, err = auth.ValidateJWT(jwt); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
@@ -260,6 +260,8 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 
 		// Get user account information to validate against.
 		if userAccount, err = db.UserGetInfo(clientID); err != nil {
+			logger.Warn("failed to read user record during an account deletion request",
+				zap.String("clientID", clientID.String()), zap.Error(err))
 			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
 				&models.HTTPError{Message: "please retry your request later"})
 
