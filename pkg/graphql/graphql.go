@@ -102,22 +102,22 @@ func (s *Server) Run() {
 	// Check for server start failure or shutdown signal.
 	select {
 	case err := <-serverErr:
-		s.logger.Error(fmt.Sprintf("REST server failed to listen on port %d", s.conf.Server.PortNumber), zap.Error(err))
+		s.logger.Error(fmt.Sprintf("GraphQL server failed to listen on port %d", s.conf.Server.PortNumber), zap.Error(err))
 
 		return
 	case <-quit:
-		s.logger.Info("Shutting down REST server...", zap.Duration("waiting", s.conf.Server.ShutdownDelay))
+		s.logger.Info("Shutting down GraphQL server...", zap.Duration("waiting", s.conf.Server.ShutdownDelay))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.conf.Server.ShutdownDelay)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
+		s.logger.Panic("Failed to shutdown GraphQL server", zap.Error(err))
 	}
 
 	// 5 second wait to exit.
 	<-ctx.Done()
 
-	s.logger.Info("REST server exited")
+	s.logger.Info("GraphQL server exited")
 }
