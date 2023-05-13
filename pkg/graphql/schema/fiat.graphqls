@@ -1,0 +1,11 @@
+# FiatOpenAccountResponse is the response returned
+type FiatOpenAccountResponse {
+    clientID: String!
+    currency: String!
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # Open a Fiat account if it does not already exist.
+    openFiat(currency: String!): FiatOpenAccountResponse!
+}

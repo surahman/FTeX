@@ -23,7 +23,7 @@ import (
 	"github.com/surahman/FTeX/pkg/quotes"
 )
 
-func TestMutationResolver_RegisterUser(t *testing.T) {
+func TestUserResolver_RegisterUser(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -150,7 +150,7 @@ func TestMutationResolver_RegisterUser(t *testing.T) {
 	}
 }
 
-func TestMutationResolver_DeleteUser(t *testing.T) {
+func TestUserResolver_DeleteUser(t *testing.T) {
 	t.Parallel()
 
 	validUserAccount := modelsPostgres.User{
@@ -392,7 +392,7 @@ func TestMutationResolver_DeleteUser(t *testing.T) {
 	}
 }
 
-func TestMutationResolver_LoginUser(t *testing.T) {
+func TestUserResolver_LoginUser(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -517,7 +517,7 @@ func TestMutationResolver_LoginUser(t *testing.T) {
 	}
 }
 
-func TestMutationResolver_RefreshToken(t *testing.T) {
+func TestUserResolver_RefreshToken(t *testing.T) {
 	t.Parallel()
 
 	validUserAccount := modelsPostgres.User{

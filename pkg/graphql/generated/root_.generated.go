@@ -39,6 +39,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	FiatOpenAccountResponse struct {
+		ClientID func(childComplexity int) int
+		Currency func(childComplexity int) int
+	}
+
 	JWTAuthResponse struct {
 		Expires   func(childComplexity int) int
 		Threshold func(childComplexity int) int
@@ -48,6 +53,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		DeleteUser   func(childComplexity int, input models.HTTPDeleteUserRequest) int
 		LoginUser    func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat     func(childComplexity int, currency string) int
 		RefreshToken func(childComplexity int) int
 		RegisterUser func(childComplexity int, input *models1.UserAccount) int
 	}
@@ -71,6 +77,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "FiatOpenAccountResponse.clientID":
+		if e.complexity.FiatOpenAccountResponse.ClientID == nil {
+			break
+		}
+
+		return e.complexity.FiatOpenAccountResponse.ClientID(childComplexity), true
+
+	case "FiatOpenAccountResponse.currency":
+		if e.complexity.FiatOpenAccountResponse.Currency == nil {
+			break
+		}
+
+		return e.complexity.FiatOpenAccountResponse.Currency(childComplexity), true
 
 	case "JWTAuthResponse.expires":
 		if e.complexity.JWTAuthResponse.Expires == nil {
@@ -116,6 +136,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.LoginUser(childComplexity, args["input"].(models1.UserLoginCredentials)), true
+
+	case "Mutation.openFiat":
+		if e.complexity.Mutation.OpenFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_openFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpenFiat(childComplexity, args["currency"].(string)), true
 
 	case "Mutation.refreshToken":
 		if e.complexity.Mutation.RefreshToken == nil {
@@ -219,6 +251,18 @@ type JWTAuthResponse {
     token: String!
     expires: Int64!
     threshold: Int64!
+}
+`, BuiltIn: false},
+	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned
+type FiatOpenAccountResponse {
+    clientID: String!
+    currency: String!
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # Open a Fiat account if it does not already exist.
+    openFiat(currency: String!): FiatOpenAccountResponse!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {

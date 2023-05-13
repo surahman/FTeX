@@ -142,7 +142,7 @@ _Request:_ A valid JWT must be provided in the request header and will be valida
 
 ```graphql
 mutation {
-  refreshToken() {
+  refreshToken {
     token
     expires
     threshold
@@ -173,3 +173,34 @@ _Response:_ A confirmation message will be returned as a success response.
 
 
 <br/>
+
+
+<br/>
+
+### Fiat Account Mutations
+
+#### Open Account
+
+_Request:_ All fields are required.
+
+```graphql
+mutation {
+    openFiat(currency: "USD") {
+        clientID,
+        currency
+    }
+}
+```
+
+_Response:_ Confirmation information containing the `Client ID` and `Currency` of the newly opened account.
+
+```json
+{
+  "data": {
+    "openFiat": {
+      "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+      "currency": "USD"
+    }
+  }
+}
+```
