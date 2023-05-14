@@ -1,0 +1,30 @@
+# FiatOpenAccountResponse is the response returned
+type FiatOpenAccountResponse {
+    clientID: String!
+    currency: String!
+}
+
+# FiatDepositResponse is the response to a Fiat currency deposit from an external source.
+type FiatDepositResponse {
+    txId: String!
+    clientId: String!
+    txTimestamp: String!
+    balance: String!
+    lastTx: String!
+    currency: String!
+}
+
+# FiatDepositRequest is a request to deposit Fiat currency from an external source.
+input FiatDepositRequest {
+    amount: Float!
+    currency: String!
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # openFiat is a request to open an account if it does not already exist.
+    openFiat(currency: String!): FiatOpenAccountResponse!
+
+    # depositFiat is a request to deposit Fiat currency from an external source.
+    depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
+}

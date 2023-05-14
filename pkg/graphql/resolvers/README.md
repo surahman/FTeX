@@ -142,7 +142,7 @@ _Request:_ A valid JWT must be provided in the request header and will be valida
 
 ```graphql
 mutation {
-  refreshToken() {
+  refreshToken {
     token
     expires
     threshold
@@ -173,3 +173,70 @@ _Response:_ A confirmation message will be returned as a success response.
 
 
 <br/>
+
+
+### Fiat Account Mutations
+
+#### Open Account
+
+_Request:_ All fields are required.
+
+```graphql
+mutation {
+    openFiat(currency: "USD") {
+        clientID,
+        currency
+    }
+}
+```
+
+_Response:_ Confirmation information containing the `Client ID` and `Currency` of the newly opened account.
+
+```json
+{
+  "data": {
+    "openFiat": {
+      "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+      "currency": "USD"
+    }
+  }
+}
+```
+
+#### Deposit
+
+Deposit money into a Fiat account for a specific currency and amount. An account for the currency must already be opened
+for the deposit to succeed.
+
+_Request:_ All fields are required.
+```graphql
+mutation {
+    depositFiat(input: {
+        amount:1345.67,
+        currency: "USD"
+    }) {
+        txId,
+        clientId,
+        txTimestamp,
+        balance,
+        lastTx,
+        currency
+    }
+}
+```
+
+_Response:_ A confirmation of the transaction with the particulars of the transfer.
+```json
+{
+  "data": {
+    "depositFiat": {
+      "txId": "8522591d-6463-4cc6-9e3c-c456c98a6755",
+      "clientId": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+      "txTimestamp": "2023-05-14 11:57:47.796057 -0400 EDT",
+      "balance": "14170.02",
+      "lastTx": "1345.67",
+      "currency": "USD"
+    }
+  }
+}
+```

@@ -71,7 +71,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDele
 	// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
 	// credentials.
 	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
-		return "", err
+		return "", errors.New("authorization failure")
 	}
 
 	// Get user account information to validate against.
@@ -158,7 +158,7 @@ func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthRes
 	// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
 	// credentials.
 	if clientID, expiresAt, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
-		return freshToken, err
+		return freshToken, errors.New("authorization failure")
 	}
 
 	if accountInfo, err = r.db.UserGetInfo(clientID); err != nil {

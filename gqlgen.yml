@@ -87,3 +87,9 @@ models:
   DeleteUserRequest:
     model:
       - models.HTTPDeleteUserRequest
+  FiatDepositRequest:
+    model:
+      - models.HTTPDepositCurrencyRequest
+  FiatDepositResponse:
+    model:
+      - github.com/surahman/FTeX/pkg/postgres.FiatAccountTransferResult

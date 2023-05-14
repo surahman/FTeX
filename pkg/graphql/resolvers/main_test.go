@@ -13,11 +13,14 @@ import (
 // zapLogger is the Zap logger used strictly for the test suite in this package.
 var zapLogger *logger.Logger
 
-// testQuizData is the test quiz data.
+// testAuthHeaderKey is the authorization header key.
 var testAuthHeaderKey = "Authorization"
 
-// testQuizData is the test user queries.
+// testUserQuery is the test user account related queries.
 var testUserQuery = getUsersQuery()
+
+// testFiatQuery is the test Fiat related queries.
+var testFiatQuery = getFiatQuery()
 
 func TestMain(m *testing.M) {
 	var err error

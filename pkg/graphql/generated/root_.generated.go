@@ -31,14 +31,30 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	FiatDepositResponse() FiatDepositResponseResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
+	FiatDepositRequest() FiatDepositRequestResolver
 }
 
 type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	FiatDepositResponse struct {
+		Balance     func(childComplexity int) int
+		ClientID    func(childComplexity int) int
+		Currency    func(childComplexity int) int
+		LastTx      func(childComplexity int) int
+		TxID        func(childComplexity int) int
+		TxTimestamp func(childComplexity int) int
+	}
+
+	FiatOpenAccountResponse struct {
+		ClientID func(childComplexity int) int
+		Currency func(childComplexity int) int
+	}
+
 	JWTAuthResponse struct {
 		Expires   func(childComplexity int) int
 		Threshold func(childComplexity int) int
@@ -47,7 +63,9 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		DeleteUser   func(childComplexity int, input models.HTTPDeleteUserRequest) int
+		DepositFiat  func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
 		LoginUser    func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat     func(childComplexity int, currency string) int
 		RefreshToken func(childComplexity int) int
 		RegisterUser func(childComplexity int, input *models1.UserAccount) int
 	}
@@ -71,6 +89,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "FiatDepositResponse.balance":
+		if e.complexity.FiatDepositResponse.Balance == nil {
+			break
+		}
+
+		return e.complexity.FiatDepositResponse.Balance(childComplexity), true
+
+	case "FiatDepositResponse.clientId":
+		if e.complexity.FiatDepositResponse.ClientID == nil {
+			break
+		}
+
+		return e.complexity.FiatDepositResponse.ClientID(childComplexity), true
+
+	case "FiatDepositResponse.currency":
+		if e.complexity.FiatDepositResponse.Currency == nil {
+			break
+		}
+
+		return e.complexity.FiatDepositResponse.Currency(childComplexity), true
+
+	case "FiatDepositResponse.lastTx":
+		if e.complexity.FiatDepositResponse.LastTx == nil {
+			break
+		}
+
+		return e.complexity.FiatDepositResponse.LastTx(childComplexity), true
+
+	case "FiatDepositResponse.txId":
+		if e.complexity.FiatDepositResponse.TxID == nil {
+			break
+		}
+
+		return e.complexity.FiatDepositResponse.TxID(childComplexity), true
+
+	case "FiatDepositResponse.txTimestamp":
+		if e.complexity.FiatDepositResponse.TxTimestamp == nil {
+			break
+		}
+
+		return e.complexity.FiatDepositResponse.TxTimestamp(childComplexity), true
+
+	case "FiatOpenAccountResponse.clientID":
+		if e.complexity.FiatOpenAccountResponse.ClientID == nil {
+			break
+		}
+
+		return e.complexity.FiatOpenAccountResponse.ClientID(childComplexity), true
+
+	case "FiatOpenAccountResponse.currency":
+		if e.complexity.FiatOpenAccountResponse.Currency == nil {
+			break
+		}
+
+		return e.complexity.FiatOpenAccountResponse.Currency(childComplexity), true
 
 	case "JWTAuthResponse.expires":
 		if e.complexity.JWTAuthResponse.Expires == nil {
@@ -105,6 +179,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["input"].(models.HTTPDeleteUserRequest)), true
 
+	case "Mutation.depositFiat":
+		if e.complexity.Mutation.DepositFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_depositFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DepositFiat(childComplexity, args["input"].(models.HTTPDepositCurrencyRequest)), true
+
 	case "Mutation.loginUser":
 		if e.complexity.Mutation.LoginUser == nil {
 			break
@@ -116,6 +202,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.LoginUser(childComplexity, args["input"].(models1.UserLoginCredentials)), true
+
+	case "Mutation.openFiat":
+		if e.complexity.Mutation.OpenFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_openFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpenFiat(childComplexity, args["currency"].(string)), true
 
 	case "Mutation.refreshToken":
 		if e.complexity.Mutation.RefreshToken == nil {
@@ -152,6 +250,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputDeleteUserRequest,
+		ec.unmarshalInputFiatDepositRequest,
 		ec.unmarshalInputUserAccount,
 		ec.unmarshalInputUserLoginCredentials,
 	)
@@ -219,6 +318,37 @@ type JWTAuthResponse {
     token: String!
     expires: Int64!
     threshold: Int64!
+}
+`, BuiltIn: false},
+	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned
+type FiatOpenAccountResponse {
+    clientID: String!
+    currency: String!
+}
+
+# FiatDepositResponse is the response to a Fiat currency deposit from an external source.
+type FiatDepositResponse {
+    txId: String!
+    clientId: String!
+    txTimestamp: String!
+    balance: String!
+    lastTx: String!
+    currency: String!
+}
+
+# FiatDepositRequest is a request to deposit Fiat currency from an external source.
+input FiatDepositRequest {
+    amount: Float!
+    currency: String!
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # openFiat is a request to open an account if it does not already exist.
+    openFiat(currency: String!): FiatOpenAccountResponse!
+
+    # depositFiat is a request to deposit Fiat currency from an external source.
+    depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
