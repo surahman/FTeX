@@ -31,10 +31,16 @@ func getUsersQuery() map[string]string {
 }
 
 // getFiatQuery is a map of test Fiat queries.
+//
+//nolint:lll
 func getFiatQuery() map[string]string {
 	return map[string]string{
 		"openFiat": `{
 		"query": "mutation { openFiat(currency: \"%s\") { clientID, currency }}"
+		}`,
+
+		"depositFiat": `{
+		"query": "mutation { depositFiat(input: { amount:%f, currency: \"%s\" }) { txId, clientId, txTimestamp, balance, lastTx, currency } }"
 		}`,
 	}
 }
