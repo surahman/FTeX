@@ -32,9 +32,12 @@ type Config struct {
 
 type ResolverRoot interface {
 	FiatDepositResponse() FiatDepositResponseResolver
+	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
 	Mutation() MutationResolver
+	PriceQuote() PriceQuoteResolver
 	Query() QueryResolver
 	FiatDepositRequest() FiatDepositRequestResolver
+	FiatExchangeOfferRequest() FiatExchangeOfferRequestResolver
 }
 
 type DirectiveRoot struct {
@@ -50,6 +53,18 @@ type ComplexityRoot struct {
 		TxTimestamp func(childComplexity int) int
 	}
 
+	FiatExchangeOfferResponse struct {
+		DebitAmount func(childComplexity int) int
+		Expires     func(childComplexity int) int
+		OfferID     func(childComplexity int) int
+		PriceQuote  func(childComplexity int) int
+	}
+
+	FiatExchangeTransferResponse struct {
+		DestinationReceipt func(childComplexity int) int
+		SourceReceipt      func(childComplexity int) int
+	}
+
 	FiatOpenAccountResponse struct {
 		ClientID func(childComplexity int) int
 		Currency func(childComplexity int) int
@@ -62,12 +77,22 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		DeleteUser   func(childComplexity int, input models.HTTPDeleteUserRequest) int
-		DepositFiat  func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
-		LoginUser    func(childComplexity int, input models1.UserLoginCredentials) int
-		OpenFiat     func(childComplexity int, currency string) int
-		RefreshToken func(childComplexity int) int
-		RegisterUser func(childComplexity int, input *models1.UserAccount) int
+		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
+		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
+		ExchangeOfferFiat    func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
+		ExchangeTransferFiat func(childComplexity int, offerID string) int
+		LoginUser            func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat             func(childComplexity int, currency string) int
+		RefreshToken         func(childComplexity int) int
+		RegisterUser         func(childComplexity int, input *models1.UserAccount) int
+	}
+
+	PriceQuote struct {
+		Amount         func(childComplexity int) int
+		ClientID       func(childComplexity int) int
+		DestinationAcc func(childComplexity int) int
+		Rate           func(childComplexity int) int
+		SourceAcc      func(childComplexity int) int
 	}
 
 	Query struct {
@@ -132,6 +157,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FiatDepositResponse.TxTimestamp(childComplexity), true
 
+	case "FiatExchangeOfferResponse.debitAmount":
+		if e.complexity.FiatExchangeOfferResponse.DebitAmount == nil {
+			break
+		}
+
+		return e.complexity.FiatExchangeOfferResponse.DebitAmount(childComplexity), true
+
+	case "FiatExchangeOfferResponse.expires":
+		if e.complexity.FiatExchangeOfferResponse.Expires == nil {
+			break
+		}
+
+		return e.complexity.FiatExchangeOfferResponse.Expires(childComplexity), true
+
+	case "FiatExchangeOfferResponse.offerID":
+		if e.complexity.FiatExchangeOfferResponse.OfferID == nil {
+			break
+		}
+
+		return e.complexity.FiatExchangeOfferResponse.OfferID(childComplexity), true
+
+	case "FiatExchangeOfferResponse.priceQuote":
+		if e.complexity.FiatExchangeOfferResponse.PriceQuote == nil {
+			break
+		}
+
+		return e.complexity.FiatExchangeOfferResponse.PriceQuote(childComplexity), true
+
+	case "FiatExchangeTransferResponse.destinationReceipt":
+		if e.complexity.FiatExchangeTransferResponse.DestinationReceipt == nil {
+			break
+		}
+
+		return e.complexity.FiatExchangeTransferResponse.DestinationReceipt(childComplexity), true
+
+	case "FiatExchangeTransferResponse.sourceReceipt":
+		if e.complexity.FiatExchangeTransferResponse.SourceReceipt == nil {
+			break
+		}
+
+		return e.complexity.FiatExchangeTransferResponse.SourceReceipt(childComplexity), true
+
 	case "FiatOpenAccountResponse.clientID":
 		if e.complexity.FiatOpenAccountResponse.ClientID == nil {
 			break
@@ -191,6 +258,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DepositFiat(childComplexity, args["input"].(models.HTTPDepositCurrencyRequest)), true
 
+	case "Mutation.exchangeOfferFiat":
+		if e.complexity.Mutation.ExchangeOfferFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_exchangeOfferFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExchangeOfferFiat(childComplexity, args["input"].(models.HTTPFiatExchangeOfferRequest)), true
+
+	case "Mutation.exchangeTransferFiat":
+		if e.complexity.Mutation.ExchangeTransferFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_exchangeTransferFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExchangeTransferFiat(childComplexity, args["offerID"].(string)), true
+
 	case "Mutation.loginUser":
 		if e.complexity.Mutation.LoginUser == nil {
 			break
@@ -234,6 +325,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
+	case "PriceQuote.amount":
+		if e.complexity.PriceQuote.Amount == nil {
+			break
+		}
+
+		return e.complexity.PriceQuote.Amount(childComplexity), true
+
+	case "PriceQuote.clientID":
+		if e.complexity.PriceQuote.ClientID == nil {
+			break
+		}
+
+		return e.complexity.PriceQuote.ClientID(childComplexity), true
+
+	case "PriceQuote.destinationAcc":
+		if e.complexity.PriceQuote.DestinationAcc == nil {
+			break
+		}
+
+		return e.complexity.PriceQuote.DestinationAcc(childComplexity), true
+
+	case "PriceQuote.rate":
+		if e.complexity.PriceQuote.Rate == nil {
+			break
+		}
+
+		return e.complexity.PriceQuote.Rate(childComplexity), true
+
+	case "PriceQuote.sourceAcc":
+		if e.complexity.PriceQuote.SourceAcc == nil {
+			break
+		}
+
+		return e.complexity.PriceQuote.SourceAcc(childComplexity), true
+
 	case "Query.healthcheck":
 		if e.complexity.Query.Healthcheck == nil {
 			break
@@ -251,6 +377,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputDeleteUserRequest,
 		ec.unmarshalInputFiatDepositRequest,
+		ec.unmarshalInputFiatExchangeOfferRequest,
 		ec.unmarshalInputUserAccount,
 		ec.unmarshalInputUserLoginCredentials,
 	)
@@ -336,10 +463,31 @@ type FiatDepositResponse {
     currency: String!
 }
 
+# FiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type FiatExchangeOfferResponse {
+    priceQuote: PriceQuote!
+    debitAmount: Float!
+    offerID: String!
+    expires: Int64!
+}
+
+# FiatExchangeTransferResponse
+type FiatExchangeTransferResponse {
+    sourceReceipt: FiatDepositResponse!
+    destinationReceipt: FiatDepositResponse!
+}
+
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
     amount: Float!
     currency: String!
+}
+
+# FiatExchangeOfferRequest is a request to exchange Fiat currency from one to another.
+input FiatExchangeOfferRequest {
+    sourceCurrency: String!
+    destinationCurrency: String!
+    sourceAmount: Float!
 }
 
 # Requests that might alter the state of data in the database.
@@ -349,14 +497,31 @@ extend type Mutation {
 
     # depositFiat is a request to deposit Fiat currency from an external source.
     depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
+
+    # exchangeOfferFiat is a request for an exchange quote. The exchange quote provided will expire after a fixed period.
+    exchangeOfferFiat(input: FiatExchangeOfferRequest!): FiatExchangeOfferResponse!
+
+    # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
+    exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
+
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
     healthcheck: String!
 }
 `, BuiltIn: false},
+	{Name: "../schema/redis.graphqls", Input: `# PriceQuote is the quote provided to the end-user requesting a transfer and will be stored in the Redis cache.
+type PriceQuote {
+    clientID: UUID!
+    sourceAcc: String!
+    destinationAcc: String!
+    rate: Float!
+    amount: Float!
+}
+`, BuiltIn: false},
 	{Name: "../schema/scalars.graphqls", Input: `scalar Int32
 scalar Int64
+scalar UUID
 `, BuiltIn: false},
 	{Name: "../schema/user.graphqls", Input: `# User account information.
 input UserAccount {

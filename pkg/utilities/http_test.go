@@ -1,16 +1,218 @@
 package utilities
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
+	"github.com/surahman/FTeX/pkg/mocks"
+	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/redis"
 )
+
+func TestUtilities_HTTPValidateSourceDestinationAmount(t *testing.T) {
+	t.Parallel()
+
+	amountValid, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid amount.")
+
+	amountInvalidNegative, err := decimal.NewFromString("-10101.11")
+	require.NoError(t, err, "failed to parse invalid negative amount")
+
+	amountInvalidDecimal, err := decimal.NewFromString("10101.111")
+	require.NoError(t, err, "failed to parse invalid decimal amount")
+
+	testCases := []struct {
+		name         string
+		expectErrMsg string
+		srcCurrency  string
+		dstCurrency  string
+		amount       decimal.Decimal
+		expectErr    require.ErrorAssertionFunc
+	}{
+		{
+			name:         "valid",
+			expectErrMsg: "",
+			srcCurrency:  "USD",
+			dstCurrency:  "CAD",
+			amount:       amountValid,
+			expectErr:    require.NoError,
+		}, {
+			name:         "invalid source currency",
+			expectErrMsg: "source currency",
+			srcCurrency:  "INVALID",
+			dstCurrency:  "CAD",
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid destination currency",
+			expectErrMsg: "destination currency",
+			srcCurrency:  "USD",
+			dstCurrency:  "INVALID",
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid negative amount",
+			expectErrMsg: "source amount",
+			srcCurrency:  "USD",
+			dstCurrency:  "CAD",
+			amount:       amountInvalidNegative,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid decimal amount",
+			expectErrMsg: "source amount",
+			srcCurrency:  "USD",
+			dstCurrency:  "CAD",
+			amount:       amountInvalidDecimal,
+			expectErr:    require.Error,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			src, dst, err := HTTPValidateSourceDestinationAmount(test.srcCurrency, test.dstCurrency, test.amount)
+			test.expectErr(t, err, "error expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+
+				return
+			}
+
+			require.Equal(t, src, postgres.Currency(test.srcCurrency), "source currency mismatched.")
+			require.Equal(t, dst, postgres.Currency(test.dstCurrency), "destination currency mismatched.")
+		})
+	}
+}
+
+func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name          string
+		expectErrMsg  string
+		expectStatus  int
+		expectErr     require.ErrorAssertionFunc
+		redisGetErr   error
+		redisGetData  models.HTTPFiatExchangeOfferResponse
+		redisGetTimes int
+		redisDelErr   error
+		redisDelTimes int
+	}{
+		{
+			name:          "get unknown error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   errors.New("unknown error"),
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 0,
+		}, {
+			name:          "get unknown package error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   redis.ErrCacheUnknown,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 0,
+		}, {
+			name:          "get package error",
+			expectErrMsg:  "expired",
+			expectStatus:  http.StatusRequestTimeout,
+			expectErr:     require.Error,
+			redisGetErr:   redis.ErrCacheMiss,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 0,
+		}, {
+			name:          "del unknown error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   errors.New("unknown error"),
+			redisDelTimes: 1,
+		}, {
+			name:          "del unknown package error",
+			expectErrMsg:  "retry",
+			expectStatus:  http.StatusInternalServerError,
+			expectErr:     require.Error,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   redis.ErrCacheUnknown,
+			redisDelTimes: 1,
+		}, {
+			name:          "del cache miss",
+			expectErrMsg:  "",
+			expectStatus:  http.StatusOK,
+			expectErr:     require.NoError,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   redis.ErrCacheMiss,
+			redisDelTimes: 1,
+		}, {
+			name:          "valid",
+			expectErrMsg:  "",
+			expectStatus:  http.StatusOK,
+			expectErr:     require.NoError,
+			redisGetErr:   nil,
+			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetTimes: 1,
+			redisDelErr:   nil,
+			redisDelTimes: 1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockCache := mocks.NewMockRedis(mockCtrl)
+
+			gomock.InOrder(
+				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(test.redisGetErr).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockCache.EXPECT().Del(gomock.Any()).
+					Return(test.redisDelErr).
+					Times(test.redisDelTimes),
+			)
+
+			_, status, msg, err := HTTPGetCachedOffer(mockCache, zapLogger, "SOME-OFFER-ID")
+			test.expectErr(t, err, "error expectation failed.")
+			require.Equal(t, test.expectStatus, status, "expected and actual status codes did not match.")
+			require.Contains(t, msg, test.expectErrMsg, "expected error message did not match.")
+		})
+	}
+}
 
 func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	t.Parallel()

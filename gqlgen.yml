@@ -93,3 +93,9 @@ models:
   FiatDepositResponse:
     model:
       - github.com/surahman/FTeX/pkg/postgres.FiatAccountTransferResult
+  FiatExchangeOfferRequest:
+    model:
+      - github.com/surahman/FTeX/pkg/models.HTTPFiatExchangeOfferRequest
+  FiatExchangeOfferResponse:
+    model:
+      - github.com/surahman/FTeX/pkg/models.HTTPFiatExchangeOfferResponse

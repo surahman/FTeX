@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -8,12 +9,78 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
+	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/redis"
 	"go.uber.org/zap"
 )
+
+// HTTPValidateSourceDestinationAmount will validate the source and destination accounts as well as the source amount.
+func HTTPValidateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal) (
+	postgres.Currency, postgres.Currency, error) {
+	var (
+		err         error
+		source      postgres.Currency
+		destination postgres.Currency
+	)
+
+	// Extract and validate the currency.
+	if err = source.Scan(src); err != nil || !source.Valid() {
+		return source, destination, fmt.Errorf("invalid source currency %s", src)
+	}
+
+	if err = destination.Scan(dst); err != nil || !destination.Valid() {
+		return source, destination, fmt.Errorf("invalid destination currency %s", dst)
+	}
+
+	// Check for correct decimal places.
+	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || sourceAmount.IsNegative() {
+		return source, destination, fmt.Errorf("invalid source amount %s", sourceAmount.String())
+	}
+
+	return source, destination, nil
+}
+
+// HTTPGetCachedOffer will retrieve and then evict an offer from the Redis cache.
+func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
+	models.HTTPFiatExchangeOfferResponse, int, string, error) {
+	var (
+		err   error
+		offer models.HTTPFiatExchangeOfferResponse
+	)
+
+	// Retrieve the offer from Redis.
+	if err = cache.Get(offerID, &offer); err != nil {
+		var redisErr *redis.Error
+
+		// If we have a valid Redis package error AND the error is that the key is not found.
+		if errors.As(err, &redisErr) && redisErr.Is(redis.ErrCacheMiss) {
+			return offer, http.StatusRequestTimeout, "Fiat exchange rate offer has expired", fmt.Errorf("%w", err)
+		}
+
+		logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+
+		return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+	}
+
+	// Remove the offer from Redis.
+	if err = cache.Del(offerID); err != nil {
+		var redisErr *redis.Error
+
+		// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
+		if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
+			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+
+			return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+		}
+	}
+
+	return offer, http.StatusOK, "", nil
+}
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit
 // and covert them to a currency and integer record limit.

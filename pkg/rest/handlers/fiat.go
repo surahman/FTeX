@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/rs/xid"
-	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
@@ -175,32 +174,6 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 	}
 }
 
-// validateSourceDestinationAmount will validate the source and destination accounts as well as the source amount.
-func validateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal) (
-	postgres.Currency, postgres.Currency, error) {
-	var (
-		err         error
-		source      postgres.Currency
-		destination postgres.Currency
-	)
-
-	// Extract and validate the currency.
-	if err = source.Scan(src); err != nil || !source.Valid() {
-		return source, destination, fmt.Errorf("invalid source currency %s", src)
-	}
-
-	if err = destination.Scan(dst); err != nil || !destination.Valid() {
-		return source, destination, fmt.Errorf("invalid destination currency %s", dst)
-	}
-
-	// Check for correct decimal places.
-	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || sourceAmount.IsNegative() {
-		return source, destination, fmt.Errorf("invalid source amount %s", sourceAmount.String())
-	}
-
-	return source, destination, nil
-}
-
 // ExchangeOfferFiat will handle an HTTP request to get an exchange offer of funds between two Fiat currencies.
 //
 //	@Summary		Exchange quote for Fiat funds between two Fiat currencies.
@@ -243,7 +216,7 @@ func ExchangeOfferFiat(
 		}
 
 		// Extract and validate the currency.
-		if _, _, err = validateSourceDestinationAmount(
+		if _, _, err = utilities.HTTPValidateSourceDestinationAmount(
 			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: "invalid request", Payload: err.Error()})
@@ -292,43 +265,6 @@ func ExchangeOfferFiat(
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "conversion rate offer", Payload: offer})
 	}
-}
-
-// getCachedOffer will retrieve and then evict an offer from the Redis cache.
-func getCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
-	models.HTTPFiatExchangeOfferResponse, int, string, error) {
-	var (
-		err   error
-		offer models.HTTPFiatExchangeOfferResponse
-	)
-
-	// Retrieve the offer from Redis.
-	if err = cache.Get(offerID, &offer); err != nil {
-		var redisErr *redis.Error
-
-		// If we have a valid Redis package error AND the error is that the key is not found.
-		if errors.As(err, &redisErr) && redisErr.Is(redis.ErrCacheMiss) {
-			return offer, http.StatusRequestTimeout, "Fiat exchange rate offer has expired", fmt.Errorf("%w", err)
-		}
-
-		logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
-
-		return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
-	}
-
-	// Remove the offer from Redis.
-	if err = cache.Del(offerID); err != nil {
-		var redisErr *redis.Error
-
-		// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
-		if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
-			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
-
-			return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
-		}
-	}
-
-	return offer, http.StatusOK, "", nil
 }
 
 // ExchangeTransferFiat will handle an HTTP request to execute and complete a Fiat currency exchange offer.
@@ -404,7 +340,7 @@ func ExchangeTransferFiat(
 				status int
 				msg    string
 			)
-			if offer, status, msg, err = getCachedOffer(cache, logger, offerID); err != nil {
+			if offer, status, msg, err = utilities.HTTPGetCachedOffer(cache, logger, offerID); err != nil {
 				ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: msg})
 
 				return
@@ -422,7 +358,7 @@ func ExchangeTransferFiat(
 		}
 
 		// Get currency codes.
-		if srcCurrency, dstCurrency, err = validateSourceDestinationAmount(
+		if srcCurrency, dstCurrency, err = utilities.HTTPValidateSourceDestinationAmount(
 			offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
 			logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
 				zap.Error(err))

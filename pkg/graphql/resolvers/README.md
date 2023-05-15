@@ -240,3 +240,109 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
   }
 }
 ```
+
+#### Exchange
+
+To convert between Fiat currencies, the user must maintain open accounts in both the source and destination Fiat currencies.
+The amount specified will be in the source currency and the amount to deposit into the destination account will be calculated
+based on the exchange rate.
+
+The workflow will involve getting a conversion rate quote, referred to as an `Offer`. The returned rate quote `Offer` will
+only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
+must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
+
+##### Quote
+
+_Request:_ All fields are required.
+```graphql
+mutation {
+    exchangeOfferFiat(input: {
+        sourceCurrency:"USD"
+        destinationCurrency: "CAD"
+        sourceAmount: 100.11
+    }) {
+        priceQuote{
+            clientID,
+            sourceAcc,
+            destinationAcc,
+            rate,
+            amount
+        },
+        debitAmount,
+        offerID,
+        expires
+    }
+}
+```
+
+_Response:_ A rate quote with an encrypted `Offer ID`.
+```json
+{
+  "data": {
+    "exchangeOfferFiat": {
+      "priceQuote": {
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "sourceAcc": "USD",
+        "destinationAcc": "CAD",
+        "rate": 1.355365,
+        "amount": 135.69
+      },
+      "debitAmount": 100.11,
+      "offerID": "ME0pUhmOJRescxQx7IhJYrgIxeSJ-P4dABP2QVFbr5FGlu-yI_4GoGJ0oW23KTGf",
+      "expires": 1684116836
+    }
+  }
+}
+```
+
+##### Convert
+
+_Request:_ All fields are required.
+```grpahql
+mutation {
+	exchangeTransferFiat(offerID: "-ptOjSHs3cw3eTw_1NuInn4w8OvI8hzFzChol7NRpKIHMDL234B_E1Fcq5Z6Zl4K") {
+    sourceReceipt {
+    	txId,
+    	clientId,
+    	txTimestamp,
+    	balance,
+    	lastTx,
+    	currency
+    },
+    destinationReceipt {
+    	txId,
+    	clientId,
+    	txTimestamp,
+    	balance,
+    	lastTx,
+    	currency
+    }
+  }
+}
+```
+
+_Response:_ A transaction receipt with the details of the source and destination accounts and transaction details.
+```json
+{
+  "data": {
+    "exchangeTransferFiat": {
+      "sourceReceipt": {
+        "txId": "043d82a9-113b-4aa7-a3e1-029cc4728926",
+        "clientId": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txTimestamp": "2023-05-15 16:59:24.243332 -0400 EDT",
+        "balance": "13569.36",
+        "lastTx": "-100.11",
+        "currency": "USD"
+      },
+      "destinationReceipt": {
+        "txId": "043d82a9-113b-4aa7-a3e1-029cc4728926",
+        "clientId": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txTimestamp": "2023-05-15 16:59:24.243332 -0400 EDT",
+        "balance": "369283.5",
+        "lastTx": "134.75",
+        "currency": "CAD"
+      }
+    }
+  }
+}
+```

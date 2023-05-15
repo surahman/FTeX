@@ -2,6 +2,15 @@
 
 package models
 
+import (
+	"github.com/surahman/FTeX/pkg/postgres"
+)
+
+type FiatExchangeTransferResponse struct {
+	SourceReceipt      *postgres.FiatAccountTransferResult `json:"sourceReceipt"`
+	DestinationReceipt *postgres.FiatAccountTransferResult `json:"destinationReceipt"`
+}
+
 type FiatOpenAccountResponse struct {
 	ClientID string `json:"clientID"`
 	Currency string `json:"currency"`

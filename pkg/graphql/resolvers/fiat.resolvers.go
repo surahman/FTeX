@@ -8,13 +8,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/constants"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/utilities"
 	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -47,6 +50,11 @@ func (r *fiatDepositResponseResolver) LastTx(ctx context.Context, obj *postgres.
 // Currency is the resolver for the currency field.
 func (r *fiatDepositResponseResolver) Currency(ctx context.Context, obj *postgres.FiatAccountTransferResult) (string, error) {
 	return string(obj.Currency), nil
+}
+
+// DebitAmount is the resolver for the DebitAmount field.
+func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferResponse) (float64, error) {
+	return obj.DebitAmount.InexactFloat64(), nil
 }
 
 // OpenFiat is the resolver for the openFiat field.
@@ -125,9 +133,144 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 	return transferReceipt, nil
 }
 
+// ExchangeOfferFiat is the resolver for the exchangeOfferFiat field.
+func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPFiatExchangeOfferRequest) (*models.HTTPFiatExchangeOfferResponse, error) {
+	var (
+		err     error
+		offer   models.HTTPFiatExchangeOfferResponse
+		offerID = xid.New().String()
+	)
+
+	if err = validator.ValidateStruct(&input); err != nil {
+		return nil, fmt.Errorf("validation %w", err)
+	}
+
+	// Extract and validate the currency.
+	if _, _, err = utilities.HTTPValidateSourceDestinationAmount(
+		input.SourceCurrency, input.DestinationCurrency, input.SourceAmount); err != nil {
+
+		return nil, errors.New("invalid request")
+	}
+
+	if offer.ClientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	// Compile exchange rate offer.
+	if offer.Rate, offer.Amount, err = r.quotes.FiatConversion(
+		input.SourceCurrency, input.DestinationCurrency, input.SourceAmount, nil); err != nil {
+		r.logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	offer.SourceAcc = input.SourceCurrency
+	offer.DestinationAcc = input.DestinationCurrency
+	offer.DebitAmount = input.SourceAmount
+	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+
+	// Encrypt offer ID before returning to client.
+	if offer.OfferID, err = r.auth.EncryptToString([]byte(offerID)); err != nil {
+		r.logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	// Store the offer in Redis.
+	if err = r.cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+		r.logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	return &offer, nil
+}
+
+// ExchangeTransferFiat is the resolver for the exchangeTransferFiat field.
+func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.FiatExchangeTransferResponse, error) {
+	var (
+		err         error
+		clientID    uuid.UUID
+		offer       models.HTTPFiatExchangeOfferResponse
+		receipt     models.FiatExchangeTransferResponse
+		srcCurrency postgres.Currency
+		dstCurrency postgres.Currency
+	)
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	// Extract Offer ID from request.
+	{
+		var rawOfferID []byte
+		if rawOfferID, err = r.auth.DecryptFromString(offerID); err != nil {
+			r.logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		offerID = string(rawOfferID)
+	}
+
+	// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
+	// the offer. If a database update fails below this point the user will need to re-request an offer.
+	{
+		var msg string
+		if offer, _, msg, err = utilities.HTTPGetCachedOffer(r.cache, r.logger, offerID); err != nil {
+			return nil, errors.New(msg)
+		}
+	}
+
+	// Verify that the client IDs match.
+	if clientID != offer.ClientID {
+		r.logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
+			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	// Get currency codes.
+	if srcCurrency, dstCurrency, err = utilities.HTTPValidateSourceDestinationAmount(
+		offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
+		r.logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
+			zap.Error(err))
+
+		return nil, errors.New(err.Error())
+	}
+
+	// Execute exchange.
+	srcTxDetails := &postgres.FiatTransactionDetails{
+		ClientID: offer.ClientID,
+		Currency: srcCurrency,
+		Amount:   offer.DebitAmount,
+	}
+	dstTxDetails := &postgres.FiatTransactionDetails{
+		ClientID: offer.ClientID,
+		Currency: dstCurrency,
+		Amount:   offer.Amount,
+	}
+
+	if receipt.SourceReceipt, receipt.DestinationReceipt, err = r.db.
+		FiatInternalTransfer(context.Background(), srcTxDetails, dstTxDetails); err != nil {
+		r.logger.Warn("failed to complete internal Fiat transfer", zap.Error(err))
+
+		return nil, errors.New("please check you have both currency accounts and enough funds")
+	}
+
+	return &receipt, nil
+}
+
 // Amount is the resolver for the amount field.
 func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error {
 	obj.Amount = decimal.NewFromFloat(data)
+
+	return nil
+}
+
+// SourceAmount is the resolver for the sourceAmount field.
+func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferRequest, data float64) error {
+	obj.SourceAmount = decimal.NewFromFloat(data)
 
 	return nil
 }
@@ -137,10 +280,22 @@ func (r *Resolver) FiatDepositResponse() graphql_generated.FiatDepositResponseRe
 	return &fiatDepositResponseResolver{r}
 }
 
+// FiatExchangeOfferResponse returns graphql_generated.FiatExchangeOfferResponseResolver implementation.
+func (r *Resolver) FiatExchangeOfferResponse() graphql_generated.FiatExchangeOfferResponseResolver {
+	return &fiatExchangeOfferResponseResolver{r}
+}
+
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
 func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver {
 	return &fiatDepositRequestResolver{r}
 }
 
+// FiatExchangeOfferRequest returns graphql_generated.FiatExchangeOfferRequestResolver implementation.
+func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOfferRequestResolver {
+	return &fiatExchangeOfferRequestResolver{r}
+}
+
 type fiatDepositResponseResolver struct{ *Resolver }
+type fiatExchangeOfferResponseResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
+type fiatExchangeOfferRequestResolver struct{ *Resolver }
