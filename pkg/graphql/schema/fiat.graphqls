@@ -22,6 +22,12 @@ type FiatExchangeOfferResponse {
     expires: Int64!
 }
 
+# FiatExchangeTransferResponse
+type FiatExchangeTransferResponse {
+    sourceReceipt: FiatDepositResponse!
+    destinationReceipt: FiatDepositResponse!
+}
+
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
     amount: Float!
@@ -45,4 +51,7 @@ extend type Mutation {
 
     # exchangeOfferFiat is a request for an exchange quote. The exchange quote provided will expire after a fixed period.
     exchangeOfferFiat(input: FiatExchangeOfferRequest!): FiatExchangeOfferResponse!
+
+    # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
+    exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
 }

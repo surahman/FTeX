@@ -298,32 +298,50 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 ##### Convert
 
 _Request:_ All fields are required.
-```json
-{
-  "offerId": "m45QsqDVbzi2bVasVzWJ3cKPKy98BUDhyicK4cOwIbZXdydUXXMzW9PFx82OAz7y"
+```grpahql
+mutation {
+	exchangeTransferFiat(offerID: "-ptOjSHs3cw3eTw_1NuInn4w8OvI8hzFzChol7NRpKIHMDL234B_E1Fcq5Z6Zl4K") {
+    sourceReceipt {
+    	txId,
+    	clientId,
+    	txTimestamp,
+    	balance,
+    	lastTx,
+    	currency
+    },
+    destinationReceipt {
+    	txId,
+    	clientId,
+    	txTimestamp,
+    	balance,
+    	lastTx,
+    	currency
+    }
+  }
 }
 ```
 
 _Response:_ A transaction receipt with the details of the source and destination accounts and transaction details.
 ```json
 {
-  "message": "funds exchange transfer successful",
-  "payload": {
-    "sourceReceipt": {
-      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
-      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txTimestamp": "2023-04-30T17:06:54.654345-04:00",
-      "balance": "1338.43",
-      "lastTx": "-100.26",
-      "currency": "CAD"
-    },
-    "destinationReceipt": {
-      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
-      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txTimestamp": "2023-04-30T17:06:54.654345-04:00",
-      "balance": "21714.35",
-      "lastTx": "73.44",
-      "currency": "USD"
+  "data": {
+    "exchangeTransferFiat": {
+      "sourceReceipt": {
+        "txId": "043d82a9-113b-4aa7-a3e1-029cc4728926",
+        "clientId": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txTimestamp": "2023-05-15 16:59:24.243332 -0400 EDT",
+        "balance": "13569.36",
+        "lastTx": "-100.11",
+        "currency": "USD"
+      },
+      "destinationReceipt": {
+        "txId": "043d82a9-113b-4aa7-a3e1-029cc4728926",
+        "clientId": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txTimestamp": "2023-05-15 16:59:24.243332 -0400 EDT",
+        "balance": "369283.5",
+        "lastTx": "134.75",
+        "currency": "CAD"
+      }
     }
   }
 }

@@ -186,6 +186,81 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 	return &offer, nil
 }
 
+// ExchangeTransferFiat is the resolver for the exchangeTransferFiat field.
+func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.FiatExchangeTransferResponse, error) {
+	var (
+		err         error
+		clientID    uuid.UUID
+		offer       models.HTTPFiatExchangeOfferResponse
+		receipt     models.FiatExchangeTransferResponse
+		srcCurrency postgres.Currency
+		dstCurrency postgres.Currency
+	)
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	// Extract Offer ID from request.
+	{
+		var rawOfferID []byte
+		if rawOfferID, err = r.auth.DecryptFromString(offerID); err != nil {
+			r.logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		offerID = string(rawOfferID)
+	}
+
+	// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
+	// the offer. If a database update fails below this point the user will need to re-request an offer.
+	{
+		var msg string
+		if offer, _, msg, err = utilities.HTTPGetCachedOffer(r.cache, r.logger, offerID); err != nil {
+			return nil, errors.New(msg)
+		}
+	}
+
+	// Verify that the client IDs match.
+	if clientID != offer.ClientID {
+		r.logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
+			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
+
+		return nil, errors.New("please retry your request later")
+	}
+
+	// Get currency codes.
+	if srcCurrency, dstCurrency, err = utilities.HTTPValidateSourceDestinationAmount(
+		offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
+		r.logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
+			zap.Error(err))
+
+		return nil, errors.New(err.Error())
+	}
+
+	// Execute exchange.
+	srcTxDetails := &postgres.FiatTransactionDetails{
+		ClientID: offer.ClientID,
+		Currency: srcCurrency,
+		Amount:   offer.DebitAmount,
+	}
+	dstTxDetails := &postgres.FiatTransactionDetails{
+		ClientID: offer.ClientID,
+		Currency: dstCurrency,
+		Amount:   offer.Amount,
+	}
+
+	if receipt.SourceReceipt, receipt.DestinationReceipt, err = r.db.
+		FiatInternalTransfer(context.Background(), srcTxDetails, dstTxDetails); err != nil {
+		r.logger.Warn("failed to complete internal Fiat transfer", zap.Error(err))
+
+		return nil, errors.New("please check you have both currency accounts and enough funds")
+	}
+
+	return &receipt, nil
+}
+
 // Amount is the resolver for the amount field.
 func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error {
 	obj.Amount = decimal.NewFromFloat(data)

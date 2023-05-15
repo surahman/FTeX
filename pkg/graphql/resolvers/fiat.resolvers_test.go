@@ -21,6 +21,7 @@ import (
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
+	"github.com/surahman/FTeX/pkg/redis"
 )
 
 func TestFiatResolver_OpenFiat(t *testing.T) {
@@ -541,6 +542,292 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.redisErr).
 					Times(test.redisTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
+	t.Parallel()
+
+	validDecimal, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid decimal.")
+
+	validClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate valid client id.")
+
+	invalidClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate invalid client id.")
+
+	validOfferID := []byte("VALID")
+	validOffer := models.HTTPFiatExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	invalidOfferClientID := models.HTTPFiatExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       invalidClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	invalidOfferSource := models.HTTPFiatExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "INVALID",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		authDecryptErr       error
+		authDecryptTimes     int
+		redisGetData         models.HTTPFiatExchangeOfferResponse
+		redisGetErr          error
+		redisGetTimes        int
+		redisDelErr          error
+		redisDelTimes        int
+		internalXferErr      error
+		internalXferTimes    int
+	}{
+		{
+			name:                 "invalid JWT",
+			path:                 "/exchange-xfer-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   errors.New("bad auth"),
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     0,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        0,
+			redisDelErr:          nil,
+			redisDelTimes:        0,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "decrypt offer ID",
+			path:                 "/exchange-xfer-fiat/decrypt-offer-id",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       errors.New("decrypt offer id"),
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        0,
+			redisDelErr:          nil,
+			redisDelTimes:        0,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "cache unknown error",
+			path:                 "/exchange-xfer-fiat/cache-unknown-error",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          errors.New("unknown error"),
+			redisGetTimes:        1,
+			redisDelErr:          nil,
+			redisDelTimes:        0,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "cache expired",
+			path:                 "/exchange-xfer-fiat/cache-expired",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          redis.ErrCacheMiss,
+			redisGetTimes:        1,
+			redisDelErr:          nil,
+			redisDelTimes:        0,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "cache del failure",
+			path:                 "/exchange-xfer-fiat/cache-del-failure",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        1,
+			redisDelErr:          redis.ErrCacheUnknown,
+			redisDelTimes:        1,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "cache del expired",
+			path:                 "/exchange-xfer-fiat/cache-del-expired",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        1,
+			redisDelErr:          redis.ErrCacheMiss,
+			redisDelTimes:        1,
+			internalXferErr:      nil,
+			internalXferTimes:    1,
+		}, {
+			name:                 "client id mismatch",
+			path:                 "/exchange-xfer-fiat/client-id-mismatch",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         invalidOfferClientID,
+			redisGetErr:          nil,
+			redisGetTimes:        1,
+			redisDelErr:          nil,
+			redisDelTimes:        1,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "invalid source destination amount",
+			path:                 "/exchange-xfer-fiat/invalid-source-destination-amount",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         invalidOfferSource,
+			redisGetErr:          nil,
+			redisGetTimes:        1,
+			redisDelErr:          nil,
+			redisDelTimes:        1,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "transaction failure",
+			path:                 "/exchange-xfer-fiat/transaction-failure",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        1,
+			redisDelErr:          nil,
+			redisDelTimes:        1,
+			internalXferErr:      errors.New("transaction failure"),
+			internalXferTimes:    1,
+		}, {
+			name:                 "valid",
+			path:                 "/exchange-transfer-fiat/valid",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            false,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptErr:       nil,
+			authDecryptTimes:     1,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        1,
+			redisDelErr:          nil,
+			redisDelTimes:        1,
+			internalXferErr:      nil,
+			internalXferTimes:    1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(validClientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return(validOfferID, test.authDecryptErr).
+					Times(test.authDecryptTimes),
+
+				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(test.redisGetErr).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockRedis.EXPECT().Del(gomock.Any()).
+					Return(test.redisDelErr).
+					Times(test.redisDelTimes),
+
+				mockPostgres.EXPECT().FiatInternalTransfer(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, nil, test.internalXferErr).
+					Times(test.internalXferTimes),
 			)
 
 			// Endpoint setup for test.

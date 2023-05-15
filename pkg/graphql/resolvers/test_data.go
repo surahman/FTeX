@@ -46,5 +46,9 @@ func getFiatQuery() map[string]string {
 		"exchangeOfferFiat": `{
 		"query": "mutation { exchangeOfferFiat(input: { sourceCurrency:\"%s\" destinationCurrency: \"%s\" sourceAmount: %f }) { priceQuote{ ClientID, SourceAcc, DestinationAcc, Rate, Amount }, debitAmount, offerID, expires } }"
 		}`,
+
+		"exchangeTransferFiat": `{
+		"query": "mutation { exchangeTransferFiat(offerID: \"%s\") { sourceReceipt { txId, clientId, txTimestamp, balance, lastTx, currency }, destinationReceipt { txId, clientId, txTimestamp, balance, lastTx, currency } } }"
+		}`,
 	}
 }
