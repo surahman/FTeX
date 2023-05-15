@@ -99,3 +99,6 @@ models:
   FiatExchangeOfferResponse:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPFiatExchangeOfferResponse
+  FiatAccount:
+    model:
+      - github.com/surahman/FTeX/pkg/postgres.FiatAccount

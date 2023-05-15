@@ -28,6 +28,16 @@ type FiatExchangeTransferResponse {
     destinationReceipt: FiatDepositResponse!
 }
 
+# FiatAccount are the Fiat account details associated with a specific Client ID.
+type FiatAccount {
+    currency: String!
+    balance: Float!
+    lastTx: Float!
+    lastTxTs: String!
+    createdAt: String!
+    clientID: UUID!
+}
+
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
     amount: Float!
@@ -55,4 +65,6 @@ extend type Mutation {
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
 
+    # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
+    balanceFiat(currencyCode: String!): FiatAccount!
 }

@@ -22,6 +22,36 @@ import (
 	"go.uber.org/zap"
 )
 
+// Currency is the resolver for the currency field.
+func (r *fiatAccountResolver) Currency(ctx context.Context, obj *postgres.FiatAccount) (string, error) {
+	return string(obj.Currency), nil
+}
+
+// Balance is the resolver for the balance field.
+func (r *fiatAccountResolver) Balance(ctx context.Context, obj *postgres.FiatAccount) (float64, error) {
+	return obj.Balance.InexactFloat64(), nil
+}
+
+// LastTx is the resolver for the lastTx field.
+func (r *fiatAccountResolver) LastTx(ctx context.Context, obj *postgres.FiatAccount) (float64, error) {
+	return obj.LastTx.InexactFloat64(), nil
+}
+
+// LastTxTs is the resolver for the lastTxTs field.
+func (r *fiatAccountResolver) LastTxTs(ctx context.Context, obj *postgres.FiatAccount) (string, error) {
+	return obj.LastTxTs.Time.String(), nil
+}
+
+// CreatedAt is the resolver for the createdAt field.
+func (r *fiatAccountResolver) CreatedAt(ctx context.Context, obj *postgres.FiatAccount) (string, error) {
+	return obj.CreatedAt.Time.String(), nil
+}
+
+// ClientID is the resolver for the clientID field.
+func (r *fiatAccountResolver) ClientID(ctx context.Context, obj *postgres.FiatAccount) (string, error) {
+	return obj.ClientID.String(), nil
+}
+
 // TxID is the resolver for the txId field.
 func (r *fiatDepositResponseResolver) TxID(ctx context.Context, obj *postgres.FiatAccountTransferResult) (string, error) {
 	return obj.TxID.String(), nil
@@ -261,6 +291,16 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 	return &receipt, nil
 }
 
+// BalanceFiat is the resolver for the balanceFiat field.
+func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
+	var currency postgres.Currency
+	if err := currency.Scan(currencyCode); err != nil || !currency.Valid() {
+		return nil, errors.New("invalid currency code")
+	}
+
+	return &postgres.FiatAccount{Currency: currency}, nil
+}
+
 // Amount is the resolver for the amount field.
 func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error {
 	obj.Amount = decimal.NewFromFloat(data)
@@ -273,6 +313,11 @@ func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj
 	obj.SourceAmount = decimal.NewFromFloat(data)
 
 	return nil
+}
+
+// FiatAccount returns graphql_generated.FiatAccountResolver implementation.
+func (r *Resolver) FiatAccount() graphql_generated.FiatAccountResolver {
+	return &fiatAccountResolver{r}
 }
 
 // FiatDepositResponse returns graphql_generated.FiatDepositResponseResolver implementation.
@@ -295,6 +340,7 @@ func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOffe
 	return &fiatExchangeOfferRequestResolver{r}
 }
 
+type fiatAccountResolver struct{ *Resolver }
 type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeOfferResponseResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
