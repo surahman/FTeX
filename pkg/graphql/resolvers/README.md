@@ -353,20 +353,30 @@ _Response:_ A transaction receipt with the details of the source and destination
 
 _Request:_ A valid currency code must be provided as a parameter.
 ```graphql
-
+mutation {
+	balanceFiat(currencyCode:"USD") {
+    currency,
+    balance,
+    lastTx,
+    lastTxTs,
+    createdAt,
+    clientID
+  }
+}
 ```
 
 _Response:_ Account balance related details associated with the currency.
 ```json
 {
-  "message": "account balance",
-  "payload": {
-    "currency": "USD",
-    "balance": "22813.05",
-    "lastTx": "1098.7",
-    "lastTxTs": "2023-04-30T17:15:43.605776-04:00",
-    "createdAt": "2023-04-28T17:24:11.540235-04:00",
-    "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32"
+  "data": {
+    "balanceFiat": {
+      "currency": "USD",
+      "balance": 13569.36,
+      "lastTx": -100.11,
+      "lastTxTs": "2023-05-15 14:59:24.243332 -0400 EDT",
+      "createdAt": "2023-05-09 18:29:04.345387 -0400 EDT",
+      "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+    }
   }
 }
 ```

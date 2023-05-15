@@ -293,12 +293,34 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 
 // BalanceFiat is the resolver for the balanceFiat field.
 func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
-	var currency postgres.Currency
-	if err := currency.Scan(currencyCode); err != nil || !currency.Valid() {
-		return nil, errors.New("invalid currency code")
+	var (
+		accDetails postgres.FiatAccount
+		clientID   uuid.UUID
+		currency   postgres.Currency
+		err        error
+	)
+
+	// Extract and validate the currency.
+	if err = currency.Scan(currencyCode); err != nil || !currency.Valid() {
+		return nil, errors.New("invalid currency")
 	}
 
-	return &postgres.FiatAccount{Currency: currency}, nil
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if accDetails, err = r.db.FiatBalanceCurrency(clientID, currency); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			r.logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		return nil, errors.New(balanceErr.Message)
+	}
+
+	return &accDetails, nil
 }
 
 // Amount is the resolver for the amount field.

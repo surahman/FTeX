@@ -925,49 +925,110 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 	})
 }
 
-func TestFiatResolver_MutationResolver(t *testing.T) {
+func TestFiatResolver_BalanceFiat(t *testing.T) {
 	t.Parallel()
 
-	resolver := mutationResolver{}
-
 	testCases := []struct {
-		currency  string
-		expectErr require.ErrorAssertionFunc
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		fiatBalanceErr       error
+		fiatBalanceTimes     int
 	}{
 		{
-			currency:  "USD",
-			expectErr: require.NoError,
+			name:                 "invalid currency",
+			path:                 "/balance-fiat/invalid-currency",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "INVALID"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
 		}, {
-			currency:  "AED",
-			expectErr: require.NoError,
+			name:                 "invalid JWT",
+			path:                 "/balance-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
 		}, {
-			currency:  "CAD",
-			expectErr: require.NoError,
+			name:                 "unknown db error",
+			path:                 "/balance-fiat/unknown-db-error",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatBalanceErr:       errors.New("unknown error"),
+			fiatBalanceTimes:     1,
 		}, {
-			currency:  "DEPOSIT",
-			expectErr: require.NoError,
+			name:                 "known db error",
+			path:                 "/balance-fiat/known-db-error",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatBalanceErr:       postgres.ErrNotFound,
+			fiatBalanceTimes:     1,
 		}, {
-			currency:  "CRYPTO",
-			expectErr: require.NoError,
-		}, {
-			currency:  "INVALID",
-			expectErr: require.Error,
+			name:                 "valid",
+			path:                 "/balance-fiat/valid",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			expectErr:            false,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
 		},
 	}
 
 	for _, testCase := range testCases {
 		test := testCase
-		t.Run(test.currency, func(t *testing.T) {
+
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := resolver.BalanceFiat(context.TODO(), test.currency)
-			test.expectErr(t, err, "error expectation failed.")
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
 
-			if err != nil {
-				return
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().FiatBalanceCurrency(gomock.Any(), gomock.Any()).
+					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
+					Times(test.fiatBalanceTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
 			}
-
-			require.Equal(t, test.currency, string(result.Currency), "currency mismatched.")
 		})
 	}
 }
