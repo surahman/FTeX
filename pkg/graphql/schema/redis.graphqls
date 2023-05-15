@@ -1,8 +1,8 @@
 # PriceQuote is the quote provided to the end-user requesting a transfer and will be stored in the Redis cache.
 type PriceQuote {
-    ClientID: UUID!
-    SourceAcc: String!
-    DestinationAcc: String!
-    Rate: Float!
-    Amount: Float!
+    clientID: UUID!
+    sourceAcc: String!
+    destinationAcc: String!
+    rate: Float!
+    amount: Float!
 }

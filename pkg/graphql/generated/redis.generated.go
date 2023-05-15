@@ -34,8 +34,8 @@ type PriceQuoteResolver interface {
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PriceQuote_ClientID(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_ClientID(ctx, field)
+func (ec *executionContext) _PriceQuote_clientID(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PriceQuote_clientID(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -65,7 +65,7 @@ func (ec *executionContext) _PriceQuote_ClientID(ctx context.Context, field grap
 	return ec.marshalNUUID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PriceQuote_ClientID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PriceQuote_clientID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PriceQuote",
 		Field:      field,
@@ -78,8 +78,8 @@ func (ec *executionContext) fieldContext_PriceQuote_ClientID(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _PriceQuote_SourceAcc(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_SourceAcc(ctx, field)
+func (ec *executionContext) _PriceQuote_sourceAcc(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PriceQuote_sourceAcc(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -109,7 +109,7 @@ func (ec *executionContext) _PriceQuote_SourceAcc(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PriceQuote_SourceAcc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PriceQuote_sourceAcc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PriceQuote",
 		Field:      field,
@@ -122,8 +122,8 @@ func (ec *executionContext) fieldContext_PriceQuote_SourceAcc(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PriceQuote_DestinationAcc(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_DestinationAcc(ctx, field)
+func (ec *executionContext) _PriceQuote_destinationAcc(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PriceQuote_destinationAcc(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -153,7 +153,7 @@ func (ec *executionContext) _PriceQuote_DestinationAcc(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PriceQuote_DestinationAcc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PriceQuote_destinationAcc(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PriceQuote",
 		Field:      field,
@@ -166,8 +166,8 @@ func (ec *executionContext) fieldContext_PriceQuote_DestinationAcc(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _PriceQuote_Rate(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_Rate(ctx, field)
+func (ec *executionContext) _PriceQuote_rate(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PriceQuote_rate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -197,7 +197,7 @@ func (ec *executionContext) _PriceQuote_Rate(ctx context.Context, field graphql.
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PriceQuote_Rate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PriceQuote_rate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PriceQuote",
 		Field:      field,
@@ -210,8 +210,8 @@ func (ec *executionContext) fieldContext_PriceQuote_Rate(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _PriceQuote_Amount(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_Amount(ctx, field)
+func (ec *executionContext) _PriceQuote_amount(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PriceQuote_amount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -241,7 +241,7 @@ func (ec *executionContext) _PriceQuote_Amount(ctx context.Context, field graphq
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PriceQuote_Amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PriceQuote_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PriceQuote",
 		Field:      field,
@@ -276,7 +276,7 @@ func (ec *executionContext) _PriceQuote(ctx context.Context, sel ast.SelectionSe
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PriceQuote")
-		case "ClientID":
+		case "clientID":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -285,7 +285,7 @@ func (ec *executionContext) _PriceQuote(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._PriceQuote_ClientID(ctx, field, obj)
+				res = ec._PriceQuote_clientID(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -296,21 +296,21 @@ func (ec *executionContext) _PriceQuote(ctx context.Context, sel ast.SelectionSe
 				return innerFunc(ctx)
 
 			})
-		case "SourceAcc":
+		case "sourceAcc":
 
-			out.Values[i] = ec._PriceQuote_SourceAcc(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "DestinationAcc":
-
-			out.Values[i] = ec._PriceQuote_DestinationAcc(ctx, field, obj)
+			out.Values[i] = ec._PriceQuote_sourceAcc(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "Rate":
+		case "destinationAcc":
+
+			out.Values[i] = ec._PriceQuote_destinationAcc(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "rate":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -319,7 +319,7 @@ func (ec *executionContext) _PriceQuote(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._PriceQuote_Rate(ctx, field, obj)
+				res = ec._PriceQuote_rate(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -330,7 +330,7 @@ func (ec *executionContext) _PriceQuote(ctx context.Context, sel ast.SelectionSe
 				return innerFunc(ctx)
 
 			})
-		case "Amount":
+		case "amount":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -339,7 +339,7 @@ func (ec *executionContext) _PriceQuote(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._PriceQuote_Amount(ctx, field, obj)
+				res = ec._PriceQuote_amount(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

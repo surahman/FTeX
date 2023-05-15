@@ -262,11 +262,11 @@ mutation {
         sourceAmount: 100.11
     }) {
         priceQuote{
-            ClientID,
-            SourceAcc,
-            DestinationAcc,
-            Rate,
-            Amount
+            clientID,
+            sourceAcc,
+            destinationAcc,
+            rate,
+            amount
         },
         debitAmount,
         offerID,
@@ -281,11 +281,11 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
   "data": {
     "exchangeOfferFiat": {
       "priceQuote": {
-        "ClientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "SourceAcc": "USD",
-        "DestinationAcc": "CAD",
-        "Rate": 1.355365,
-        "Amount": 135.69
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "sourceAcc": "USD",
+        "destinationAcc": "CAD",
+        "rate": 1.355365,
+        "amount": 135.69
       },
       "debitAmount": 100.11,
       "offerID": "ME0pUhmOJRescxQx7IhJYrgIxeSJ-P4dABP2QVFbr5FGlu-yI_4GoGJ0oW23KTGf",

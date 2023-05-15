@@ -351,16 +351,16 @@ func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_priceQuote(ct
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "ClientID":
-				return ec.fieldContext_PriceQuote_ClientID(ctx, field)
-			case "SourceAcc":
-				return ec.fieldContext_PriceQuote_SourceAcc(ctx, field)
-			case "DestinationAcc":
-				return ec.fieldContext_PriceQuote_DestinationAcc(ctx, field)
-			case "Rate":
-				return ec.fieldContext_PriceQuote_Rate(ctx, field)
-			case "Amount":
-				return ec.fieldContext_PriceQuote_Amount(ctx, field)
+			case "clientID":
+				return ec.fieldContext_PriceQuote_clientID(ctx, field)
+			case "sourceAcc":
+				return ec.fieldContext_PriceQuote_sourceAcc(ctx, field)
+			case "destinationAcc":
+				return ec.fieldContext_PriceQuote_destinationAcc(ctx, field)
+			case "rate":
+				return ec.fieldContext_PriceQuote_rate(ctx, field)
+			case "amount":
+				return ec.fieldContext_PriceQuote_amount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PriceQuote", field.Name)
 		},

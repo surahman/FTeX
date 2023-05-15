@@ -325,35 +325,35 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
-	case "PriceQuote.Amount":
+	case "PriceQuote.amount":
 		if e.complexity.PriceQuote.Amount == nil {
 			break
 		}
 
 		return e.complexity.PriceQuote.Amount(childComplexity), true
 
-	case "PriceQuote.ClientID":
+	case "PriceQuote.clientID":
 		if e.complexity.PriceQuote.ClientID == nil {
 			break
 		}
 
 		return e.complexity.PriceQuote.ClientID(childComplexity), true
 
-	case "PriceQuote.DestinationAcc":
+	case "PriceQuote.destinationAcc":
 		if e.complexity.PriceQuote.DestinationAcc == nil {
 			break
 		}
 
 		return e.complexity.PriceQuote.DestinationAcc(childComplexity), true
 
-	case "PriceQuote.Rate":
+	case "PriceQuote.rate":
 		if e.complexity.PriceQuote.Rate == nil {
 			break
 		}
 
 		return e.complexity.PriceQuote.Rate(childComplexity), true
 
-	case "PriceQuote.SourceAcc":
+	case "PriceQuote.sourceAcc":
 		if e.complexity.PriceQuote.SourceAcc == nil {
 			break
 		}
@@ -503,6 +503,7 @@ extend type Mutation {
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
+
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
@@ -511,11 +512,11 @@ extend type Mutation {
 `, BuiltIn: false},
 	{Name: "../schema/redis.graphqls", Input: `# PriceQuote is the quote provided to the end-user requesting a transfer and will be stored in the Redis cache.
 type PriceQuote {
-    ClientID: UUID!
-    SourceAcc: String!
-    DestinationAcc: String!
-    Rate: Float!
-    Amount: Float!
+    clientID: UUID!
+    sourceAcc: String!
+    destinationAcc: String!
+    rate: Float!
+    amount: Float!
 }
 `, BuiltIn: false},
 	{Name: "../schema/scalars.graphqls", Input: `scalar Int32

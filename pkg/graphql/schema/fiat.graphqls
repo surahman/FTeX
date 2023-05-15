@@ -54,4 +54,5 @@ extend type Mutation {
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
+
 }
