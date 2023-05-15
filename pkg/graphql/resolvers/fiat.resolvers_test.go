@@ -18,6 +18,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/mocks"
+	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
 )
@@ -124,8 +125,10 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 	}
 }
 
-func TestFiatResolver_FiatDepositResponseResolver(t *testing.T) {
+func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Parallel()
+
+	resolver := fiatDepositResponseResolver{}
 
 	txID, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate TxID.")
@@ -150,8 +153,6 @@ func TestFiatResolver_FiatDepositResponseResolver(t *testing.T) {
 		LastTx:   lastTx,
 		Currency: postgres.CurrencyUSD,
 	}
-
-	resolver := fiatDepositResponseResolver{}
 
 	t.Run("TxID", func(t *testing.T) {
 		t.Parallel()
@@ -199,6 +200,50 @@ func TestFiatResolver_FiatDepositResponseResolver(t *testing.T) {
 		result, err := resolver.Currency(context.TODO(), input)
 		require.NoError(t, err, "failed to resolve currency")
 		require.Equal(t, "USD", result, "currency mismatched.")
+	})
+}
+
+func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatExchangeOfferRequestResolver{}
+	expected := 9876.54
+
+	exchangeOfferRequest := &models.HTTPFiatExchangeOfferRequest{
+		SourceCurrency:      "",
+		DestinationCurrency: "",
+		SourceAmount:        decimal.NewFromFloat(123456.78),
+	}
+
+	t.Run("SourceAmount", func(t *testing.T) {
+		t.Parallel()
+
+		err := resolver.SourceAmount(context.TODO(), exchangeOfferRequest, expected)
+		require.NoError(t, err, "failed to resolve debit amount")
+		require.Equal(t, expected, exchangeOfferRequest.SourceAmount.InexactFloat64(), "debit amount mismatched.")
+	})
+}
+
+func TestFiatResolver_FiatExchangeOfferResponseResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatExchangeOfferResponseResolver{}
+
+	debitAmount := decimal.NewFromFloat(123456.78)
+
+	exchangeOfferResponse := &models.HTTPFiatExchangeOfferResponse{
+		PriceQuote:  models.PriceQuote{},
+		DebitAmount: debitAmount,
+		OfferID:     "",
+		Expires:     0,
+	}
+
+	t.Run("DebitAmount", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.DebitAmount(context.TODO(), exchangeOfferResponse)
+		require.NoError(t, err, "failed to resolve debit amount")
+		require.Equal(t, debitAmount.InexactFloat64(), result, "debit amount mismatched.")
 	})
 }
 

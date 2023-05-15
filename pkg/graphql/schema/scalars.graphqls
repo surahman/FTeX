@@ -1,2 +1,3 @@
 scalar Int32
 scalar Int64
+scalar UUID

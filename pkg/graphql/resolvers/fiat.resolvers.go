@@ -49,6 +49,11 @@ func (r *fiatDepositResponseResolver) Currency(ctx context.Context, obj *postgre
 	return string(obj.Currency), nil
 }
 
+// DebitAmount is the resolver for the DebitAmount field.
+func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferResponse) (float64, error) {
+	return obj.DebitAmount.InexactFloat64(), nil
+}
+
 // OpenFiat is the resolver for the openFiat field.
 func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) {
 	var (
@@ -132,9 +137,21 @@ func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTT
 	return nil
 }
 
+// SourceAmount is the resolver for the sourceAmount field.
+func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferRequest, data float64) error {
+	obj.SourceAmount = decimal.NewFromFloat(data)
+
+	return nil
+}
+
 // FiatDepositResponse returns graphql_generated.FiatDepositResponseResolver implementation.
 func (r *Resolver) FiatDepositResponse() graphql_generated.FiatDepositResponseResolver {
 	return &fiatDepositResponseResolver{r}
+}
+
+// FiatExchangeOfferResponse returns graphql_generated.FiatExchangeOfferResponseResolver implementation.
+func (r *Resolver) FiatExchangeOfferResponse() graphql_generated.FiatExchangeOfferResponseResolver {
+	return &fiatExchangeOfferResponseResolver{r}
 }
 
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
@@ -142,5 +159,12 @@ func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestReso
 	return &fiatDepositRequestResolver{r}
 }
 
+// FiatExchangeOfferRequest returns graphql_generated.FiatExchangeOfferRequestResolver implementation.
+func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOfferRequestResolver {
+	return &fiatExchangeOfferRequestResolver{r}
+}
+
 type fiatDepositResponseResolver struct{ *Resolver }
+type fiatExchangeOfferResponseResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
+type fiatExchangeOfferRequestResolver struct{ *Resolver }

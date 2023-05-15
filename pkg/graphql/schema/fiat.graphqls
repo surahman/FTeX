@@ -14,10 +14,25 @@ type FiatDepositResponse {
     currency: String!
 }
 
+# FiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type FiatExchangeOfferResponse {
+    priceQuote: PriceQuote!
+    debitAmount: Float!
+    offerID: String!
+    expires: Int64!
+}
+
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
     amount: Float!
     currency: String!
+}
+
+# FiatExchangeOfferRequest is a request to exchange Fiat currency from one to another.
+input FiatExchangeOfferRequest {
+    sourceCurrency: String!
+    destinationCurrency: String!
+    sourceAmount: Float!
 }
 
 # Requests that might alter the state of data in the database.
