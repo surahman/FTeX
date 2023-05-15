@@ -203,50 +203,6 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	})
 }
 
-func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
-	t.Parallel()
-
-	resolver := fiatExchangeOfferRequestResolver{}
-	expected := 9876.54
-
-	exchangeOfferRequest := &models.HTTPFiatExchangeOfferRequest{
-		SourceCurrency:      "",
-		DestinationCurrency: "",
-		SourceAmount:        decimal.NewFromFloat(123456.78),
-	}
-
-	t.Run("SourceAmount", func(t *testing.T) {
-		t.Parallel()
-
-		err := resolver.SourceAmount(context.TODO(), exchangeOfferRequest, expected)
-		require.NoError(t, err, "failed to resolve debit amount")
-		require.Equal(t, expected, exchangeOfferRequest.SourceAmount.InexactFloat64(), "debit amount mismatched.")
-	})
-}
-
-func TestFiatResolver_FiatExchangeOfferResponseResolver(t *testing.T) {
-	t.Parallel()
-
-	resolver := fiatExchangeOfferResponseResolver{}
-
-	debitAmount := decimal.NewFromFloat(123456.78)
-
-	exchangeOfferResponse := &models.HTTPFiatExchangeOfferResponse{
-		PriceQuote:  models.PriceQuote{},
-		DebitAmount: debitAmount,
-		OfferID:     "",
-		Expires:     0,
-	}
-
-	t.Run("DebitAmount", func(t *testing.T) {
-		t.Parallel()
-
-		result, err := resolver.DebitAmount(context.TODO(), exchangeOfferResponse)
-		require.NoError(t, err, "failed to resolve debit amount")
-		require.Equal(t, debitAmount.InexactFloat64(), result, "debit amount mismatched.")
-	})
-}
-
 func TestFiatResolver_DepositFiat(t *testing.T) {
 	t.Parallel()
 
@@ -330,6 +286,261 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 				mockPostgres.EXPECT().FiatExternalTransfer(gomock.Any(), gomock.Any()).
 					Return(&postgres.FiatAccountTransferResult{}, test.fiatDepositAccErr).
 					Times(test.fiatDepositAccTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatExchangeOfferRequestResolver{}
+	expected := 9876.54
+
+	exchangeOfferRequest := &models.HTTPFiatExchangeOfferRequest{
+		SourceCurrency:      "",
+		DestinationCurrency: "",
+		SourceAmount:        decimal.NewFromFloat(123456.78),
+	}
+
+	t.Run("SourceAmount", func(t *testing.T) {
+		t.Parallel()
+
+		err := resolver.SourceAmount(context.TODO(), exchangeOfferRequest, expected)
+		require.NoError(t, err, "failed to resolve debit amount")
+		require.Equal(t, expected, exchangeOfferRequest.SourceAmount.InexactFloat64(), "debit amount mismatched.")
+	})
+}
+
+func TestFiatResolver_FiatExchangeOfferResponseResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatExchangeOfferResponseResolver{}
+
+	debitAmount := decimal.NewFromFloat(123456.78)
+
+	exchangeOfferResponse := &models.HTTPFiatExchangeOfferResponse{
+		PriceQuote:  models.PriceQuote{},
+		DebitAmount: debitAmount,
+		OfferID:     "",
+		Expires:     0,
+	}
+
+	t.Run("DebitAmount", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.DebitAmount(context.TODO(), exchangeOfferResponse)
+		require.NoError(t, err, "failed to resolve debit amount")
+		require.Equal(t, debitAmount.InexactFloat64(), result, "debit amount mismatched.")
+	})
+}
+
+func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
+	t.Parallel()
+
+	amountValid, err := decimal.NewFromString("999")
+	require.NoError(t, err, "failed to convert valid amount")
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		quotesErr            error
+		quotesTimes          int
+		authEncryptErr       error
+		authEncryptTimes     int
+		redisErr             error
+		redisTimes           int
+	}{
+		{
+			name:                 "empty request",
+			path:                 "/exchange-offer-fiat/empty-request",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "", "", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "invalid source currency",
+			path:                 "/exchange-offer-fiat/invalid-src-currency",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "INVALID", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "invalid destination currency",
+			path:                 "/exchange-offer-fiat/invalid-dst-currency",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "INVALID", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "too many decimal places",
+			path:                 "/exchange-offer-fiat/too-many-decimal-places",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.111),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "negative",
+			path:                 "/exchange-offer-fiat/negative",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", -101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "invalid jwt",
+			path:                 "/exchange-offer-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   errors.New("invalid jwt"),
+			authValidateJWTTimes: 1,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "fiat conversion error",
+			path:                 "/exchange-offer-fiat/fiat-conversion-error",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			quotesErr:            errors.New(""),
+			quotesTimes:          1,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "encryption error",
+			path:                 "/exchange-offer-fiat/encryption-error",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			quotesErr:            nil,
+			quotesTimes:          1,
+			authEncryptErr:       errors.New(""),
+			authEncryptTimes:     1,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "redis error",
+			path:                 "/exchange-offer-fiat/redis-error",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			quotesErr:            nil,
+			quotesTimes:          1,
+			authEncryptErr:       nil,
+			authEncryptTimes:     1,
+			redisErr:             errors.New(""),
+			redisTimes:           1,
+		}, {
+			name:                 "valid",
+			path:                 "/exchange-offer-fiat/valid",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            false,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			quotesErr:            nil,
+			quotesTimes:          1,
+			authEncryptErr:       nil,
+			authEncryptTimes:     1,
+			redisErr:             nil,
+			redisTimes:           1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl) // Not called.
+			mockRedis := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockQuotes.EXPECT().FiatConversion(gomock.Any(), gomock.Any(), gomock.Any(), nil).
+					Return(amountValid, amountValid, test.quotesErr).
+					Times(test.quotesTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("OFFER-ID", test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					Times(test.redisTimes),
 			)
 
 			// Endpoint setup for test.

@@ -42,4 +42,7 @@ extend type Mutation {
 
     # depositFiat is a request to deposit Fiat currency from an external source.
     depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
+
+    # exchangeOfferFiat is a request for an exchange quote. The exchange quote provided will expire after a fixed period.
+    exchangeOfferFiat(input: FiatExchangeOfferRequest!): FiatExchangeOfferResponse!
 }

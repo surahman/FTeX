@@ -950,6 +950,25 @@ func (ec *executionContext) marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahm
 	return ec._FiatDepositResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferRequest(ctx context.Context, v interface{}) (models.HTTPFiatExchangeOfferRequest, error) {
+	res, err := ec.unmarshalInputFiatExchangeOfferRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFiatExchangeOfferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPFiatExchangeOfferResponse) graphql.Marshaler {
+	return ec._FiatExchangeOfferResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatExchangeOfferResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FiatExchangeOfferResponse(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNFiatOpenAccountResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, v models.FiatOpenAccountResponse) graphql.Marshaler {
 	return ec._FiatOpenAccountResponse(ctx, sel, &v)
 }

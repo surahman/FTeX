@@ -72,12 +72,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		DeleteUser   func(childComplexity int, input models.HTTPDeleteUserRequest) int
-		DepositFiat  func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
-		LoginUser    func(childComplexity int, input models1.UserLoginCredentials) int
-		OpenFiat     func(childComplexity int, currency string) int
-		RefreshToken func(childComplexity int) int
-		RegisterUser func(childComplexity int, input *models1.UserAccount) int
+		DeleteUser        func(childComplexity int, input models.HTTPDeleteUserRequest) int
+		DepositFiat       func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
+		ExchangeOfferFiat func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
+		LoginUser         func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat          func(childComplexity int, currency string) int
+		RefreshToken      func(childComplexity int) int
+		RegisterUser      func(childComplexity int, input *models1.UserAccount) int
 	}
 
 	PriceQuote struct {
@@ -236,6 +237,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DepositFiat(childComplexity, args["input"].(models.HTTPDepositCurrencyRequest)), true
+
+	case "Mutation.exchangeOfferFiat":
+		if e.complexity.Mutation.ExchangeOfferFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_exchangeOfferFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExchangeOfferFiat(childComplexity, args["input"].(models.HTTPFiatExchangeOfferRequest)), true
 
 	case "Mutation.loginUser":
 		if e.complexity.Mutation.LoginUser == nil {
@@ -446,6 +459,9 @@ extend type Mutation {
 
     # depositFiat is a request to deposit Fiat currency from an external source.
     depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
+
+    # exchangeOfferFiat is a request for an exchange quote. The exchange quote provided will expire after a fixed period.
+    exchangeOfferFiat(input: FiatExchangeOfferRequest!): FiatExchangeOfferResponse!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
@@ -459,7 +475,8 @@ type PriceQuote {
     DestinationAcc: String!
     Rate: Float!
     Amount: Float!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../schema/scalars.graphqls", Input: `scalar Int32
 scalar Int64
 scalar UUID

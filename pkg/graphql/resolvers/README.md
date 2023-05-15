@@ -240,3 +240,91 @@ _Response:_ A confirmation of the transaction with the particulars of the transf
   }
 }
 ```
+
+#### Exchange
+
+To convert between Fiat currencies, the user must maintain open accounts in both the source and destination Fiat currencies.
+The amount specified will be in the source currency and the amount to deposit into the destination account will be calculated
+based on the exchange rate.
+
+The workflow will involve getting a conversion rate quote, referred to as an `Offer`. The returned rate quote `Offer` will
+only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp. The user
+must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
+
+##### Quote
+
+_Request:_ All fields are required.
+```graphql
+mutation {
+    exchangeOfferFiat(input: {
+        sourceCurrency:"USD"
+        destinationCurrency: "CAD"
+        sourceAmount: 100.11
+    }) {
+        priceQuote{
+            ClientID,
+            SourceAcc,
+            DestinationAcc,
+            Rate,
+            Amount
+        },
+        debitAmount,
+        offerID,
+        expires
+    }
+}
+```
+
+_Response:_ A rate quote with an encrypted `Offer ID`.
+```json
+{
+  "data": {
+    "exchangeOfferFiat": {
+      "priceQuote": {
+        "ClientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "SourceAcc": "USD",
+        "DestinationAcc": "CAD",
+        "Rate": 1.355365,
+        "Amount": 135.69
+      },
+      "debitAmount": 100.11,
+      "offerID": "ME0pUhmOJRescxQx7IhJYrgIxeSJ-P4dABP2QVFbr5FGlu-yI_4GoGJ0oW23KTGf",
+      "expires": 1684116836
+    }
+  }
+}
+```
+
+##### Convert
+
+_Request:_ All fields are required.
+```json
+{
+  "offerId": "m45QsqDVbzi2bVasVzWJ3cKPKy98BUDhyicK4cOwIbZXdydUXXMzW9PFx82OAz7y"
+}
+```
+
+_Response:_ A transaction receipt with the details of the source and destination accounts and transaction details.
+```json
+{
+  "message": "funds exchange transfer successful",
+  "payload": {
+    "sourceReceipt": {
+      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txTimestamp": "2023-04-30T17:06:54.654345-04:00",
+      "balance": "1338.43",
+      "lastTx": "-100.26",
+      "currency": "CAD"
+    },
+    "destinationReceipt": {
+      "txId": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac",
+      "clientId": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txTimestamp": "2023-04-30T17:06:54.654345-04:00",
+      "balance": "21714.35",
+      "lastTx": "73.44",
+      "currency": "USD"
+    }
+  }
+}
+```
