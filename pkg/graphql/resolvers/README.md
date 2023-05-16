@@ -381,7 +381,7 @@ _Response:_ Account balance related details associated with the currency.
 }
 ```
 
-##### Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`
+##### Balance for all Currencies for a Client
 
 _Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
 subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
@@ -389,7 +389,7 @@ subsequent responses will contain encrypted page cursors that must be specified 
 Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
 ```graphql
 mutation {
-  balanceAllFiat(pageSize:"3") {
+  balanceAllFiat(pageSize: 3) {
     accountBalances{
       currency
       balance
@@ -408,7 +408,7 @@ mutation {
 Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
 ```graphql
 mutation {
-  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize:"3") {
+  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize: 3) {
     accountBalances{
       currency
       balance
@@ -425,9 +425,9 @@ mutation {
 ```
 
 
-_Response:_ Account balances for the Client will be limited to the `Page Size` specified and is `10` by default. A
-`Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the `links.nextPage` JSON
-field.
+_Response:_ The number of account balances for the Client will be limited to the `Page Size` specified and is `10` by
+default. A `Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the
+`links.pageCursor` JSON field.
 
 ```json
 {
