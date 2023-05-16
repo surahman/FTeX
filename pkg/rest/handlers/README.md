@@ -375,9 +375,7 @@ field.
         "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
       }
     ],
-    "links": {
-      "nextPage": ""
-    }
+    "links": {}
   }
 }
 ```
@@ -511,9 +509,7 @@ transfer, two entries will be returned - one for the source and the other for th
         "txID": "6c930c8c-fef8-4711-8961-2d101bfb7a5e"
       }
     ],
-    "links": {
-      "nextPage": ""
-    }
+    "links": {}
   }
 }
 ```
