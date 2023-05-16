@@ -488,3 +488,146 @@ default. A `Page Cursor` link will be supplied if there are subsequent pages of 
   }
 }
 ```
+##### Transaction Details for a Specific Transaction
+
+_Request:_ A valid `Transaction ID` must be provided as a path parameter.
+
+```graphql
+
+```
+
+_Response:_ Transaction-related details for a specific transaction. In the event of an external deposit, there will be
+a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
+one for the source and the other for the destination accounts.
+
+###### External Transfer (deposit)
+```json
+{
+  "message": "transaction details",
+  "payload": [
+    {
+      "currency": "USD",
+      "amount": "10101.11",
+      "transactedAt": "2023-04-28T17:24:53.396603-04:00",
+      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txID": "de7456cb-1dde-4b73-941d-252a1fb1d337"
+    }
+  ]
+}
+```
+
+###### Internal Transfer (currency conversion/exchange)
+```json
+{
+  "message": "transaction details",
+  "payload": [
+    {
+      "currency": "CAD",
+      "amount": "-100.26",
+      "transactedAt": "2023-04-30T17:06:54.654345-04:00",
+      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
+    },
+    {
+      "currency": "USD",
+      "amount": "73.44",
+      "transactedAt": "2023-04-30T17:06:54.654345-04:00",
+      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
+      "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
+    }
+  ]
+}
+```
+##### Transaction Details for a Specific Currency
+
+_Request:_ A valid `Currency Code` must be provided as a path parameter. The path parameters accepted are listed below.
+If a `pageCursor` is supplied, all other parameters except for the `pageSize` are ignored.
+
+Optional:
+* `pageCursor`: Defaults to 10.
+
+Initial Page (required):
+* `month`: Month for which the transactions are being requested.
+* `year`: Year for which the transactions are being requested.
+* `timezone`: Timezone for which the transactions are being requested.
+
+Subsequent Pages (required)
+* `pageCursor`: Hashed page cursor for the next page of data.
+
+```graphql
+
+```
+
+_Response:_ All Transaction-related details for a specific currency in a given timezone and date are returned. In the
+event of an external deposit, there will be a single entry reporting the deposited amount. When querying for an internal
+transfer, two entries will be returned - one for the source and the other for the destination accounts.
+
+###### Initial Page
+```json
+{
+  "message": "account transactions",
+  "payload": {
+    "transactionDetails": [
+      {
+        "currency": "AED",
+        "amount": "10000",
+        "transactedAt": "2023-05-09T18:33:55.453689-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+      },
+      {
+        "currency": "AED",
+        "amount": "8180.74",
+        "transactedAt": "2023-05-09T18:32:16.38917-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "b6a760ba-a189-4222-9897-4a783c799953"
+      },
+      {
+        "currency": "AED",
+        "amount": "4396.12",
+        "transactedAt": "2023-05-09T18:32:16.004549-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "7108d3e5-257e-45a8-ace1-d7e86c84556e"
+      }
+    ],
+    "links": {
+      "nextPage": "?pageCursor=xft0C3AaJwShw6Du5tr0d8FKXYedyFd1cgPp13W2LvU9U8ii3svtRn2Tt7Pd3LI6nQvO3AUI0NioM18v6XGFXuC4jpFDA8AsqFnXqSZMwMSk&pageSize=3"
+    }
+  }
+}
+```
+
+###### Subsequent Page
+```json
+{
+  "message": "account transactions",
+  "payload": {
+    "transactionDetails": [
+      {
+        "currency": "AED",
+        "amount": "4561.01",
+        "transactedAt": "2023-05-09T18:32:15.547456-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "525ea850-916b-4761-ae28-a34a63613212"
+      },
+      {
+        "currency": "AED",
+        "amount": "3323.22",
+        "transactedAt": "2023-05-09T18:32:15.137486-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "77278e19-5a1b-46fe-a106-d2f21ad72839"
+      },
+      {
+        "currency": "AED",
+        "amount": "4242.43",
+        "transactedAt": "2023-05-09T18:31:49.872366-04:00",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "6c930c8c-fef8-4711-8961-2d101bfb7a5e"
+      }
+    ],
+    "links": {
+      "nextPage": ""
+    }
+  }
+}
+```

@@ -88,6 +88,31 @@ func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj
 	return obj.DebitAmount.InexactFloat64(), nil
 }
 
+// Currency is the resolver for the currency field.
+func (r *fiatJournalResolver) Currency(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return string(obj.Currency), nil
+}
+
+// Amount is the resolver for the amount field.
+func (r *fiatJournalResolver) Amount(ctx context.Context, obj *postgres.FiatJournal) (float64, error) {
+	return obj.Amount.InexactFloat64(), nil
+}
+
+// TransactedAt is the resolver for the transactedAt field.
+func (r *fiatJournalResolver) TransactedAt(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return obj.TransactedAt.Time.String(), nil
+}
+
+// ClientID is the resolver for the clientID field.
+func (r *fiatJournalResolver) ClientID(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return obj.ClientID.String(), nil
+}
+
+// TxID is the resolver for the txID field.
+func (r *fiatJournalResolver) TxID(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return obj.TxID.String(), nil
+}
+
 // OpenFiat is the resolver for the openFiat field.
 func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) {
 	var (
@@ -386,6 +411,11 @@ func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor *strin
 	}, nil
 }
 
+// TransactionFiat is the resolver for the transactionFiat field.
+func (r *mutationResolver) TransactionFiat(ctx context.Context, transactionID string) ([]*postgres.FiatJournal, error) {
+	panic(fmt.Errorf("not implemented: TransactionFiat - transactionFiat"))
+}
+
 // Amount is the resolver for the amount field.
 func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error {
 	obj.Amount = decimal.NewFromFloat(data)
@@ -415,6 +445,11 @@ func (r *Resolver) FiatExchangeOfferResponse() graphql_generated.FiatExchangeOff
 	return &fiatExchangeOfferResponseResolver{r}
 }
 
+// FiatJournal returns graphql_generated.FiatJournalResolver implementation.
+func (r *Resolver) FiatJournal() graphql_generated.FiatJournalResolver {
+	return &fiatJournalResolver{r}
+}
+
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
 func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver {
 	return &fiatDepositRequestResolver{r}
@@ -428,5 +463,6 @@ func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOffe
 type fiatAccountResolver struct{ *Resolver }
 type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeOfferResponseResolver struct{ *Resolver }
+type fiatJournalResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
 type fiatExchangeOfferRequestResolver struct{ *Resolver }

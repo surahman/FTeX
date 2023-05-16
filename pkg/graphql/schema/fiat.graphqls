@@ -38,6 +38,15 @@ type FiatAccount {
     clientID: UUID!
 }
 
+# FiatJournal are the Fiat transactional records for a specific transaction.
+type FiatJournal {
+    currency: String!
+    amount: Float!
+    transactedAt: String!
+    clientID: UUID!
+    txID: UUID!
+}
+
 # Links are links used in responses to retrieve pages of information.
 type Links {
     nextPage:   String
@@ -82,4 +91,7 @@ extend type Mutation {
 
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
+
+    # transactionFiat is a request to retrieve the details for a specific transaction.
+    transactionFiat(transactionID: String!): [FiatJournal!]!
 }

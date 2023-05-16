@@ -34,6 +34,7 @@ type ResolverRoot interface {
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
 	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
+	FiatJournal() FiatJournalResolver
 	Mutation() MutationResolver
 	PriceQuote() PriceQuoteResolver
 	Query() QueryResolver
@@ -80,6 +81,14 @@ type ComplexityRoot struct {
 		SourceReceipt      func(childComplexity int) int
 	}
 
+	FiatJournal struct {
+		Amount       func(childComplexity int) int
+		ClientID     func(childComplexity int) int
+		Currency     func(childComplexity int) int
+		TransactedAt func(childComplexity int) int
+		TxID         func(childComplexity int) int
+	}
+
 	FiatOpenAccountResponse struct {
 		ClientID func(childComplexity int) int
 		Currency func(childComplexity int) int
@@ -107,6 +116,7 @@ type ComplexityRoot struct {
 		OpenFiat             func(childComplexity int, currency string) int
 		RefreshToken         func(childComplexity int) int
 		RegisterUser         func(childComplexity int, input *models1.UserAccount) int
+		TransactionFiat      func(childComplexity int, transactionID string) int
 	}
 
 	PriceQuote struct {
@@ -277,6 +287,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FiatExchangeTransferResponse.SourceReceipt(childComplexity), true
 
+	case "FiatJournal.amount":
+		if e.complexity.FiatJournal.Amount == nil {
+			break
+		}
+
+		return e.complexity.FiatJournal.Amount(childComplexity), true
+
+	case "FiatJournal.clientID":
+		if e.complexity.FiatJournal.ClientID == nil {
+			break
+		}
+
+		return e.complexity.FiatJournal.ClientID(childComplexity), true
+
+	case "FiatJournal.currency":
+		if e.complexity.FiatJournal.Currency == nil {
+			break
+		}
+
+		return e.complexity.FiatJournal.Currency(childComplexity), true
+
+	case "FiatJournal.transactedAt":
+		if e.complexity.FiatJournal.TransactedAt == nil {
+			break
+		}
+
+		return e.complexity.FiatJournal.TransactedAt(childComplexity), true
+
+	case "FiatJournal.txID":
+		if e.complexity.FiatJournal.TxID == nil {
+			break
+		}
+
+		return e.complexity.FiatJournal.TxID(childComplexity), true
+
 	case "FiatOpenAccountResponse.clientID":
 		if e.complexity.FiatOpenAccountResponse.ClientID == nil {
 			break
@@ -441,6 +486,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
+	case "Mutation.transactionFiat":
+		if e.complexity.Mutation.TransactionFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_transactionFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TransactionFiat(childComplexity, args["transactionID"].(string)), true
+
 	case "PriceQuote.amount":
 		if e.complexity.PriceQuote.Amount == nil {
 			break
@@ -603,6 +660,15 @@ type FiatAccount {
     clientID: UUID!
 }
 
+# FiatJournal are the Fiat transactional records for a specific transaction.
+type FiatJournal {
+    currency: String!
+    amount: Float!
+    transactedAt: String!
+    clientID: UUID!
+    txID: UUID!
+}
+
 # Links are links used in responses to retrieve pages of information.
 type Links {
     nextPage:   String
@@ -647,6 +713,9 @@ extend type Mutation {
 
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
+
+    # transactionFiat is a request to retrieve the details for a specific transaction.
+    transactionFiat(transactionID: String!): [FiatJournal!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {

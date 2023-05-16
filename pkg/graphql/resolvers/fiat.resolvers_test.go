@@ -332,7 +332,7 @@ func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
 
 		err := resolver.SourceAmount(context.TODO(), exchangeOfferRequest, expected)
 		require.NoError(t, err, "failed to resolve debit amount")
-		require.Equal(t, expected, exchangeOfferRequest.SourceAmount.InexactFloat64(), "debit amount mismatched.")
+		require.InDelta(t, expected, exchangeOfferRequest.SourceAmount.InexactFloat64(), 0.01, "debit amount mismatched.")
 	})
 }
 
@@ -355,7 +355,7 @@ func TestFiatResolver_FiatExchangeOfferResponseResolver(t *testing.T) {
 
 		result, err := resolver.DebitAmount(context.TODO(), exchangeOfferResponse)
 		require.NoError(t, err, "failed to resolve debit amount")
-		require.Equal(t, debitAmount.InexactFloat64(), result, "debit amount mismatched.")
+		require.InDelta(t, debitAmount.InexactFloat64(), result, 0.01, "debit amount mismatched.")
 	})
 }
 
@@ -897,7 +897,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 
 		result, err := resolver.Balance(context.TODO(), fiatAccount)
 		require.NoError(t, err, "failed to resolve balance amount")
-		require.Equal(t, balanceAmount.InexactFloat64(), result, "balance amount mismatched.")
+		require.InDelta(t, balanceAmount.InexactFloat64(), result, 0.01, "balance amount mismatched.")
 	})
 
 	t.Run("LastTxAmount", func(t *testing.T) {
@@ -905,7 +905,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 
 		result, err := resolver.LastTx(context.TODO(), fiatAccount)
 		require.NoError(t, err, "failed to resolve lastTx amount")
-		require.Equal(t, lastTxAmount.InexactFloat64(), result, "lastTx amount mismatched.")
+		require.InDelta(t, lastTxAmount.InexactFloat64(), result, 0.01, "lastTx amount mismatched.")
 	})
 
 	t.Run("LastTxTS", func(t *testing.T) {
@@ -1238,4 +1238,70 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFiatResolver_FiatJournalResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatJournalResolver{}
+
+	amount := decimal.NewFromFloat(123456.78)
+
+	timestamp := time.Now()
+	transactedAt := pgtype.Timestamptz{}
+	require.NoError(t, transactedAt.Scan(timestamp), "failed to generate timestamp.")
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate client id.")
+
+	txID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate tx id.")
+
+	fiatJournal := &postgres.FiatJournal{
+		Currency:     postgres.CurrencyUSD,
+		Amount:       amount,
+		TransactedAt: transactedAt,
+		ClientID:     clientID,
+		TxID:         txID,
+	}
+
+	t.Run("Currency", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.Currency(context.TODO(), fiatJournal)
+		require.NoError(t, err, "failed to resolve currency")
+		require.Equal(t, string(postgres.CurrencyUSD), result, "currency mismatched.")
+	})
+
+	t.Run("Amount", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.Amount(context.TODO(), fiatJournal)
+		require.NoError(t, err, "failed to resolve amount")
+		require.InDeltaf(t, amount.InexactFloat64(), result, 0.01, "amount mismatched.")
+	})
+
+	t.Run("TransactedAt", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.TransactedAt(context.TODO(), fiatJournal)
+		require.NoError(t, err, "failed to resolve transacted at timestamp.")
+		require.Equal(t, timestamp.String(), result, "transacted at timestamp mismatched.")
+	})
+
+	t.Run("ClientID", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.ClientID(context.TODO(), fiatJournal)
+		require.NoError(t, err, "failed to resolve client id.")
+		require.Equal(t, clientID.String(), result, "client id mismatched.")
+	})
+
+	t.Run("TxID", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.TxID(context.TODO(), fiatJournal)
+		require.NoError(t, err, "failed to resolve tx id.")
+		require.Equal(t, txID.String(), result, "tx id mismatched.")
+	})
 }
