@@ -388,7 +388,7 @@ _Response:_ Transaction-related details for a specific transaction. In the event
 a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
 one for the source and the other for the destination accounts.
 
-###### Initial Page
+###### External Transaction (Deposit)
 ```json
 {
   "message": "transaction details",
@@ -404,7 +404,7 @@ one for the source and the other for the destination accounts.
 }
 ```
 
-###### Subsequent Page
+###### Internal Transaction (between accounts)
 ```json
 {
   "message": "transaction details",
