@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -315,6 +316,114 @@ func (ec *executionContext) fieldContext_FiatAccount_clientID(ctx context.Contex
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatBalancesPaginated_accountBalances(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatDetailsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatBalancesPaginated_accountBalances(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccountBalances, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]postgres.FiatAccount)
+	fc.Result = res
+	return ec.marshalNFiatAccount2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatBalancesPaginated_accountBalances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatBalancesPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_FiatAccount_currency(ctx, field)
+			case "balance":
+				return ec.fieldContext_FiatAccount_balance(ctx, field)
+			case "lastTx":
+				return ec.fieldContext_FiatAccount_lastTx(ctx, field)
+			case "lastTxTs":
+				return ec.fieldContext_FiatAccount_lastTxTs(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FiatAccount_createdAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_FiatAccount_clientID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FiatAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatBalancesPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatDetailsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatBalancesPaginated_links(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Links, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.HTTPLinks)
+	fc.Result = res
+	return ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatBalancesPaginated_links(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatBalancesPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "nextPage":
+				return ec.fieldContext_Links_nextPage(ctx, field)
+			case "pageCursor":
+				return ec.fieldContext_Links_pageCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Links", field.Name)
 		},
 	}
 	return fc, nil
@@ -976,6 +1085,88 @@ func (ec *executionContext) fieldContext_FiatOpenAccountResponse_currency(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Links_nextPage(ctx context.Context, field graphql.CollectedField, obj *models.HTTPLinks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Links_nextPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NextPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Links_nextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Links",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Links_pageCursor(ctx context.Context, field graphql.CollectedField, obj *models.HTTPLinks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Links_pageCursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Links_pageCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Links",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -1207,6 +1398,41 @@ func (ec *executionContext) _FiatAccount(ctx context.Context, sel ast.SelectionS
 				return innerFunc(ctx)
 
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var fiatBalancesPaginatedImplementors = []string{"FiatBalancesPaginated"}
+
+func (ec *executionContext) _FiatBalancesPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPFiatDetailsPaginated) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fiatBalancesPaginatedImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FiatBalancesPaginated")
+		case "accountBalances":
+
+			out.Values[i] = ec._FiatBalancesPaginated_accountBalances(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "links":
+
+			out.Values[i] = ec._FiatBalancesPaginated_links(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1491,12 +1717,85 @@ func (ec *executionContext) _FiatOpenAccountResponse(ctx context.Context, sel as
 	return out
 }
 
+var linksImplementors = []string{"Links"}
+
+func (ec *executionContext) _Links(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPLinks) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, linksImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Links")
+		case "nextPage":
+
+			out.Values[i] = ec._Links_nextPage(ctx, field, obj)
+
+		case "pageCursor":
+
+			out.Values[i] = ec._Links_pageCursor(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
 
 func (ec *executionContext) marshalNFiatAccount2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccount(ctx context.Context, sel ast.SelectionSet, v postgres.FiatAccount) graphql.Marshaler {
 	return ec._FiatAccount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatAccount2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []postgres.FiatAccount) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFiatAccount2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNFiatAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccount(ctx context.Context, sel ast.SelectionSet, v *postgres.FiatAccount) graphql.Marshaler {
@@ -1507,6 +1806,20 @@ func (ec *executionContext) marshalNFiatAccount2ᚖgithubᚗcomᚋsurahmanᚋFTe
 		return graphql.Null
 	}
 	return ec._FiatAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFiatBalancesPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatDetailsPaginated(ctx context.Context, sel ast.SelectionSet, v models.HTTPFiatDetailsPaginated) graphql.Marshaler {
+	return ec._FiatBalancesPaginated(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatDetailsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatDetailsPaginated) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FiatBalancesPaginated(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNFiatDepositRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDepositCurrencyRequest(ctx context.Context, v interface{}) (models.HTTPDepositCurrencyRequest, error) {
@@ -1573,6 +1886,10 @@ func (ec *executionContext) marshalNFiatOpenAccountResponse2ᚖgithubᚗcomᚋsu
 		return graphql.Null
 	}
 	return ec._FiatOpenAccountResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v models.HTTPLinks) graphql.Marshaler {
+	return ec._Links(ctx, sel, &v)
 }
 
 // endregion ***************************** type.gotpl *****************************

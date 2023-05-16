@@ -54,6 +54,11 @@ type ComplexityRoot struct {
 		LastTxTs  func(childComplexity int) int
 	}
 
+	FiatBalancesPaginated struct {
+		AccountBalances func(childComplexity int) int
+		Links           func(childComplexity int) int
+	}
+
 	FiatDepositResponse struct {
 		Balance     func(childComplexity int) int
 		ClientID    func(childComplexity int) int
@@ -86,7 +91,13 @@ type ComplexityRoot struct {
 		Token     func(childComplexity int) int
 	}
 
+	Links struct {
+		NextPage   func(childComplexity int) int
+		PageCursor func(childComplexity int) int
+	}
+
 	Mutation struct {
+		BalanceAllFiat       func(childComplexity int, pageCursor string, pageSizeStr string) int
 		BalanceFiat          func(childComplexity int, currencyCode string) int
 		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
 		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
@@ -167,6 +178,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FiatAccount.LastTxTs(childComplexity), true
+
+	case "FiatBalancesPaginated.accountBalances":
+		if e.complexity.FiatBalancesPaginated.AccountBalances == nil {
+			break
+		}
+
+		return e.complexity.FiatBalancesPaginated.AccountBalances(childComplexity), true
+
+	case "FiatBalancesPaginated.links":
+		if e.complexity.FiatBalancesPaginated.Links == nil {
+			break
+		}
+
+		return e.complexity.FiatBalancesPaginated.Links(childComplexity), true
 
 	case "FiatDepositResponse.balance":
 		if e.complexity.FiatDepositResponse.Balance == nil {
@@ -286,6 +311,32 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JWTAuthResponse.Token(childComplexity), true
+
+	case "Links.nextPage":
+		if e.complexity.Links.NextPage == nil {
+			break
+		}
+
+		return e.complexity.Links.NextPage(childComplexity), true
+
+	case "Links.pageCursor":
+		if e.complexity.Links.PageCursor == nil {
+			break
+		}
+
+		return e.complexity.Links.PageCursor(childComplexity), true
+
+	case "Mutation.balanceAllFiat":
+		if e.complexity.Mutation.BalanceAllFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_balanceAllFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BalanceAllFiat(childComplexity, args["pageCursor"].(string), args["pageSizeStr"].(string)), true
 
 	case "Mutation.balanceFiat":
 		if e.complexity.Mutation.BalanceFiat == nil {
@@ -552,6 +603,18 @@ type FiatAccount {
     clientID: UUID!
 }
 
+# Links are links used in responses to retrieve pages of information.
+type Links {
+    nextPage:   String
+    pageCursor: String
+}
+
+# FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type FiatBalancesPaginated {
+    accountBalances: [FiatAccount!]!
+    links: Links!
+}
+
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
     amount: Float!
@@ -581,6 +644,9 @@ extend type Mutation {
 
     # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceFiat(currencyCode: String!): FiatAccount!
+
+    # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
+    balanceAllFiat(pageCursor: String!, pageSizeStr: String!): FiatBalancesPaginated!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {

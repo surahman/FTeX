@@ -38,6 +38,18 @@ type FiatAccount {
     clientID: UUID!
 }
 
+# Links are links used in responses to retrieve pages of information.
+type Links {
+    nextPage:   String
+    pageCursor: String
+}
+
+# FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type FiatBalancesPaginated {
+    accountBalances: [FiatAccount!]!
+    links: Links!
+}
+
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
     amount: Float!
@@ -67,4 +79,7 @@ extend type Mutation {
 
     # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceFiat(currencyCode: String!): FiatAccount!
+
+    # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
+    balanceAllFiat(pageCursor: String!, pageSizeStr: String!): FiatBalancesPaginated!
 }

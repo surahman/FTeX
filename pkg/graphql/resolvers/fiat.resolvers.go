@@ -323,6 +323,61 @@ func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string)
 	return &accDetails, nil
 }
 
+// BalanceAllFiat is the resolver for the balanceAllFiat field.
+func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor string, pageSizeStr string) (*models.HTTPFiatDetailsPaginated, error) {
+	var (
+		accDetails []postgres.FiatAccount
+		clientID   uuid.UUID
+		currency   postgres.Currency
+		err        error
+		pageSize   int32
+	)
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	// Extract and assemble the page cursor and page size.
+	if currency, pageSize, err = utilities.HTTPFiatBalancePaginatedRequest(
+		r.auth, pageCursor, pageSizeStr); err != nil {
+
+		return nil, errors.New("invalid page cursor or page size")
+	}
+
+	if accDetails, err = r.db.FiatBalanceCurrencyPaginated(clientID, currency, pageSize+1); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			r.logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		return nil, errors.New(balanceErr.Message)
+	}
+
+	// Reset and generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
+	pageCursor = ""
+	lastRecordIdx := int(pageSize)
+	if len(accDetails) == lastRecordIdx+1 {
+		// Generate next page link.
+		if pageCursor, err = r.auth.EncryptToString([]byte(accDetails[pageSize].Currency)); err != nil {
+			r.logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		// Remove last element.
+		accDetails = accDetails[:pageSize]
+	}
+
+	return &models.HTTPFiatDetailsPaginated{
+		AccountBalances: accDetails,
+		Links: models.HTTPLinks{
+			PageCursor: pageCursor,
+		},
+	}, nil
+}
+
 // Amount is the resolver for the amount field.
 func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error {
 	obj.Amount = decimal.NewFromFloat(data)

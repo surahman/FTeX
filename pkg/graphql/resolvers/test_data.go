@@ -54,5 +54,9 @@ func getFiatQuery() map[string]string {
 		"balanceFiat": `{
 		"query": "mutation { balanceFiat(currencyCode: \"%s\") { currency, balance, lastTx, lastTxTs, createdAt, clientID } }"
 		}`,
+
+		"balanceAllFiat": `{
+		"query": "mutation { balanceAllFiat( pageCursor: \"%s\", pageSizeStr: \"%d\" ) { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		}`,
 	}
 }

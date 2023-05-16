@@ -386,7 +386,43 @@ _Response:_ Account balance related details associated with the currency.
 _Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
 subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
 
-> fiat/info/balance/?pageCursor=QW9bg6pXqXdwegEf7PVEuqoPzAJ28tO0r4TSh-t8qQ==&pageSize=3
+Initial request: The `pageCursor` will be an empty string and the `pageSize` is optional and will default to 10.
+```graphql
+mutation {
+  balanceAllFiat(pageCursor: "", pageSizeStr:"3") {
+    accountBalances{
+      currency
+      balance
+      lastTx
+      lastTxTs
+      createdAt
+      clientID
+    }
+    links{
+      pageCursor
+    }
+  }
+}
+```
+
+Subsequent requests: The `currencyCode` and  `pageCursor` must be provided but the `pageSize` is optional.
+```graphql
+mutation {
+  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSizeStr:"3") {
+    accountBalances{
+      currency
+      balance
+      lastTx
+      lastTxTs
+      createdAt
+      clientID
+    }
+    links{
+      pageCursor
+    }
+  }
+}
+```
 
 
 _Response:_ Account balances for the Client will be limited to the `Page Size` specified and is `10` by default. A
@@ -395,56 +431,60 @@ field.
 
 ```json
 {
-  "message": "account balances",
-  "payload": {
-    "accountBalances": [
-      {
-        "currency": "AED",
-        "balance": "30903.7",
-        "lastTx": "-10000",
-        "lastTxTs": "2023-05-09T18:33:55.453689-04:00",
-        "createdAt": "2023-05-09T18:29:16.74704-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
-      },
-      {
-        "currency": "CAD",
-        "balance": "368474.77",
-        "lastTx": "368474.77",
-        "lastTxTs": "2023-05-09T18:30:51.985719-04:00",
-        "createdAt": "2023-05-09T18:29:08.746285-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
-      },
-      {
-        "currency": "EUR",
-        "balance": "1536.45",
-        "lastTx": "1536.45",
-        "lastTxTs": "2023-05-09T18:31:32.213239-04:00",
-        "createdAt": "2023-05-09T18:29:21.365991-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+  "data": {
+    "balanceAllFiat": {
+      "accountBalances": [
+        {
+          "currency": "AED",
+          "balance": 30903.7,
+          "lastTx": -10000,
+          "lastTxTs": "2023-05-09 18:33:55.453689 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:16.74704 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        },
+        {
+          "currency": "CAD",
+          "balance": 369283.5,
+          "lastTx": 134.75,
+          "lastTxTs": "2023-05-15 16:59:24.243332 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:08.746285 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        },
+        {
+          "currency": "EUR",
+          "balance": 1536.45,
+          "lastTx": 1536.45,
+          "lastTxTs": "2023-05-09 18:31:32.213239 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:21.365991 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        }
+      ],
+      "links": {
+        "pageCursor": "iaguqIObr8FvtimV4k1uHJtZ2DHGPgTxNZVmsyEKKA=="
       }
-    ],
-    "links": {
-      "nextPage": "?pageCursor=zTrzwXDqdxG-9aQ6sWVCwfJNs--anH9mQEMVKlDsvA==&pageSize=3"
     }
   }
 }
 ```
+
 ```json
 {
-  "message": "account balances",
-  "payload": {
-    "accountBalances": [
-      {
-        "currency": "USD",
-        "balance": "12824.35",
-        "lastTx": "2723.24",
-        "lastTxTs": "2023-05-09T18:33:55.453689-04:00",
-        "createdAt": "2023-05-09T18:29:04.345387-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+  "data": {
+    "balanceAllFiat": {
+      "accountBalances": [
+        {
+          "currency": "USD",
+          "balance": 13569.36,
+          "lastTx": -100.11,
+          "lastTxTs": "2023-05-15 16:59:24.243332 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:04.345387 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        }
+      ],
+      "links": {
+        "pageCursor": ""
       }
-    ],
-    "links": {
-      "nextPage": ""
     }
   }
 }
+```

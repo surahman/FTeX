@@ -1032,3 +1032,210 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 		})
 	}
 }
+
+func TestFiatResolver_BalanceAllFiat(t *testing.T) {
+	t.Parallel()
+
+	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		accDetails           []postgres.FiatAccount
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		authDecryptStrErr    error
+		authDecryptStrTimes  int
+		fiatBalanceErr       error
+		fiatBalanceTimes     int
+		authEncryptStrErr    error
+		authEncryptStrTimes  int
+	}{
+		{
+			name:                 "invalid JWT",
+			path:                 "/balance-all-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "decrypt cursor failure",
+			path:                 "/balance-all-fiat/decrypt-cursor-failure",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    errors.New("decrypt failure"),
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "known db error",
+			path:                 "/balance-all-fiat/known-db-error",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       postgres.ErrNotFound,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "unknown db error",
+			path:                 "/balance-all-fiat/unknown-db-error",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       errors.New("unknown db error"),
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "encrypt cursor failure",
+			path:                 "/balance-all-fiat/encrypt-cursor-failure",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    errors.New("encrypt string error"),
+			authEncryptStrTimes:  1,
+		}, {
+			name:                 "valid without query and 10 records",
+			path:                 "/balance-all-fiat/valid-no-query-10-records",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "", 0),
+			expectErr:            false,
+			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "valid without query and 11 records",
+			path:                 "/balance-all-fiat/valid-no-query-11-records",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "", 0),
+			expectErr:            false,
+			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  1,
+		}, {
+			name:                 "valid without query",
+			path:                 "/balance-all-fiat/valid-no-query",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "", 0),
+			expectErr:            false,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "valid",
+			path:                 "/balance-all-fiat/valid",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            false,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte{}, test.authDecryptStrErr).
+					Times(test.authDecryptStrTimes),
+
+				mockPostgres.EXPECT().FiatBalanceCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.accDetails, test.fiatBalanceErr).
+					Times(test.fiatBalanceTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-page-cursor", test.authEncryptStrErr).
+					Times(test.authEncryptStrTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
