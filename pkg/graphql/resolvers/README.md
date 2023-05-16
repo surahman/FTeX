@@ -346,3 +346,145 @@ _Response:_ A transaction receipt with the details of the source and destination
   }
 }
 ```
+
+#### Info
+
+##### Balance for a Specific Currency
+
+_Request:_ A valid currency code must be provided as a parameter.
+```graphql
+mutation {
+	balanceFiat(currencyCode:"USD") {
+    currency,
+    balance,
+    lastTx,
+    lastTxTs,
+    createdAt,
+    clientID
+  }
+}
+```
+
+_Response:_ Account balance related details associated with the currency.
+```json
+{
+  "data": {
+    "balanceFiat": {
+      "currency": "USD",
+      "balance": 13569.36,
+      "lastTx": -100.11,
+      "lastTxTs": "2023-05-15 14:59:24.243332 -0400 EDT",
+      "createdAt": "2023-05-09 18:29:04.345387 -0400 EDT",
+      "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+    }
+  }
+}
+```
+
+##### Balance for all Currencies for a Client
+
+_Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
+subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
+
+Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
+```graphql
+mutation {
+  balanceAllFiat(pageSize: 3) {
+    accountBalances{
+      currency
+      balance
+      lastTx
+      lastTxTs
+      createdAt
+      clientID
+    }
+    links{
+      pageCursor
+    }
+  }
+}
+```
+
+Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
+```graphql
+mutation {
+  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize: 3) {
+    accountBalances{
+      currency
+      balance
+      lastTx
+      lastTxTs
+      createdAt
+      clientID
+    }
+    links{
+      pageCursor
+    }
+  }
+}
+```
+
+
+_Response:_ The number of account balances for the Client will be limited to the `Page Size` specified and is `10` by
+default. A `Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the
+`links.pageCursor` JSON field.
+
+```json
+{
+  "data": {
+    "balanceAllFiat": {
+      "accountBalances": [
+        {
+          "currency": "AED",
+          "balance": 30903.7,
+          "lastTx": -10000,
+          "lastTxTs": "2023-05-09 18:33:55.453689 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:16.74704 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        },
+        {
+          "currency": "CAD",
+          "balance": 369283.5,
+          "lastTx": 134.75,
+          "lastTxTs": "2023-05-15 16:59:24.243332 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:08.746285 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        },
+        {
+          "currency": "EUR",
+          "balance": 1536.45,
+          "lastTx": 1536.45,
+          "lastTxTs": "2023-05-09 18:31:32.213239 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:21.365991 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        }
+      ],
+      "links": {
+        "pageCursor": "iaguqIObr8FvtimV4k1uHJtZ2DHGPgTxNZVmsyEKKA=="
+      }
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "balanceAllFiat": {
+      "accountBalances": [
+        {
+          "currency": "USD",
+          "balance": 13569.36,
+          "lastTx": -100.11,
+          "lastTxTs": "2023-05-15 16:59:24.243332 -0400 EDT",
+          "createdAt": "2023-05-09 18:29:04.345387 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        }
+      ],
+      "links": {
+        "pageCursor": ""
+      }
+    }
+  }
+}
+```

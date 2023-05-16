@@ -50,5 +50,17 @@ func getFiatQuery() map[string]string {
 		"exchangeTransferFiat": `{
 		"query": "mutation { exchangeTransferFiat(offerID: \"%s\") { sourceReceipt { txId, clientId, txTimestamp, balance, lastTx, currency }, destinationReceipt { txId, clientId, txTimestamp, balance, lastTx, currency } } }"
 		}`,
+
+		"balanceFiat": `{
+		"query": "mutation { balanceFiat(currencyCode: \"%s\") { currency, balance, lastTx, lastTxTs, createdAt, clientID } }"
+		}`,
+
+		"balanceAllFiat": `{
+		"query": "mutation { balanceAllFiat( pageCursor: \"%s\", pageSize: %d ) { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		}`,
+
+		"balanceAllFiatNoParams": `{
+		"query": "mutation { balanceAllFiat { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		}`,
 	}
 }

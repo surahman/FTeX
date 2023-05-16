@@ -83,7 +83,7 @@ func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string
 }
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit
-// and covert them to a currency and integer record limit.
+// and covert them to a currency and integer record limit. The currencyStr is the encrypted pageCursor passed in.
 func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr string) (postgres.Currency, int32, error) {
 	var (
 		currency  postgres.Currency

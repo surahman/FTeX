@@ -375,9 +375,7 @@ field.
         "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
       }
     ],
-    "links": {
-      "nextPage": ""
-    }
+    "links": {}
   }
 }
 ```
@@ -390,7 +388,7 @@ _Response:_ Transaction-related details for a specific transaction. In the event
 a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
 one for the source and the other for the destination accounts.
 
-###### Initial Page
+###### External Transaction (Deposit)
 ```json
 {
   "message": "transaction details",
@@ -406,7 +404,7 @@ one for the source and the other for the destination accounts.
 }
 ```
 
-###### Subsequent Page
+###### Internal Transaction (between accounts)
 ```json
 {
   "message": "transaction details",
@@ -511,9 +509,7 @@ transfer, two entries will be returned - one for the source and the other for th
         "txID": "6c930c8c-fef8-4711-8961-2d101bfb7a5e"
       }
     ],
-    "links": {
-      "nextPage": ""
-    }
+    "links": {}
   }
 }
 ```

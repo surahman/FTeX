@@ -83,10 +83,11 @@ type HTTPFiatDetailsPaginated struct {
 // next page of information.
 type HTTPFiatTransactionsPaginated struct {
 	TransactionDetails []postgres.FiatJournal `json:"transactionDetails"`
-	Links              HTTPLinks              `json:"links"`
+	Links              HTTPLinks              `json:"links,omitempty"`
 }
 
 // HTTPLinks are links used in HTTP responses to retrieve pages of information.
 type HTTPLinks struct {
-	NextPage string `json:"nextPage"`
+	NextPage   string `json:"nextPage,omitempty"`
+	PageCursor string `json:"pageCursor,omitempty"`
 }
