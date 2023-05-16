@@ -27,7 +27,7 @@ type MutationResolver interface {
 	ExchangeOfferFiat(ctx context.Context, input models1.HTTPFiatExchangeOfferRequest) (*models1.HTTPFiatExchangeOfferResponse, error)
 	ExchangeTransferFiat(ctx context.Context, offerID string) (*models1.FiatExchangeTransferResponse, error)
 	BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error)
-	BalanceAllFiat(ctx context.Context, pageCursor string, pageSizeStr string) (*models1.HTTPFiatDetailsPaginated, error)
+	BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models1.HTTPFiatDetailsPaginated, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -37,24 +37,24 @@ type MutationResolver interface {
 func (ec *executionContext) field_Mutation_balanceAllFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 *string
 	if tmp, ok := rawArgs["pageCursor"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageCursor"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["pageCursor"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["pageSizeStr"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSizeStr"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg1 *int32
+	if tmp, ok := rawArgs["pageSize"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
+		arg1, err = ec.unmarshalOInt322ᚖint32(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["pageSizeStr"] = arg1
+	args["pageSize"] = arg1
 	return args, nil
 }
 
@@ -758,7 +758,7 @@ func (ec *executionContext) _Mutation_balanceAllFiat(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().BalanceAllFiat(rctx, fc.Args["pageCursor"].(string), fc.Args["pageSizeStr"].(string))
+		return ec.resolvers.Mutation().BalanceAllFiat(rctx, fc.Args["pageCursor"].(*string), fc.Args["pageSize"].(*int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

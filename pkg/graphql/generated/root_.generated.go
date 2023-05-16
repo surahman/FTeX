@@ -97,7 +97,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		BalanceAllFiat       func(childComplexity int, pageCursor string, pageSizeStr string) int
+		BalanceAllFiat       func(childComplexity int, pageCursor *string, pageSize *int32) int
 		BalanceFiat          func(childComplexity int, currencyCode string) int
 		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
 		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
@@ -336,7 +336,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.BalanceAllFiat(childComplexity, args["pageCursor"].(string), args["pageSizeStr"].(string)), true
+		return e.complexity.Mutation.BalanceAllFiat(childComplexity, args["pageCursor"].(*string), args["pageSize"].(*int32)), true
 
 	case "Mutation.balanceFiat":
 		if e.complexity.Mutation.BalanceFiat == nil {
@@ -646,7 +646,7 @@ extend type Mutation {
     balanceFiat(currencyCode: String!): FiatAccount!
 
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
-    balanceAllFiat(pageCursor: String!, pageSizeStr: String!): FiatBalancesPaginated!
+    balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {

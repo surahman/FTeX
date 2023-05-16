@@ -386,10 +386,10 @@ _Response:_ Account balance related details associated with the currency.
 _Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
 subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
 
-Initial request: The `pageCursor` will be an empty string and the `pageSize` is optional and will default to 10.
+Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
 ```graphql
 mutation {
-  balanceAllFiat(pageCursor: "", pageSizeStr:"3") {
+  balanceAllFiat(pageSize:"3") {
     accountBalances{
       currency
       balance
@@ -405,10 +405,10 @@ mutation {
 }
 ```
 
-Subsequent requests: The `currencyCode` and  `pageCursor` must be provided but the `pageSize` is optional.
+Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
 ```graphql
 mutation {
-  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSizeStr:"3") {
+  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize:"3") {
     accountBalances{
       currency
       balance

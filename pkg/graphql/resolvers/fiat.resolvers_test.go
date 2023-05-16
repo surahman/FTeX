@@ -1126,7 +1126,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 		}, {
 			name:                 "valid without query and 10 records",
 			path:                 "/balance-all-fiat/valid-no-query-10-records",
-			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "", 0),
+			query:                testFiatQuery["balanceAllFiatNoParams"],
 			expectErr:            false,
 			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			authValidateJWTErr:   nil,
@@ -1140,7 +1140,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 		}, {
 			name:                 "valid without query and 11 records",
 			path:                 "/balance-all-fiat/valid-no-query-11-records",
-			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "", 0),
+			query:                testFiatQuery["balanceAllFiatNoParams"],
 			expectErr:            false,
 			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			authValidateJWTErr:   nil,
@@ -1154,7 +1154,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 		}, {
 			name:                 "valid without query",
 			path:                 "/balance-all-fiat/valid-no-query",
-			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "", 0),
+			query:                testFiatQuery["balanceAllFiatNoParams"],
 			expectErr:            false,
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
