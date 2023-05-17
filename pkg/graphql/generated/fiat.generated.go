@@ -13,7 +13,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
-	"github.com/surahman/FTeX/pkg/utilities"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -44,10 +43,6 @@ type FiatJournalResolver interface {
 	TransactedAt(ctx context.Context, obj *postgres.FiatJournal) (string, error)
 	ClientID(ctx context.Context, obj *postgres.FiatJournal) (string, error)
 	TxID(ctx context.Context, obj *postgres.FiatJournal) (string, error)
-}
-type FiatPaginatedTxParamsResolver interface {
-	PeriodStart(ctx context.Context, obj *utilities.HTTPFiatPaginatedTxParams) (*string, error)
-	PeriodEnd(ctx context.Context, obj *utilities.HTTPFiatPaginatedTxParams) (*string, error)
 }
 
 type FiatDepositRequestResolver interface {
@@ -1317,8 +1312,8 @@ func (ec *executionContext) fieldContext_FiatOpenAccountResponse_currency(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatPaginatedTxParams_PageSizeStr(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_PageSizeStr(ctx, field)
+func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField, obj *models.FiatTransactionsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatTransactionsPaginated_transactions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1331,35 +1326,50 @@ func (ec *executionContext) _FiatPaginatedTxParams_PageSizeStr(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PageSizeStr, nil
+		return obj.Transactions, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]postgres.FiatJournal)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_PageSizeStr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
+		Object:     "FiatTransactionsPaginated",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_FiatJournal_currency(ctx, field)
+			case "amount":
+				return ec.fieldContext_FiatJournal_amount(ctx, field)
+			case "transactedAt":
+				return ec.fieldContext_FiatJournal_transactedAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_FiatJournal_clientID(ctx, field)
+			case "txID":
+				return ec.fieldContext_FiatJournal_txID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FiatJournal", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatPaginatedTxParams_PageCursorStr(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_PageCursorStr(ctx, field)
+func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.FiatTransactionsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatTransactionsPaginated_links(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1372,7 +1382,7 @@ func (ec *executionContext) _FiatPaginatedTxParams_PageCursorStr(ctx context.Con
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PageCursorStr, nil
+		return obj.Links, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1381,347 +1391,25 @@ func (ec *executionContext) _FiatPaginatedTxParams_PageCursorStr(ctx context.Con
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*models.HTTPLinks)
 	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return ec.marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_PageCursorStr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
+		Object:     "FiatTransactionsPaginated",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_TimezoneStr(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_TimezoneStr(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TimezoneStr, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_TimezoneStr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_MonthStr(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_MonthStr(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.MonthStr, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_MonthStr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_YearStr(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_YearStr(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.YearStr, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_YearStr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_Offset(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_Offset(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Offset, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(int32)
-	fc.Result = res
-	return ec.marshalOInt322int32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_Offset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int32 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_PageSize(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_PageSize(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageSize, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(int32)
-	fc.Result = res
-	return ec.marshalOInt322int32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_PageSize(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int32 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_NextPage(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_NextPage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.NextPage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_NextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_PeriodStart(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_PeriodStart(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatPaginatedTxParams().PeriodStart(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_PeriodStart(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatPaginatedTxParams_PeriodEnd(ctx context.Context, field graphql.CollectedField, obj *utilities.HTTPFiatPaginatedTxParams) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatPaginatedTxParams_PeriodEnd(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatPaginatedTxParams().PeriodEnd(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatPaginatedTxParams_PeriodEnd(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatPaginatedTxParams",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "nextPage":
+				return ec.fieldContext_Links_nextPage(ctx, field)
+			case "pageCursor":
+				return ec.fieldContext_Links_pageCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Links", field.Name)
 		},
 	}
 	return fc, nil
@@ -1896,6 +1584,80 @@ func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.C
 			if err = ec.resolvers.FiatExchangeOfferRequest().SourceAmount(ctx, &it, data); err != nil {
 				return it, err
 			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFiatPaginatedTxDetailsRequest(ctx context.Context, obj interface{}) (models.FiatPaginatedTxDetailsRequest, error) {
+	var it models.FiatPaginatedTxDetailsRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"currency", "pageSize", "pageCursor", "timezone", "month", "year"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "currency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "pageSize":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PageSize = data
+		case "pageCursor":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageCursor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PageCursor = data
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
+		case "month":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Month = data
+		case "year":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Year = data
 		}
 	}
 
@@ -2480,82 +2242,27 @@ func (ec *executionContext) _FiatOpenAccountResponse(ctx context.Context, sel as
 	return out
 }
 
-var fiatPaginatedTxParamsImplementors = []string{"FiatPaginatedTxParams"}
+var fiatTransactionsPaginatedImplementors = []string{"FiatTransactionsPaginated"}
 
-func (ec *executionContext) _FiatPaginatedTxParams(ctx context.Context, sel ast.SelectionSet, obj *utilities.HTTPFiatPaginatedTxParams) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, fiatPaginatedTxParamsImplementors)
+func (ec *executionContext) _FiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.FiatTransactionsPaginated) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fiatTransactionsPaginatedImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("FiatPaginatedTxParams")
-		case "PageSizeStr":
+			out.Values[i] = graphql.MarshalString("FiatTransactionsPaginated")
+		case "transactions":
 
-			out.Values[i] = ec._FiatPaginatedTxParams_PageSizeStr(ctx, field, obj)
+			out.Values[i] = ec._FiatTransactionsPaginated_transactions(ctx, field, obj)
 
-		case "PageCursorStr":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_PageCursorStr(ctx, field, obj)
-
-		case "TimezoneStr":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_TimezoneStr(ctx, field, obj)
-
-		case "MonthStr":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_MonthStr(ctx, field, obj)
-
-		case "YearStr":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_YearStr(ctx, field, obj)
-
-		case "Offset":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_Offset(ctx, field, obj)
-
-		case "PageSize":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_PageSize(ctx, field, obj)
-
-		case "NextPage":
-
-			out.Values[i] = ec._FiatPaginatedTxParams_NextPage(ctx, field, obj)
-
-		case "PeriodStart":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._FiatPaginatedTxParams_PeriodStart(ctx, field, obj)
-				return res
+			if out.Values[i] == graphql.Null {
+				invalids++
 			}
+		case "links":
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
+			out.Values[i] = ec._FiatTransactionsPaginated_links(ctx, field, obj)
 
-			})
-		case "PeriodEnd":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._FiatPaginatedTxParams_PeriodEnd(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2786,8 +2493,37 @@ func (ec *executionContext) marshalNFiatOpenAccountResponse2ᚖgithubᚗcomᚋsu
 	return ec._FiatOpenAccountResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNFiatTransactionsPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v models.FiatTransactionsPaginated) graphql.Marshaler {
+	return ec._FiatTransactionsPaginated(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.FiatTransactionsPaginated) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FiatTransactionsPaginated(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v models.HTTPLinks) graphql.Marshaler {
 	return ec._Links(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalOFiatPaginatedTxDetailsRequest2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (*models.FiatPaginatedTxDetailsRequest, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFiatPaginatedTxDetailsRequest(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v *models.HTTPLinks) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Links(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************

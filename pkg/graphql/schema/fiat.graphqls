@@ -59,34 +59,33 @@ type FiatBalancesPaginated {
     links:              Links!
 }
 
-# FiatPaginatedTxParams
-type FiatPaginatedTxParams {
-    # HTTP request input parameters.
-    PageSizeStr:   String
-    PageCursorStr: String
-    TimezoneStr:   String
-    MonthStr:      String
-    YearStr:       String
-
-    # Postgres query parameters.
-    Offset:      Int32
-    PageSize:    Int32
-    NextPage:    String
-    PeriodStart: String
-    PeriodEnd:   String
+# FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type FiatTransactionsPaginated {
+    transactions:   [FiatJournal!]!
+    links:          Links
 }
 
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
-    amount: Float!
-    currency: String!
+    amount:     Float!
+    currency:   String!
 }
 
 # FiatExchangeOfferRequest is a request to exchange Fiat currency from one to another.
 input FiatExchangeOfferRequest {
-    sourceCurrency: String!
-    destinationCurrency: String!
-    sourceAmount: Float!
+    sourceCurrency:         String!
+    destinationCurrency:    String!
+    sourceAmount:           Float!
+}
+
+# FiatPaginatedTxDetailsRequest request input parameters for all transaction records for a specific currency.
+input FiatPaginatedTxDetailsRequest{
+    currency:   String!
+    pageSize:   String
+    pageCursor: String
+    timezone:   String
+    month:      String
+    year:       String
 }
 
 # Requests that might alter the state of data in the database.
@@ -111,4 +110,7 @@ extend type Mutation {
 
     # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+
+    # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest): FiatTransactionsPaginated!
 }

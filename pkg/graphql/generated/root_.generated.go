@@ -35,7 +35,6 @@ type ResolverRoot interface {
 	FiatDepositResponse() FiatDepositResponseResolver
 	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
 	FiatJournal() FiatJournalResolver
-	FiatPaginatedTxParams() FiatPaginatedTxParamsResolver
 	Mutation() MutationResolver
 	PriceQuote() PriceQuoteResolver
 	Query() QueryResolver
@@ -95,17 +94,9 @@ type ComplexityRoot struct {
 		Currency func(childComplexity int) int
 	}
 
-	FiatPaginatedTxParams struct {
-		MonthStr      func(childComplexity int) int
-		NextPage      func(childComplexity int) int
-		Offset        func(childComplexity int) int
-		PageCursorStr func(childComplexity int) int
-		PageSize      func(childComplexity int) int
-		PageSizeStr   func(childComplexity int) int
-		PeriodEnd     func(childComplexity int) int
-		PeriodStart   func(childComplexity int) int
-		TimezoneStr   func(childComplexity int) int
-		YearStr       func(childComplexity int) int
+	FiatTransactionsPaginated struct {
+		Links        func(childComplexity int) int
+		Transactions func(childComplexity int) int
 	}
 
 	JWTAuthResponse struct {
@@ -120,17 +111,18 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		BalanceAllFiat         func(childComplexity int, pageCursor *string, pageSize *int32) int
-		BalanceFiat            func(childComplexity int, currencyCode string) int
-		DeleteUser             func(childComplexity int, input models.HTTPDeleteUserRequest) int
-		DepositFiat            func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
-		ExchangeOfferFiat      func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
-		ExchangeTransferFiat   func(childComplexity int, offerID string) int
-		LoginUser              func(childComplexity int, input models1.UserLoginCredentials) int
-		OpenFiat               func(childComplexity int, currency string) int
-		RefreshToken           func(childComplexity int) int
-		RegisterUser           func(childComplexity int, input *models1.UserAccount) int
-		TransactionDetailsFiat func(childComplexity int, transactionID string) int
+		BalanceAllFiat            func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceFiat               func(childComplexity int, currencyCode string) int
+		DeleteUser                func(childComplexity int, input models.HTTPDeleteUserRequest) int
+		DepositFiat               func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
+		ExchangeOfferFiat         func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
+		ExchangeTransferFiat      func(childComplexity int, offerID string) int
+		LoginUser                 func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat                  func(childComplexity int, currency string) int
+		RefreshToken              func(childComplexity int) int
+		RegisterUser              func(childComplexity int, input *models1.UserAccount) int
+		TransactionDetailsAllFiat func(childComplexity int, input *models.FiatPaginatedTxDetailsRequest) int
+		TransactionDetailsFiat    func(childComplexity int, transactionID string) int
 	}
 
 	PriceQuote struct {
@@ -350,75 +342,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FiatOpenAccountResponse.Currency(childComplexity), true
 
-	case "FiatPaginatedTxParams.MonthStr":
-		if e.complexity.FiatPaginatedTxParams.MonthStr == nil {
+	case "FiatTransactionsPaginated.links":
+		if e.complexity.FiatTransactionsPaginated.Links == nil {
 			break
 		}
 
-		return e.complexity.FiatPaginatedTxParams.MonthStr(childComplexity), true
+		return e.complexity.FiatTransactionsPaginated.Links(childComplexity), true
 
-	case "FiatPaginatedTxParams.NextPage":
-		if e.complexity.FiatPaginatedTxParams.NextPage == nil {
+	case "FiatTransactionsPaginated.transactions":
+		if e.complexity.FiatTransactionsPaginated.Transactions == nil {
 			break
 		}
 
-		return e.complexity.FiatPaginatedTxParams.NextPage(childComplexity), true
-
-	case "FiatPaginatedTxParams.Offset":
-		if e.complexity.FiatPaginatedTxParams.Offset == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.Offset(childComplexity), true
-
-	case "FiatPaginatedTxParams.PageCursorStr":
-		if e.complexity.FiatPaginatedTxParams.PageCursorStr == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.PageCursorStr(childComplexity), true
-
-	case "FiatPaginatedTxParams.PageSize":
-		if e.complexity.FiatPaginatedTxParams.PageSize == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.PageSize(childComplexity), true
-
-	case "FiatPaginatedTxParams.PageSizeStr":
-		if e.complexity.FiatPaginatedTxParams.PageSizeStr == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.PageSizeStr(childComplexity), true
-
-	case "FiatPaginatedTxParams.PeriodEnd":
-		if e.complexity.FiatPaginatedTxParams.PeriodEnd == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.PeriodEnd(childComplexity), true
-
-	case "FiatPaginatedTxParams.PeriodStart":
-		if e.complexity.FiatPaginatedTxParams.PeriodStart == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.PeriodStart(childComplexity), true
-
-	case "FiatPaginatedTxParams.TimezoneStr":
-		if e.complexity.FiatPaginatedTxParams.TimezoneStr == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.TimezoneStr(childComplexity), true
-
-	case "FiatPaginatedTxParams.YearStr":
-		if e.complexity.FiatPaginatedTxParams.YearStr == nil {
-			break
-		}
-
-		return e.complexity.FiatPaginatedTxParams.YearStr(childComplexity), true
+		return e.complexity.FiatTransactionsPaginated.Transactions(childComplexity), true
 
 	case "JWTAuthResponse.expires":
 		if e.complexity.JWTAuthResponse.Expires == nil {
@@ -570,6 +506,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
+	case "Mutation.transactionDetailsAllFiat":
+		if e.complexity.Mutation.TransactionDetailsAllFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_transactionDetailsAllFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TransactionDetailsAllFiat(childComplexity, args["input"].(*models.FiatPaginatedTxDetailsRequest)), true
+
 	case "Mutation.transactionDetailsFiat":
 		if e.complexity.Mutation.TransactionDetailsFiat == nil {
 			break
@@ -635,6 +583,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputDeleteUserRequest,
 		ec.unmarshalInputFiatDepositRequest,
 		ec.unmarshalInputFiatExchangeOfferRequest,
+		ec.unmarshalInputFiatPaginatedTxDetailsRequest,
 		ec.unmarshalInputUserAccount,
 		ec.unmarshalInputUserLoginCredentials,
 	)
@@ -765,34 +714,33 @@ type FiatBalancesPaginated {
     links:              Links!
 }
 
-# FiatPaginatedTxParams
-type FiatPaginatedTxParams {
-    # HTTP request input parameters.
-    PageSizeStr:   String
-    PageCursorStr: String
-    TimezoneStr:   String
-    MonthStr:      String
-    YearStr:       String
-
-    # Postgres query parameters.
-    Offset:      Int32
-    PageSize:    Int32
-    NextPage:    String
-    PeriodStart: String
-    PeriodEnd:   String
+# FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type FiatTransactionsPaginated {
+    transactions:   [FiatJournal!]!
+    links:          Links
 }
 
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
-    amount: Float!
-    currency: String!
+    amount:     Float!
+    currency:   String!
 }
 
 # FiatExchangeOfferRequest is a request to exchange Fiat currency from one to another.
 input FiatExchangeOfferRequest {
-    sourceCurrency: String!
-    destinationCurrency: String!
-    sourceAmount: Float!
+    sourceCurrency:         String!
+    destinationCurrency:    String!
+    sourceAmount:           Float!
+}
+
+# FiatPaginatedTxDetailsRequest request input parameters for all transaction records for a specific currency.
+input FiatPaginatedTxDetailsRequest{
+    currency:   String!
+    pageSize:   String
+    pageCursor: String
+    timezone:   String
+    month:      String
+    year:       String
 }
 
 # Requests that might alter the state of data in the database.
@@ -817,6 +765,9 @@ extend type Mutation {
 
     # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+
+    # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest): FiatTransactionsPaginated!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
