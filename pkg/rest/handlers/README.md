@@ -6,32 +6,32 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 
 ## Table of contents
 
-- [HTTP REST API Endpoints](#http-rest-api-endpoints)
-  - [Table of contents](#table-of-contents)
-    - [Authorization Response](#authorization-response)
-    - [Error Response](#error-response)
-    - [Success Response](#success-response)
-    - [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
-    - [User Endpoints `/user`](#user-endpoints-user)
-      - [Register `/register`](#register-register)
-      - [Login `/login`](#login-login)
-      - [Refresh `/refresh`](#refresh-refresh)
-      - [Delete `/delete`](#delete-delete)
-    - [Fiat Accounts Endpoints `/fiat`](#fiat-accounts-endpoints-fiat)
-      - [Open `/open`](#open-open)
-      - [Deposit `/deposit`](#deposit-deposit)
-      - [Exchange `/exchange`](#exchange-exchange)
-        - [Quote `/offer`](#quote-offer)
-        - [Convert `/convert`](#convert-convert)
-      - [Info `/info`](#info-info)
-        - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
-        - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
-        - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
-          - [Initial Page](#initial-page)
-          - [Subsequent Page](#subsequent-page)
-        - [Transaction Details for a Specific Currency `/transaction/all/{currencyCode}`](#transaction-details-for-a-specific-currency-transactionallcurrencycode)
-          - [Initial Page](#initial-page)
-          - [Subsequent Page](#subsequent-page)
+# Table of contents
+
+- [Authorization Response](#authorization-response)
+- [Error Response](#error-response)
+- [Success Response](#success-response)
+- [Healthcheck Endpoint `/health`](#healthcheck-endpoint-health)
+- [User Endpoints `/user`](#user-endpoints-user)
+  - [Register `/register`](#register-register)
+  - [Login `/login`](#login-login)
+  - [Refresh `/refresh`](#refresh-refresh)
+  - [Delete `/delete`](#delete-delete)
+- [Fiat Accounts Endpoints `/fiat`](#fiat-accounts-endpoints-fiat)
+  - [Open `/open`](#open-open)
+  - [Deposit `/deposit`](#deposit-deposit)
+  - [Exchange `/exchange`](#exchange-exchange)
+    - [Quote `/offer`](#quote-offer)
+    - [Convert `/convert`](#convert-convert)
+  - [Info `/info`](#info-info)
+    - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
+    - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
+    - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
+      - [External Transaction (deposit)](#external-transaction-deposit)
+      - [Internal Transfer (currency conversion/exchange)](#internal-transfer-currency-conversionexchange)
+    - [Transaction Details for a Specific Currency `/transaction/all/{currencyCode}`](#transaction-details-for-a-specific-currency-transactionallcurrencycode)
+      - [Initial Page](#initial-page)
+      - [Subsequent Page](#subsequent-page)
 
 <br/>
 
@@ -388,7 +388,7 @@ _Response:_ Transaction-related details for a specific transaction. In the event
 a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
 one for the source and the other for the destination accounts.
 
-###### External Transaction (Deposit)
+###### External Transaction (deposit)
 ```json
 {
   "message": "transaction details",
@@ -404,7 +404,7 @@ one for the source and the other for the destination accounts.
 }
 ```
 
-###### Internal Transaction (between accounts)
+###### Internal Transfer (currency conversion/exchange)
 ```json
 {
   "message": "transaction details",

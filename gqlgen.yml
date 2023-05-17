@@ -30,7 +30,7 @@ resolver:
 # struct_tag: json
 
 # Optional: turn on to use []Thing instead of []*Thing
-# omit_slice_element_pointers: false
+omit_slice_element_pointers: true
 
 # Optional: turn on to skip generation of ComplexityRoot struct content and Complexity function
 # omit_complexity: false

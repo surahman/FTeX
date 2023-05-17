@@ -28,7 +28,7 @@ type MutationResolver interface {
 	ExchangeTransferFiat(ctx context.Context, offerID string) (*models1.FiatExchangeTransferResponse, error)
 	BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error)
 	BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models1.HTTPFiatDetailsPaginated, error)
-	TransactionFiat(ctx context.Context, transactionID string) ([]*postgres.FiatJournal, error)
+	TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -179,7 +179,7 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_transactionFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_transactionDetailsFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -821,8 +821,8 @@ func (ec *executionContext) fieldContext_Mutation_balanceAllFiat(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_transactionFiat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_transactionFiat(ctx, field)
+func (ec *executionContext) _Mutation_transactionDetailsFiat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_transactionDetailsFiat(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -835,7 +835,7 @@ func (ec *executionContext) _Mutation_transactionFiat(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().TransactionFiat(rctx, fc.Args["transactionID"].(string))
+		return ec.resolvers.Mutation().TransactionDetailsFiat(rctx, fc.Args["transactionID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -847,12 +847,12 @@ func (ec *executionContext) _Mutation_transactionFiat(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*postgres.FiatJournal)
+	res := resTmp.([]postgres.FiatJournal)
 	fc.Result = res
-	return ec.marshalNFiatJournal2ᚕᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx, field.Selections, res)
+	return ec.marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_transactionFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_transactionDetailsFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -881,7 +881,7 @@ func (ec *executionContext) fieldContext_Mutation_transactionFiat(ctx context.Co
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_transactionFiat_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_transactionDetailsFiat_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -1150,10 +1150,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "transactionFiat":
+		case "transactionDetailsFiat":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_transactionFiat(ctx, field)
+				return ec._Mutation_transactionDetailsFiat(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

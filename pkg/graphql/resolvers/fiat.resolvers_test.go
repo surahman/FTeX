@@ -1305,3 +1305,135 @@ func TestFiatResolver_FiatJournalResolver(t *testing.T) {
 		require.Equal(t, txID.String(), result, "tx id mismatched.")
 	})
 }
+
+func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
+	t.Parallel()
+
+	txID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate new UUID.")
+
+	journalEntries := []postgres.FiatJournal{{}}
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		journalEntries       []postgres.FiatJournal
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		fiatTxDetailsErr     error
+		fiatTxDetailsTimes   int
+	}{
+		{
+			name:                 "invalid transaction ID",
+			path:                 "/transaction-details-fiat/invalid-transaction-id",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], "invalid-tx-id"),
+			expectErr:            true,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 0,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+		}, {
+			name:                 "invalid JWT",
+			path:                 "/transaction-details-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            true,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+		}, {
+			name:                 "unknown db error",
+			path:                 "/transaction-details-fiat/unknown-db-error",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            true,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     errors.New("unknown error"),
+			fiatTxDetailsTimes:   1,
+		}, {
+			name:                 "known db error",
+			path:                 "/transaction-details-fiat/known-db-error",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            true,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     postgres.ErrNotFound,
+			fiatTxDetailsTimes:   1,
+		}, {
+			name:                 "transaction id not found",
+			path:                 "/transaction-details-fiat/transaction-id-not-found",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            true,
+			journalEntries:       nil,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   1,
+		}, {
+			name:                 "valid",
+			path:                 "/transaction-details-fiat/valid",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            false,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return(test.journalEntries, test.fiatTxDetailsErr).
+					Times(test.fiatTxDetailsTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}

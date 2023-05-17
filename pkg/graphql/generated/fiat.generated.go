@@ -2222,7 +2222,11 @@ func (ec *executionContext) marshalNFiatExchangeTransferResponse2ᚖgithubᚗcom
 	return ec._FiatExchangeTransferResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFiatJournal2ᚕᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx context.Context, sel ast.SelectionSet, v []*postgres.FiatJournal) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatJournal2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx context.Context, sel ast.SelectionSet, v postgres.FiatJournal) graphql.Marshaler {
+	return ec._FiatJournal(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx context.Context, sel ast.SelectionSet, v []postgres.FiatJournal) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2246,7 +2250,7 @@ func (ec *executionContext) marshalNFiatJournal2ᚕᚖgithubᚗcomᚋsurahmanᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFiatJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx, sel, v[i])
+			ret[i] = ec.marshalNFiatJournal2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2264,16 +2268,6 @@ func (ec *executionContext) marshalNFiatJournal2ᚕᚖgithubᚗcomᚋsurahmanᚋ
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalNFiatJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx context.Context, sel ast.SelectionSet, v *postgres.FiatJournal) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._FiatJournal(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNFiatOpenAccountResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, v models.FiatOpenAccountResponse) graphql.Marshaler {

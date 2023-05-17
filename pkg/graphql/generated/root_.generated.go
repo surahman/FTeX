@@ -106,17 +106,17 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		BalanceAllFiat       func(childComplexity int, pageCursor *string, pageSize *int32) int
-		BalanceFiat          func(childComplexity int, currencyCode string) int
-		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
-		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
-		ExchangeOfferFiat    func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
-		ExchangeTransferFiat func(childComplexity int, offerID string) int
-		LoginUser            func(childComplexity int, input models1.UserLoginCredentials) int
-		OpenFiat             func(childComplexity int, currency string) int
-		RefreshToken         func(childComplexity int) int
-		RegisterUser         func(childComplexity int, input *models1.UserAccount) int
-		TransactionFiat      func(childComplexity int, transactionID string) int
+		BalanceAllFiat         func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceFiat            func(childComplexity int, currencyCode string) int
+		DeleteUser             func(childComplexity int, input models.HTTPDeleteUserRequest) int
+		DepositFiat            func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
+		ExchangeOfferFiat      func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
+		ExchangeTransferFiat   func(childComplexity int, offerID string) int
+		LoginUser              func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat               func(childComplexity int, currency string) int
+		RefreshToken           func(childComplexity int) int
+		RegisterUser           func(childComplexity int, input *models1.UserAccount) int
+		TransactionDetailsFiat func(childComplexity int, transactionID string) int
 	}
 
 	PriceQuote struct {
@@ -486,17 +486,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
-	case "Mutation.transactionFiat":
-		if e.complexity.Mutation.TransactionFiat == nil {
+	case "Mutation.transactionDetailsFiat":
+		if e.complexity.Mutation.TransactionDetailsFiat == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_transactionFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_transactionDetailsFiat_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.TransactionFiat(childComplexity, args["transactionID"].(string)), true
+		return e.complexity.Mutation.TransactionDetailsFiat(childComplexity, args["transactionID"].(string)), true
 
 	case "PriceQuote.amount":
 		if e.complexity.PriceQuote.Amount == nil {
@@ -714,8 +714,8 @@ extend type Mutation {
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
 
-    # transactionFiat is a request to retrieve the details for a specific transaction.
-    transactionFiat(transactionID: String!): [FiatJournal!]!
+    # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {

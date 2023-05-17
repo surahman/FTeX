@@ -493,7 +493,15 @@ default. A `Page Cursor` link will be supplied if there are subsequent pages of 
 _Request:_ A valid `Transaction ID` must be provided as a path parameter.
 
 ```graphql
-
+mutation {
+  transactionDetailsFiat(transactionID: "7d2fe42b-df1e-449f-875e-e9908ff24263") {
+    currency
+    amount
+    transactedAt
+    clientID
+    txID
+  }
+}
 ```
 
 _Response:_ Transaction-related details for a specific transaction. In the event of an external deposit, there will be
@@ -503,44 +511,46 @@ one for the source and the other for the destination accounts.
 ###### External Transfer (deposit)
 ```json
 {
-  "message": "transaction details",
-  "payload": [
-    {
-      "currency": "USD",
-      "amount": "10101.11",
-      "transactedAt": "2023-04-28T17:24:53.396603-04:00",
-      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txID": "de7456cb-1dde-4b73-941d-252a1fb1d337"
-    }
-  ]
+  "data": {
+    "transactionFiat": [
+      {
+        "currency": "CAD",
+        "amount": 368474.77,
+        "transactedAt": "2023-05-09 18:30:51.985719 -0400 EDT",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "7d2fe42b-df1e-449f-875e-e9908ff24263"
+      }
+    ]
+  }
 }
 ```
 
 ###### Internal Transfer (currency conversion/exchange)
 ```json
 {
-  "message": "transaction details",
-  "payload": [
-    {
-      "currency": "CAD",
-      "amount": "-100.26",
-      "transactedAt": "2023-04-30T17:06:54.654345-04:00",
-      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
-    },
-    {
-      "currency": "USD",
-      "amount": "73.44",
-      "transactedAt": "2023-04-30T17:06:54.654345-04:00",
-      "clientID": "a8d55c17-09cc-4805-a7f7-4c5038a97b32",
-      "txID": "da3f100a-2f47-4879-a3b7-bb0517c3b1ac"
-    }
-  ]
+  "data": {
+    "transactionDetailsFiat": [
+      {
+        "currency": "AED",
+        "amount": 10000,
+        "transactedAt": "2023-05-09 18:33:55.453689 -0400 EDT",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+      },
+      {
+        "currency": "USD",
+        "amount": 2723.24,
+        "transactedAt": "2023-05-09 18:33:55.453689 -0400 EDT",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+      }
+    ]
+  }
 }
 ```
 ##### Transaction Details for a Specific Currency
 
-_Request:_ A valid `Currency Code` must be provided as a path parameter. The path parameters accepted are listed below.
+_Request:_ A valid `Currency Code` must be provided as a parameter. The parameters accepted are listed below.
 If a `pageCursor` is supplied, all other parameters except for the `pageSize` are ignored.
 
 Optional:

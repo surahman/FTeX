@@ -411,9 +411,40 @@ func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor *strin
 	}, nil
 }
 
-// TransactionFiat is the resolver for the transactionFiat field.
-func (r *mutationResolver) TransactionFiat(ctx context.Context, transactionID string) ([]*postgres.FiatJournal, error) {
-	panic(fmt.Errorf("not implemented: TransactionFiat - transactionFiat"))
+// TransactionDetailsFiat is the resolver for the transactionDetailsFiat field.
+func (r *mutationResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error) {
+	var (
+		journalEntries []postgres.FiatJournal
+		clientID       uuid.UUID
+		txID           uuid.UUID
+		err            error
+	)
+
+	// Extract and validate the transactionID.
+	if txID, err = uuid.FromString(transactionID); err != nil {
+		return nil, fmt.Errorf("invalid transaction id %s", transactionID)
+	}
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if journalEntries, err = r.db.FiatTxDetailsCurrency(clientID, txID); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			r.logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		return nil, errors.New(balanceErr.Message)
+	}
+
+	if len(journalEntries) == 0 {
+		return nil, errors.New("transaction id not found")
+	}
+
+	return journalEntries, nil
 }
 
 // Amount is the resolver for the amount field.
