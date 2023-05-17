@@ -561,6 +561,10 @@ Initial Page (required):
 * `year`: Year for which the transactions are being requested.
 * `timezone`: Timezone for which the transactions are being requested.
 
+```graphql
+
+```
+
 Subsequent Pages (required)
 * `pageCursor`: Hashed page cursor for the next page of data.
 

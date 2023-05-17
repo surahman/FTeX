@@ -111,3 +111,6 @@ models:
   FiatJournal:
     model:
       - github.com/surahman/FTeX/pkg/postgres.FiatJournal
+  FiatPaginatedTxParams:
+    model:
+      - github.com/surahman/FTeX/pkg/utilities.HTTPFiatPaginatedTxParams

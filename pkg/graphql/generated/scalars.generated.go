@@ -69,6 +69,16 @@ func (ec *executionContext) marshalNUUID2string(ctx context.Context, sel ast.Sel
 	return res
 }
 
+func (ec *executionContext) unmarshalOInt322int32(ctx context.Context, v interface{}) (int32, error) {
+	res, err := graphql.UnmarshalInt32(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt322int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
+	res := graphql.MarshalInt32(v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOInt322ᚖint32(ctx context.Context, v interface{}) (*int32, error) {
 	if v == nil {
 		return nil, nil

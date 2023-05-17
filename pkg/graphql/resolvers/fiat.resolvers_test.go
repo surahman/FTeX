@@ -22,6 +22,7 @@ import (
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
+	"github.com/surahman/FTeX/pkg/utilities"
 )
 
 func TestFiatResolver_OpenFiat(t *testing.T) {
@@ -1240,7 +1241,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 	}
 }
 
-func TestFiatResolver_FiatJournalResolver(t *testing.T) {
+func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	t.Parallel()
 
 	resolver := fiatJournalResolver{}
@@ -1436,4 +1437,39 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFiatResolver_FiatPaginatedTxParamsResolvers(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatPaginatedTxParamsResolver{}
+
+	start := time.Now().Add(-1 * time.Hour)
+	periodStart := pgtype.Timestamptz{}
+	require.NoError(t, periodStart.Scan(start), "failed to generate start timestamp.")
+
+	end := time.Now()
+	periodEnd := pgtype.Timestamptz{}
+	require.NoError(t, periodEnd.Scan(end), "failed to generate end timestamp.")
+
+	params := &utilities.HTTPFiatPaginatedTxParams{
+		PeriodStart: periodStart,
+		PeriodEnd:   periodEnd,
+	}
+
+	t.Run("PeriodStart", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.PeriodStart(context.TODO(), params)
+		require.NoError(t, err, "failed to resolve period start")
+		require.Equal(t, start.String(), *result, "period start mismatched.")
+	})
+
+	t.Run("PeriodEnd", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.PeriodEnd(context.TODO(), params)
+		require.NoError(t, err, "failed to resolve period end")
+		require.Equal(t, end.String(), *result, "period end mismatched.")
+	})
 }

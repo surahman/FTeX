@@ -113,6 +113,20 @@ func (r *fiatJournalResolver) TxID(ctx context.Context, obj *postgres.FiatJourna
 	return obj.TxID.String(), nil
 }
 
+// PeriodStart is the resolver for the PeriodStart field.
+func (r *fiatPaginatedTxParamsResolver) PeriodStart(ctx context.Context, obj *utilities.HTTPFiatPaginatedTxParams) (*string, error) {
+	periodStart := obj.PeriodStart.Time.String()
+
+	return &periodStart, nil
+}
+
+// PeriodEnd is the resolver for the PeriodEnd field.
+func (r *fiatPaginatedTxParamsResolver) PeriodEnd(ctx context.Context, obj *utilities.HTTPFiatPaginatedTxParams) (*string, error) {
+	periodEnd := obj.PeriodEnd.Time.String()
+
+	return &periodEnd, nil
+}
+
 // OpenFiat is the resolver for the openFiat field.
 func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) {
 	var (
@@ -481,6 +495,11 @@ func (r *Resolver) FiatJournal() graphql_generated.FiatJournalResolver {
 	return &fiatJournalResolver{r}
 }
 
+// FiatPaginatedTxParams returns graphql_generated.FiatPaginatedTxParamsResolver implementation.
+func (r *Resolver) FiatPaginatedTxParams() graphql_generated.FiatPaginatedTxParamsResolver {
+	return &fiatPaginatedTxParamsResolver{r}
+}
+
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
 func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver {
 	return &fiatDepositRequestResolver{r}
@@ -495,5 +514,6 @@ type fiatAccountResolver struct{ *Resolver }
 type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeOfferResponseResolver struct{ *Resolver }
 type fiatJournalResolver struct{ *Resolver }
+type fiatPaginatedTxParamsResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
 type fiatExchangeOfferRequestResolver struct{ *Resolver }
