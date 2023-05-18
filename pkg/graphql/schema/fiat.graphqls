@@ -107,12 +107,12 @@ extend type Mutation {
 
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
-
-    # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
-    transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
 }
 
 extend type Query {
+    # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+
     # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest!): FiatTransactionsPaginated!
 }

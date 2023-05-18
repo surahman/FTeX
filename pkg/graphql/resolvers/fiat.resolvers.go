@@ -412,7 +412,7 @@ func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor *strin
 }
 
 // TransactionDetailsFiat is the resolver for the transactionDetailsFiat field.
-func (r *mutationResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error) {
+func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error) {
 	var (
 		journalEntries []postgres.FiatJournal
 		clientID       uuid.UUID
