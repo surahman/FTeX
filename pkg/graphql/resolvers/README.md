@@ -490,10 +490,10 @@ default. A `Page Cursor` link will be supplied if there are subsequent pages of 
 ```
 ##### Transaction Details for a Specific Transaction
 
-_Request:_ A valid `Transaction ID` must be provided as a path parameter.
+_Request:_ A valid `Transaction ID` must be provided as a parameter.
 
 ```graphql
-mutation {
+query {
   transactionDetailsFiat(transactionID: "7d2fe42b-df1e-449f-875e-e9908ff24263") {
     currency
     amount
@@ -562,14 +562,50 @@ Initial Page (required):
 * `timezone`: Timezone for which the transactions are being requested.
 
 ```graphql
-
+query {
+  transactionDetailsAllFiat(input:{
+    currency: "USD"
+  	pageSize:"3"
+    timezone:"-04:00"
+    month: "5"
+    year:"2023"
+  }) {
+    transactions {
+      currency
+      amount
+      transactedAt
+      clientID
+      txID
+    }
+    links {
+      pageCursor
+    }
+  }
+}
 ```
 
 Subsequent Pages (required)
 * `pageCursor`: Hashed page cursor for the next page of data.
 
 ```graphql
-
+query {
+  transactionDetailsAllFiat(input:{
+    currency: "USD"
+  	pageSize:"3"
+    pageCursor: "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
+  }) {
+    transactions {
+      currency
+      amount
+      transactedAt
+      clientID
+      txID
+    }
+    links {
+      pageCursor
+    }
+  }
+}
 ```
 
 _Response:_ All Transaction-related details for a specific currency in a given timezone and date are returned. In the
@@ -579,33 +615,34 @@ transfer, two entries will be returned - one for the source and the other for th
 ###### Initial Page
 ```json
 {
-  "message": "account transactions",
-  "payload": {
-    "transactionDetails": [
-      {
-        "currency": "AED",
-        "amount": "10000",
-        "transactedAt": "2023-05-09T18:33:55.453689-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
-      },
-      {
-        "currency": "AED",
-        "amount": "8180.74",
-        "transactedAt": "2023-05-09T18:32:16.38917-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "txID": "b6a760ba-a189-4222-9897-4a783c799953"
-      },
-      {
-        "currency": "AED",
-        "amount": "4396.12",
-        "transactedAt": "2023-05-09T18:32:16.004549-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "txID": "7108d3e5-257e-45a8-ace1-d7e86c84556e"
+  "data": {
+    "transactionDetailsAllFiat": {
+      "transactions": [
+        {
+          "currency": "USD",
+          "amount": 100.11,
+          "transactedAt": "2023-05-15 16:59:24.243332 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "043d82a9-113b-4aa7-a3e1-029cc4728926"
+        },
+        {
+          "currency": "USD",
+          "amount": 100.11,
+          "transactedAt": "2023-05-15 16:58:54.84774 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "04ab99a6-c054-4592-b9cb-477369e0e9d8"
+        },
+        {
+          "currency": "USD",
+          "amount": 100.11,
+          "transactedAt": "2023-05-15 16:57:45.752318 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "1c57d150-9a93-4e4d-aef3-a8c3a14ff433"
+        }
+      ],
+      "links": {
+        "pageCursor": "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
       }
-    ],
-    "links": {
-      "nextPage": "?pageCursor=xft0C3AaJwShw6Du5tr0d8FKXYedyFd1cgPp13W2LvU9U8ii3svtRn2Tt7Pd3LI6nQvO3AUI0NioM18v6XGFXuC4jpFDA8AsqFnXqSZMwMSk&pageSize=3"
     }
   }
 }
@@ -614,33 +651,34 @@ transfer, two entries will be returned - one for the source and the other for th
 ###### Subsequent Page
 ```json
 {
-  "message": "account transactions",
-  "payload": {
-    "transactionDetails": [
-      {
-        "currency": "AED",
-        "amount": "4561.01",
-        "transactedAt": "2023-05-09T18:32:15.547456-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "txID": "525ea850-916b-4761-ae28-a34a63613212"
-      },
-      {
-        "currency": "AED",
-        "amount": "3323.22",
-        "transactedAt": "2023-05-09T18:32:15.137486-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "txID": "77278e19-5a1b-46fe-a106-d2f21ad72839"
-      },
-      {
-        "currency": "AED",
-        "amount": "4242.43",
-        "transactedAt": "2023-05-09T18:31:49.872366-04:00",
-        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-        "txID": "6c930c8c-fef8-4711-8961-2d101bfb7a5e"
+  "data": {
+    "transactionDetailsAllFiat": {
+      "transactions": [
+        {
+          "currency": "USD",
+          "amount": 1345.67,
+          "transactedAt": "2023-05-14 11:57:47.796057 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "8522591d-6463-4cc6-9e3c-c456c98a6755"
+        },
+        {
+          "currency": "USD",
+          "amount": 2723.24,
+          "transactedAt": "2023-05-09 18:33:55.453689 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+        },
+        {
+          "currency": "USD",
+          "amount": 10101.11,
+          "transactedAt": "2023-05-09 18:29:48.729195 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "1d7e1e70-0f9d-41b4-9f85-6dc310aa8f2d"
+        }
+      ],
+      "links": {
+        "pageCursor": ""
       }
-    ],
-    "links": {
-      "nextPage": ""
     }
   }
 }
