@@ -52,15 +52,27 @@ func getFiatQuery() map[string]string {
 		}`,
 
 		"balanceFiat": `{
-		"query": "mutation { balanceFiat(currencyCode: \"%s\") { currency, balance, lastTx, lastTxTs, createdAt, clientID } }"
+		"query": "query { balanceFiat(currencyCode: \"%s\") { currency, balance, lastTx, lastTxTs, createdAt, clientID } }"
 		}`,
 
 		"balanceAllFiat": `{
-		"query": "mutation { balanceAllFiat( pageCursor: \"%s\", pageSize: %d ) { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		"query": "query { balanceAllFiat( pageCursor: \"%s\", pageSize: %d ) { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
 		}`,
 
 		"balanceAllFiatNoParams": `{
-		"query": "mutation { balanceAllFiat { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		"query": "query { balanceAllFiat { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		}`,
+
+		"transactionDetailsFiat": `{
+		"query": "query { transactionDetailsFiat ( transactionID: \"%s\") { currency, amount, transactedAt, clientID, txID } }"
+		}`,
+
+		"transactionDetailsAllFiatInit": `{
+		"query": "query { transactionDetailsAllFiat(input: { currency: \"%s\", pageSize:\"%d\", timezone:\"%s\", month: \"%d\", year:\"%d\" }) { transactions { currency, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
+
+		"transactionDetailsAllFiatSubsequent": `{
+		"query": "query { transactionDetailsAllFiat(input: { currency: \"%s\", pageSize:\"%d\", pageCursor:\"%s\" }) { transactions { currency, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
 		}`,
 	}
 }

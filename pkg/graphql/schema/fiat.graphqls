@@ -30,12 +30,21 @@ type FiatExchangeTransferResponse {
 
 # FiatAccount are the Fiat account details associated with a specific Client ID.
 type FiatAccount {
-    currency: String!
-    balance: Float!
-    lastTx: Float!
-    lastTxTs: String!
-    createdAt: String!
-    clientID: UUID!
+    currency:   String!
+    balance:    Float!
+    lastTx:     Float!
+    lastTxTs:   String!
+    createdAt:  String!
+    clientID:   UUID!
+}
+
+# FiatJournal are the Fiat transactional records for a specific transaction.
+type FiatJournal {
+    currency:       String!
+    amount:         Float!
+    transactedAt:   String!
+    clientID:       UUID!
+    txID:           UUID!
 }
 
 # Links are links used in responses to retrieve pages of information.
@@ -46,21 +55,37 @@ type Links {
 
 # FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
 type FiatBalancesPaginated {
-    accountBalances: [FiatAccount!]!
-    links: Links!
+    accountBalances:    [FiatAccount!]!
+    links:              Links!
+}
+
+# FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type FiatTransactionsPaginated {
+    transactions:   [FiatJournal!]!
+    links:          Links
 }
 
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.
 input FiatDepositRequest {
-    amount: Float!
-    currency: String!
+    amount:     Float!
+    currency:   String!
 }
 
 # FiatExchangeOfferRequest is a request to exchange Fiat currency from one to another.
 input FiatExchangeOfferRequest {
-    sourceCurrency: String!
-    destinationCurrency: String!
-    sourceAmount: Float!
+    sourceCurrency:         String!
+    destinationCurrency:    String!
+    sourceAmount:           Float!
+}
+
+# FiatPaginatedTxDetailsRequest request input parameters for all transaction records for a specific currency.
+input FiatPaginatedTxDetailsRequest{
+    currency:   String!
+    pageSize:   String
+    pageCursor: String
+    timezone:   String
+    month:      String
+    year:       String
 }
 
 # Requests that might alter the state of data in the database.
@@ -76,10 +101,18 @@ extend type Mutation {
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
+}
 
+extend type Query {
     # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceFiat(currencyCode: String!): FiatAccount!
 
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
+
+    # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+
+    # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest!): FiatTransactionsPaginated!
 }

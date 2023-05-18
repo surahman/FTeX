@@ -88,6 +88,31 @@ func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj
 	return obj.DebitAmount.InexactFloat64(), nil
 }
 
+// Currency is the resolver for the currency field.
+func (r *fiatJournalResolver) Currency(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return string(obj.Currency), nil
+}
+
+// Amount is the resolver for the amount field.
+func (r *fiatJournalResolver) Amount(ctx context.Context, obj *postgres.FiatJournal) (float64, error) {
+	return obj.Amount.InexactFloat64(), nil
+}
+
+// TransactedAt is the resolver for the transactedAt field.
+func (r *fiatJournalResolver) TransactedAt(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return obj.TransactedAt.Time.String(), nil
+}
+
+// ClientID is the resolver for the clientID field.
+func (r *fiatJournalResolver) ClientID(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return obj.ClientID.String(), nil
+}
+
+// TxID is the resolver for the txID field.
+func (r *fiatJournalResolver) TxID(ctx context.Context, obj *postgres.FiatJournal) (string, error) {
+	return obj.TxID.String(), nil
+}
+
 // OpenFiat is the resolver for the openFiat field.
 func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) {
 	var (
@@ -293,7 +318,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 }
 
 // BalanceFiat is the resolver for the balanceFiat field.
-func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
+func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
 	var (
 		accDetails postgres.FiatAccount
 		clientID   uuid.UUID
@@ -325,7 +350,7 @@ func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string)
 }
 
 // BalanceAllFiat is the resolver for the balanceAllFiat field.
-func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error) {
+func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error) {
 	var (
 		accDetails []postgres.FiatAccount
 		clientID   uuid.UUID
@@ -386,6 +411,128 @@ func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor *strin
 	}, nil
 }
 
+// TransactionDetailsFiat is the resolver for the transactionDetailsFiat field.
+func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error) {
+	var (
+		journalEntries []postgres.FiatJournal
+		clientID       uuid.UUID
+		txID           uuid.UUID
+		err            error
+	)
+
+	// Extract and validate the transactionID.
+	if txID, err = uuid.FromString(transactionID); err != nil {
+		return nil, fmt.Errorf("invalid transaction id %s", transactionID)
+	}
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if journalEntries, err = r.db.FiatTxDetailsCurrency(clientID, txID); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			r.logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		return nil, errors.New(balanceErr.Message)
+	}
+
+	if len(journalEntries) == 0 {
+		return nil, errors.New("transaction id not found")
+	}
+
+	return journalEntries, nil
+}
+
+// TransactionDetailsAllFiat is the resolver for the transactionDetailsAllFiat field.
+func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.FiatTransactionsPaginated, error) {
+	var (
+		journalEntries []postgres.FiatJournal
+		clientID       uuid.UUID
+		currency       postgres.Currency
+		err            error
+		params         utilities.HTTPFiatPaginatedTxParams
+	)
+
+	if input.PageSize == nil {
+		input.PageSize = new(string)
+	}
+	params.PageSizeStr = *input.PageSize
+
+	if input.PageCursor == nil {
+		input.PageCursor = new(string)
+	}
+	params.PageCursorStr = *input.PageCursor
+
+	if input.Timezone == nil {
+		input.Timezone = new(string)
+	}
+	params.TimezoneStr = *input.Timezone
+
+	if input.Month == nil {
+		input.Month = new(string)
+	}
+	params.MonthStr = *input.Month
+
+	if input.Year == nil {
+		input.Year = new(string)
+	}
+	params.YearStr = *input.Year
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	// Extract and validate the currency.
+	if err = currency.Scan(input.Currency); err != nil || !currency.Valid() {
+		return nil, fmt.Errorf("invalid currency %s", currency)
+	}
+
+	// Check for required parameters.
+	if len(*input.PageCursor) == 0 && (len(*input.Month) == 0 || len(*input.Year) == 0) {
+		return nil, errors.New("missing required parameters")
+	}
+
+	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
+	if _, err = utilities.HTTPFiatTxParseQueryParams(r.auth, r.logger, &params); err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	// Retrieve transaction details page.
+	if journalEntries, err = r.db.FiatTransactionsCurrencyPaginated(
+		clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			r.logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
+
+			return nil, errors.New("please retry your request later")
+		}
+
+		return nil, errors.New(balanceErr.Message)
+	}
+
+	if len(journalEntries) == 0 {
+		return nil, errors.New("no transactions")
+	}
+
+	// Check if there are further pages of data. If not, set the next link to be empty.
+	if len(journalEntries) > int(params.PageSize) {
+		journalEntries = journalEntries[:int(params.PageSize)]
+	} else {
+		params.NextPage = ""
+	}
+
+	return &models.FiatTransactionsPaginated{
+		Transactions: journalEntries,
+		Links: &models.HTTPLinks{
+			PageCursor: params.NextPage,
+		},
+	}, nil
+}
+
 // Amount is the resolver for the amount field.
 func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error {
 	obj.Amount = decimal.NewFromFloat(data)
@@ -415,6 +562,11 @@ func (r *Resolver) FiatExchangeOfferResponse() graphql_generated.FiatExchangeOff
 	return &fiatExchangeOfferResponseResolver{r}
 }
 
+// FiatJournal returns graphql_generated.FiatJournalResolver implementation.
+func (r *Resolver) FiatJournal() graphql_generated.FiatJournalResolver {
+	return &fiatJournalResolver{r}
+}
+
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
 func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver {
 	return &fiatDepositRequestResolver{r}
@@ -428,5 +580,6 @@ func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOffe
 type fiatAccountResolver struct{ *Resolver }
 type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeOfferResponseResolver struct{ *Resolver }
+type fiatJournalResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
 type fiatExchangeOfferRequestResolver struct{ *Resolver }

@@ -6,6 +6,29 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
 
 ## Table of contents
 
+- [Authorization Response](#authorization-response)
+- [Authorization](#authorization)
+- [Healthcheck Query.](#healthcheck-query)
+- [User Mutations](#user-mutations)
+    - [Register](#register)
+    - [Login](#login)
+    - [Refresh](#refresh)
+    - [Delete](#delete)
+- [Fiat Account Mutations and Queries](#fiat-account-mutations-and-queries)
+    - [Open Account](#open-account)
+    - [Deposit](#deposit)
+    - [Exchange](#exchange)
+        - [Quote](#quote)
+        - [Convert](#convert)
+    - [Info](#info)
+        - [Balance for a Specific Currency](#balance-for-a-specific-currency)
+        - [Balance for all Currencies for a Client](#balance-for-all-currencies-for-a-client)
+        - [Transaction Details for a Specific Transaction](#transaction-details-for-a-specific-transaction)
+            - [External Transfer (deposit)](#external-transfer-deposit)
+            - [Internal Transfer (currency conversion/exchange)](#internal-transfer-currency-conversionexchange)
+        - [Transaction Details for a Specific Currency](#transaction-details-for-a-specific-currency)
+            - [Initial Page](#initial-page)
+            - [Subsequent Page](#subsequent-page)
 
 <br/>
 
@@ -175,7 +198,7 @@ _Response:_ A confirmation message will be returned as a success response.
 <br/>
 
 
-### Fiat Account Mutations
+### Fiat Account Mutations and Queries
 
 #### Open Account
 
@@ -353,7 +376,7 @@ _Response:_ A transaction receipt with the details of the source and destination
 
 _Request:_ A valid currency code must be provided as a parameter.
 ```graphql
-mutation {
+query {
 	balanceFiat(currencyCode:"USD") {
     currency,
     balance,
@@ -388,7 +411,7 @@ subsequent responses will contain encrypted page cursors that must be specified 
 
 Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
 ```graphql
-mutation {
+query {
   balanceAllFiat(pageSize: 3) {
     accountBalances{
       currency
@@ -407,7 +430,7 @@ mutation {
 
 Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
 ```graphql
-mutation {
+query {
   balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize: 3) {
     accountBalances{
       currency
@@ -479,6 +502,201 @@ default. A `Page Cursor` link will be supplied if there are subsequent pages of 
           "lastTxTs": "2023-05-15 16:59:24.243332 -0400 EDT",
           "createdAt": "2023-05-09 18:29:04.345387 -0400 EDT",
           "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe"
+        }
+      ],
+      "links": {
+        "pageCursor": ""
+      }
+    }
+  }
+}
+```
+##### Transaction Details for a Specific Transaction
+
+_Request:_ A valid `Transaction ID` must be provided as a parameter.
+
+```graphql
+query {
+  transactionDetailsFiat(transactionID: "7d2fe42b-df1e-449f-875e-e9908ff24263") {
+    currency
+    amount
+    transactedAt
+    clientID
+    txID
+  }
+}
+```
+
+_Response:_ Transaction-related details for a specific transaction. In the event of an external deposit, there will be
+a single entry reporting the deposited amount. When querying for an internal transfer, two entries will be returned -
+one for the source and the other for the destination accounts.
+
+###### External Transfer (deposit)
+```json
+{
+  "data": {
+    "transactionFiat": [
+      {
+        "currency": "CAD",
+        "amount": 368474.77,
+        "transactedAt": "2023-05-09 18:30:51.985719 -0400 EDT",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "7d2fe42b-df1e-449f-875e-e9908ff24263"
+      }
+    ]
+  }
+}
+```
+
+###### Internal Transfer (currency conversion/exchange)
+```json
+{
+  "data": {
+    "transactionDetailsFiat": [
+      {
+        "currency": "AED",
+        "amount": 10000,
+        "transactedAt": "2023-05-09 18:33:55.453689 -0400 EDT",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+      },
+      {
+        "currency": "USD",
+        "amount": 2723.24,
+        "transactedAt": "2023-05-09 18:33:55.453689 -0400 EDT",
+        "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+        "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+      }
+    ]
+  }
+}
+```
+##### Transaction Details for a Specific Currency
+
+_Request:_ A valid `Currency Code` must be provided as a parameter. The parameters accepted are listed below.
+If a `pageCursor` is supplied, all other parameters except for the `pageSize` are ignored.
+
+Optional:
+* `pageCursor`: Defaults to 10.
+
+Initial Page (required):
+* `month`: Month for which the transactions are being requested.
+* `year`: Year for which the transactions are being requested.
+* `timezone`: Timezone for which the transactions are being requested.
+
+```graphql
+query {
+  transactionDetailsAllFiat(input:{
+    currency: "USD"
+  	pageSize:"3"
+    timezone:"-04:00"
+    month: "5"
+    year:"2023"
+  }) {
+    transactions {
+      currency
+      amount
+      transactedAt
+      clientID
+      txID
+    }
+    links {
+      pageCursor
+    }
+  }
+}
+```
+
+Subsequent Pages (required)
+* `pageCursor`: Hashed page cursor for the next page of data.
+
+```graphql
+query {
+  transactionDetailsAllFiat(input:{
+    currency: "USD"
+  	pageSize:"3"
+    pageCursor: "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
+  }) {
+    transactions {
+      currency
+      amount
+      transactedAt
+      clientID
+      txID
+    }
+    links {
+      pageCursor
+    }
+  }
+}
+```
+
+_Response:_ All Transaction-related details for a specific currency in a given timezone and date are returned. In the
+event of an external deposit, there will be a single entry reporting the deposited amount. When querying for an internal
+transfer, two entries will be returned - one for the source and the other for the destination accounts.
+
+###### Initial Page
+```json
+{
+  "data": {
+    "transactionDetailsAllFiat": {
+      "transactions": [
+        {
+          "currency": "USD",
+          "amount": 100.11,
+          "transactedAt": "2023-05-15 16:59:24.243332 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "043d82a9-113b-4aa7-a3e1-029cc4728926"
+        },
+        {
+          "currency": "USD",
+          "amount": 100.11,
+          "transactedAt": "2023-05-15 16:58:54.84774 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "04ab99a6-c054-4592-b9cb-477369e0e9d8"
+        },
+        {
+          "currency": "USD",
+          "amount": 100.11,
+          "transactedAt": "2023-05-15 16:57:45.752318 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "1c57d150-9a93-4e4d-aef3-a8c3a14ff433"
+        }
+      ],
+      "links": {
+        "pageCursor": "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
+      }
+    }
+  }
+}
+```
+
+###### Subsequent Page
+```json
+{
+  "data": {
+    "transactionDetailsAllFiat": {
+      "transactions": [
+        {
+          "currency": "USD",
+          "amount": 1345.67,
+          "transactedAt": "2023-05-14 11:57:47.796057 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "8522591d-6463-4cc6-9e3c-c456c98a6755"
+        },
+        {
+          "currency": "USD",
+          "amount": 2723.24,
+          "transactedAt": "2023-05-09 18:33:55.453689 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "af4467a9-7c0a-4437-acf3-e5060509a5d9"
+        },
+        {
+          "currency": "USD",
+          "amount": 10101.11,
+          "transactedAt": "2023-05-09 18:29:48.729195 -0400 EDT",
+          "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+          "txID": "1d7e1e70-0f9d-41b4-9f85-6dc310aa8f2d"
         }
       ],
       "links": {

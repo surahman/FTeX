@@ -37,6 +37,13 @@ type FiatDepositResponseResolver interface {
 type FiatExchangeOfferResponseResolver interface {
 	DebitAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferResponse) (float64, error)
 }
+type FiatJournalResolver interface {
+	Currency(ctx context.Context, obj *postgres.FiatJournal) (string, error)
+	Amount(ctx context.Context, obj *postgres.FiatJournal) (float64, error)
+	TransactedAt(ctx context.Context, obj *postgres.FiatJournal) (string, error)
+	ClientID(ctx context.Context, obj *postgres.FiatJournal) (string, error)
+	TxID(ctx context.Context, obj *postgres.FiatJournal) (string, error)
+}
 
 type FiatDepositRequestResolver interface {
 	Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error
@@ -997,6 +1004,226 @@ func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_destinatio
 	return fc, nil
 }
 
+func (ec *executionContext) _FiatJournal_currency(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatJournal_currency(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FiatJournal().Currency(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatJournal_currency(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatJournal_amount(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatJournal_amount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FiatJournal().Amount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatJournal_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatJournal_transactedAt(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatJournal_transactedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FiatJournal().TransactedAt(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatJournal_transactedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatJournal_clientID(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatJournal_clientID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FiatJournal().ClientID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNUUID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatJournal_clientID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatJournal_txID(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatJournal_txID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FiatJournal().TxID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNUUID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatJournal_txID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FiatOpenAccountResponse_clientID(ctx context.Context, field graphql.CollectedField, obj *models.FiatOpenAccountResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatOpenAccountResponse_clientID(ctx, field)
 	if err != nil {
@@ -1080,6 +1307,109 @@ func (ec *executionContext) fieldContext_FiatOpenAccountResponse_currency(ctx co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField, obj *models.FiatTransactionsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatTransactionsPaginated_transactions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transactions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]postgres.FiatJournal)
+	fc.Result = res
+	return ec.marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatTransactionsPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_FiatJournal_currency(ctx, field)
+			case "amount":
+				return ec.fieldContext_FiatJournal_amount(ctx, field)
+			case "transactedAt":
+				return ec.fieldContext_FiatJournal_transactedAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_FiatJournal_clientID(ctx, field)
+			case "txID":
+				return ec.fieldContext_FiatJournal_txID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FiatJournal", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.FiatTransactionsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FiatTransactionsPaginated_links(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Links, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*models.HTTPLinks)
+	fc.Result = res
+	return ec.marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FiatTransactionsPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "nextPage":
+				return ec.fieldContext_Links_nextPage(ctx, field)
+			case "pageCursor":
+				return ec.fieldContext_Links_pageCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Links", field.Name)
 		},
 	}
 	return fc, nil
@@ -1254,6 +1584,80 @@ func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.C
 			if err = ec.resolvers.FiatExchangeOfferRequest().SourceAmount(ctx, &it, data); err != nil {
 				return it, err
 			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFiatPaginatedTxDetailsRequest(ctx context.Context, obj interface{}) (models.FiatPaginatedTxDetailsRequest, error) {
+	var it models.FiatPaginatedTxDetailsRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"currency", "pageSize", "pageCursor", "timezone", "month", "year"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "currency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		case "pageSize":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PageSize = data
+		case "pageCursor":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageCursor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PageCursor = data
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
+		case "month":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Month = data
+		case "year":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Year = data
 		}
 	}
 
@@ -1682,6 +2086,127 @@ func (ec *executionContext) _FiatExchangeTransferResponse(ctx context.Context, s
 	return out
 }
 
+var fiatJournalImplementors = []string{"FiatJournal"}
+
+func (ec *executionContext) _FiatJournal(ctx context.Context, sel ast.SelectionSet, obj *postgres.FiatJournal) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fiatJournalImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FiatJournal")
+		case "currency":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatJournal_currency(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "amount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatJournal_amount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "transactedAt":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatJournal_transactedAt(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "clientID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatJournal_clientID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "txID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatJournal_txID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var fiatOpenAccountResponseImplementors = []string{"FiatOpenAccountResponse"}
 
 func (ec *executionContext) _FiatOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, obj *models.FiatOpenAccountResponse) graphql.Marshaler {
@@ -1706,6 +2231,38 @@ func (ec *executionContext) _FiatOpenAccountResponse(ctx context.Context, sel as
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var fiatTransactionsPaginatedImplementors = []string{"FiatTransactionsPaginated"}
+
+func (ec *executionContext) _FiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.FiatTransactionsPaginated) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fiatTransactionsPaginatedImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FiatTransactionsPaginated")
+		case "transactions":
+
+			out.Values[i] = ec._FiatTransactionsPaginated_transactions(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "links":
+
+			out.Values[i] = ec._FiatTransactionsPaginated_links(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1874,6 +2431,54 @@ func (ec *executionContext) marshalNFiatExchangeTransferResponse2ᚖgithubᚗcom
 	return ec._FiatExchangeTransferResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNFiatJournal2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx context.Context, sel ast.SelectionSet, v postgres.FiatJournal) graphql.Marshaler {
+	return ec._FiatJournal(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx context.Context, sel ast.SelectionSet, v []postgres.FiatJournal) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFiatJournal2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNFiatOpenAccountResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, v models.FiatOpenAccountResponse) graphql.Marshaler {
 	return ec._FiatOpenAccountResponse(ctx, sel, &v)
 }
@@ -1888,8 +2493,34 @@ func (ec *executionContext) marshalNFiatOpenAccountResponse2ᚖgithubᚗcomᚋsu
 	return ec._FiatOpenAccountResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (models.FiatPaginatedTxDetailsRequest, error) {
+	res, err := ec.unmarshalInputFiatPaginatedTxDetailsRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFiatTransactionsPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v models.FiatTransactionsPaginated) graphql.Marshaler {
+	return ec._FiatTransactionsPaginated(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.FiatTransactionsPaginated) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FiatTransactionsPaginated(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v models.HTTPLinks) graphql.Marshaler {
 	return ec._Links(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v *models.HTTPLinks) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Links(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************
