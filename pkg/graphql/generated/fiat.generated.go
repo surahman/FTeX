@@ -2493,6 +2493,11 @@ func (ec *executionContext) marshalNFiatOpenAccountResponse2ᚖgithubᚗcomᚋsu
 	return ec._FiatOpenAccountResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (models.FiatPaginatedTxDetailsRequest, error) {
+	res, err := ec.unmarshalInputFiatPaginatedTxDetailsRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNFiatTransactionsPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v models.FiatTransactionsPaginated) graphql.Marshaler {
 	return ec._FiatTransactionsPaginated(ctx, sel, &v)
 }
@@ -2509,14 +2514,6 @@ func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋ
 
 func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v models.HTTPLinks) graphql.Marshaler {
 	return ec._Links(ctx, sel, &v)
-}
-
-func (ec *executionContext) unmarshalOFiatPaginatedTxDetailsRequest2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (*models.FiatPaginatedTxDetailsRequest, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputFiatPaginatedTxDetailsRequest(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v *models.HTTPLinks) graphql.Marshaler {

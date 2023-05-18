@@ -448,20 +448,39 @@ func (r *mutationResolver) TransactionDetailsFiat(ctx context.Context, transacti
 }
 
 // TransactionDetailsAllFiat is the resolver for the transactionDetailsAllFiat field.
-func (r *mutationResolver) TransactionDetailsAllFiat(ctx context.Context, input *models.FiatPaginatedTxDetailsRequest) (*models.FiatTransactionsPaginated, error) {
+func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.FiatTransactionsPaginated, error) {
 	var (
 		journalEntries []postgres.FiatJournal
 		clientID       uuid.UUID
 		currency       postgres.Currency
 		err            error
-		params         = utilities.HTTPFiatPaginatedTxParams{
-			PageSizeStr:   *input.PageSize,
-			PageCursorStr: *input.PageCursor,
-			TimezoneStr:   *input.Timezone,
-			MonthStr:      *input.Month,
-			YearStr:       *input.Year,
-		}
+		params         utilities.HTTPFiatPaginatedTxParams
 	)
+
+	if input.PageSize == nil {
+		input.PageSize = new(string)
+	}
+	params.PageSizeStr = *input.PageSize
+
+	if input.PageCursor == nil {
+		input.PageCursor = new(string)
+	}
+	params.PageCursorStr = *input.PageCursor
+
+	if input.Timezone == nil {
+		input.Timezone = new(string)
+	}
+	params.TimezoneStr = *input.Timezone
+
+	if input.Month == nil {
+		input.Month = new(string)
+	}
+	params.MonthStr = *input.Month
+
+	if input.Year == nil {
+		input.Year = new(string)
+	}
+	params.YearStr = *input.Year
 
 	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")

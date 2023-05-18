@@ -111,18 +111,17 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		BalanceAllFiat            func(childComplexity int, pageCursor *string, pageSize *int32) int
-		BalanceFiat               func(childComplexity int, currencyCode string) int
-		DeleteUser                func(childComplexity int, input models.HTTPDeleteUserRequest) int
-		DepositFiat               func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
-		ExchangeOfferFiat         func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
-		ExchangeTransferFiat      func(childComplexity int, offerID string) int
-		LoginUser                 func(childComplexity int, input models1.UserLoginCredentials) int
-		OpenFiat                  func(childComplexity int, currency string) int
-		RefreshToken              func(childComplexity int) int
-		RegisterUser              func(childComplexity int, input *models1.UserAccount) int
-		TransactionDetailsAllFiat func(childComplexity int, input *models.FiatPaginatedTxDetailsRequest) int
-		TransactionDetailsFiat    func(childComplexity int, transactionID string) int
+		BalanceAllFiat         func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceFiat            func(childComplexity int, currencyCode string) int
+		DeleteUser             func(childComplexity int, input models.HTTPDeleteUserRequest) int
+		DepositFiat            func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
+		ExchangeOfferFiat      func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
+		ExchangeTransferFiat   func(childComplexity int, offerID string) int
+		LoginUser              func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenFiat               func(childComplexity int, currency string) int
+		RefreshToken           func(childComplexity int) int
+		RegisterUser           func(childComplexity int, input *models1.UserAccount) int
+		TransactionDetailsFiat func(childComplexity int, transactionID string) int
 	}
 
 	PriceQuote struct {
@@ -134,7 +133,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Healthcheck func(childComplexity int) int
+		Healthcheck               func(childComplexity int) int
+		TransactionDetailsAllFiat func(childComplexity int, input models.FiatPaginatedTxDetailsRequest) int
 	}
 }
 
@@ -506,18 +506,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
-	case "Mutation.transactionDetailsAllFiat":
-		if e.complexity.Mutation.TransactionDetailsAllFiat == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_transactionDetailsAllFiat_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.TransactionDetailsAllFiat(childComplexity, args["input"].(*models.FiatPaginatedTxDetailsRequest)), true
-
 	case "Mutation.transactionDetailsFiat":
 		if e.complexity.Mutation.TransactionDetailsFiat == nil {
 			break
@@ -571,6 +559,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Healthcheck(childComplexity), true
+
+	case "Query.transactionDetailsAllFiat":
+		if e.complexity.Query.TransactionDetailsAllFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Query_transactionDetailsAllFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TransactionDetailsAllFiat(childComplexity, args["input"].(models.FiatPaginatedTxDetailsRequest)), true
 
 	}
 	return 0, false
@@ -765,11 +765,12 @@ extend type Mutation {
 
     # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
-
-    # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
-    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest): FiatTransactionsPaginated!
 }
-`, BuiltIn: false},
+
+extend type Query {
+    # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
+    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest!): FiatTransactionsPaginated!
+}`, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
     healthcheck: String!
 }

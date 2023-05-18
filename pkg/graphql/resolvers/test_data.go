@@ -66,5 +66,13 @@ func getFiatQuery() map[string]string {
 		"transactionDetailsFiat": `{
 		"query": "mutation { transactionDetailsFiat ( transactionID: \"%s\") { currency, amount, transactedAt, clientID, txID } }"
 		}`,
+
+		"transactionDetailsAllFiatInit": `{
+		"query": "query { transactionDetailsAllFiat(input: { currency: \"%s\", pageSize:\"%d\", timezone:\"%s\", month: \"%d\", year:\"%d\" }) { transactions { currency, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
+
+		"transactionDetailsAllFiatSubsequent": `{
+		"query": "query { transactionDetailsAllFiat(input: { currency: \"%s\", pageSize:\"%d\", pageCursor:\"%s\" }) { transactions { currency, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
@@ -1410,6 +1411,213 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
 					Return(test.journalEntries, test.fiatTxDetailsErr).
 					Times(test.fiatTxDetailsTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
+	t.Parallel()
+
+	decryptedCursor := fmt.Sprintf("%s,%s,%d",
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		10)
+
+	journalEntries := []postgres.FiatJournal{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                   string
+		path                   string
+		query                  string
+		expectErr              bool
+		journalEntries         []postgres.FiatJournal
+		authValidateJWTErr     error
+		authValidateJWTTimes   int
+		authDecryptCursorErr   error
+		authDecryptCursorTimes int
+		authEncryptCursorErr   error
+		authEncryptCursorTimes int
+		fiatTxPaginatedErr     error
+		fiatTxPaginatedTimes   int
+	}{
+		{
+			name: "auth failure",
+			path: "/transaction-details-all-fiat/auth-failure",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     errors.New("auth failure"),
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name: "bad currency",
+			path: "/transaction-details-all-fiat/bad-currency",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"INVALID", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name: "no cursor or params",
+			path: "/transaction-details-all-fiat/no-cursor-or-params",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"", 3, ""),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name: "db failure",
+			path: "/transaction-details-all-fiat/db-failure",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     postgres.ErrNotFound,
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name: "unknown db failure",
+			path: "/transaction-details-all-fiat/unknown-db-failure",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     errors.New("db failure"),
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name: "no transactions",
+			path: "/transaction-details-all-fiat/no-transactions",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              false,
+			journalEntries:         []postgres.FiatJournal{},
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name: "valid with cursor",
+			path: "/transaction-details-all-fiat/valid-with-cursor",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              false,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+		}, {
+			name: "valid with query",
+			path: "/transaction-details-all-fiat/valid-with-query",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatInit"],
+				"USD", 3, "-04:00", 6, 2023),
+			expectErr:              false,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
+					Times(test.authDecryptCursorTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-cursor", test.authEncryptCursorErr).
+					Times(test.authEncryptCursorTimes),
+
+				mockPostgres.EXPECT().FiatTransactionsCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.journalEntries, test.fiatTxPaginatedErr).
+					Times(test.fiatTxPaginatedTimes),
 			)
 
 			// Endpoint setup for test.

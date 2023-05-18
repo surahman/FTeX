@@ -110,7 +110,9 @@ extend type Mutation {
 
     # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+}
 
+extend type Query {
     # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
-    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest): FiatTransactionsPaginated!
+    transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest!): FiatTransactionsPaginated!
 }
