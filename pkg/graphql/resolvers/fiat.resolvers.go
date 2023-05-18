@@ -318,7 +318,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 }
 
 // BalanceFiat is the resolver for the balanceFiat field.
-func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
+func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
 	var (
 		accDetails postgres.FiatAccount
 		clientID   uuid.UUID

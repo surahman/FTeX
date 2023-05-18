@@ -52,7 +52,7 @@ func getFiatQuery() map[string]string {
 		}`,
 
 		"balanceFiat": `{
-		"query": "mutation { balanceFiat(currencyCode: \"%s\") { currency, balance, lastTx, lastTxTs, createdAt, clientID } }"
+		"query": "query { balanceFiat(currencyCode: \"%s\") { currency, balance, lastTx, lastTxTs, createdAt, clientID } }"
 		}`,
 
 		"balanceAllFiat": `{

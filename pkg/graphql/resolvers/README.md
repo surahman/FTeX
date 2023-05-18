@@ -353,7 +353,7 @@ _Response:_ A transaction receipt with the details of the source and destination
 
 _Request:_ A valid currency code must be provided as a parameter.
 ```graphql
-mutation {
+query {
 	balanceFiat(currencyCode:"USD") {
     currency,
     balance,

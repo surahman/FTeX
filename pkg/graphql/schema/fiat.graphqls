@@ -101,12 +101,12 @@ extend type Mutation {
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
-
-    # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
-    balanceFiat(currencyCode: String!): FiatAccount!
 }
 
 extend type Query {
+    # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
+    balanceFiat(currencyCode: String!): FiatAccount!
+
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
 

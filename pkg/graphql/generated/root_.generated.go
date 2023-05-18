@@ -111,7 +111,6 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		BalanceFiat          func(childComplexity int, currencyCode string) int
 		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
 		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
 		ExchangeOfferFiat    func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
@@ -132,6 +131,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		BalanceAllFiat            func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceFiat               func(childComplexity int, currencyCode string) int
 		Healthcheck               func(childComplexity int) int
 		TransactionDetailsAllFiat func(childComplexity int, input models.FiatPaginatedTxDetailsRequest) int
 		TransactionDetailsFiat    func(childComplexity int, transactionID string) int
@@ -391,18 +391,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Links.PageCursor(childComplexity), true
 
-	case "Mutation.balanceFiat":
-		if e.complexity.Mutation.BalanceFiat == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_balanceFiat_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.BalanceFiat(childComplexity, args["currencyCode"].(string)), true
-
 	case "Mutation.deleteUser":
 		if e.complexity.Mutation.DeleteUser == nil {
 			break
@@ -540,6 +528,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.BalanceAllFiat(childComplexity, args["pageCursor"].(*string), args["pageSize"].(*int32)), true
+
+	case "Query.balanceFiat":
+		if e.complexity.Query.BalanceFiat == nil {
+			break
+		}
+
+		args, err := ec.field_Query_balanceFiat_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BalanceFiat(childComplexity, args["currencyCode"].(string)), true
 
 	case "Query.healthcheck":
 		if e.complexity.Query.Healthcheck == nil {
@@ -756,12 +756,12 @@ extend type Mutation {
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
-
-    # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
-    balanceFiat(currencyCode: String!): FiatAccount!
 }
 
 extend type Query {
+    # balanceFiat is a request to retrieve the balance for a specific Fiat currency.
+    balanceFiat(currencyCode: String!): FiatAccount!
+
     # balanceAllFiat is a request to retrieve the balance for a specific Fiat currency.
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
 
