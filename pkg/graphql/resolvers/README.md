@@ -6,6 +6,29 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
 
 ## Table of contents
 
+- [Authorization Response](#authorization-response)
+- [Authorization](#authorization)
+- [Healthcheck Query.](#healthcheck-query)
+- [User Mutations](#user-mutations)
+    - [Register](#register)
+    - [Login](#login)
+    - [Refresh](#refresh)
+    - [Delete](#delete)
+- [Fiat Account Mutations and Queries](#fiat-account-mutations-and-queries)
+    - [Open Account](#open-account)
+    - [Deposit](#deposit)
+    - [Exchange](#exchange)
+        - [Quote](#quote)
+        - [Convert](#convert)
+    - [Info](#info)
+        - [Balance for a Specific Currency](#balance-for-a-specific-currency)
+        - [Balance for all Currencies for a Client](#balance-for-all-currencies-for-a-client)
+        - [Transaction Details for a Specific Transaction](#transaction-details-for-a-specific-transaction)
+            - [External Transfer (deposit)](#external-transfer-deposit)
+            - [Internal Transfer (currency conversion/exchange)](#internal-transfer-currency-conversionexchange)
+        - [Transaction Details for a Specific Currency](#transaction-details-for-a-specific-currency)
+            - [Initial Page](#initial-page)
+            - [Subsequent Page](#subsequent-page)
 
 <br/>
 
@@ -175,7 +198,7 @@ _Response:_ A confirmation message will be returned as a success response.
 <br/>
 
 
-### Fiat Account Mutations
+### Fiat Account Mutations and Queries
 
 #### Open Account
 
