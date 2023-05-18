@@ -56,11 +56,11 @@ func getFiatQuery() map[string]string {
 		}`,
 
 		"balanceAllFiat": `{
-		"query": "mutation { balanceAllFiat( pageCursor: \"%s\", pageSize: %d ) { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		"query": "query { balanceAllFiat( pageCursor: \"%s\", pageSize: %d ) { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
 		}`,
 
 		"balanceAllFiatNoParams": `{
-		"query": "mutation { balanceAllFiat { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		"query": "query { balanceAllFiat { accountBalances { currency, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
 		}`,
 
 		"transactionDetailsFiat": `{

@@ -388,7 +388,7 @@ subsequent responses will contain encrypted page cursors that must be specified 
 
 Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
 ```graphql
-mutation {
+query {
   balanceAllFiat(pageSize: 3) {
     accountBalances{
       currency
@@ -407,7 +407,7 @@ mutation {
 
 Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
 ```graphql
-mutation {
+query {
   balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize: 3) {
     accountBalances{
       currency

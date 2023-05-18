@@ -350,7 +350,7 @@ func (r *mutationResolver) BalanceFiat(ctx context.Context, currencyCode string)
 }
 
 // BalanceAllFiat is the resolver for the balanceAllFiat field.
-func (r *mutationResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error) {
+func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error) {
 	var (
 		accDetails []postgres.FiatAccount
 		clientID   uuid.UUID
