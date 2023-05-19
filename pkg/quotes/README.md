@@ -36,7 +36,8 @@ The GitHub Actions CI pipeline will need to have a secrets with the API keys con
 - `FIATCURRENCY_APIKEY`
 
 Free API Keys for data can be obtained [here for fiat currencies](https://rapidapi.com/principalapis/api/currency-conversion-and-exchange-rates), and
-[here for cryptocurrencies](https://www.coinapi.io/pricing?apikey).
+[here for cryptocurrencies](https://www.coinapi.io/pricing?apikey). The endpoint URLs are public information and are thus included
+in the sample [`QuotesConfig.yaml`](../../configs/QuotesConfig.yaml) file.
 
 <br/>
 
@@ -79,7 +80,7 @@ fiatCurrency:
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s
