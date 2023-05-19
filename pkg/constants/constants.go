@@ -37,6 +37,8 @@ const (
 	cryptoOfferTTL                = 2 * time.Minute
 	monthFormatString             = "%d-%02d-01T00:00:00%s" // YYYY-MM-DDTHH:MM:SS+HH:MM (last section is +/- timezone.)
 	nextPageRESTFormatString      = "?pageCursor=%s&pageSize=%d"
+	specialAccountFiat            = "fiat-currencies"
+	specialAccountCrypto          = "crypto-currencies"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -172,4 +174,14 @@ func GetHTTPGraphQLFileName() string {
 // GetHTTPGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
 func GetHTTPGraphQLPrefix() string {
 	return graphQLPrefix
+}
+
+// GetSpecialAccountFiat special purpose account for Fiat currency related operations in the database.
+func GetSpecialAccountFiat() string {
+	return specialAccountFiat
+}
+
+// GetSpecialAccountCrypto special purpose account for Cryptocurrency related operations in the database.
+func GetSpecialAccountCrypto() string {
+	return specialAccountCrypto
 }

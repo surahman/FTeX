@@ -155,9 +155,17 @@ func TestGetNextPageRESTFormatString(t *testing.T) {
 }
 
 func TestGetGraphqlConfigFileName(t *testing.T) {
-	require.Equal(t, graphqlConfigFileName, GetHTTPGraphQLFileName(), "Incorrect HTTP GraphQL filename")
+	require.Equal(t, graphqlConfigFileName, GetHTTPGraphQLFileName(), "Incorrect HTTP GraphQL filename.")
 }
 
 func TestGetHTTPGraphQLPrefix(t *testing.T) {
-	require.Equal(t, graphQLPrefix, GetHTTPGraphQLPrefix(), "Incorrect HTTP GraphQL environment prefix")
+	require.Equal(t, graphQLPrefix, GetHTTPGraphQLPrefix(), "Incorrect HTTP GraphQL environment prefix.")
+}
+
+func TestGetSpecialAccountFiat(t *testing.T) {
+	require.Equal(t, specialAccountFiat, GetSpecialAccountFiat(), "Incorrect Fiat currency account name.")
+}
+
+func TestGetSpecialAccountCrypto(t *testing.T) {
+	require.Equal(t, specialAccountCrypto, GetSpecialAccountCrypto(), "Incorrect Cryptocurrency account name.")
 }
