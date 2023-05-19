@@ -27,7 +27,7 @@ CREATE TYPE currency AS ENUM (
 'QAR','RON','RSD','RUB','RWF','SAR','SBD','SCR','SDG','SEK','SGD','SHP','SLL','SOS','SPL','SRD','STN','SVC','SYP',
 'SZL','THB','TJS','TMT','TND','TOP','TRY','TTD','TVD','TWD','TZS','UAH','UGX','USD','UYU','UZS','VEF','VND','VUV',
 'WST','XAF','XCD','XDR','XOF','XPF','YER','ZAR','ZMW','ZWD',
-'DEPOSIT', 'CRYPTO');
+'FIAT', 'CRYPTO');
 --rollback DROP TYPE currency;
 
 --changeset surahman:3
@@ -48,7 +48,7 @@ CREATE INDEX IF NOT EXISTS fiat_client_id_idx ON fiat_accounts USING btree (clie
 
 --changeset surahman:4
 --preconditions onFail:HALT onError:HALT
---comment: Create fiat currency deposit user and account.
+--comment: Create Fiat currency operations user and account.
 INSERT INTO users (
     first_name,
     last_name,
@@ -59,8 +59,8 @@ INSERT INTO users (
 SELECT
    'Internal',
    'FTeX, Inc.',
-   'deposit@ftex.com',
-   'deposit-fiat',
+   'fiat@ftex.com',
+   'fiat-currencies',
    password,
    true
 FROM
@@ -70,13 +70,13 @@ INSERT INTO fiat_accounts (
     currency,
     client_id)
 SELECT
-   'DEPOSIT',
+   'FIAT',
    client_id
 FROM
     users AS client_id
 WHERE
-    username = 'deposit-fiat';
---rollback DELETE FROM users WHERE username='deposit-fiat';
+    username = 'fiat-currencies';
+--rollback DELETE FROM users WHERE username='fiat-currencies';
 
 --changeset surahman:5
 --preconditions onFail:HALT onError:HALT
@@ -130,3 +130,35 @@ AS '
     END;
 ';
 --rollback DROP FUNCTION round_half_even;
+
+--changeset surahman:7
+--preconditions onFail:HALT onError:HALT
+--comment: Create Cryptocurrency operations user and account.
+INSERT INTO users (
+    first_name,
+    last_name,
+    email,
+    username,
+    password,
+    is_deleted)
+SELECT
+   'Internal',
+   'FTeX, Inc.',
+   'crypto@ftex.com',
+   'crypto-currencies',
+   password,
+   true
+FROM
+    substr(md5(random()::text), 0, 32) AS password;
+
+INSERT INTO fiat_accounts (
+    currency,
+    client_id)
+SELECT
+   'CRYPTO',
+   client_id
+FROM
+    users AS client_id
+WHERE
+    username = 'crypto-currencies';
+--rollback DELETE FROM users WHERE username='crypto-currencies';

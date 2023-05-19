@@ -244,9 +244,10 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 ## Special Purpose Accounts
 
-| Username     | Purpose                                                                        |
-|--------------|--------------------------------------------------------------------------------|
-| deposit-fiat | Inbound deposits to the fiat accounts will be associated to this user account. |
+| Username          | Purpose                                                                          |
+|-------------------|----------------------------------------------------------------------------------|
+| fiat-currencies   | Inbound deposits to the fiat accounts will be associated to this user account.   |
+| crypto-currencies | Inbound deposits to the crypto accounts will be associated to this user account. |
 
 Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
 at creation and will be marked as deleted so disable login capabilities.
@@ -281,7 +282,7 @@ liquibase update
 
 ```bash
 # Main database rollback. Specify number of steps.
-liquibase rollback-count 5
+liquibase rollback-count 7
 ```
 
 
@@ -292,5 +293,5 @@ liquibase update --defaultsFile liquibase_testsuite.properties
 
 ```bash
 # Test suite setup
-liquibase rollback-count 5 --defaultsFile liquibase_testsuite.properties
+liquibase rollback-count 7 --defaultsFile liquibase_testsuite.properties
 ```

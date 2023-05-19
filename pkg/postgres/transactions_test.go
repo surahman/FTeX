@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 )
 
 func TestTransactions_FiatTransactionsDetails_LessComparator(t *testing.T) {
@@ -202,7 +203,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 
 	defer cancel()
 
-	ftexID, err := connection.queries.userGetClientId(ctx, "deposit-fiat")
+	ftexID, err := connection.queries.userGetClientId(ctx, constants.GetSpecialAccountFiat())
 	require.NoError(t, err, "failed to retrieve FTeX internal ID.")
 
 	for _, testCase := range testCases {

@@ -43,7 +43,7 @@ WITH deposit AS (
     SELECT
         (   SELECT client_id
             FROM users
-            WHERE username = 'deposit-fiat'),
+            WHERE username = 'fiat-currencies'),
         $2,
         round_half_even(-1 * $3::numeric(18, 2), 2),
         now(),
