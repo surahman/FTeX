@@ -8,7 +8,7 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
 
 - [Authorization Response](#authorization-response)
 - [Authorization](#authorization)
-- [Healthcheck Query.](#healthcheck-query)
+- [Healthcheck Query](#healthcheck-query)
 - [User Mutations](#user-mutations)
     - [Register](#register)
     - [Login](#login)
@@ -70,7 +70,7 @@ The following `queries` and `mutations` do not require authorization:
 
 <br/>
 
-### Healthcheck Query.
+### Healthcheck Query
 
 The health check endpoint is exposed to facilitate liveness checks on the service. The check will verify whether the
 service is connected to all the ancillary services and responds appropriately.
@@ -125,7 +125,7 @@ mutation {
     lastname: "last name"
     email: "email@address.com",
     userLoginCredentials: {
-      username:"someusername",
+      username: "someusername",
       password: "somepassword"
     }
   }) {
@@ -146,7 +146,7 @@ _Request:_ All fields are required.
 ```graphql
 mutation {
   loginUser(input: {
-    username:"someusername",
+    username: "someusername",
     password: "somepassword"
   }) {
     token,
@@ -235,7 +235,7 @@ _Request:_ All fields are required.
 ```graphql
 mutation {
     depositFiat(input: {
-        amount:1345.67,
+        amount: 1345.67,
         currency: "USD"
     }) {
         txId,
@@ -280,7 +280,7 @@ _Request:_ All fields are required.
 ```graphql
 mutation {
     exchangeOfferFiat(input: {
-        sourceCurrency:"USD"
+        sourceCurrency: "USD"
         destinationCurrency: "CAD"
         sourceAmount: 100.11
     }) {
@@ -321,7 +321,7 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 ##### Convert
 
 _Request:_ All fields are required.
-```grpahql
+```graphql
 mutation {
 	exchangeTransferFiat(offerID: "-ptOjSHs3cw3eTw_1NuInn4w8OvI8hzFzChol7NRpKIHMDL234B_E1Fcq5Z6Zl4K") {
     sourceReceipt {
@@ -377,7 +377,7 @@ _Response:_ A transaction receipt with the details of the source and destination
 _Request:_ A valid currency code must be provided as a parameter.
 ```graphql
 query {
-	balanceFiat(currencyCode:"USD") {
+	balanceFiat(currencyCode: "USD") {
     currency,
     balance,
     lastTx,
@@ -588,10 +588,10 @@ Initial Page (required):
 query {
   transactionDetailsAllFiat(input:{
     currency: "USD"
-  	pageSize:"3"
-    timezone:"-04:00"
+  	pageSize: "3"
+    timezone: "-04:00"
     month: "5"
-    year:"2023"
+    year: "2023"
   }) {
     transactions {
       currency
@@ -614,7 +614,7 @@ Subsequent Pages (required)
 query {
   transactionDetailsAllFiat(input:{
     currency: "USD"
-  	pageSize:"3"
+  	pageSize: "3"
     pageCursor: "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
   }) {
     transactions {

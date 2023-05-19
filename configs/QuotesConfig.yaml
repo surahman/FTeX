@@ -5,7 +5,7 @@ fiatCurrency:
 cryptoCurrency:
   apiKey: some-api-key-for-crypto-currencies
   headerKey: X-CoinAPI-Key
-  endpoint: url-to-data-source-for-crypto-currency-price-quotes
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
 connection:
   userAgent: ftex_inc
   timeout: 1s

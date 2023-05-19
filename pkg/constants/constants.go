@@ -32,6 +32,7 @@ const (
 	testDatabaseName              = "ftex_db_test"
 	deleteUserAccountConfirmation = "I understand the consequences, delete my user account %s"
 	fiatDecimalPlaces             = int32(2)
+	cryptoDecimalPlaces           = int32(8)
 	fiatOfferTTL                  = 2 * time.Minute
 	cryptoOfferTTL                = 2 * time.Minute
 	monthFormatString             = "%d-%02d-01T00:00:00%s" // YYYY-MM-DDTHH:MM:SS+HH:MM (last section is +/- timezone.)
@@ -136,6 +137,11 @@ func GetDeleteUserAccountConfirmation() string {
 // GetDecimalPlacesFiat the number of decimal places Fiat currency can have.
 func GetDecimalPlacesFiat() int32 {
 	return fiatDecimalPlaces
+}
+
+// GetDecimalPlacesCrypto the number of decimal places Cryptocurrency can have.
+func GetDecimalPlacesCrypto() int32 {
+	return cryptoDecimalPlaces
 }
 
 // GetFiatOfferTTL is the time duration that a Fiat conversion rate offer will be valid for.
