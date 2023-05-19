@@ -388,6 +388,23 @@ func (e Currency) Valid() bool {
 	return false
 }
 
+type CryptoAccount struct {
+	Ticker    string             `json:"ticker"`
+	Balance   decimal.Decimal    `json:"balance"`
+	LastTx    decimal.Decimal    `json:"lastTx"`
+	LastTxTs  pgtype.Timestamptz `json:"lastTxTs"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+	ClientID  uuid.UUID          `json:"clientID"`
+}
+
+type CryptoJournal struct {
+	Ticker       string             `json:"ticker"`
+	Amount       decimal.Decimal    `json:"amount"`
+	TransactedAt pgtype.Timestamptz `json:"transactedAt"`
+	ClientID     uuid.UUID          `json:"clientID"`
+	TxID         uuid.UUID          `json:"txID"`
+}
+
 type FiatAccount struct {
 	Currency  Currency           `json:"currency"`
 	Balance   decimal.Decimal    `json:"balance"`

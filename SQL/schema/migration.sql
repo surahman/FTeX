@@ -135,13 +135,13 @@ AS '
 --preconditions onFail:HALT onError:HALT
 --comment: Cryptocurrency accounts.
 CREATE TABLE IF NOT EXISTS crypto_accounts (
-    currency        VARCHAR(8)      NOT NULL,
+    ticker          VARCHAR(6)      NOT NULL,
     balance         NUMERIC(24,8)   DEFAULT 0 NOT NULL,
     last_tx         NUMERIC(24,8)   DEFAULT 0 NOT NULL,
     last_tx_ts      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     created_at      TIMESTAMPTZ     DEFAULT now() NOT NULL,
     client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
-    PRIMARY KEY (client_id, currency)
+    PRIMARY KEY (client_id, ticker)
 );
 
 CREATE INDEX IF NOT EXISTS crypto_client_id_idx ON crypto_accounts USING btree (client_id);
@@ -168,7 +168,7 @@ FROM
     substr(md5(random()::text), 0, 32) AS password;
 
 INSERT INTO crypto_accounts (
-    currency,
+    ticker,
     client_id)
 SELECT
    'CRYPTO',
@@ -178,3 +178,19 @@ FROM
 WHERE
     username = 'crypto-currencies';
 --rollback DELETE FROM users WHERE username='crypto-currencies';
+
+--changeset surahman:9
+--preconditions onFail:HALT onError:HALT
+--comment: Cryptocurrency accounts transactions journal.
+CREATE TABLE IF NOT EXISTS crypto_journal (
+    ticker          VARCHAR(6)      NOT NULL,
+    amount          NUMERIC(24,8)   NOT NULL,
+    transacted_at   TIMESTAMPTZ     NOT NULL,
+    client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
+    tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
+    PRIMARY KEY(tx_id, client_id, ticker)
+);
+
+CREATE INDEX IF NOT EXISTS crypto_journal_transacted_at_idx ON crypto_journal USING btree (transacted_at);
+CREATE INDEX IF NOT EXISTS crypto_journal_tx_idx ON crypto_journal USING btree (tx_id);
+--rollback DROP TABLE crypto_journal CASCADE;
