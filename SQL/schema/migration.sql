@@ -133,6 +133,22 @@ AS '
 
 --changeset surahman:7
 --preconditions onFail:HALT onError:HALT
+--comment: Cryptocurrency accounts.
+CREATE TABLE IF NOT EXISTS crypto_accounts (
+    currency        VARCHAR(8)      NOT NULL,
+    balance         NUMERIC(24,8)   DEFAULT 0 NOT NULL,
+    last_tx         NUMERIC(24,8)   DEFAULT 0 NOT NULL,
+    last_tx_ts      TIMESTAMPTZ     DEFAULT now() NOT NULL,
+    created_at      TIMESTAMPTZ     DEFAULT now() NOT NULL,
+    client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
+    PRIMARY KEY (client_id, currency)
+);
+
+CREATE INDEX IF NOT EXISTS crypto_client_id_idx ON crypto_accounts USING btree (client_id);
+--rollback DROP TABLE crypto_accounts CASCADE;
+
+--changeset surahman:8
+--preconditions onFail:HALT onError:HALT
 --comment: Create Cryptocurrency operations user and account.
 INSERT INTO users (
     first_name,
@@ -151,7 +167,7 @@ SELECT
 FROM
     substr(md5(random()::text), 0, 32) AS password;
 
-INSERT INTO fiat_accounts (
+INSERT INTO crypto_accounts (
     currency,
     client_id)
 SELECT
