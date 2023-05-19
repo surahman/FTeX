@@ -29,6 +29,11 @@ type Quotes interface {
 	FiatConversion(source, destination string, amount decimal.Decimal,
 		fiatQuote func(source, destination string, amount decimal.Decimal) (models.FiatQuote, error)) (
 		decimal.Decimal, decimal.Decimal, error)
+
+	// CryptoConversion will convert Fiat to Crypto and Crypto to Fiat currencies, for a given amount.
+	CryptoConversion(fiatSymbol, cryptoSymbol string, amount decimal.Decimal, isPurchasingCrypto bool,
+		cryptoQuote func(source, destination string) (models.CryptoQuote, error)) (
+		decimal.Decimal, decimal.Decimal, error)
 }
 
 // Check to ensure the Redis interface has been implemented.
@@ -132,7 +137,7 @@ func (q *quotesImpl) fiatQuote(source, destination string, sourceAmount decimal.
 	return result, nil
 }
 
-// FiatConversion will convert a source currency, in a given amount, to the destination currency.
+// FiatConversion will convert a source currency, of a given amount, to the destination currency.
 func (q *quotesImpl) FiatConversion(
 	source,
 	destination string,
@@ -195,4 +200,43 @@ func (q *quotesImpl) cryptoQuote(source, destination string) (models.CryptoQuote
 	}
 
 	return result, nil
+}
+
+// CryptoConversion will convert Fiat to Crypto and Crypto to Fiat currencies, for a given amount.
+func (q *quotesImpl) CryptoConversion(
+	sourceCurrency,
+	destinationCurrency string,
+	sourceAmount decimal.Decimal,
+	isPurchasingCrypto bool,
+	cryptoQuote func(source, destination string) (models.CryptoQuote, error)) (
+	decimal.Decimal, decimal.Decimal, error) {
+	var (
+		precision = constants.GetDecimalPlacesCrypto()
+		err       error
+		rawQuote  models.CryptoQuote
+	)
+
+	// The fiatQuote parameter is exposed for stub injection used for testing.
+	if cryptoQuote == nil {
+		cryptoQuote = q.cryptoQuote
+	}
+
+	if !isPurchasingCrypto {
+		precision = constants.GetDecimalPlacesFiat()
+	}
+
+	rawQuote, err = cryptoQuote(sourceCurrency, destinationCurrency)
+	if err != nil {
+		q.logger.Warn("failed to retrieve Fiat to Cryptocurrency exchange quote", zap.Error(err))
+
+		return decimal.Decimal{}, decimal.Decimal{}, fmt.Errorf("%w", err)
+	}
+
+	// For precision related concerns the amount to be posted will be recalculated here. We only rely on the quote
+	// provider for rate quote's precision and not the amount converted precision.
+	convertedAmount := rawQuote.Rate.
+		Mul(sourceAmount).
+		RoundBank(precision)
+
+	return rawQuote.Rate, convertedAmount, nil
 }
