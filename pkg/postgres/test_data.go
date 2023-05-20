@@ -246,3 +246,33 @@ func getTestFiatJournal(clientID1, clientID2 uuid.UUID) map[string]fiatExternalT
 		},
 	}
 }
+
+// getTestCryptoAccounts generates a number of test crypto accounts.
+func getTestCryptoAccounts(clientID1, clientID2 uuid.UUID) map[string][]cryptoCreateAccountParams {
+	return map[string][]cryptoCreateAccountParams{
+		"clientID1": {
+			{
+				ClientID: clientID1,
+				Ticker:   "BTC",
+			}, {
+				ClientID: clientID1,
+				Ticker:   "ETH",
+			}, {
+				ClientID: clientID1,
+				Ticker:   "USDT",
+			},
+		},
+		"clientID2": {
+			{
+				ClientID: clientID2,
+				Ticker:   "BTC",
+			}, {
+				ClientID: clientID2,
+				Ticker:   "ETH",
+			}, {
+				ClientID: clientID2,
+				Ticker:   "USDT",
+			},
+		},
+	}
+}

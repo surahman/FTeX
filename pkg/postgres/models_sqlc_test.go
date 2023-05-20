@@ -44,8 +44,8 @@ func TestModels_CurrencyValid(t *testing.T) {
 			errExpected: require.True,
 		},
 		{
-			name:        "Valid - DEPOSIT",
-			currency:    CurrencyDEPOSIT,
+			name:        "Valid - FIAT",
+			currency:    CurrencyFIAT,
 			errExpected: require.True,
 		},
 		{
@@ -129,9 +129,9 @@ func TestModels_NullCurrencyValue(t *testing.T) {
 		},
 		{
 			name:        "Valid",
-			driverValue: "DEPOSIT",
+			driverValue: "FIAT",
 			nullCurr: NullCurrency{
-				Currency: CurrencyDEPOSIT,
+				Currency: CurrencyFIAT,
 				Valid:    true,
 			},
 			errExpected: require.NoError,

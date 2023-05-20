@@ -7,10 +7,13 @@
 - [Numeric Rounding](#numeric-rounding)
   - [Rounding Half-Up](#rounding-half-up)
   - [Rounding Half-Even](#rounding-half-even)
+- [Transactions](#transactions)
 - [Tablespaces](#tablespaces)
 - [Users Table Schema](#users-table-schema)
 - [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
 - [Fiat Journal Table Schema](#fiat-journal-table-schema)
+- [Crypto Accounts Table Schema](#crypto-accounts-table-schema)
+- [Crypto Journal Table Schema](#crypto-journal-table-schema)
 - [Special Purpose Accounts](#special-purpose-accounts)
 - [SQL Queries](#sql-queries)
 - [Schema Migration and Setup](#schema-migration-and-setup)
@@ -142,12 +145,18 @@ RETURN rounded
 
 _**Always design and develop systems with Mechanical Sympathy in mind.**_
 
-It is almost always best to develop transactions in User Defined Functions (_UDFs_) that return results to the backend upon
-completion (success or failure). This helps to minimize the latency introduced by network communication when running
-staged/phased transactions on the backend. This will in turn results in lower lock contention, resulting in higher throughput
-and less resource pressure on the database instance.
+It is almost always best to develop transactions that leverage User Defined Procedures
+([_UDPs_](https://www.postgresql.org/docs/15/xproc.html)) that return results to the backend upon completion
+(success or failure). This helps to minimize the latency introduced by network communication when running staged/phased
+transactions on the backend. This will in turn results in lower lock contention, resulting in higher throughput and less
+resource pressure on the database instance.
 
-Transactions are being developed on the backend here strictly as a technical presentation.
+As an alternative, transactions can also be comprised of User Defined Functions
+([_UDFs_](https://www.postgresql.org/docs/15/xfunc.html)) that are stored on the backend database. This reduces latency
+and network traffic when calling queries within the transaction in the driver code in the backend service.
+
+Transactions for Fiat operations are being developed on the backend service here strictly as a technical presentation.
+Transactions involving Crypto operations will be developed, tested, and deployed as transactions within _UDPs_.
 
 <br/>
 
@@ -242,11 +251,63 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 <br/>
 
+## Crypto Accounts Table Schema
+
+| Name (Struct) | Data Type (Struct) | Column Name | Column Type   | Description                                                                                                                           |
+|---------------|--------------------|-------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| ClientID      | pgtype.UUID        | client_id   | UUID          | Unique identifier for the account holder. References the Users table.                                                                 |
+| Ticker        | string             | ticker      | VARCHAR(6)    | The ticker symbol for the cryptocurrency. Each cryptocurrency has a unique ticker symbol.                                             |
+| Balance       | pgtype.Numeric     | balance     | Numeric(24,8) | Current balance of the account correct to eight decimal places. This precision is chosen because 1 Satoshi (Sat) is `BTC 0.00000001`. |
+| LastTx        | pgtype.Numeric     | last_tx     | Numeric(24,8) | Last transaction amount correct to eight decimal places.                                                                              |
+| LastTxTs      | pgtype.Timestamptz | last_tx_ts  | TIMESTAMPTZ   | Last transactions UTC timestamp.                                                                                                      |
+| CreatedAt     | pgtype.Timestamptz | created_at  | TIMESTAMPTZ   | UTC timestamp at which the account was created.                                                                                       |
+
+A compound primary key has been created on the `ClientID` and `Ticker`. Each user may only have one account in each cryptocurrency and the ticker is unique for each cryptocurrency.
+A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts belonging to a single user.
+
+The query to retrieve all Crypto account balances for a specific client leverages the index on the Crypto Accounts table.
+Each is expected to have only a few different Cryptocurrencies. The top 50 Cryptocurrencies by market capitalization can
+be viewed [here](https://crypto.com/price), whilst the 12 most popular, as of May 2023, can be viewed
+[here](https://finance.yahoo.com/news/12-most-popular-types-cryptocurrency-221243578.html). It is thus assumed that the
+aggregate number of accounts that will be retrieved for a single client will be limited to at most 50. Since the index
+is a compound index on the `ClientID` and `Ticker`, the sort operation in the query should have a minimal performance
+impact. The next page cursor is merely the encrypted ticker. If a user requests `N` records, `N + 1` records are
+retrieved. The `N + 1`th record is used as the cursor to the following page. If only `N` records are returned by the
+query it indicates an end to the data set. This iteration method will mean that new accounts created in the currency
+range prior to the page cursor will not affect data contained in the pages that follow.
+
+<br/>
+
+## Crypto Journal Table Schema
+
+| Name (Struct) | Data Type (Struct) | Column Name   | Column Type   | Description                                                                                                                                              |
+|---------------|--------------------|---------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TxID          | pgtype.UUID        | tx_id         | UUID          | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.    |
+| ClientID      | pgtype.UUID        | client_id     | UUID          | Unique identifier for the account relating to the transaction. References the Accounts table.                                                            |
+| Ticker        | string             | ticker        | VARCHAR(6)    | The ticker symbol for the cryptocurrency. Each cryptocurrency has a unique ticker symbol.                                                                |
+| Amount        | pgtype.Numeric     | amount        | Numeric(24,8) | Amount for the transaction correct to eight decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
+| TransactedAt  | pgtype.Timestamptz | transacted_at | Numeric(24,8) | Last transactions UTC timestamp.                                                                                                                         |
+
+A compound primary key has been configured on the `tx_id`, `client_id`, and `ticker` which will enforce uniqueness. Two
+additional indices have been created on the `transacted_at` and `tx_id` to support efficient record retrieval.
+
+The query for Crypto Transaction retrieval will use the `Ticker`, `Year`, `Month`, and `Timezone`. The data returned by
+the query will be for all transactions for the specified currency during the year and month in the specific timezone.
+The returned records will be sorted by transaction timestamps and will leverage the index on the `transacted_at` column.
+Data page iteration will adopt the offset-limit method. If a user requests `N` records, `N + 1` records are retrieved.
+The `N + 1`th record is used to check if there are more records to be retrieved. If only `N` records are returned by the
+query it indicates an end to the data set. The anticipated number of transactions per month is not expected to exceed
+1000, and the performance impact should be negligible. The page cursor consists of the record `offset`, `ticker`,
+`start`, and `end` dates for the transactions and is encrypted.
+
+<br/>
+
 ## Special Purpose Accounts
 
-| Username     | Purpose                                                                        |
-|--------------|--------------------------------------------------------------------------------|
-| deposit-fiat | Inbound deposits to the fiat accounts will be associated to this user account. |
+| Username          | Purpose                                                                            |
+|-------------------|------------------------------------------------------------------------------------|
+| fiat-currencies   | Inbound deposits to the fiat accounts will be associated with this user account.   |
+| crypto-currencies | Inbound deposits to the crypto accounts will be associated with this user account. |
 
 Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
 at creation and will be marked as deleted so disable login capabilities.
@@ -281,7 +342,7 @@ liquibase update
 
 ```bash
 # Main database rollback. Specify number of steps.
-liquibase rollback-count 5
+liquibase rollback-count 9
 ```
 
 
@@ -292,5 +353,5 @@ liquibase update --defaultsFile liquibase_testsuite.properties
 
 ```bash
 # Test suite setup
-liquibase rollback-count 5 --defaultsFile liquibase_testsuite.properties
+liquibase rollback-count 9 --defaultsFile liquibase_testsuite.properties
 ```

@@ -27,7 +27,7 @@ CREATE TYPE currency AS ENUM (
 'QAR','RON','RSD','RUB','RWF','SAR','SBD','SCR','SDG','SEK','SGD','SHP','SLL','SOS','SPL','SRD','STN','SVC','SYP',
 'SZL','THB','TJS','TMT','TND','TOP','TRY','TTD','TVD','TWD','TZS','UAH','UGX','USD','UYU','UZS','VEF','VND','VUV',
 'WST','XAF','XCD','XDR','XOF','XPF','YER','ZAR','ZMW','ZWD',
-'DEPOSIT', 'CRYPTO');
+'FIAT', 'CRYPTO');
 --rollback DROP TYPE currency;
 
 --changeset surahman:3
@@ -48,7 +48,7 @@ CREATE INDEX IF NOT EXISTS fiat_client_id_idx ON fiat_accounts USING btree (clie
 
 --changeset surahman:4
 --preconditions onFail:HALT onError:HALT
---comment: Create fiat currency deposit user and account.
+--comment: Create Fiat currency operations user and account.
 INSERT INTO users (
     first_name,
     last_name,
@@ -59,8 +59,8 @@ INSERT INTO users (
 SELECT
    'Internal',
    'FTeX, Inc.',
-   'deposit@ftex.com',
-   'deposit-fiat',
+   'fiat@ftex.com',
+   'fiat-currencies',
    password,
    true
 FROM
@@ -70,13 +70,13 @@ INSERT INTO fiat_accounts (
     currency,
     client_id)
 SELECT
-   'DEPOSIT',
+   'FIAT',
    client_id
 FROM
     users AS client_id
 WHERE
-    username = 'deposit-fiat';
---rollback DELETE FROM users WHERE username='deposit-fiat';
+    username = 'fiat-currencies';
+--rollback DELETE FROM users WHERE username='fiat-currencies';
 
 --changeset surahman:5
 --preconditions onFail:HALT onError:HALT
@@ -130,3 +130,67 @@ AS '
     END;
 ';
 --rollback DROP FUNCTION round_half_even;
+
+--changeset surahman:7
+--preconditions onFail:HALT onError:HALT
+--comment: Cryptocurrency accounts.
+CREATE TABLE IF NOT EXISTS crypto_accounts (
+    ticker          VARCHAR(6)      NOT NULL,
+    balance         NUMERIC(24,8)   DEFAULT 0 NOT NULL,
+    last_tx         NUMERIC(24,8)   DEFAULT 0 NOT NULL,
+    last_tx_ts      TIMESTAMPTZ     DEFAULT now() NOT NULL,
+    created_at      TIMESTAMPTZ     DEFAULT now() NOT NULL,
+    client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
+    PRIMARY KEY (client_id, ticker)
+);
+
+CREATE INDEX IF NOT EXISTS crypto_client_id_idx ON crypto_accounts USING btree (client_id);
+--rollback DROP TABLE crypto_accounts CASCADE;
+
+--changeset surahman:8
+--preconditions onFail:HALT onError:HALT
+--comment: Create Cryptocurrency operations user and account.
+INSERT INTO users (
+    first_name,
+    last_name,
+    email,
+    username,
+    password,
+    is_deleted)
+SELECT
+   'Internal',
+   'FTeX, Inc.',
+   'crypto@ftex.com',
+   'crypto-currencies',
+   password,
+   true
+FROM
+    substr(md5(random()::text), 0, 32) AS password;
+
+INSERT INTO crypto_accounts (
+    ticker,
+    client_id)
+SELECT
+   'CRYPTO',
+   client_id
+FROM
+    users AS client_id
+WHERE
+    username = 'crypto-currencies';
+--rollback DELETE FROM users WHERE username='crypto-currencies';
+
+--changeset surahman:9
+--preconditions onFail:HALT onError:HALT
+--comment: Cryptocurrency accounts transactions journal.
+CREATE TABLE IF NOT EXISTS crypto_journal (
+    ticker          VARCHAR(6)      NOT NULL,
+    amount          NUMERIC(24,8)   NOT NULL,
+    transacted_at   TIMESTAMPTZ     NOT NULL,
+    client_id       UUID            REFERENCES users(client_id) ON DELETE CASCADE,
+    tx_id           UUID            DEFAULT gen_random_uuid() NOT NULL,
+    PRIMARY KEY(tx_id, client_id, ticker)
+);
+
+CREATE INDEX IF NOT EXISTS crypto_journal_transacted_at_idx ON crypto_journal USING btree (transacted_at);
+CREATE INDEX IF NOT EXISTS crypto_journal_tx_idx ON crypto_journal USING btree (tx_id);
+--rollback DROP TABLE crypto_journal CASCADE;

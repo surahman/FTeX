@@ -2,6 +2,7 @@ version: 2
 sql:
     - engine: postgresql
       queries:
+        - queries/crypto.sql
         - queries/fiat.sql
         - queries/udf.sql
         - queries/users.sql
