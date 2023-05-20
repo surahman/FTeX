@@ -12,6 +12,8 @@ import (
 )
 
 type Querier interface {
+	// cryptoCreateAccount inserts a fiat account record.
+	cryptoCreateAccount(ctx context.Context, arg *cryptoCreateAccountParams) (int64, error)
 	// fiatCreateAccount inserts a fiat account record.
 	fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error)
 	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.

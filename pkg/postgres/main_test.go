@@ -142,7 +142,7 @@ func insertTestUsers(t *testing.T) []uuid.UUID {
 }
 
 // resetTestFiatAccounts will reset the fiat accounts table and create some test accounts.
-func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
+func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) { //nolint:dupl
 	t.Helper()
 
 	// Reset the fiat accounts table.
@@ -232,4 +232,40 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 	}
 
 	return testCases, transactions
+}
+
+// resetTestCryptoAccounts will reset the crypto accounts table and create some test accounts.
+func resetTestCryptoAccounts(t *testing.T) (uuid.UUID, uuid.UUID) { //nolint:dupl
+	t.Helper()
+
+	// Reset the fiat accounts table.
+	query := "TRUNCATE TABLE crypto_accounts CASCADE;"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.queries.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe crypto accounts table before reinserting accounts.")
+
+	// Retrieve client ids from users table.
+	clientID1, err := connection.Query.userGetClientId(ctx, "username1")
+	require.NoError(t, err, "failed to retrieve username1 client id.")
+	clientID2, err := connection.Query.userGetClientId(ctx, "username2")
+	require.NoError(t, err, "failed to retrieve username2 client id.")
+
+	// Insert new crypto accounts.
+	for _, testCase := range getTestCryptoAccounts(clientID1, clientID2) {
+		parameters := testCase
+
+		for _, param := range parameters {
+			accInfo := param
+			rowCount, err := connection.Query.cryptoCreateAccount(ctx, &accInfo)
+			require.NoError(t, err, "errored whilst trying to insert crypto account.")
+			require.NotEqual(t, 0, rowCount, "no rows were added.")
+		}
+	}
+
+	return clientID1, clientID2
 }
