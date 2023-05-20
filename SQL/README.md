@@ -304,10 +304,10 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 ## Special Purpose Accounts
 
-| Username          | Purpose                                                                          |
-|-------------------|----------------------------------------------------------------------------------|
-| fiat-currencies   | Inbound deposits to the fiat accounts will be associated to this user account.   |
-| crypto-currencies | Inbound deposits to the crypto accounts will be associated to this user account. |
+| Username          | Purpose                                                                            |
+|-------------------|------------------------------------------------------------------------------------|
+| fiat-currencies   | Inbound deposits to the fiat accounts will be associated with this user account.   |
+| crypto-currencies | Inbound deposits to the crypto accounts will be associated with this user account. |
 
 Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
 at creation and will be marked as deleted so disable login capabilities.
