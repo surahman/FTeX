@@ -194,3 +194,52 @@ CREATE TABLE IF NOT EXISTS crypto_journal (
 CREATE INDEX IF NOT EXISTS crypto_journal_transacted_at_idx ON crypto_journal USING btree (transacted_at);
 CREATE INDEX IF NOT EXISTS crypto_journal_tx_idx ON crypto_journal USING btree (tx_id);
 --rollback DROP TABLE crypto_journal CASCADE;
+
+--changeset surahman:10
+--preconditions onFail:HALT onError:HALT
+--comment: Purchase a crypto currency using a base Fiat currency.
+CREATE OR REPLACE PROCEDURE purchase_cryptocurrency(
+    client_id             UUID,
+    fiat_currency         Currency,
+    fiat_debit_amount     NUMERIC(20, 2),
+    crypto_ticker         VARCHAR(6),
+    crypto_credit_amount  NUMERIC(24,8)
+)
+LANGUAGE plpgsql
+AS '
+    DECLARE
+      -- VARIABLE DECLARATIONS
+      fiat_balance        NUMERIC(20,2);  -- current balance of the Fiat account.
+      crypto_balance      NUMERIC(24,8);  -- current balance of the Crypto account.
+      current_timestamp   TIMESTAMPTZ;    -- current timestamp with timezone to be used as transaction timestamp.
+    BEGIN
+
+      -- Get balances and row lock the Fiat and then Crypto accounts without locking the foreign keys.
+      SELECT fa.balance INTO fiat_balance
+      FROM fiat_accounts AS fa
+      WHERE fa.client_id = client_id AND fa.currency = fiat_currency
+      LIMIT 1
+      FOR NO KEY UPDATE;
+
+      SELECT ca.balance INTO crypto_balance
+      FROM crypto_accounts AS ca
+      WHERE ca.client_id = client_id AND ca.ticker = crypto_ticker
+      LIMIT 1
+      FOR NO KEY UPDATE;
+
+      -- After row locks are acquired generate the timestamp with timezone for this transaction.
+      SELECT NOW() INTO current_timestamp;
+
+      -- Check for sufficient Fiat balance to complete purchase.
+      IF fiat_debit_amount > fiat_balance THEN
+         RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, balance %, debit amount %'', fiat_balance, fiat_debit_amount;
+      END IF;
+
+      -- Credit the Crypto account and create the Crypto Journal entries for both the external/inbound Crypto currency deposit and the credit.
+
+      --
+
+      COMMIT;
+    END;
+';
+--rollback DROP PROCEDURE purchase_cryptocurrency;
