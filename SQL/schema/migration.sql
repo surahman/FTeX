@@ -199,16 +199,15 @@ CREATE INDEX IF NOT EXISTS crypto_journal_tx_idx ON crypto_journal USING btree (
 --preconditions onFail:HALT onError:HALT
 --comment: Purchase a crypto currency using a base Fiat currency.
 CREATE OR REPLACE PROCEDURE purchase_cryptocurrency(
-    client_id             UUID,
-    fiat_currency         Currency,
-    fiat_debit_amount     NUMERIC(20, 2),
-    crypto_ticker         VARCHAR(6),
-    crypto_credit_amount  NUMERIC(24,8)
+    _client_id              UUID,
+    _fiat_currency          Currency,
+    _fiat_debit_amount      NUMERIC(20, 2),
+    _crypto_ticker          VARCHAR(6),
+    _crypto_credit_amount   NUMERIC(24,8)
 )
 LANGUAGE plpgsql
 AS '
     DECLARE
-      -- VARIABLE DECLARATIONS
       fiat_balance        NUMERIC(20,2);  -- current balance of the Fiat account.
       crypto_balance      NUMERIC(24,8);  -- current balance of the Crypto account.
       current_timestamp   TIMESTAMPTZ;    -- current timestamp with timezone to be used as transaction timestamp.
@@ -218,82 +217,88 @@ AS '
     BEGIN
 
       -- Generate the timestamp with timezone for this transaction.
-      SELECT NOW() INTO current_timestamp;
+      SELECT NOW() INTO STRICT current_timestamp;
 
       -- Generate the transaction id for this purchase.
       transaction_id = gen_random_uuid() ;
 
-      RAISE NOTICE ''generated timestamp and transaction id.'';
+      RAISE NOTICE ''generated timestamp % and transaction id %'', current_timestamp, transaction_id;
 
       -- Round Half-to-Even the Fiat debit amount.
-      fiat_debit_amount = round_half_even(fiat_debit_amount, 2);
+      _fiat_debit_amount = round_half_even(_fiat_debit_amount, 2);
 
       RAISE NOTICE ''rounded debit amount.'';
 
       -- Get FTeX operations account IDs.
-      SELECT fa.client_id INTO ftex_fiat_id
-      FROM fiat_accounts AS fa
-      WHERE fa.username = ''fiat-currencies'';
+      SELECT client_id INTO STRICT ftex_fiat_id
+      FROM users
+      WHERE username = ''fiat-currencies'';
 
-      SELECT fc.client_id INTO ftex_crypto_id
-      FROM crypto_accounts AS fc
-      WHERE fc.username = ''crypto-currencies'';
+      SELECT client_id INTO STRICT ftex_crypto_id
+      FROM users
+      WHERE username = ''crypto-currencies'';
 
       RAISE NOTICE ''retrieved operations account IDs.'';
 
       -- Get balances and row lock the Fiat and then Crypto accounts without locking the foreign keys.
-      SELECT fa.balance INTO fiat_balance
+      SELECT fa.balance INTO STRICT fiat_balance
       FROM fiat_accounts AS fa
-      WHERE fa.client_id = client_id AND fa.currency = fiat_currency
+      WHERE fa.client_id = _client_id AND fa.currency = _fiat_currency
       LIMIT 1
       FOR NO KEY UPDATE;
 
-      SELECT ca.balance INTO crypto_balance
+      SELECT ca.balance INTO STRICT crypto_balance
       FROM crypto_accounts AS ca
-      WHERE ca.client_id = client_id AND ca.ticker = crypto_ticker
+      WHERE ca.client_id = _client_id AND ca.ticker = _crypto_ticker
       LIMIT 1
       FOR NO KEY UPDATE;
 
       RAISE NOTICE ''row locks acquired.'';
 
       -- Check for sufficient Fiat balance to complete purchase.
-      IF fiat_debit_amount > fiat_balance THEN
-         RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, delta %'', fiat_balance - fiat_debit_amount;
+      IF _fiat_debit_amount > fiat_balance THEN
+         RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, delta %'', fiat_balance - _fiat_debit_amount;
       END IF;
 
       -- Debit the Fiat account and create the Fiat Journal entry.
-      UPDATE fiat_accounts AS fa
-      SET fa.balance = round_half_even(fiat_balance - fiat_debit_amount, 2),
-          fa.last_tx = fiat_debit_amount,
-          fa.last_tx_ts = current_timestamp
-      WHERE fa.client_id = client_id AND fa.currency = fiat_currency;
+      UPDATE fiat_accounts
+      SET balance = round_half_even(fiat_balance - _fiat_debit_amount, 2),
+          last_tx = - _fiat_debit_amount,
+          last_tx_ts = current_timestamp
+      WHERE client_id = _client_id AND currency = _fiat_currency;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to update Fiat balance'';
+      END IF;
 
       INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
-      VALUES (client_id, fiat_currency, -fiat_debit_amount, current_timestamp, tansaction_id);
+      VALUES (_client_id, _fiat_currency, - _fiat_debit_amount, current_timestamp, transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Fiat Journal debit entry'';
+      END IF;
 
       RAISE NOTICE ''fiat account debited and journal entries made.'';
 
       -- Credit the Crypto account and create the Crypto Journal entries for the credit.
-      UPDATE crypto_accounts AS ca
-      SET ca.balance = round_half_even(crypto_balance + crypto_credit_amount, 8),
-          ca.last_tx = crypto_credit_amount,
-          ca.last_tx_ts = current_timestamp
-      WHERE ca.client_id = client_id AND ca.ticker = crypto_ticker;
+      UPDATE crypto_accounts
+      SET balance = round_half_even(crypto_balance + _crypto_credit_amount, 8),
+          last_tx = _crypto_credit_amount,
+          last_tx_ts = current_timestamp
+      WHERE client_id = _client_id AND ticker = _crypto_ticker;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to update Crypto balance'';
+      END IF;
 
       INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
-      VALUES (client_id, crypto_ticker, crypto_credit_amount, current_timestamp, tansaction_id);
+      VALUES (_client_id, _crypto_ticker, _crypto_credit_amount, current_timestamp, transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Crypto Journal credit entry'';
+      END IF;
 
       RAISE NOTICE ''crypto account debited and journal entries made.'';
-
-      -- Create outflow entry in Journal for Fiat currency to purchase crypto.
-      INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
-      VALUES (ftex_fiat_id, fiat_currency, -fiat_debit_amount, current_timestamp, tansaction_id);
-
-      -- Create inflow entry in Journal for Crypto currency purchase.
-      INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
-      VALUES (ftex_crypto_id, crypto_ticker, crypto_credit_amount, current_timestamp, tansaction_id);
-
-      RAISE NOTICE ''fiat and crypto inflow-outflow journal entries made.'';
 
       COMMIT;
     END;

@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,8 +20,11 @@ func TestCrypto_CryptoCreateAccount(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
 	// Insert initial set of test crypto accounts.
-	clientID1, clientID2 := resetTestCryptoAccounts(t)
+	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
 
@@ -38,4 +43,45 @@ func TestCrypto_CryptoCreateAccount(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Insert the initial set of test fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Insert initial set of test crypto accounts.
+	resetTestCryptoAccounts(t, clientID1, clientID2)
+
+	var (
+		amount1Ts = time.Now().UTC()
+		amount1   = decimal.NewFromFloat(5643.17)
+		ts1       = pgtype.Timestamptz{}
+	)
+
+	require.NoError(t, ts1.Scan(amount1Ts), "time stamp 1 parse failed.")
+
+	// Configure context.
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Insert a test amount to check the final balances against.
+	_, err := connection.Query.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
+		ClientID: clientID1,
+		Currency: CurrencyUSD,
+		Amount:   amount1,
+		LastTxTs: ts1,
+	})
+	require.NoError(t, err, "error expectation condition failed.")
 }
