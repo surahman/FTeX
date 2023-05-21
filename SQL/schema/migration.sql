@@ -239,7 +239,7 @@ AS '
 
       -- Check for sufficient Fiat balance to complete purchase.
       IF fiat_debit_amount > fiat_balance THEN
-         RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, balance %, debit amount %'', fiat_balance, fiat_debit_amount;
+         RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, delta %'', fiat_balance - fiat_debit_amount;
       END IF;
 
       -- Debit the Fiat account and create the Fiat Journal entry.
