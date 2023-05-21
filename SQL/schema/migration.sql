@@ -213,13 +213,33 @@ AS '
       crypto_balance      NUMERIC(24,8);  -- current balance of the Crypto account.
       current_timestamp   TIMESTAMPTZ;    -- current timestamp with timezone to be used as transaction timestamp.
       transaction_id      UUID;           -- transaction''s id.
+      ftex_fiat_id        UUID;           -- FTeX Fiat operations account id.
+      ftex_crypto_id      UUID;           -- FTeX Crypto operations account id.
     BEGIN
+
+      -- Generate the timestamp with timezone for this transaction.
+      SELECT NOW() INTO current_timestamp;
 
       -- Generate the transaction id for this purchase.
       transaction_id = gen_random_uuid() ;
 
+      RAISE NOTICE ''generated timestamp and transaction id.'';
+
       -- Round Half-to-Even the Fiat debit amount.
       fiat_debit_amount = round_half_even(fiat_debit_amount, 2);
+
+      RAISE NOTICE ''rounded debit amount.'';
+
+      -- Get FTeX operations account IDs.
+      SELECT fa.client_id INTO ftex_fiat_id
+      FROM fiat_accounts AS fa
+      WHERE fa.username = ''fiat-currencies'';
+
+      SELECT fc.client_id INTO ftex_crypto_id
+      FROM crypto_accounts AS fc
+      WHERE fc.username = ''crypto-currencies'';
+
+      RAISE NOTICE ''retrieved operations account IDs.'';
 
       -- Get balances and row lock the Fiat and then Crypto accounts without locking the foreign keys.
       SELECT fa.balance INTO fiat_balance
@@ -234,8 +254,7 @@ AS '
       LIMIT 1
       FOR NO KEY UPDATE;
 
-      -- After row locks are acquired generate the timestamp with timezone for this transaction.
-      SELECT NOW() INTO current_timestamp;
+      RAISE NOTICE ''row locks acquired.'';
 
       -- Check for sufficient Fiat balance to complete purchase.
       IF fiat_debit_amount > fiat_balance THEN
@@ -252,8 +271,29 @@ AS '
       INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
       VALUES (client_id, fiat_currency, -fiat_debit_amount, current_timestamp, tansaction_id);
 
-      -- Credit the Crypto account and create the Crypto Journal entries for both the external/inbound Crypto currency deposit and the credit.
+      RAISE NOTICE ''fiat account debited and journal entries made.'';
 
+      -- Credit the Crypto account and create the Crypto Journal entries for the credit.
+      UPDATE crypto_accounts AS ca
+      SET ca.balance = round_half_even(crypto_balance + crypto_credit_amount, 8),
+          ca.last_tx = crypto_credit_amount,
+          ca.last_tx_ts = current_timestamp
+      WHERE ca.client_id = client_id AND ca.ticker = crypto_ticker;
+
+      INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
+      VALUES (client_id, crypto_ticker, crypto_credit_amount, current_timestamp, tansaction_id);
+
+      RAISE NOTICE ''crypto account debited and journal entries made.'';
+
+      -- Create outflow entry in Journal for Fiat currency to purchase crypto.
+      INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
+      VALUES (ftex_fiat_id, fiat_currency, -fiat_debit_amount, current_timestamp, tansaction_id);
+
+      -- Create inflow entry in Journal for Crypto currency purchase.
+      INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
+      VALUES (ftex_crypto_id, crypto_ticker, crypto_credit_amount, current_timestamp, tansaction_id);
+
+      RAISE NOTICE ''fiat and crypto inflow-outflow journal entries made.'';
 
       COMMIT;
     END;
