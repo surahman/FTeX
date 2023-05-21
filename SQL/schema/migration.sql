@@ -212,7 +212,14 @@ AS '
       fiat_balance        NUMERIC(20,2);  -- current balance of the Fiat account.
       crypto_balance      NUMERIC(24,8);  -- current balance of the Crypto account.
       current_timestamp   TIMESTAMPTZ;    -- current timestamp with timezone to be used as transaction timestamp.
+      transaction_id      UUID;           -- transaction''s id.
     BEGIN
+
+      -- Generate the transaction id for this purchase.
+      transaction_id = gen_random_uuid() ;
+
+      -- Round Half-to-Even the Fiat debit amount.
+      fiat_debit_amount = round_half_even(fiat_debit_amount, 2);
 
       -- Get balances and row lock the Fiat and then Crypto accounts without locking the foreign keys.
       SELECT fa.balance INTO fiat_balance
@@ -235,9 +242,18 @@ AS '
          RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, balance %, debit amount %'', fiat_balance, fiat_debit_amount;
       END IF;
 
+      -- Debit the Fiat account and create the Fiat Journal entry.
+      UPDATE fiat_accounts AS fa
+      SET fa.balance = round_half_even(fiat_balance - fiat_debit_amount, 2),
+          fa.last_tx = fiat_debit_amount,
+          fa.last_tx_ts = current_timestamp
+      WHERE fa.client_id = client_id AND fa.currency = fiat_currency;
+
+      INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
+      VALUES (client_id, fiat_currency, -fiat_debit_amount, current_timestamp, tansaction_id);
+
       -- Credit the Crypto account and create the Crypto Journal entries for both the external/inbound Crypto currency deposit and the credit.
 
-      --
 
       COMMIT;
     END;
