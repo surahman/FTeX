@@ -199,6 +199,7 @@ CREATE INDEX IF NOT EXISTS crypto_journal_tx_idx ON crypto_journal USING btree (
 --preconditions onFail:HALT onError:HALT
 --comment: Purchase a crypto currency using a base Fiat currency.
 CREATE OR REPLACE PROCEDURE purchase_cryptocurrency(
+    _transaction_id         UUID,
     _client_id              UUID,
     _fiat_currency          Currency,
     _fiat_debit_amount      NUMERIC(20, 2),
@@ -211,7 +212,6 @@ AS '
       fiat_balance        NUMERIC(20,2);  -- current balance of the Fiat account.
       crypto_balance      NUMERIC(24,8);  -- current balance of the Crypto account.
       current_timestamp   TIMESTAMPTZ;    -- current timestamp with timezone to be used as transaction timestamp.
-      transaction_id      UUID;           -- transaction''s id.
       ftex_fiat_id        UUID;           -- FTeX Fiat operations account id.
       ftex_crypto_id      UUID;           -- FTeX Crypto operations account id.
     BEGIN
@@ -219,10 +219,7 @@ AS '
       -- Generate the timestamp with timezone for this transaction.
       SELECT NOW() INTO STRICT current_timestamp;
 
-      -- Generate the transaction id for this purchase.
-      transaction_id = gen_random_uuid() ;
-
-      RAISE NOTICE ''generated timestamp % and transaction id %'', current_timestamp, transaction_id;
+      RAISE NOTICE ''generated timestamp % and transaction id %'', current_timestamp, _transaction_id;
 
       -- Round Half-to-Even the Fiat debit amount.
       _fiat_debit_amount = round_half_even(_fiat_debit_amount, 2);
@@ -272,7 +269,7 @@ AS '
       END IF;
 
       INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
-      VALUES (_client_id, _fiat_currency, - _fiat_debit_amount, current_timestamp, transaction_id);
+      VALUES (_client_id, _fiat_currency, - _fiat_debit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
         RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Fiat Journal debit entry'';
@@ -292,7 +289,7 @@ AS '
       END IF;
 
       INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
-      VALUES (_client_id, _crypto_ticker, _crypto_credit_amount, current_timestamp, transaction_id);
+      VALUES (_client_id, _crypto_ticker, _crypto_credit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
         RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Crypto Journal credit entry'';
