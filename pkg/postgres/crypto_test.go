@@ -83,12 +83,12 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		params    *callPurchaseCryptoParams
+		params    *cryptoPurchaseParams
 		expectErr require.ErrorAssertionFunc
 	}{
 		{
 			name: "valid - USD to BTC (first)",
-			params: &callPurchaseCryptoParams{
+			params: &cryptoPurchaseParams{
 				TransactionID:      txIDValid1,
 				ClientID:           clientID1,
 				FiatCurrency:       CurrencyUSD,
@@ -99,7 +99,7 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 			expectErr: require.NoError,
 		}, {
 			name: "valid - USD to BTC (second)",
-			params: &callPurchaseCryptoParams{
+			params: &cryptoPurchaseParams{
 				TransactionID:      txIDValid2,
 				ClientID:           clientID1,
 				FiatCurrency:       CurrencyUSD,
@@ -110,7 +110,7 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 			expectErr: require.NoError,
 		}, {
 			name: "invalid - PKR to BTC",
-			params: &callPurchaseCryptoParams{
+			params: &cryptoPurchaseParams{
 				TransactionID:      txIDPKR,
 				ClientID:           clientID1,
 				FiatCurrency:       CurrencyPKR,
@@ -121,7 +121,7 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 			expectErr: require.Error,
 		}, {
 			name: "invalid - USD to invalid crypto",
-			params: &callPurchaseCryptoParams{
+			params: &cryptoPurchaseParams{
 				TransactionID:      txIDBAD,
 				ClientID:           clientID1,
 				FiatCurrency:       CurrencyUSD,
@@ -132,7 +132,7 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 			expectErr: require.Error,
 		}, {
 			name: "invalid - USD insufficient funds",
-			params: &callPurchaseCryptoParams{
+			params: &cryptoPurchaseParams{
 				TransactionID:      txIDNoFunds,
 				ClientID:           clientID1,
 				FiatCurrency:       CurrencyUSD,
@@ -175,7 +175,7 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 			defer wg.Done()
 
 			t.Run(test.name, func(t *testing.T) {
-				err := connection.Query.callPurchaseCrypto(ctx, test.params)
+				err := connection.Query.cryptoPurchase(ctx, test.params)
 				test.expectErr(t, err, "error expectation failed.")
 			})
 		}()
@@ -186,12 +186,16 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 
 	// Verify results.
 	t.Run("check end results", func(t *testing.T) {
-		// Check balance.
+		// Check balances.
 		fiatAccount, err := connection.FiatBalanceCurrency(clientID1, CurrencyUSD)
 		require.NoError(t, err, "failed to retrieve Fiat account balance.")
 		require.Equal(t, fiatAccount.Balance, decimal.NewFromFloat(2797.06), "Fiat balance mismatch.")
 
-		// Check for successful transaction Journal entries.
+		cryptoAccount, err := connection.CryptoBalanceCurrency(clientID1, "BTC")
+		require.NoError(t, err, "failed to retrieve Crypto account balance.")
+		require.Equal(t, cryptoAccount.Balance, decimal.NewFromFloat(117.93153759), "Crypto balance mismatch.")
+
+		// Check Fiat Journal entries.
 		fiatJournal, err := connection.FiatTxDetailsCurrency(clientID1, txIDValid1)
 		require.NoError(t, err, "failed to retrieve Fiat journal for first valid purchase.")
 		require.Equal(t, 1, len(fiatJournal), "invalid Fiat journal count for first purchase.")
@@ -211,5 +215,26 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 		fiatJournal, err = connection.FiatTxDetailsCurrency(clientID1, txIDNoFunds)
 		require.NoError(t, err, "failed to retrieve Fiat journal for insufficient funds purchase.")
 		require.Equal(t, 0, len(fiatJournal), "Fiat journal entry for insufficient funds purchase found.")
+
+		// Check Crypto Journal entries.
+		cryptoJournal, err := connection.CryptoTxDetailsCurrency(clientID1, txIDValid1)
+		require.NoError(t, err, "failed to retrieve Crypto journal for first valid purchase.")
+		require.Equal(t, 1, len(cryptoJournal), "invalid Crypto journal count for first purchase.")
+
+		cryptoJournal, err = connection.CryptoTxDetailsCurrency(clientID1, txIDValid2)
+		require.NoError(t, err, "failed to retrieve Crypto journal for second valid purchase.")
+		require.Equal(t, 1, len(cryptoJournal), "invalid Crypto journal count for second purchase.")
+
+		cryptoJournal, err = connection.CryptoTxDetailsCurrency(clientID1, txIDPKR)
+		require.NoError(t, err, "failed to retrieve Crypto journal for PKR purchase.")
+		require.Equal(t, 0, len(cryptoJournal), "Crypto journal entry for PKR purchase found.")
+
+		cryptoJournal, err = connection.CryptoTxDetailsCurrency(clientID1, txIDBAD)
+		require.NoError(t, err, "failed to retrieve Crypto journal for invalid crypto ticker purchase.")
+		require.Equal(t, 0, len(cryptoJournal), "Crypto journal entry for invalid crypto ticker purchase found.")
+
+		cryptoJournal, err = connection.CryptoTxDetailsCurrency(clientID1, txIDNoFunds)
+		require.NoError(t, err, "failed to retrieve Crypto journal for insufficient funds purchase.")
+		require.Equal(t, 0, len(cryptoJournal), "Crypto journal entry for insufficient funds purchase found.")
 	})
 }

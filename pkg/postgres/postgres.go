@@ -11,6 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shopspring/decimal"
 	"github.com/spf13/afero"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
@@ -77,6 +78,20 @@ type Postgres interface {
 	// Fiat account for a specific client during a specific month.
 	FiatTransactionsCurrencyPaginated(uuid.UUID, Currency, int32, int32, pgtype.Timestamptz, pgtype.Timestamptz) (
 		[]FiatJournal, error)
+
+	// CryptoCreateAccount is the interface through which external methods can create a Crypto account.
+	CryptoCreateAccount(uuid.UUID, string) error
+
+	// CryptoBalanceCurrency is the interface through which external methods can retrieve a Fiat account balance for a
+	// specific cryptocurrency.
+	CryptoBalanceCurrency(uuid.UUID, string) (CryptoAccount, error)
+
+	// CryptoTxDetailsCurrency is the interface through which external methods can retrieve a Crypto transaction details
+	// for a specific transaction.
+	CryptoTxDetailsCurrency(uuid.UUID, uuid.UUID) ([]CryptoJournal, error)
+
+	// CryptoPurchase is the interface through which external methods can purchase a specific Cryptocurrency.
+	CryptoPurchase(uuid.UUID, Currency, decimal.Decimal, string, decimal.Decimal) (uuid.UUID, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

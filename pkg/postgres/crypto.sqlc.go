@@ -12,32 +12,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const callPurchaseCrypto = `-- name: callPurchaseCrypto :exec
-CALL purchase_cryptocurrency($1,$2,$3, $5::numeric(18, 2), $4, $6::numeric(24, 8))
-`
-
-type callPurchaseCryptoParams struct {
-	TransactionID      uuid.UUID       `json:"TransactionID"`
-	ClientID           uuid.UUID       `json:"ClientID"`
-	FiatCurrency       Currency        `json:"FiatCurrency"`
-	CryptoTicker       string          `json:"CryptoTicker"`
-	FiatDebitAmount    decimal.Decimal `json:"fiatDebitAmount"`
-	CryptoCreditAmount decimal.Decimal `json:"cryptoCreditAmount"`
-}
-
-// purchaseCrypto will execute a transaction to purchase a crypto currency.
-func (q *Queries) callPurchaseCrypto(ctx context.Context, arg *callPurchaseCryptoParams) error {
-	_, err := q.db.Exec(ctx, callPurchaseCrypto,
-		arg.TransactionID,
-		arg.ClientID,
-		arg.FiatCurrency,
-		arg.CryptoTicker,
-		arg.FiatDebitAmount,
-		arg.CryptoCreditAmount,
-	)
-	return err
-}
-
 const cryptoCreateAccount = `-- name: cryptoCreateAccount :execrows
 INSERT INTO crypto_accounts (client_id, ticker)
 VALUES ($1, $2)
@@ -55,4 +29,94 @@ func (q *Queries) cryptoCreateAccount(ctx context.Context, arg *cryptoCreateAcco
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const cryptoGetAccount = `-- name: cryptoGetAccount :one
+SELECT ticker, balance, last_tx, last_tx_ts, created_at, client_id
+FROM crypto_accounts
+WHERE client_id=$1 AND ticker=$2
+`
+
+type cryptoGetAccountParams struct {
+	ClientID uuid.UUID `json:"clientID"`
+	Ticker   string    `json:"ticker"`
+}
+
+// cryptoGetAccount will retrieve a specific user's account for a given cryptocurrency ticker.
+func (q *Queries) cryptoGetAccount(ctx context.Context, arg *cryptoGetAccountParams) (CryptoAccount, error) {
+	row := q.db.QueryRow(ctx, cryptoGetAccount, arg.ClientID, arg.Ticker)
+	var i CryptoAccount
+	err := row.Scan(
+		&i.Ticker,
+		&i.Balance,
+		&i.LastTx,
+		&i.LastTxTs,
+		&i.CreatedAt,
+		&i.ClientID,
+	)
+	return i, err
+}
+
+const cryptoGetJournalTransaction = `-- name: cryptoGetJournalTransaction :many
+SELECT ticker, amount, transacted_at, client_id, tx_id
+FROM crypto_journal
+WHERE client_id = $1 AND tx_id = $2
+`
+
+type cryptoGetJournalTransactionParams struct {
+	ClientID uuid.UUID `json:"clientID"`
+	TxID     uuid.UUID `json:"txID"`
+}
+
+// cryptoGetJournalTransaction will retrieve the journal entries associated with a transaction.
+func (q *Queries) cryptoGetJournalTransaction(ctx context.Context, arg *cryptoGetJournalTransactionParams) ([]CryptoJournal, error) {
+	rows, err := q.db.Query(ctx, cryptoGetJournalTransaction, arg.ClientID, arg.TxID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CryptoJournal
+	for rows.Next() {
+		var i CryptoJournal
+		if err := rows.Scan(
+			&i.Ticker,
+			&i.Amount,
+			&i.TransactedAt,
+			&i.ClientID,
+			&i.TxID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const cryptoPurchase = `-- name: cryptoPurchase :exec
+CALL purchase_cryptocurrency($1,$2,$3, $5::numeric(18, 2), $4, $6::numeric(24, 8))
+`
+
+type cryptoPurchaseParams struct {
+	TransactionID      uuid.UUID       `json:"TransactionID"`
+	ClientID           uuid.UUID       `json:"ClientID"`
+	FiatCurrency       Currency        `json:"FiatCurrency"`
+	CryptoTicker       string          `json:"CryptoTicker"`
+	FiatDebitAmount    decimal.Decimal `json:"fiatDebitAmount"`
+	CryptoCreditAmount decimal.Decimal `json:"cryptoCreditAmount"`
+}
+
+// cryptoPurchase will execute a transaction to purchase a crypto currency.
+func (q *Queries) cryptoPurchase(ctx context.Context, arg *cryptoPurchaseParams) error {
+	_, err := q.db.Exec(ctx, cryptoPurchase,
+		arg.TransactionID,
+		arg.ClientID,
+		arg.FiatCurrency,
+		arg.CryptoTicker,
+		arg.FiatDebitAmount,
+		arg.CryptoCreditAmount,
+	)
+	return err
 }
