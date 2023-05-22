@@ -36,6 +36,20 @@ func (m *MockQuerier) EXPECT() *MockQuerierMockRecorder {
 	return m.recorder
 }
 
+// callPurchaseCrypto mocks base method.
+func (m *MockQuerier) callPurchaseCrypto(arg0 context.Context, arg1 *callPurchaseCryptoParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "callPurchaseCrypto", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// callPurchaseCrypto indicates an expected call of callPurchaseCrypto.
+func (mr *MockQuerierMockRecorder) callPurchaseCrypto(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "callPurchaseCrypto", reflect.TypeOf((*MockQuerier)(nil).callPurchaseCrypto), arg0, arg1)
+}
+
 // cryptoCreateAccount mocks base method.
 func (m *MockQuerier) cryptoCreateAccount(arg0 context.Context, arg1 *cryptoCreateAccountParams) (int64, error) {
 	m.ctrl.T.Helper()

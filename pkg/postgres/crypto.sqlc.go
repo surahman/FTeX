@@ -9,7 +9,34 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
+	"github.com/shopspring/decimal"
 )
+
+const callPurchaseCrypto = `-- name: callPurchaseCrypto :exec
+CALL purchase_cryptocurrency($1,$2,$3, $5::numeric(18, 2), $4, $6::numeric(24, 8))
+`
+
+type callPurchaseCryptoParams struct {
+	TransactionID      uuid.UUID       `json:"TransactionID"`
+	ClientID           uuid.UUID       `json:"ClientID"`
+	FiatCurrency       Currency        `json:"FiatCurrency"`
+	CryptoTicker       string          `json:"CryptoTicker"`
+	FiatDebitAmount    decimal.Decimal `json:"fiatDebitAmount"`
+	CryptoCreditAmount decimal.Decimal `json:"cryptoCreditAmount"`
+}
+
+// purchaseCrypto will execute a transaction to purchase a crypto currency.
+func (q *Queries) callPurchaseCrypto(ctx context.Context, arg *callPurchaseCryptoParams) error {
+	_, err := q.db.Exec(ctx, callPurchaseCrypto,
+		arg.TransactionID,
+		arg.ClientID,
+		arg.FiatCurrency,
+		arg.CryptoTicker,
+		arg.FiatDebitAmount,
+		arg.CryptoCreditAmount,
+	)
+	return err
+}
 
 const cryptoCreateAccount = `-- name: cryptoCreateAccount :execrows
 INSERT INTO crypto_accounts (client_id, ticker)

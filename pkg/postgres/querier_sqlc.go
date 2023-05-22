@@ -12,6 +12,8 @@ import (
 )
 
 type Querier interface {
+	// purchaseCrypto will execute a transaction to purchase a crypto currency.
+	callPurchaseCrypto(ctx context.Context, arg *callPurchaseCryptoParams) error
 	// cryptoCreateAccount inserts a fiat account record.
 	cryptoCreateAccount(ctx context.Context, arg *cryptoCreateAccountParams) (int64, error)
 	// fiatCreateAccount inserts a fiat account record.
