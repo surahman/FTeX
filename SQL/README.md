@@ -2,21 +2,24 @@
 
 ## Table of contents
 
-- [Case Study and Justification](#case-study-and-justification)
-- [Design Considerations](#design-considerations)
-- [Numeric Rounding](#numeric-rounding)
-  - [Rounding Half-Up](#rounding-half-up)
-  - [Rounding Half-Even](#rounding-half-even)
-- [Transactions](#transactions)
-- [Tablespaces](#tablespaces)
-- [Users Table Schema](#users-table-schema)
-- [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
-- [Fiat Journal Table Schema](#fiat-journal-table-schema)
-- [Crypto Accounts Table Schema](#crypto-accounts-table-schema)
-- [Crypto Journal Table Schema](#crypto-journal-table-schema)
-- [Special Purpose Accounts](#special-purpose-accounts)
-- [SQL Queries](#sql-queries)
-- [Schema Migration and Setup](#schema-migration-and-setup)
+- [Postgres](#postgres)
+  - [Table of contents](#table-of-contents)
+  - [Case Study and Justification](#case-study-and-justification)
+  - [Design Considerations](#design-considerations)
+  - [Numeric Rounding](#numeric-rounding)
+    - [Rounding Half-Up](#rounding-half-up)
+    - [Rounding Half-Even](#rounding-half-even)
+  - [Transactions](#transactions)
+  - [Tablespaces](#tablespaces)
+  - [Users Table Schema](#users-table-schema)
+  - [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
+  - [Fiat Journal Table Schema](#fiat-journal-table-schema)
+  - [Crypto Accounts Table Schema](#crypto-accounts-table-schema)
+  - [Crypto Journal Table Schema](#crypto-journal-table-schema)
+  - [Special Purpose Accounts](#special-purpose-accounts)
+  - [Journal Entries](#journal-entries)
+  - [SQL Queries](#sql-queries)
+  - [Schema Migration and Setup](#schema-migration-and-setup)
 
 <br/>
 
@@ -311,6 +314,29 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
 at creation and will be marked as deleted so disable login capabilities.
+
+<br/>
+
+## Journal Entries
+
+The following Journal entries will be made during deposits, exchanges, purchases, and sale operations on the platform.
+
+* ___Deposit Fiat:___
+  * Debit entry for the FTeX Fiat operations account.
+  * Credit entry for the client’s destination Fiat currency account.
+* ___Exchange/Convert Fiat:___
+  * Debit entry for the client’s source Fiat currency account.
+  * Credit entry for the client’s destination Fiat currency account.
+* ___Purchase Crypto:___
+  * Debit entry for the client’s source Fiat currency account.
+  * Credit entry for the FTeX Fiat operations account.
+  * Debit entry for the FTeX Crypto operations account.
+  * Credit entry for the client’s destination cryptocurrency account.
+* ___Sell Crypto___
+  * Debit entry for the client’s source cryptocurrency account.
+  * Credit entry for the FTeX Crypto operations account.
+  * Debit entry for the FTeX Fiat operations account.
+  * Credit entry for the client’s destination Fiat currency account.
 
 <br/>
 
