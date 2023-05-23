@@ -61,7 +61,7 @@ func (p *postgresImpl) CryptoPurchase(
 	fiatCurrency Currency,
 	fiatDebitAmount decimal.Decimal,
 	cryptoTicker string,
-	cryptoCreditAmount decimal.Decimal) (uuid.UUID, error) {
+	cryptoCreditAmount decimal.Decimal) (*FiatJournal, *CryptoJournal, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
 
 	defer cancel()
@@ -70,11 +70,11 @@ func (p *postgresImpl) CryptoPurchase(
 	if err != nil {
 		p.logger.Error("failed to generate transaction id for Crypto purchase", zap.Error(err))
 
-		return uuid.UUID{}, ErrTransactCrypto
+		return nil, nil, ErrTransactCrypto
 	}
 
 	err = p.Query.cryptoPurchase(ctx, &cryptoPurchaseParams{
-		TransactionID:      uuid.UUID{},
+		TransactionID:      txID,
 		ClientID:           clientID,
 		FiatCurrency:       fiatCurrency,
 		CryptoTicker:       cryptoTicker,
@@ -82,8 +82,28 @@ func (p *postgresImpl) CryptoPurchase(
 		CryptoCreditAmount: cryptoCreditAmount,
 	})
 	if err != nil {
-		return uuid.UUID{}, ErrTransactCrypto
+		return nil, nil, ErrTransactCrypto
 	}
 
-	return txID, nil
+	fiatJournal, err := p.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+		ClientID: clientID,
+		TxID:     txID,
+	})
+	if err != nil {
+		p.logger.Error("failed to retrieve Fiat balance post Crypto purchase", zap.Error(err))
+
+		return nil, nil, ErrTransactCryptoDetails
+	}
+
+	cryptoJournal, err := p.Query.cryptoGetJournalTransaction(ctx, &cryptoGetJournalTransactionParams{
+		ClientID: clientID,
+		TxID:     txID,
+	})
+	if err != nil {
+		p.logger.Error("failed to retrieve Crypto balance post Crypto purchase", zap.Error(err))
+
+		return nil, nil, ErrTransactCryptoDetails
+	}
+
+	return &fiatJournal[0], &cryptoJournal[0], nil
 }

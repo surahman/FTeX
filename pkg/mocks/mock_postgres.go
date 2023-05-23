@@ -83,12 +83,13 @@ func (mr *MockPostgresMockRecorder) CryptoCreateAccount(arg0, arg1 interface{}) 
 }
 
 // CryptoPurchase mocks base method.
-func (m *MockPostgres) CryptoPurchase(arg0 uuid.UUID, arg1 postgres.Currency, arg2 decimal.Decimal, arg3 string, arg4 decimal.Decimal) (uuid.UUID, error) {
+func (m *MockPostgres) CryptoPurchase(arg0 uuid.UUID, arg1 postgres.Currency, arg2 decimal.Decimal, arg3 string, arg4 decimal.Decimal) (*postgres.FiatJournal, *postgres.CryptoJournal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CryptoPurchase", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(uuid.UUID)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(*postgres.FiatJournal)
+	ret1, _ := ret[1].(*postgres.CryptoJournal)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // CryptoPurchase indicates an expected call of CryptoPurchase.

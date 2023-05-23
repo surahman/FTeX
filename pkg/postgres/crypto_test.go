@@ -47,7 +47,7 @@ func TestCrypto_CryptoCreateAccount(t *testing.T) {
 	}
 }
 
-func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
+func TestCrypto_CryptoPurchase(t *testing.T) {
 	// Skip integration tests for short test runs.
 	if testing.Short() {
 		return

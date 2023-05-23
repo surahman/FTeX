@@ -43,15 +43,18 @@ func (e *Error) SetStatus(code int) *Error {
 
 // Generic error variables.
 // Errors to be returned by the Postgres Queries exposed through the interface for various failure conditions.
+//
+//nolint:lll
 var (
-	ErrRegisterUser   = errorRegisterUser()      // ErrorRegisterUser is returned if user registration fails.
-	ErrLoginUser      = errorLoginUser()         // ErrLoginUser is returned if user credentials are not found.
-	ErrNotFoundUser   = errorNotFoundUser()      // ErrNotFoundUser is returned if a user account is not found.
-	ErrCreateFiat     = errorCreateFiat()        // ErrCreateFiat is returned if a Fiat account could not be opened.
-	ErrTransactFiat   = errorTransactionFiat()   // ErrTransactFiat is returned if a Fiat transaction fails.
-	ErrNotFound       = errorNotFound()          // ErrNotFound is returned as a generic not found error.
-	ErrUnhealthy      = errorUnhealthy()         // ErrUnhealthy is returned if the database cannot be pinged.
-	ErrTransactCrypto = errorTransactionCrypto() // ErrTransactCrypto is returned if a Crypto transaction fails.
+	ErrRegisterUser          = errorRegisterUser()             // ErrorRegisterUser is returned if user registration fails.
+	ErrLoginUser             = errorLoginUser()                // ErrLoginUser is returned if user credentials are not found.
+	ErrNotFoundUser          = errorNotFoundUser()             // ErrNotFoundUser is returned if a user account is not found.
+	ErrCreateFiat            = errorCreateFiat()               // ErrCreateFiat is returned if a Fiat account could not be opened.
+	ErrTransactFiat          = errorTransactionFiat()          // ErrTransactFiat is returned if a Fiat transaction fails.
+	ErrNotFound              = errorNotFound()                 // ErrNotFound is returned as a generic not found error.
+	ErrUnhealthy             = errorUnhealthy()                // ErrUnhealthy is returned if the database cannot be pinged.
+	ErrTransactCrypto        = errorTransactionCrypto()        // ErrTransactCrypto is returned if a Crypto transaction fails.
+	ErrTransactCryptoDetails = errorTransactionCryptoDetails() // ErrTransactCryptoDetails is returned if a Crypto transaction succeeds but balance retrieval fails.
 )
 
 func errorRegisterUser() error {
@@ -106,6 +109,13 @@ func errorUnhealthy() error {
 func errorTransactionCrypto() error {
 	return &Error{
 		Message: "could not complete Crypto transaction",
+		Code:    http.StatusInternalServerError,
+	}
+}
+
+func errorTransactionCryptoDetails() error {
+	return &Error{
+		Message: "could not retrieve transaction details for successful Crypto transaction",
 		Code:    http.StatusInternalServerError,
 	}
 }

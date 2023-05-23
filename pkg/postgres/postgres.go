@@ -91,7 +91,7 @@ type Postgres interface {
 	CryptoTxDetailsCurrency(uuid.UUID, uuid.UUID) ([]CryptoJournal, error)
 
 	// CryptoPurchase is the interface through which external methods can purchase a specific Cryptocurrency.
-	CryptoPurchase(uuid.UUID, Currency, decimal.Decimal, string, decimal.Decimal) (uuid.UUID, error)
+	CryptoPurchase(uuid.UUID, Currency, decimal.Decimal, string, decimal.Decimal) (*FiatJournal, *CryptoJournal, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.
