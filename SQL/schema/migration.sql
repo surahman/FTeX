@@ -219,12 +219,8 @@ AS '
       -- Generate the timestamp with timezone for this transaction.
       SELECT NOW() INTO STRICT current_timestamp;
 
-      RAISE NOTICE ''generated timestamp % and transaction id %'', current_timestamp, _transaction_id;
-
       -- Round Half-to-Even the Fiat debit amount.
       _fiat_debit_amount = round_half_even(_fiat_debit_amount, 2);
-
-      RAISE NOTICE ''rounded debit amount.'';
 
       -- Get FTeX operations account IDs.
       SELECT client_id INTO STRICT ftex_fiat_id
@@ -234,8 +230,6 @@ AS '
       SELECT client_id INTO STRICT ftex_crypto_id
       FROM users
       WHERE username = ''crypto-currencies'';
-
-      RAISE NOTICE ''retrieved operations account IDs.'';
 
       -- Get balances and row lock the Fiat and then Crypto accounts without locking the foreign keys.
       SELECT fa.balance INTO STRICT fiat_balance
@@ -249,8 +243,6 @@ AS '
       WHERE ca.client_id = _client_id AND ca.ticker = _crypto_ticker
       LIMIT 1
       FOR NO KEY UPDATE;
-
-      RAISE NOTICE ''row locks acquired.'';
 
       -- Check for sufficient Fiat balance to complete purchase.
       IF _fiat_debit_amount > fiat_balance THEN
@@ -282,8 +274,6 @@ AS '
         RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Fiat Journal debit entry'';
       END IF;
 
-      RAISE NOTICE ''fiat account debited and journal entries made.'';
-
       -- Credit the Crypto account and create the Crypto Journal entries for outflow from FTeX to client.
       UPDATE crypto_accounts
       SET balance = round_half_even(crypto_balance + _crypto_credit_amount, 8),
@@ -308,8 +298,6 @@ AS '
       IF NOT FOUND THEN
         RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Crypto Journal credit entry'';
       END IF;
-
-      RAISE NOTICE ''crypto account debited and journal entries made.'';
 
       COMMIT;
     END;
