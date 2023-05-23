@@ -185,7 +185,16 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 	wg.Wait()
 
 	// Verify results.
+	//nolint:contextcheck
 	t.Run("check end results", func(t *testing.T) {
+		negOne := decimal.NewFromFloat(-1)
+
+		fiatOpsAcc, err := connection.Query.userGetClientId(ctx, "fiat-currencies")
+		require.NoError(t, err, "failed to retrieve Fiat operations user id.")
+
+		cryptoOpsAcc, err := connection.Query.userGetClientId(ctx, "crypto-currencies")
+		require.NoError(t, err, "failed to retrieve Fiat operations user id.")
+
 		// Check balances.
 		fiatAccount, err := connection.FiatBalanceCurrency(clientID1, CurrencyUSD)
 		require.NoError(t, err, "failed to retrieve Fiat account balance.")
@@ -199,10 +208,26 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 		fiatJournal, err := connection.FiatTxDetailsCurrency(clientID1, txIDValid1)
 		require.NoError(t, err, "failed to retrieve Fiat journal for first valid purchase.")
 		require.Equal(t, 1, len(fiatJournal), "invalid Fiat journal count for first purchase.")
+		require.Equal(t, testCases[0].params.FiatDebitAmount.Mul(negOne), fiatJournal[0].Amount,
+			"first Fiat debit amount mismatched.")
+
+		fiatJournal, err = connection.FiatTxDetailsCurrency(fiatOpsAcc, txIDValid1)
+		require.NoError(t, err, "failed to retrieve ops Fiat journal for first valid purchase.")
+		require.Equal(t, 1, len(fiatJournal), "invalid ops Fiat journal count for first purchase.")
+		require.Equal(t, testCases[0].params.FiatDebitAmount, fiatJournal[0].Amount,
+			"first ops Fiat debit amount mismatched.")
 
 		fiatJournal, err = connection.FiatTxDetailsCurrency(clientID1, txIDValid2)
 		require.NoError(t, err, "failed to retrieve Fiat journal for second valid purchase.")
 		require.Equal(t, 1, len(fiatJournal), "invalid Fiat journal count for second purchase.")
+		require.Equal(t, testCases[1].params.FiatDebitAmount.Mul(negOne), fiatJournal[0].Amount,
+			"second Fiat debit amount mismatched.")
+
+		fiatJournal, err = connection.FiatTxDetailsCurrency(fiatOpsAcc, txIDValid2)
+		require.NoError(t, err, "failed to retrieve ops Fiat journal for second valid purchase.")
+		require.Equal(t, 1, len(fiatJournal), "invalid ops Fiat journal count for second purchase.")
+		require.Equal(t, testCases[1].params.FiatDebitAmount, fiatJournal[0].Amount,
+			"second ops Fiat debit amount mismatched.")
 
 		fiatJournal, err = connection.FiatTxDetailsCurrency(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Fiat journal for PKR purchase.")
@@ -220,10 +245,26 @@ func TestCrypto_PurchaseCryptocurrency(t *testing.T) {
 		cryptoJournal, err := connection.CryptoTxDetailsCurrency(clientID1, txIDValid1)
 		require.NoError(t, err, "failed to retrieve Crypto journal for first valid purchase.")
 		require.Equal(t, 1, len(cryptoJournal), "invalid Crypto journal count for first purchase.")
+		require.Equal(t, testCases[0].params.CryptoCreditAmount, cryptoJournal[0].Amount,
+			"first Crypto credit amount mismatched.")
+
+		cryptoJournal, err = connection.CryptoTxDetailsCurrency(cryptoOpsAcc, txIDValid1)
+		require.NoError(t, err, "failed to retrieve ops Crypto journal for first valid purchase.")
+		require.Equal(t, 1, len(cryptoJournal), "invalid ops Crypto journal count for first purchase.")
+		require.Equal(t, testCases[0].params.CryptoCreditAmount.Mul(negOne), cryptoJournal[0].Amount,
+			"first ops Crypto debit amount mismatched.")
 
 		cryptoJournal, err = connection.CryptoTxDetailsCurrency(clientID1, txIDValid2)
 		require.NoError(t, err, "failed to retrieve Crypto journal for second valid purchase.")
 		require.Equal(t, 1, len(cryptoJournal), "invalid Crypto journal count for second purchase.")
+		require.Equal(t, testCases[1].params.CryptoCreditAmount, cryptoJournal[0].Amount,
+			"second Crypto credit amount mismatched.")
+
+		cryptoJournal, err = connection.CryptoTxDetailsCurrency(cryptoOpsAcc, txIDValid2)
+		require.NoError(t, err, "failed to retrieve ops Crypto journal for second valid purchase.")
+		require.Equal(t, 1, len(cryptoJournal), "invalid ops Crypto journal count for second purchase.")
+		require.Equal(t, testCases[1].params.CryptoCreditAmount.Mul(negOne), cryptoJournal[0].Amount,
+			"second Crypto debit amount mismatched.")
 
 		cryptoJournal, err = connection.CryptoTxDetailsCurrency(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Crypto journal for PKR purchase.")

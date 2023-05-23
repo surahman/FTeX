@@ -257,7 +257,7 @@ AS '
          RAISE EXCEPTION ''purchase_cryptocurrency: insufficient Fiat currency funds, delta %'', fiat_balance - _fiat_debit_amount;
       END IF;
 
-      -- Debit the Fiat account and create the Fiat Journal entry.
+      -- Debit the Fiat account and create the Fiat Journal entries for outflow from client to FTeX.
       UPDATE fiat_accounts
       SET balance = round_half_even(fiat_balance - _fiat_debit_amount, 2),
           last_tx = - _fiat_debit_amount,
@@ -275,9 +275,16 @@ AS '
         RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Fiat Journal debit entry'';
       END IF;
 
+      INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
+      VALUES (ftex_fiat_id, _fiat_currency, _fiat_debit_amount, current_timestamp, _transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Fiat Journal debit entry'';
+      END IF;
+
       RAISE NOTICE ''fiat account debited and journal entries made.'';
 
-      -- Credit the Crypto account and create the Crypto Journal entries for the credit.
+      -- Credit the Crypto account and create the Crypto Journal entries for outflow from FTeX to client.
       UPDATE crypto_accounts
       SET balance = round_half_even(crypto_balance + _crypto_credit_amount, 8),
           last_tx = _crypto_credit_amount,
@@ -290,6 +297,13 @@ AS '
 
       INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
       VALUES (_client_id, _crypto_ticker, _crypto_credit_amount, current_timestamp, _transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Crypto Journal credit entry'';
+      END IF;
+
+      INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
+      VALUES (ftex_crypto_id, _crypto_ticker, - _crypto_credit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
         RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Crypto Journal credit entry'';
