@@ -51,6 +51,50 @@ func (mr *MockQuerierMockRecorder) cryptoCreateAccount(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoCreateAccount", reflect.TypeOf((*MockQuerier)(nil).cryptoCreateAccount), arg0, arg1)
 }
 
+// cryptoGetAccount mocks base method.
+func (m *MockQuerier) cryptoGetAccount(arg0 context.Context, arg1 *cryptoGetAccountParams) (CryptoAccount, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "cryptoGetAccount", arg0, arg1)
+	ret0, _ := ret[0].(CryptoAccount)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// cryptoGetAccount indicates an expected call of cryptoGetAccount.
+func (mr *MockQuerierMockRecorder) cryptoGetAccount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoGetAccount", reflect.TypeOf((*MockQuerier)(nil).cryptoGetAccount), arg0, arg1)
+}
+
+// cryptoGetJournalTransaction mocks base method.
+func (m *MockQuerier) cryptoGetJournalTransaction(arg0 context.Context, arg1 *cryptoGetJournalTransactionParams) ([]CryptoJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "cryptoGetJournalTransaction", arg0, arg1)
+	ret0, _ := ret[0].([]CryptoJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// cryptoGetJournalTransaction indicates an expected call of cryptoGetJournalTransaction.
+func (mr *MockQuerierMockRecorder) cryptoGetJournalTransaction(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoGetJournalTransaction", reflect.TypeOf((*MockQuerier)(nil).cryptoGetJournalTransaction), arg0, arg1)
+}
+
+// cryptoPurchase mocks base method.
+func (m *MockQuerier) cryptoPurchase(arg0 context.Context, arg1 *cryptoPurchaseParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "cryptoPurchase", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// cryptoPurchase indicates an expected call of cryptoPurchase.
+func (mr *MockQuerierMockRecorder) cryptoPurchase(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoPurchase", reflect.TypeOf((*MockQuerier)(nil).cryptoPurchase), arg0, arg1)
+}
+
 // fiatCreateAccount mocks base method.
 func (m *MockQuerier) fiatCreateAccount(arg0 context.Context, arg1 *fiatCreateAccountParams) (int64, error) {
 	m.ctrl.T.Helper()

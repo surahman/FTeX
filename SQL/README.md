@@ -8,6 +8,10 @@
   - [Rounding Half-Up](#rounding-half-up)
   - [Rounding Half-Even](#rounding-half-even)
 - [Transactions](#transactions)
+- [Account Operations Specifics](#account-operations-specifics)
+  - [Rounding](#rounding)
+  - [Fiat Currency](#fiat-currency)
+  - [Cryptocurrency](#cryptocurrency)
 - [Tablespaces](#tablespaces)
 - [Users Table Schema](#users-table-schema)
 - [Fiat Accounts Table Schema](#fiat-accounts-table-schema)
@@ -15,6 +19,7 @@
 - [Crypto Accounts Table Schema](#crypto-accounts-table-schema)
 - [Crypto Journal Table Schema](#crypto-journal-table-schema)
 - [Special Purpose Accounts](#special-purpose-accounts)
+- [Journal Entries](#journal-entries)
 - [SQL Queries](#sql-queries)
 - [Schema Migration and Setup](#schema-migration-and-setup)
 
@@ -157,6 +162,45 @@ and network traffic when calling queries within the transaction in the driver co
 
 Transactions for Fiat operations are being developed on the backend service here strictly as a technical presentation.
 Transactions involving Crypto operations will be developed, tested, and deployed as transactions within _UDPs_.
+
+<br/>
+
+## Account Operations Specifics
+
+### Rounding
+All numbers will be rounded using Round to Half-Even with the following precision:
+* Fiat Currency: Two decimal places with a minimum of `0.01`.
+* Cryptocurrencies: Quantity will have a precision of eight decimal places with a minimum of `1 Satoshi` or `0.00000001`.
+
+### Fiat Currency
+
+**_External Deposits:_**
+* Destination Fiat currencies must be valid.
+* Destination Fiat currency account must have been opened prior.
+
+**_Internal Exchange/Conversion:_**
+* Source Fiat currency must be valid.
+* Destination Fiat currency must be valid.
+* Source Fiat currency account must have been opened prior and must contain sufficient funds.
+* Destination Fiat currency account must have been opened prior.
+
+### Cryptocurrency
+
+The Fiat currency minimum value helps to mitigate arbitrarily small cryptocurrency quantities. A cryptocurrency quantity
+minimum value is set due to cryptocurrency precision restrictions and requirements.
+
+**_Purchase:_**
+* Must have a `USD` account with enough funds to purchase.
+* Purchase value in `USD` will be supplied as a parameter.
+* Purchase quantity will be calculated based upon purchase value supplied.
+* Minimum purchase value of `USD 1.0`.
+* Minimum purchase quantity of `1 Satoshi` or `0.00000001` units.
+
+**_Sale:_**
+* Must have a `USD` account to deposit sale proceeds into.
+* Sale quantity will be supplied as a parameter.
+* Minimum quantity must be `1 Satoshi` or `0.00000001` units.
+* Sale quantity must have minimum value of `USD 0.01`.
 
 <br/>
 
@@ -311,6 +355,29 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
 at creation and will be marked as deleted so disable login capabilities.
+
+<br/>
+
+## Journal Entries
+
+The following Journal entries will be made during deposits, exchanges, purchases, and sale operations on the platform.
+
+* ___Deposit Fiat:___
+  * Debit entry for the FTeX Fiat operations account.
+  * Credit entry for the client’s destination Fiat currency account.
+* ___Exchange/Convert Fiat:___
+  * Debit entry for the client’s source Fiat currency account.
+  * Credit entry for the client’s destination Fiat currency account.
+* ___Purchase Crypto:___
+  * Debit entry for the client’s source Fiat currency account.
+  * Credit entry for the FTeX Fiat operations account.
+  * Debit entry for the FTeX Crypto operations account.
+  * Credit entry for the client’s destination cryptocurrency account.
+* ___Sell Crypto___
+  * Debit entry for the client’s source cryptocurrency account.
+  * Credit entry for the FTeX Crypto operations account.
+  * Debit entry for the FTeX Fiat operations account.
+  * Credit entry for the client’s destination Fiat currency account.
 
 <br/>
 

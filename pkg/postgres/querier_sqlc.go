@@ -14,6 +14,12 @@ import (
 type Querier interface {
 	// cryptoCreateAccount inserts a fiat account record.
 	cryptoCreateAccount(ctx context.Context, arg *cryptoCreateAccountParams) (int64, error)
+	// cryptoGetAccount will retrieve a specific user's account for a given cryptocurrency ticker.
+	cryptoGetAccount(ctx context.Context, arg *cryptoGetAccountParams) (CryptoAccount, error)
+	// cryptoGetJournalTransaction will retrieve the journal entries associated with a transaction.
+	cryptoGetJournalTransaction(ctx context.Context, arg *cryptoGetJournalTransactionParams) ([]CryptoJournal, error)
+	// cryptoPurchase will execute a transaction to purchase a crypto currency.
+	cryptoPurchase(ctx context.Context, arg *cryptoPurchaseParams) error
 	// fiatCreateAccount inserts a fiat account record.
 	fiatCreateAccount(ctx context.Context, arg *fiatCreateAccountParams) (int64, error)
 	// fiatExternalTransferJournalEntry will create both journal entries for fiat accounts inbound deposits.
