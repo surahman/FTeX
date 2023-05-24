@@ -65,6 +65,9 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 	// Insert initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
 	// Configure test grid.
 	txIDValid1, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate first tx id for USD to BTC.")

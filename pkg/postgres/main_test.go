@@ -261,3 +261,19 @@ func resetTestCryptoAccounts(t *testing.T, clientID1, clientID2 uuid.UUID) {
 		}
 	}
 }
+
+// resetTestCryptoAccounts will reset the crypto accounts table and create some test accounts.
+func resetTestCryptoJournal(t *testing.T) {
+	t.Helper()
+
+	// Reset the fiat accounts table.
+	query := "TRUNCATE TABLE crypto_journal CASCADE;"
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	rows, err := connection.queries.db.Query(ctx, query)
+	rows.Close()
+
+	require.NoError(t, err, "failed to wipe crypto journal table.")
+}

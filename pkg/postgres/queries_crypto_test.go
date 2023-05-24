@@ -95,6 +95,9 @@ func TestQueries_CryptoPurchase(t *testing.T) {
 	// Insert initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
 	// Configure test grid.
 	testCases := []struct {
 		name               string
