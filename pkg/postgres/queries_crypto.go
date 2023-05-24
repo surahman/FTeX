@@ -90,7 +90,7 @@ func (p *postgresImpl) CryptoPurchase(
 		TxID:     txID,
 	})
 	if err != nil {
-		p.logger.Error("failed to retrieve Fiat balance post Crypto purchase", zap.Error(err))
+		p.logger.Error("failed to retrieve Fiat transaction details post Crypto purchase", zap.Error(err))
 
 		return nil, nil, ErrTransactCryptoDetails
 	}
@@ -100,7 +100,7 @@ func (p *postgresImpl) CryptoPurchase(
 		TxID:     txID,
 	})
 	if err != nil {
-		p.logger.Error("failed to retrieve Crypto balance post Crypto purchase", zap.Error(err))
+		p.logger.Error("failed to retrieve Crypto transaction details post Crypto purchase", zap.Error(err))
 
 		return nil, nil, ErrTransactCryptoDetails
 	}
