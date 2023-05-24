@@ -302,4 +302,112 @@ AS '
       COMMIT;
     END;
 ';
+
 --rollback DROP PROCEDURE purchase_cryptocurrency;
+--changeset surahman:11
+--preconditions onFail:HALT onError:HALT
+--comment: Purchase a crypto currency using a base Fiat currency.
+CREATE OR REPLACE PROCEDURE sell_cryptocurrency(
+    _transaction_id         UUID,
+    _client_id              UUID,
+    _fiat_currency          Currency,
+    _fiat_credit_amount     NUMERIC(20, 2),
+    _crypto_ticker          VARCHAR(6),
+    _crypto_debit_amount    NUMERIC(24,8)
+)
+LANGUAGE plpgsql
+AS '
+    DECLARE
+      fiat_balance        NUMERIC(20,2);  -- current balance of the Fiat account.
+      crypto_balance      NUMERIC(24,8);  -- current balance of the Crypto account.
+      current_timestamp   TIMESTAMPTZ;    -- current timestamp with timezone to be used as transaction timestamp.
+      ftex_fiat_id        UUID;           -- FTeX Fiat operations account id.
+      ftex_crypto_id      UUID;           -- FTeX Crypto operations account id.
+    BEGIN
+      -- Generate the timestamp with timezone for this transaction.
+      SELECT NOW() INTO STRICT current_timestamp;
+
+      -- Round Half-to-Even the Fiat credit amount.
+      _fiat_credit_amount = round_half_even(_fiat_credit_amount, 2);
+
+      -- Get FTeX operations account IDs.
+      SELECT client_id INTO STRICT ftex_fiat_id
+      FROM users
+      WHERE username = ''fiat-currencies'';
+
+      SELECT client_id INTO STRICT ftex_crypto_id
+      FROM users
+      WHERE username = ''crypto-currencies'';
+
+      -- Get balances and row lock the Fiat and then Crypto accounts without locking the foreign keys.
+      SELECT fa.balance INTO STRICT fiat_balance
+      FROM fiat_accounts AS fa
+      WHERE fa.client_id = _client_id AND fa.currency = _fiat_currency
+      LIMIT 1
+      FOR NO KEY UPDATE;
+
+      SELECT ca.balance INTO STRICT crypto_balance
+      FROM crypto_accounts AS ca
+      WHERE ca.client_id = _client_id AND ca.ticker = _crypto_ticker
+      LIMIT 1
+      FOR NO KEY UPDATE;
+
+      -- Check for sufficient Cryptocurrency balance to complete sale.
+      IF _crypto_debit_amount > crypto_balance THEN
+         RAISE EXCEPTION ''sell_cryptocurrency: insufficient Cryptocurrency funds, delta %'', crypto_balance - _crypto_debit_amount;
+      END IF;
+
+      -- Debit the Crypto account and create the Crypto Journal entries for outflow from client from FTeX.
+      UPDATE crypto_accounts
+      SET balance = round_half_even(crypto_balance - _crypto_debit_amount, 8),
+          last_tx = - _crypto_debit_amount,
+          last_tx_ts = current_timestamp
+      WHERE client_id = _client_id AND ticker = _crypto_ticker;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''sell_cryptocurrency: failed to update Crypto balance'';
+      END IF;
+
+      INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
+      VALUES (_client_id, _crypto_ticker, - _crypto_debit_amount, current_timestamp, _transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''sell_cryptocurrency: failed to create Crypto Journal debit entry'';
+      END IF;
+
+      INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
+      VALUES (ftex_crypto_id, _crypto_ticker, _crypto_credit_amount, current_timestamp, _transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''sell_cryptocurrency: failed to create FTeX operations Crypto Journal entry'';
+      END IF;
+
+      -- Credit the Fiat account and create the Fiat Journal entries for inflow to the client from FTeX.
+      UPDATE fiat_accounts
+      SET balance = round_half_even(fiat_balance + _fiat_credit_amount, 2),
+          last_tx = _fiat_credit_amount,
+          last_tx_ts = current_timestamp
+      WHERE client_id = _client_id AND currency = _fiat_currency;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''sell_cryptocurrency: failed to update Fiat balance'';
+      END IF;
+
+      INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
+      VALUES (_client_id, _fiat_currency, _fiat_credit_amount, current_timestamp, _transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''sell_cryptocurrency: failed to create Fiat Journal credit entry'';
+      END IF;
+
+      INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
+      VALUES (ftex_fiat_id, - _fiat_currency, _fiat_debit_amount, current_timestamp, _transaction_id);
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION ''sell_cryptocurrency: failed to create FTeX operations Fiat Journal entry'';
+      END IF;
+
+      COMMIT;
+    END;
+';
+--rollback DROP PROCEDURE sell_cryptocurrency;
