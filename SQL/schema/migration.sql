@@ -197,7 +197,7 @@ CREATE INDEX IF NOT EXISTS crypto_journal_tx_idx ON crypto_journal USING btree (
 
 --changeset surahman:10
 --preconditions onFail:HALT onError:HALT
---comment: Purchase a crypto currency using a base Fiat currency.
+--comment: Purchase a Cryptocurrency using a base Fiat currency.
 CREATE OR REPLACE PROCEDURE purchase_cryptocurrency(
     _transaction_id         UUID,
     _client_id              UUID,
@@ -304,9 +304,10 @@ AS '
 ';
 
 --rollback DROP PROCEDURE purchase_cryptocurrency;
+
 --changeset surahman:11
 --preconditions onFail:HALT onError:HALT
---comment: Purchase a crypto currency using a base Fiat currency.
+--comment: Sell a Cryptocurrency and purchase a Fiat currency.
 CREATE OR REPLACE PROCEDURE sell_cryptocurrency(
     _transaction_id         UUID,
     _client_id              UUID,
@@ -376,7 +377,7 @@ AS '
       END IF;
 
       INSERT INTO crypto_journal (client_id, ticker, amount, transacted_at, tx_id)
-      VALUES (ftex_crypto_id, _crypto_ticker, _crypto_credit_amount, current_timestamp, _transaction_id);
+      VALUES (ftex_crypto_id, _crypto_ticker, _crypto_debit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
         RAISE EXCEPTION ''sell_cryptocurrency: failed to create FTeX operations Crypto Journal entry'';
@@ -401,7 +402,7 @@ AS '
       END IF;
 
       INSERT INTO fiat_journal (client_id, currency, amount, transacted_at, tx_id)
-      VALUES (ftex_fiat_id, - _fiat_currency, _fiat_debit_amount, current_timestamp, _transaction_id);
+      VALUES (ftex_fiat_id, _fiat_currency, - _fiat_credit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
         RAISE EXCEPTION ''sell_cryptocurrency: failed to create FTeX operations Fiat Journal entry'';

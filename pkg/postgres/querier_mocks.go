@@ -95,6 +95,20 @@ func (mr *MockQuerierMockRecorder) cryptoPurchase(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoPurchase", reflect.TypeOf((*MockQuerier)(nil).cryptoPurchase), arg0, arg1)
 }
 
+// cryptoSell mocks base method.
+func (m *MockQuerier) cryptoSell(arg0 context.Context, arg1 *cryptoSellParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "cryptoSell", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// cryptoSell indicates an expected call of cryptoSell.
+func (mr *MockQuerierMockRecorder) cryptoSell(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoSell", reflect.TypeOf((*MockQuerier)(nil).cryptoSell), arg0, arg1)
+}
+
 // fiatCreateAccount mocks base method.
 func (m *MockQuerier) fiatCreateAccount(arg0 context.Context, arg1 *fiatCreateAccountParams) (int64, error) {
 	m.ctrl.T.Helper()

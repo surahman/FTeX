@@ -108,7 +108,7 @@ type cryptoPurchaseParams struct {
 	CryptoCreditAmount decimal.Decimal `json:"cryptoCreditAmount"`
 }
 
-// cryptoPurchase will execute a transaction to purchase a crypto currency.
+// cryptoPurchase will execute a transaction to purchase a Cryptocurrency using a Fiat currency.
 func (q *Queries) cryptoPurchase(ctx context.Context, arg *cryptoPurchaseParams) error {
 	_, err := q.db.Exec(ctx, cryptoPurchase,
 		arg.TransactionID,
@@ -117,6 +117,32 @@ func (q *Queries) cryptoPurchase(ctx context.Context, arg *cryptoPurchaseParams)
 		arg.CryptoTicker,
 		arg.FiatDebitAmount,
 		arg.CryptoCreditAmount,
+	)
+	return err
+}
+
+const cryptoSell = `-- name: cryptoSell :exec
+CALL purchase_cryptocurrency($1,$2,$3, $5::numeric(18, 2), $4, $6::numeric(24, 8))
+`
+
+type cryptoSellParams struct {
+	TransactionID     uuid.UUID       `json:"TransactionID"`
+	ClientID          uuid.UUID       `json:"ClientID"`
+	FiatCurrency      Currency        `json:"FiatCurrency"`
+	CryptoTicker      string          `json:"CryptoTicker"`
+	FiatCreditAmount  decimal.Decimal `json:"fiatCreditAmount"`
+	CryptoDebitAmount decimal.Decimal `json:"cryptoDebitAmount"`
+}
+
+// cryptoSell will execute a transaction to sell a Cryptocurrency and purchase a Fiat currency.
+func (q *Queries) cryptoSell(ctx context.Context, arg *cryptoSellParams) error {
+	_, err := q.db.Exec(ctx, cryptoSell,
+		arg.TransactionID,
+		arg.ClientID,
+		arg.FiatCurrency,
+		arg.CryptoTicker,
+		arg.FiatCreditAmount,
+		arg.CryptoDebitAmount,
 	)
 	return err
 }
