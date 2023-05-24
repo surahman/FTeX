@@ -271,10 +271,10 @@ AS '
       VALUES (ftex_fiat_id, _fiat_currency, _fiat_debit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
-        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Fiat Journal debit entry'';
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create FTeX operations Fiat Journal entry'';
       END IF;
 
-      -- Credit the Crypto account and create the Crypto Journal entries for outflow from FTeX to client.
+      -- Credit the Crypto account and create the Crypto Journal entries for inflow to client from FTeX.
       UPDATE crypto_accounts
       SET balance = round_half_even(crypto_balance + _crypto_credit_amount, 8),
           last_tx = _crypto_credit_amount,
@@ -296,7 +296,7 @@ AS '
       VALUES (ftex_crypto_id, _crypto_ticker, - _crypto_credit_amount, current_timestamp, _transaction_id);
 
       IF NOT FOUND THEN
-        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create Crypto Journal credit entry'';
+        RAISE EXCEPTION ''purchase_cryptocurrency: failed to create FTeX operations Crypto Journal entry'';
       END IF;
 
       COMMIT;
