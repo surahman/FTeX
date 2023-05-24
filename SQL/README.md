@@ -176,7 +176,7 @@ All numbers will be rounded using Round to Half-Even with the following precisio
 
 **_External Deposits:_**
 * Destination Fiat currencies must be valid.
-* Destination Fiat currency account must have be opened prior.
+* Destination Fiat currency account must have been opened prior.
 
 **_Internal Exchange/Conversion:_**
 * Source Fiat currency must be valid.
