@@ -54,7 +54,7 @@ var (
 	ErrNotFound              = errorNotFound()                 // ErrNotFound is returned as a generic not found error.
 	ErrUnhealthy             = errorUnhealthy()                // ErrUnhealthy is returned if the database cannot be pinged.
 	ErrTransactCrypto        = errorTransactionCrypto()        // ErrTransactCrypto is returned if a Crypto transaction fails.
-	ErrTransactCryptoDetails = errorTransactionCryptoDetails() // ErrTransactCryptoDetails is returned if a Crypto transaction succeeds but balance retrieval fails.
+	ErrTransactCryptoDetails = errorTransactionCryptoDetails() // ErrTransactCryptoDetails is returned if a Crypto transaction succeeds but transaction retrieval fails.
 )
 
 func errorRegisterUser() error {
