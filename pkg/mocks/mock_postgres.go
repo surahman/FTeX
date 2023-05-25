@@ -98,6 +98,22 @@ func (mr *MockPostgresMockRecorder) CryptoPurchase(arg0, arg1, arg2, arg3, arg4 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoPurchase", reflect.TypeOf((*MockPostgres)(nil).CryptoPurchase), arg0, arg1, arg2, arg3, arg4)
 }
 
+// CryptoSell mocks base method.
+func (m *MockPostgres) CryptoSell(arg0 uuid.UUID, arg1 postgres.Currency, arg2 decimal.Decimal, arg3 string, arg4 decimal.Decimal) (*postgres.FiatJournal, *postgres.CryptoJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CryptoSell", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(*postgres.FiatJournal)
+	ret1, _ := ret[1].(*postgres.CryptoJournal)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CryptoSell indicates an expected call of CryptoSell.
+func (mr *MockPostgresMockRecorder) CryptoSell(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoSell", reflect.TypeOf((*MockPostgres)(nil).CryptoSell), arg0, arg1, arg2, arg3, arg4)
+}
+
 // CryptoTxDetailsCurrency mocks base method.
 func (m *MockPostgres) CryptoTxDetailsCurrency(arg0, arg1 uuid.UUID) ([]postgres.CryptoJournal, error) {
 	m.ctrl.T.Helper()
