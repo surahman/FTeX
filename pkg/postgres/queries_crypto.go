@@ -56,6 +56,8 @@ func (p *postgresImpl) CryptoTxDetailsCurrency(clientID uuid.UUID, transactionID
 }
 
 // CryptoPurchase is the interface through which external methods can purchase a specific Cryptocurrency.
+//
+//nolint:dupl
 func (p *postgresImpl) CryptoPurchase(
 	clientID uuid.UUID,
 	fiatCurrency Currency,
@@ -101,6 +103,61 @@ func (p *postgresImpl) CryptoPurchase(
 	})
 	if err != nil {
 		p.logger.Error("failed to retrieve Crypto transaction details post Crypto purchase", zap.Error(err))
+
+		return nil, nil, ErrTransactCryptoDetails
+	}
+
+	return &fiatJournal[0], &cryptoJournal[0], nil
+}
+
+// CryptoSell is the interface through which external methods can sell a specific Cryptocurrency.
+//
+//nolint:dupl
+func (p *postgresImpl) CryptoSell(
+	clientID uuid.UUID,
+	fiatCurrency Currency,
+	fiatCreditAmount decimal.Decimal,
+	cryptoTicker string,
+	cryptoDebitAmount decimal.Decimal) (*FiatJournal, *CryptoJournal, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	txID, err := uuid.NewV4()
+	if err != nil {
+		p.logger.Error("failed to generate transaction id for Crypto sale", zap.Error(err))
+
+		return nil, nil, ErrTransactCrypto
+	}
+
+	err = p.Query.cryptoSell(ctx, &cryptoSellParams{
+		TransactionID:     txID,
+		ClientID:          clientID,
+		FiatCurrency:      fiatCurrency,
+		CryptoTicker:      cryptoTicker,
+		FiatCreditAmount:  fiatCreditAmount,
+		CryptoDebitAmount: cryptoDebitAmount,
+	})
+	if err != nil {
+		return nil, nil, ErrTransactCrypto
+	}
+
+	fiatJournal, err := p.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
+		ClientID: clientID,
+		TxID:     txID,
+	})
+	if err != nil {
+		p.logger.Error("failed to retrieve Fiat transaction details post Crypto sale", zap.Error(err))
+
+		return nil, nil, ErrTransactCryptoDetails
+	}
+
+	cryptoJournal, err := p.Query.cryptoGetJournalTransaction(ctx, &cryptoGetJournalTransactionParams{
+		ClientID: clientID,
+		TxID:     txID,
+	})
+	if err != nil {
+		p.logger.Error("failed to retrieve Crypto transaction details post Crypto sale", zap.Error(err))
 
 		return nil, nil, ErrTransactCryptoDetails
 	}
