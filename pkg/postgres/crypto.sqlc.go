@@ -122,7 +122,7 @@ func (q *Queries) cryptoPurchase(ctx context.Context, arg *cryptoPurchaseParams)
 }
 
 const cryptoSell = `-- name: cryptoSell :exec
-CALL purchase_cryptocurrency($1,$2,$3, $5::numeric(18, 2), $4, $6::numeric(24, 8))
+CALL sell_cryptocurrency($1,$2,$3, $5::numeric(18, 2), $4, $6::numeric(24, 8))
 `
 
 type cryptoSellParams struct {
