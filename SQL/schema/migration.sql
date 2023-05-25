@@ -222,6 +222,9 @@ AS '
       -- Round Half-to-Even the Fiat debit amount.
       _fiat_debit_amount = round_half_even(_fiat_debit_amount, 2);
 
+      -- Round Half-to-Even the Crypto credit amount.
+      _crypto_credit_amount = round_half_even(_crypto_credit_amount, 8);
+
       -- Get FTeX operations account IDs.
       SELECT client_id INTO STRICT ftex_fiat_id
       FROM users
@@ -330,6 +333,9 @@ AS '
 
       -- Round Half-to-Even the Fiat credit amount.
       _fiat_credit_amount = round_half_even(_fiat_credit_amount, 2);
+
+      -- Round Half-to-Even the Crypto debit amount.
+      _crypto_debit_amount = round_half_even(_crypto_debit_amount, 8);
 
       -- Get FTeX operations account IDs.
       SELECT client_id INTO STRICT ftex_fiat_id
