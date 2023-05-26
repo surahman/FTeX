@@ -311,3 +311,26 @@ func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *H
 
 	return 0, nil
 }
+
+// HTTPValidateOfferRequest will validate an offer request by checking the amount and Fiat currencies are valid.
+func HTTPValidateOfferRequest(debitAmount decimal.Decimal, precision int32, fiatCurrencies ...string) (
+	[]postgres.Currency, error) {
+	var (
+		err              error
+		parsedCurrencies = make([]postgres.Currency, len(fiatCurrencies))
+	)
+
+	// Validate the source Fiat currency.
+	for idx, fiatCurrencyCode := range fiatCurrencies {
+		if err = parsedCurrencies[idx].Scan(fiatCurrencyCode); err != nil || !parsedCurrencies[idx].Valid() {
+			return parsedCurrencies, fmt.Errorf("invalid Fiat currency %s", fiatCurrencyCode)
+		}
+	}
+
+	// Check for correct decimal places in source amount.
+	if !debitAmount.Equal(debitAmount.Truncate(precision)) || debitAmount.IsNegative() {
+		return parsedCurrencies, fmt.Errorf("invalid source amount %s", debitAmount.String())
+	}
+
+	return parsedCurrencies, nil
+}

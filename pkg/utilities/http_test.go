@@ -579,3 +579,75 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 		})
 	}
 }
+
+func TestUtilities_HTTPValidateOfferRequest(t *testing.T) {
+	t.Parallel()
+
+	amountValid, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid amount.")
+
+	amountInvalidNegative, err := decimal.NewFromString("-10101.11")
+	require.NoError(t, err, "failed to parse invalid negative amount")
+
+	amountInvalidDecimal, err := decimal.NewFromString("10101.111")
+	require.NoError(t, err, "failed to parse invalid decimal amount")
+
+	testCases := []struct {
+		name         string
+		expectErrMsg string
+		currencies   []string
+		amount       decimal.Decimal
+		expectErr    require.ErrorAssertionFunc
+	}{
+		{
+			name:         "valid",
+			expectErrMsg: "",
+			currencies:   []string{"USD", "CAD"},
+			amount:       amountValid,
+			expectErr:    require.NoError,
+		}, {
+			name:         "invalid source currency",
+			expectErrMsg: "invalid Fiat currency",
+			currencies:   []string{"INVALID", "CAD"},
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid destination currency",
+			expectErrMsg: "invalid Fiat currency",
+			currencies:   []string{"USD", "INVALID"},
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid negative amount",
+			expectErrMsg: "source amount",
+			currencies:   []string{"USD", "CAD"},
+			amount:       amountInvalidNegative,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid decimal amount",
+			expectErrMsg: "source amount",
+			currencies:   []string{"USD", "CAD"},
+			amount:       amountInvalidDecimal,
+			expectErr:    require.Error,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			parsedCurrencies, err := HTTPValidateOfferRequest(test.amount, constants.GetDecimalPlacesFiat(), test.currencies...)
+			test.expectErr(t, err, "error expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+
+				return
+			}
+
+			require.Equal(t, len(test.currencies), len(parsedCurrencies), "incorrect number of parsed currencies returned.")
+		})
+	}
+}
