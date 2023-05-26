@@ -526,14 +526,14 @@ Cryptocurrencies to purchase Fiat currencies.
 
 #### Open `/open`
 
-Open a Crypto account with an empty balance for a logged-in user of a specific ticker. Examples of valid tickers can be
+Open a Crypto account with an empty balance for a logged-in user for a specific ticker. Examples of valid tickers can be
 found on [`Coin Market Cap`](https://coinmarketcap.com/all/views/all/). The Cryptocurrency ticker for the new account to
-be opened must be provided in the request.
+be opened must be provided in the `Currency` field of the request payload.
 
 _Request:_ All fields are required.
 ```json
 {
-  "Ticker": "USDT"
+  "Currency": "USDT"
 }
 ```
 _Response:_ The Client ID and Cryptocurrency ticker that the Crypto account was set up for.

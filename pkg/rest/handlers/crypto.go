@@ -17,24 +17,24 @@ import (
 // OpenCrypto will handle an HTTP request to open a Cryptocurrency account.
 //
 //	@Summary		Open a Cryptocurrency account.
-//	@Description	Creates a Cryptocurrency account for a specified ticker for a user by creating a row in the Crypto Accounts table.
+//	@Description	Creates a Cryptocurrency account for a specified ticker, to be provided as the currency in the request, for a user by creating a row in the Crypto Accounts table.
 //	@Tags			crypto cryptocurrency currency open
 //	@Id				openCrypto
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			request	body		models.HTTPOpenCryptoAccountRequest	true	"cryptocurrency ticker for new account"
-//	@Success		201		{object}	models.HTTPSuccess					"a message to confirm the creation of an account"
-//	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Param			request	body		models.HTTPOpenCurrencyAccountRequest	true	"cryptocurrency ticker for new account"
+//	@Success		201		{object}	models.HTTPSuccess						"a message to confirm the creation of an account"
+//	@Failure		400		{object}	models.HTTPError						"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Router			/crypto/open [post]
 func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID uuid.UUID
 			err      error
-			request  models.HTTPOpenCryptoAccountRequest
+			request  models.HTTPOpenCurrencyAccountRequest
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -55,7 +55,7 @@ func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		if err = db.CryptoCreateAccount(clientID, request.Ticker); err != nil {
+		if err = db.CryptoCreateAccount(clientID, request.Currency); err != nil {
 			var createErr *postgres.Error
 			if !errors.As(err, &createErr) {
 				logger.Info("failed to unpack open Crypto account error", zap.Error(err))
@@ -71,6 +71,6 @@ func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 		}
 
 		ginCtx.JSON(http.StatusCreated,
-			models.HTTPSuccess{Message: "account created", Payload: []string{clientID.String(), request.Ticker}})
+			models.HTTPSuccess{Message: "account created", Payload: []string{clientID.String(), request.Currency}})
 	}
 }

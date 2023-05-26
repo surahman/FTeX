@@ -25,7 +25,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 		name                 string
 		path                 string
 		expectedStatus       int
-		request              *models.HTTPOpenCryptoAccountRequest
+		request              *models.HTTPOpenCurrencyAccountRequest
 		authValidateJWTErr   error
 		authValidateTimes    int
 		cryptoCreateAccErr   error
@@ -35,7 +35,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "valid",
 			path:                 "/open/valid",
 			expectedStatus:       http.StatusCreated,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "BTC"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   nil,
@@ -44,7 +44,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "validation",
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
-			request:              &models.HTTPOpenCryptoAccountRequest{},
+			request:              &models.HTTPOpenCurrencyAccountRequest{},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    0,
 			cryptoCreateAccErr:   nil,
@@ -53,7 +53,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "invalid jwt",
 			path:                 "/open/invalid-jwt",
 			expectedStatus:       http.StatusForbidden,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "BTC"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
 			authValidateJWTErr:   errors.New("invalid jwt"),
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   nil,
@@ -62,7 +62,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "db failure",
 			path:                 "/open/db-failure",
 			expectedStatus:       http.StatusConflict,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "ETH"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "ETH"},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   postgres.ErrCreateFiat,
@@ -71,7 +71,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "db failure unknown",
 			path:                 "/open/db-failure-unknown",
 			expectedStatus:       http.StatusInternalServerError,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "USDC"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "USDC"},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   errors.New("unknown server error"),

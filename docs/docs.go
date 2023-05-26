@@ -37,7 +37,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Creates a Cryptocurrency account for a specified ticker for a user by creating a row in the Crypto Accounts table.",
+                "description": "Creates a Cryptocurrency account for a specified ticker, to be provided as the currency in the request, for a user by creating a row in the Crypto Accounts table.",
                 "consumes": [
                     "application/json"
                 ],
@@ -56,7 +56,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPOpenCryptoAccountRequest"
+                            "$ref": "#/definitions/models.HTTPOpenCurrencyAccountRequest"
                         }
                     }
                 ],
@@ -925,17 +925,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "offerId": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.HTTPOpenCryptoAccountRequest": {
-            "type": "object",
-            "required": [
-                "ticker"
-            ],
-            "properties": {
-                "ticker": {
                     "type": "string"
                 }
             }

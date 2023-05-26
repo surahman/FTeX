@@ -55,13 +55,6 @@ definitions:
     required:
     - offerId
     type: object
-  models.HTTPOpenCryptoAccountRequest:
-    properties:
-      ticker:
-        type: string
-    required:
-    - ticker
-    type: object
   models.HTTPOpenCurrencyAccountRequest:
     properties:
       currency:
@@ -152,8 +145,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a Cryptocurrency account for a specified ticker for a user
-        by creating a row in the Crypto Accounts table.
+      description: Creates a Cryptocurrency account for a specified ticker, to be
+        provided as the currency in the request, for a user by creating a row in the
+        Crypto Accounts table.
       operationId: openCrypto
       parameters:
       - description: cryptocurrency ticker for new account
@@ -161,7 +155,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPOpenCryptoAccountRequest'
+          $ref: '#/definitions/models.HTTPOpenCurrencyAccountRequest'
       produces:
       - application/json
       responses:
