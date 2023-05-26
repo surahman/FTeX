@@ -172,7 +172,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPFiatExchangeOfferRequest"
+                            "$ref": "#/definitions/models.HTTPExchangeOfferRequest"
                         }
                     }
                 ],
@@ -899,7 +899,7 @@ const docTemplate = `{
                 "payload": {}
             }
         },
-        "models.HTTPFiatExchangeOfferRequest": {
+        "models.HTTPExchangeOfferRequest": {
             "type": "object",
             "required": [
                 "destinationCurrency",

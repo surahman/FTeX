@@ -183,11 +183,11 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			request	body		models.HTTPFiatExchangeOfferRequest	true	"the two currency code and amount to be converted"
-//	@Success		200		{object}	models.HTTPSuccess					"a message to confirm the conversion rate for a currency"
-//	@Failure		400		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
+//	@Param			request	body		models.HTTPExchangeOfferRequest	true	"the two currency code and amount to be converted"
+//	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the conversion rate for a currency"
+//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Router			/fiat/exchange/offer [post]
 func ExchangeOfferFiat(
 	logger *logger.Logger,
@@ -198,7 +198,7 @@ func ExchangeOfferFiat(
 	return func(ginCtx *gin.Context) {
 		var (
 			err     error
-			request models.HTTPFiatExchangeOfferRequest
+			request models.HTTPExchangeOfferRequest
 			offer   models.HTTPFiatExchangeOfferResponse
 			offerID = xid.New().String()
 		)

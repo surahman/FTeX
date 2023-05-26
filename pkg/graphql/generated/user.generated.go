@@ -24,7 +24,7 @@ type MutationResolver interface {
 	RefreshToken(ctx context.Context) (*models1.JWTAuthResponse, error)
 	OpenFiat(ctx context.Context, currency string) (*models1.FiatOpenAccountResponse, error)
 	DepositFiat(ctx context.Context, input models1.HTTPDepositCurrencyRequest) (*postgres.FiatAccountTransferResult, error)
-	ExchangeOfferFiat(ctx context.Context, input models1.HTTPFiatExchangeOfferRequest) (*models1.HTTPFiatExchangeOfferResponse, error)
+	ExchangeOfferFiat(ctx context.Context, input models1.HTTPExchangeOfferRequest) (*models1.HTTPFiatExchangeOfferResponse, error)
 	ExchangeTransferFiat(ctx context.Context, offerID string) (*models1.FiatExchangeTransferResponse, error)
 }
 
@@ -65,10 +65,10 @@ func (ec *executionContext) field_Mutation_depositFiat_args(ctx context.Context,
 func (ec *executionContext) field_Mutation_exchangeOfferFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 models1.HTTPFiatExchangeOfferRequest
+	var arg0 models1.HTTPExchangeOfferRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -522,7 +522,7 @@ func (ec *executionContext) _Mutation_exchangeOfferFiat(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ExchangeOfferFiat(rctx, fc.Args["input"].(models1.HTTPFiatExchangeOfferRequest))
+		return ec.resolvers.Mutation().ExchangeOfferFiat(rctx, fc.Args["input"].(models1.HTTPExchangeOfferRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

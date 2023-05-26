@@ -35,7 +35,7 @@ definitions:
         type: string
       payload: {}
     type: object
-  models.HTTPFiatExchangeOfferRequest:
+  models.HTTPExchangeOfferRequest:
     properties:
       destinationCurrency:
         type: string
@@ -238,7 +238,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPFiatExchangeOfferRequest'
+          $ref: '#/definitions/models.HTTPExchangeOfferRequest'
       produces:
       - application/json
       responses:

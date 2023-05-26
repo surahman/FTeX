@@ -168,7 +168,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPFiatExchangeOfferRequest"
+                            "$ref": "#/definitions/models.HTTPExchangeOfferRequest"
                         }
                     }
                 ],
@@ -895,7 +895,7 @@
                 "payload": {}
             }
         },
-        "models.HTTPFiatExchangeOfferRequest": {
+        "models.HTTPExchangeOfferRequest": {
             "type": "object",
             "required": [
                 "destinationCurrency",

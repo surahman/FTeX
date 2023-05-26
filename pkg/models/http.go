@@ -51,8 +51,8 @@ type HTTPDepositCurrencyRequest struct {
 	Currency string          `json:"currency" yaml:"currency" validate:"required"`
 }
 
-// HTTPFiatExchangeOfferRequest is a request to convert a source to destination currency in the source currency amount.
-type HTTPFiatExchangeOfferRequest struct {
+// HTTPExchangeOfferRequest is a request to convert a source to destination currency in the source currency amount.
+type HTTPExchangeOfferRequest struct {
 	SourceCurrency      string          `json:"sourceCurrency" yaml:"sourceCurrency" validate:"required"`
 	DestinationCurrency string          `json:"destinationCurrency" yaml:"destinationCurrency" validate:"required"`
 	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`

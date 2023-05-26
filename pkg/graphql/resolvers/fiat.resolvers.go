@@ -190,7 +190,7 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 }
 
 // ExchangeOfferFiat is the resolver for the exchangeOfferFiat field.
-func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPFiatExchangeOfferRequest) (*models.HTTPFiatExchangeOfferResponse, error) {
+func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPExchangeOfferRequest) (*models.HTTPFiatExchangeOfferResponse, error) {
 	var (
 		err     error
 		offer   models.HTTPFiatExchangeOfferResponse
@@ -541,7 +541,7 @@ func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTT
 }
 
 // SourceAmount is the resolver for the sourceAmount field.
-func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferRequest, data float64) error {
+func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPExchangeOfferRequest, data float64) error {
 	obj.SourceAmount = decimal.NewFromFloat(data)
 
 	return nil

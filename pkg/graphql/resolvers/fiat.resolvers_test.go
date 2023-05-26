@@ -322,7 +322,7 @@ func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
 	resolver := fiatExchangeOfferRequestResolver{}
 	expected := 9876.54
 
-	exchangeOfferRequest := &models.HTTPFiatExchangeOfferRequest{
+	exchangeOfferRequest := &models.HTTPExchangeOfferRequest{
 		SourceCurrency:      "",
 		DestinationCurrency: "",
 		SourceAmount:        decimal.NewFromFloat(123456.78),

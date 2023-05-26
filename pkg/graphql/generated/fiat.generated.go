@@ -49,7 +49,7 @@ type FiatDepositRequestResolver interface {
 	Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error
 }
 type FiatExchangeOfferRequestResolver interface {
-	SourceAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferRequest, data float64) error
+	SourceAmount(ctx context.Context, obj *models.HTTPExchangeOfferRequest, data float64) error
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -1541,8 +1541,8 @@ func (ec *executionContext) unmarshalInputFiatDepositRequest(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.Context, obj interface{}) (models.HTTPFiatExchangeOfferRequest, error) {
-	var it models.HTTPFiatExchangeOfferRequest
+func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.Context, obj interface{}) (models.HTTPExchangeOfferRequest, error) {
+	var it models.HTTPExchangeOfferRequest
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -2398,7 +2398,7 @@ func (ec *executionContext) marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahm
 	return ec._FiatDepositResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferRequest(ctx context.Context, v interface{}) (models.HTTPFiatExchangeOfferRequest, error) {
+func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferRequest(ctx context.Context, v interface{}) (models.HTTPExchangeOfferRequest, error) {
 	res, err := ec.unmarshalInputFiatExchangeOfferRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
