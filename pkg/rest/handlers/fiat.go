@@ -216,8 +216,8 @@ func ExchangeOfferFiat(
 		}
 
 		// Extract and validate the currency.
-		if _, _, err = utilities.HTTPValidateSourceDestinationAmount(
-			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount); err != nil {
+		if _, err = utilities.HTTPValidateOfferRequest(request.SourceAmount, constants.GetDecimalPlacesFiat(),
+			request.SourceCurrency, request.DestinationCurrency); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: "invalid request", Payload: err.Error()})
 
@@ -291,14 +291,13 @@ func ExchangeTransferFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err         error
-			clientID    uuid.UUID
-			request     models.HTTPFiatTransferRequest
-			offer       models.HTTPExchangeOfferResponse
-			receipt     models.HTTPFiatTransferResponse
-			offerID     string
-			srcCurrency postgres.Currency
-			dstCurrency postgres.Currency
+			err              error
+			clientID         uuid.UUID
+			request          models.HTTPFiatTransferRequest
+			offer            models.HTTPExchangeOfferResponse
+			receipt          models.HTTPFiatTransferResponse
+			offerID          string
+			parsedCurrencies []postgres.Currency
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -358,8 +357,8 @@ func ExchangeTransferFiat(
 		}
 
 		// Get currency codes.
-		if srcCurrency, dstCurrency, err = utilities.HTTPValidateSourceDestinationAmount(
-			offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
+		if parsedCurrencies, err = utilities.HTTPValidateOfferRequest(
+			offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
 			logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
 				zap.Error(err))
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
@@ -370,12 +369,12 @@ func ExchangeTransferFiat(
 		// Execute exchange.
 		srcTxDetails := &postgres.FiatTransactionDetails{
 			ClientID: offer.ClientID,
-			Currency: srcCurrency,
+			Currency: parsedCurrencies[0],
 			Amount:   offer.DebitAmount,
 		}
 		dstTxDetails := &postgres.FiatTransactionDetails{
 			ClientID: offer.ClientID,
-			Currency: dstCurrency,
+			Currency: parsedCurrencies[1],
 			Amount:   offer.Amount,
 		}
 

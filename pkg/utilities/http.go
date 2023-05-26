@@ -19,32 +19,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// HTTPValidateSourceDestinationAmount will validate the source and destination accounts as well as the source amount.
-func HTTPValidateSourceDestinationAmount(src, dst string, sourceAmount decimal.Decimal) (
-	postgres.Currency, postgres.Currency, error) {
-	var (
-		err         error
-		source      postgres.Currency
-		destination postgres.Currency
-	)
-
-	// Extract and validate the currency.
-	if err = source.Scan(src); err != nil || !source.Valid() {
-		return source, destination, fmt.Errorf("invalid source currency %s", src)
-	}
-
-	if err = destination.Scan(dst); err != nil || !destination.Valid() {
-		return source, destination, fmt.Errorf("invalid destination currency %s", dst)
-	}
-
-	// Check for correct decimal places.
-	if !sourceAmount.Equal(sourceAmount.Truncate(constants.GetDecimalPlacesFiat())) || sourceAmount.IsNegative() {
-		return source, destination, fmt.Errorf("invalid source amount %s", sourceAmount.String())
-	}
-
-	return source, destination, nil
-}
-
 // HTTPGetCachedOffer will retrieve and then evict an offer from the Redis cache.
 func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
 	models.HTTPExchangeOfferResponse, int, string, error) {

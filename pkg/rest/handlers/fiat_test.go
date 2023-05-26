@@ -317,7 +317,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "invalid source currency",
-			expectedMsg:    "source currency",
+			expectedMsg:    "Fiat currency",
 			path:           "/exchange-offer-fiat/invalid-src-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPExchangeOfferRequest{
@@ -335,7 +335,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "invalid destination currency",
-			expectedMsg:    "destination currency",
+			expectedMsg:    "Fiat currency",
 			path:           "/exchange-offer-fiat/invalid-dst-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPExchangeOfferRequest{

@@ -18,85 +18,6 @@ import (
 	"github.com/surahman/FTeX/pkg/redis"
 )
 
-func TestUtilities_HTTPValidateSourceDestinationAmount(t *testing.T) {
-	t.Parallel()
-
-	amountValid, err := decimal.NewFromString("10101.11")
-	require.NoError(t, err, "failed to parse valid amount.")
-
-	amountInvalidNegative, err := decimal.NewFromString("-10101.11")
-	require.NoError(t, err, "failed to parse invalid negative amount")
-
-	amountInvalidDecimal, err := decimal.NewFromString("10101.111")
-	require.NoError(t, err, "failed to parse invalid decimal amount")
-
-	testCases := []struct {
-		name         string
-		expectErrMsg string
-		srcCurrency  string
-		dstCurrency  string
-		amount       decimal.Decimal
-		expectErr    require.ErrorAssertionFunc
-	}{
-		{
-			name:         "valid",
-			expectErrMsg: "",
-			srcCurrency:  "USD",
-			dstCurrency:  "CAD",
-			amount:       amountValid,
-			expectErr:    require.NoError,
-		}, {
-			name:         "invalid source currency",
-			expectErrMsg: "source currency",
-			srcCurrency:  "INVALID",
-			dstCurrency:  "CAD",
-			amount:       amountValid,
-			expectErr:    require.Error,
-		}, {
-			name:         "invalid destination currency",
-			expectErrMsg: "destination currency",
-			srcCurrency:  "USD",
-			dstCurrency:  "INVALID",
-			amount:       amountValid,
-			expectErr:    require.Error,
-		}, {
-			name:         "invalid negative amount",
-			expectErrMsg: "source amount",
-			srcCurrency:  "USD",
-			dstCurrency:  "CAD",
-			amount:       amountInvalidNegative,
-			expectErr:    require.Error,
-		}, {
-			name:         "invalid decimal amount",
-			expectErrMsg: "source amount",
-			srcCurrency:  "USD",
-			dstCurrency:  "CAD",
-			amount:       amountInvalidDecimal,
-			expectErr:    require.Error,
-		},
-	}
-
-	for _, testCase := range testCases {
-		test := testCase
-
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			src, dst, err := HTTPValidateSourceDestinationAmount(test.srcCurrency, test.dstCurrency, test.amount)
-			test.expectErr(t, err, "error expectation failed.")
-
-			if err != nil {
-				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
-
-				return
-			}
-
-			require.Equal(t, src, postgres.Currency(test.srcCurrency), "source currency mismatched.")
-			require.Equal(t, dst, postgres.Currency(test.dstCurrency), "destination currency mismatched.")
-		})
-	}
-}
-
 func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 	t.Parallel()
 
@@ -648,6 +569,12 @@ func TestUtilities_HTTPValidateOfferRequest(t *testing.T) {
 			}
 
 			require.Equal(t, len(test.currencies), len(parsedCurrencies), "incorrect number of parsed currencies returned.")
+
+			for idx, actualCurrency := range parsedCurrencies {
+				var expectedCurrency postgres.Currency
+				require.NoError(t, expectedCurrency.Scan(test.currencies[idx]), "failed to parse expected currency.")
+				require.Equal(t, expectedCurrency, actualCurrency, "parse currency mismatched.")
+			}
 		})
 	}
 }

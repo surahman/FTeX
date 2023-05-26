@@ -202,8 +202,8 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 	}
 
 	// Extract and validate the currency.
-	if _, _, err = utilities.HTTPValidateSourceDestinationAmount(
-		input.SourceCurrency, input.DestinationCurrency, input.SourceAmount); err != nil {
+	if _, err = utilities.HTTPValidateOfferRequest(
+		input.SourceAmount, constants.GetDecimalPlacesFiat(), input.SourceCurrency, input.DestinationCurrency); err != nil {
 
 		return nil, errors.New("invalid request")
 	}
@@ -245,12 +245,11 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 // ExchangeTransferFiat is the resolver for the exchangeTransferFiat field.
 func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.FiatExchangeTransferResponse, error) {
 	var (
-		err         error
-		clientID    uuid.UUID
-		offer       models.HTTPExchangeOfferResponse
-		receipt     models.FiatExchangeTransferResponse
-		srcCurrency postgres.Currency
-		dstCurrency postgres.Currency
+		err              error
+		clientID         uuid.UUID
+		offer            models.HTTPExchangeOfferResponse
+		receipt          models.FiatExchangeTransferResponse
+		parsedCurrencies []postgres.Currency
 	)
 
 	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
@@ -287,8 +286,8 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 	}
 
 	// Get currency codes.
-	if srcCurrency, dstCurrency, err = utilities.HTTPValidateSourceDestinationAmount(
-		offer.SourceAcc, offer.DestinationAcc, offer.Amount); err != nil {
+	if parsedCurrencies, err = utilities.HTTPValidateOfferRequest(
+		offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
 		r.logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
 			zap.Error(err))
 
@@ -298,12 +297,12 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 	// Execute exchange.
 	srcTxDetails := &postgres.FiatTransactionDetails{
 		ClientID: offer.ClientID,
-		Currency: srcCurrency,
+		Currency: parsedCurrencies[0],
 		Amount:   offer.DebitAmount,
 	}
 	dstTxDetails := &postgres.FiatTransactionDetails{
 		ClientID: offer.ClientID,
-		Currency: dstCurrency,
+		Currency: parsedCurrencies[1],
 		Amount:   offer.Amount,
 	}
 
