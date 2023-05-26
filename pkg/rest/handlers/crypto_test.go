@@ -120,17 +120,14 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 	}
 }
 
-func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
+func TestHandlers_PurchaseOfferCrypto(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
-	amountValid, err := decimal.NewFromString("999")
-	require.NoError(t, err, "failed to convert valid amount")
+	amountValid := decimal.NewFromFloat(999)
 
-	amountInvalidDecimal, err := decimal.NewFromString("999.999")
-	require.NoError(t, err, "failed to convert invalid decimal amount")
+	amountInvalidDecimal := decimal.NewFromFloat(999.999)
 
-	amountInvalidNegative, err := decimal.NewFromString("-999")
-	require.NoError(t, err, "failed to convert invalid negative amount")
+	amountInvalidNegative := decimal.NewFromFloat(-999)
 
 	testCases := []struct {
 		name               string
@@ -141,6 +138,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 		authValidateJWTErr error
 		authValidateTimes  int
 		quotesErr          error
+		quotesAmount       decimal.Decimal
 		quotesTimes        int
 		authEncryptErr     error
 		authEncryptTimes   int
@@ -156,6 +154,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
 			authEncryptTimes:   0,
@@ -174,6 +173,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
 			authEncryptTimes:   0,
@@ -192,6 +192,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
 			authEncryptTimes:   0,
@@ -210,6 +211,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
 			authEncryptTimes:   0,
@@ -228,6 +230,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
 			authEncryptTimes:   0,
@@ -246,6 +249,26 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          errors.New(""),
+			quotesAmount:       amountValid,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "crypto conversion amount too small",
+			expectedMsg:    "purchase amount",
+			path:           "/purchase-offer-crypto/crypto-amount-too-small",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPExchangeOfferRequest{
+				SourceCurrency:      "USD",
+				DestinationCurrency: "BTC",
+				SourceAmount:        amountValid,
+			},
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       decimal.NewFromFloat(0),
 			quotesTimes:        1,
 			authEncryptErr:     nil,
 			authEncryptTimes:   0,
@@ -264,6 +287,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        1,
 			authEncryptErr:     errors.New(""),
 			authEncryptTimes:   1,
@@ -282,6 +306,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        1,
 			authEncryptErr:     nil,
 			authEncryptTimes:   1,
@@ -300,6 +325,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
+			quotesAmount:       amountValid,
 			quotesTimes:        1,
 			authEncryptErr:     nil,
 			authEncryptTimes:   1,
@@ -330,7 +356,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) {
 					Times(test.authValidateTimes),
 
 				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), true, nil).
-					Return(amountValid, amountValid, test.quotesErr).
+					Return(amountValid, test.quotesAmount, test.quotesErr).
 					Times(test.quotesTimes),
 
 				mockAuth.EXPECT().EncryptToString(gomock.Any()).

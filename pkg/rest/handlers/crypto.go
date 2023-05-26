@@ -147,6 +147,14 @@ func PurchaseOfferCrypto(
 			return
 		}
 
+		// Check to make sure there is a valid Cryptocurrency amount.
+		if offer.Amount.IsZero() {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				&models.HTTPError{Message: "Cryptocurrency purchase amount is too small"})
+
+			return
+		}
+
 		offer.SourceAcc = request.SourceCurrency
 		offer.DestinationAcc = request.DestinationCurrency
 		offer.DebitAmount = request.SourceAmount
