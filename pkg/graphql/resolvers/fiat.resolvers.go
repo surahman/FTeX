@@ -84,7 +84,7 @@ func (r *fiatDepositResponseResolver) Currency(ctx context.Context, obj *postgre
 }
 
 // DebitAmount is the resolver for the DebitAmount field.
-func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferResponse) (float64, error) {
+func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error) {
 	return obj.DebitAmount.InexactFloat64(), nil
 }
 
@@ -190,10 +190,10 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 }
 
 // ExchangeOfferFiat is the resolver for the exchangeOfferFiat field.
-func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPExchangeOfferRequest) (*models.HTTPFiatExchangeOfferResponse, error) {
+func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPExchangeOfferRequest) (*models.HTTPExchangeOfferResponse, error) {
 	var (
 		err     error
-		offer   models.HTTPFiatExchangeOfferResponse
+		offer   models.HTTPExchangeOfferResponse
 		offerID = xid.New().String()
 	)
 
@@ -247,7 +247,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 	var (
 		err         error
 		clientID    uuid.UUID
-		offer       models.HTTPFiatExchangeOfferResponse
+		offer       models.HTTPExchangeOfferResponse
 		receipt     models.FiatExchangeTransferResponse
 		srcCurrency postgres.Currency
 		dstCurrency postgres.Currency

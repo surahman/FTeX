@@ -35,7 +35,7 @@ type FiatDepositResponseResolver interface {
 	Currency(ctx context.Context, obj *postgres.FiatAccountTransferResult) (string, error)
 }
 type FiatExchangeOfferResponseResolver interface {
-	DebitAmount(ctx context.Context, obj *models.HTTPFiatExchangeOfferResponse) (float64, error)
+	DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error)
 }
 type FiatJournalResolver interface {
 	Currency(ctx context.Context, obj *postgres.FiatJournal) (string, error)
@@ -700,7 +700,7 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_currency(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeOfferResponse_priceQuote(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatExchangeOfferResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatExchangeOfferResponse_priceQuote(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeOfferResponse_priceQuote(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -756,7 +756,7 @@ func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_priceQuote(ct
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeOfferResponse_debitAmount(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatExchangeOfferResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatExchangeOfferResponse_debitAmount(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeOfferResponse_debitAmount(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -800,7 +800,7 @@ func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_debitAmount(c
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeOfferResponse_offerID(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatExchangeOfferResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatExchangeOfferResponse_offerID(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeOfferResponse_offerID(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -844,7 +844,7 @@ func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_offerID(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeOfferResponse_expires(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatExchangeOfferResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatExchangeOfferResponse_expires(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeOfferResponse_expires(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1991,7 +1991,7 @@ func (ec *executionContext) _FiatDepositResponse(ctx context.Context, sel ast.Se
 
 var fiatExchangeOfferResponseImplementors = []string{"FiatExchangeOfferResponse"}
 
-func (ec *executionContext) _FiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPFiatExchangeOfferResponse) graphql.Marshaler {
+func (ec *executionContext) _FiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPExchangeOfferResponse) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, fiatExchangeOfferResponseImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -2403,11 +2403,11 @@ func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFiatExchangeOfferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPFiatExchangeOfferResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatExchangeOfferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPExchangeOfferResponse) graphql.Marshaler {
 	return ec._FiatExchangeOfferResponse(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatExchangeOfferResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPExchangeOfferResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

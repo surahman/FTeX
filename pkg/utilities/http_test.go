@@ -106,7 +106,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 		expectStatus  int
 		expectErr     require.ErrorAssertionFunc
 		redisGetErr   error
-		redisGetData  models.HTTPFiatExchangeOfferResponse
+		redisGetData  models.HTTPExchangeOfferResponse
 		redisGetTimes int
 		redisDelErr   error
 		redisDelTimes int
@@ -117,7 +117,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   errors.New("unknown error"),
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 0,
@@ -127,7 +127,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   redis.ErrCacheUnknown,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 0,
@@ -137,7 +137,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusRequestTimeout,
 			expectErr:     require.Error,
 			redisGetErr:   redis.ErrCacheMiss,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 0,
@@ -147,7 +147,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   errors.New("unknown error"),
 			redisDelTimes: 1,
@@ -157,7 +157,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   redis.ErrCacheUnknown,
 			redisDelTimes: 1,
@@ -167,7 +167,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusOK,
 			expectErr:     require.NoError,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   redis.ErrCacheMiss,
 			redisDelTimes: 1,
@@ -177,7 +177,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusOK,
 			expectErr:     require.NoError,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 1,

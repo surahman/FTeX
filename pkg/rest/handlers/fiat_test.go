@@ -555,7 +555,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	require.NoError(t, err, "failed to generate invalid client id.")
 
 	validOfferID := []byte("VALID")
-	validOffer := models.HTTPFiatExchangeOfferResponse{
+	validOffer := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       validClientID,
 			SourceAcc:      "USD",
@@ -565,7 +565,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		},
 	}
 
-	invalidOfferClientID := models.HTTPFiatExchangeOfferResponse{
+	invalidOfferClientID := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       invalidClientID,
 			SourceAcc:      "USD",
@@ -575,7 +575,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		},
 	}
 
-	invalidOfferSource := models.HTTPFiatExchangeOfferResponse{
+	invalidOfferSource := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       validClientID,
 			SourceAcc:      "INVALID",
@@ -595,7 +595,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		authValidateTimes  int
 		authDecryptErr     error
 		authDecryptTimes   int
-		redisGetData       models.HTTPFiatExchangeOfferResponse
+		redisGetData       models.HTTPExchangeOfferResponse
 		redisGetErr        error
 		redisGetTimes      int
 		redisDelErr        error

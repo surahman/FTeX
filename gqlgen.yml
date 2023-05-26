@@ -98,7 +98,7 @@ models:
       - github.com/surahman/FTeX/pkg/models.HTTPExchangeOfferRequest
   FiatExchangeOfferResponse:
     model:
-      - github.com/surahman/FTeX/pkg/models.HTTPFiatExchangeOfferResponse
+      - github.com/surahman/FTeX/pkg/models.HTTPExchangeOfferResponse
   FiatAccount:
     model:
       - github.com/surahman/FTeX/pkg/postgres.FiatAccount

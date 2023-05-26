@@ -199,7 +199,7 @@ func ExchangeOfferFiat(
 		var (
 			err     error
 			request models.HTTPExchangeOfferRequest
-			offer   models.HTTPFiatExchangeOfferResponse
+			offer   models.HTTPExchangeOfferResponse
 			offerID = xid.New().String()
 		)
 
@@ -294,7 +294,7 @@ func ExchangeTransferFiat(
 			err         error
 			clientID    uuid.UUID
 			request     models.HTTPFiatTransferRequest
-			offer       models.HTTPFiatExchangeOfferResponse
+			offer       models.HTTPExchangeOfferResponse
 			receipt     models.HTTPFiatTransferResponse
 			offerID     string
 			srcCurrency postgres.Currency

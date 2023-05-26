@@ -58,8 +58,8 @@ type HTTPExchangeOfferRequest struct {
 	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`
 }
 
-// HTTPFiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
-type HTTPFiatExchangeOfferResponse struct {
+// HTTPExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type HTTPExchangeOfferResponse struct {
 	PriceQuote  `json:"offer" yaml:"offer"`
 	DebitAmount decimal.Decimal `json:"debitAmount" yaml:"debitAmount"`
 	OfferID     string          `json:"offerId" yaml:"offerId"`

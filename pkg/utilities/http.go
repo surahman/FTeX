@@ -47,10 +47,10 @@ func HTTPValidateSourceDestinationAmount(src, dst string, sourceAmount decimal.D
 
 // HTTPGetCachedOffer will retrieve and then evict an offer from the Redis cache.
 func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
-	models.HTTPFiatExchangeOfferResponse, int, string, error) {
+	models.HTTPExchangeOfferResponse, int, string, error) {
 	var (
 		err   error
-		offer models.HTTPFiatExchangeOfferResponse
+		offer models.HTTPExchangeOfferResponse
 	)
 
 	// Retrieve the offer from Redis.
