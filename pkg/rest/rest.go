@@ -119,6 +119,9 @@ func (s *Server) initialize() {
 		restHandlers.TxDetailsCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/all/:currencyCode",
 		restHandlers.TxDetailsCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+
+	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
+	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

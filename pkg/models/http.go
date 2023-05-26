@@ -35,12 +35,17 @@ type HTTPDeleteUserRequest struct {
 	Confirmation string `json:"confirmation" yaml:"confirmation" validate:"required"`
 }
 
-// HTTPOpenCurrencyAccountRequest is a request to open an account in a specified Fiat or Cryptocurrency.
+// HTTPOpenCurrencyAccountRequest is a request to open an account in a specified Fiat currency.
 type HTTPOpenCurrencyAccountRequest struct {
 	Currency string `json:"currency" yaml:"currency" validate:"required"`
 }
 
-// HTTPDepositCurrencyRequest is a request to deposit currency in to a specified Fiat or Cryptocurrency.
+// HTTPOpenCryptoAccountRequest is a request to open an account in a specified Cryptocurrency.
+type HTTPOpenCryptoAccountRequest struct {
+	Ticker string `json:"ticker" yaml:"ticker" validate:"required"`
+}
+
+// HTTPDepositCurrencyRequest is a request to deposit currency in to a specified Fiat currency.
 type HTTPDepositCurrencyRequest struct {
 	Amount   decimal.Decimal `json:"amount" yaml:"amount" validate:"required,gt=0"`
 	Currency string          `json:"currency" yaml:"currency" validate:"required"`

@@ -93,6 +93,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 		},
 	}
 
+	//nolint:dupl
 	for _, testCase := range testCases {
 		test := testCase
 

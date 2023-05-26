@@ -30,6 +30,64 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/crypto/open": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a Cryptocurrency account for a specified ticker for a user by creating a row in the Crypto Accounts table.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "crypto cryptocurrency currency open"
+                ],
+                "summary": "Open a Cryptocurrency account.",
+                "operationId": "openCrypto",
+                "parameters": [
+                    {
+                        "description": "cryptocurrency ticker for new account",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPOpenCryptoAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "a message to confirm the creation of an account",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/fiat/deposit": {
             "post": {
                 "security": [
@@ -867,6 +925,17 @@ const docTemplate = `{
             ],
             "properties": {
                 "offerId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.HTTPOpenCryptoAccountRequest": {
+            "type": "object",
+            "required": [
+                "ticker"
+            ],
+            "properties": {
+                "ticker": {
                     "type": "string"
                 }
             }
