@@ -88,6 +88,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/crypto/purchase/offer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Purchase a Cryptocurrency using a Fiat currencies. The amount must be a positive number with at most two decimal places and both currency accounts must be opened.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat crypto cryptocurrency currency purchase offer"
+                ],
+                "summary": "Purchase a Cryptocurrency using a Fiat currencies.",
+                "operationId": "purchaseOfferCrypto",
+                "parameters": [
+                    {
+                        "description": "the Fiat currency code, Cryptocurrency ticker, and amount to be converted in the Fiat currency",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPExchangeOfferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the purchase rate for a currency",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/fiat/deposit": {
             "post": {
                 "security": [

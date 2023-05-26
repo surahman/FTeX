@@ -180,6 +180,46 @@ paths:
       summary: Open a Cryptocurrency account.
       tags:
       - crypto cryptocurrency currency open
+  /crypto/purchase/offer:
+    post:
+      consumes:
+      - application/json
+      description: Purchase a Cryptocurrency using a Fiat currencies. The amount must
+        be a positive number with at most two decimal places and both currency accounts
+        must be opened.
+      operationId: purchaseOfferCrypto
+      parameters:
+      - description: the Fiat currency code, Cryptocurrency ticker, and amount to
+          be converted in the Fiat currency
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPExchangeOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the purchase rate for a currency
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Purchase a Cryptocurrency using a Fiat currencies.
+      tags:
+      - fiat crypto cryptocurrency currency purchase offer
   /fiat/deposit:
     post:
       consumes:
