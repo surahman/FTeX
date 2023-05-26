@@ -32,6 +32,8 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Transaction Details for a Specific Currency `/transaction/all/{currencyCode}`](#transaction-details-for-a-specific-currency-transactionallcurrencycode)
       - [Initial Page](#initial-page)
       - [Subsequent Page](#subsequent-page)
+- [Crypto Accounts Endpoints `/crypto`](#crypto-accounts-endpoints-crypto)
+  - [Open `/open`](#open-open)
 
 <br/>
 
@@ -511,5 +513,36 @@ transfer, two entries will be returned - one for the source and the other for th
     ],
     "links": {}
   }
+}
+```
+
+
+<br/>
+
+### Crypto Accounts Endpoints `/crypto`
+
+Crypto account endpoints provide facilities to purchase Cryptocurrencies using Fiat currencies as well as to sell
+Cryptocurrencies to purchase Fiat currencies.
+
+#### Open `/open`
+
+Open a Crypto account with an empty balance for a logged-in user of a specific ticker. Examples of valid tickers can be
+found on [`Coin Market Cap`](https://coinmarketcap.com/all/views/all/). The Cryptocurrency ticker for the new account to
+be opened must be provided in the request.
+
+_Request:_ All fields are required.
+```json
+{
+  "Ticker": "USDT"
+}
+```
+_Response:_ The Client ID and Cryptocurrency ticker that the Crypto account was set up for.
+```json
+{
+  "message": "account created",
+  "payload": [
+    "cbe0d46b-7668-45f4-8519-6f291914b14c",
+    "USDT"
+  ]
 }
 ```
