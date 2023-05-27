@@ -205,7 +205,7 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 	if _, err = utilities.HTTPValidateOfferRequest(
 		input.SourceAmount, constants.GetDecimalPlacesFiat(), input.SourceCurrency, input.DestinationCurrency); err != nil {
 
-		return nil, errors.New("invalid request")
+		return nil, errors.New(constants.GetInvalidRequest())
 	}
 
 	if offer.ClientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {

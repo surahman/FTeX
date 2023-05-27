@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
@@ -385,7 +386,7 @@ func TestHandlers_PurchaseOfferCrypto(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == "invalid request" { //nolint:goconst
+			if errorMessage == constants.GetInvalidRequest() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)

@@ -531,7 +531,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == "invalid request" {
+			if errorMessage == constants.GetInvalidRequest() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)
@@ -849,7 +849,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == "invalid request" {
+			if errorMessage == constants.GetInvalidRequest() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)

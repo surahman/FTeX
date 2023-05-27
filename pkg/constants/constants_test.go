@@ -169,3 +169,7 @@ func TestGetSpecialAccountFiat(t *testing.T) {
 func TestGetSpecialAccountCrypto(t *testing.T) {
 	require.Equal(t, specialAccountCrypto, GetSpecialAccountCrypto(), "Incorrect Cryptocurrency account name.")
 }
+
+func TestGetInvalidRequest(t *testing.T) {
+	require.Equal(t, invalidRequest, GetInvalidRequest(), "Incorrect invalid request string.")
+}

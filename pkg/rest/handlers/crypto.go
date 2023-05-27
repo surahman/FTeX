@@ -3,11 +3,9 @@ package rest
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
-	"github.com/rs/xid"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
@@ -104,10 +102,11 @@ func PurchaseOfferCrypto(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err     error
-			request models.HTTPExchangeOfferRequest
-			offer   models.HTTPExchangeOfferResponse
-			offerID = xid.New().String()
+			err           error
+			request       models.HTTPExchangeOfferRequest
+			offer         models.HTTPExchangeOfferResponse
+			status        int
+			statusMessage string
 		)
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
@@ -128,52 +127,15 @@ func PurchaseOfferCrypto(
 			return
 		}
 
-		// Extract and validate the currency.
-		if _, err = utilities.HTTPValidateOfferRequest(
-			request.SourceAmount, constants.GetDecimalPlacesFiat(), request.SourceCurrency); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid request", Payload: err.Error()})
+		offer, status, statusMessage, err = utilities.HTTPPrepareCryptoOffer(auth, cache, logger, quotes,
+			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, true)
+		if err != nil {
+			httpErr := &models.HTTPError{Message: statusMessage}
+			if statusMessage == constants.GetInvalidRequest() {
+				httpErr.Payload = err.Error()
+			}
 
-			return
-		}
-
-		// Compile exchange rate offer.
-		if offer.Rate, offer.Amount, err = quotes.CryptoConversion(
-			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, true, nil); err != nil {
-			logger.Warn("failed to retrieve quote for Cryptocurrency purchase", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		// Check to make sure there is a valid Cryptocurrency amount.
-		if offer.Amount.IsZero() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: "Cryptocurrency purchase amount is too small"})
-
-			return
-		}
-
-		offer.SourceAcc = request.SourceCurrency
-		offer.DestinationAcc = request.DestinationCurrency
-		offer.DebitAmount = request.SourceAmount
-		offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
-
-		// Encrypt offer ID before returning to client.
-		if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
-			logger.Warn("failed to encrypt offer ID for Crypto purchase", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		// Store the offer in Redis.
-		if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
-			logger.Warn("failed to store Cryptocurrency purchase offer in cache", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
+			ginCtx.AbortWithStatusJSON(status, httpErr)
 
 			return
 		}

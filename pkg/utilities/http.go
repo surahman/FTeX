@@ -314,7 +314,7 @@ func HTTPValidateOfferRequest(debitAmount decimal.Decimal, precision int32, fiat
 }
 
 // HTTPPrepareCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
-func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger logger.Logger, quotes quotes.Quotes,
+func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
 	source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
 	models.HTTPExchangeOfferResponse, int, string, error) {
 	var (
@@ -333,7 +333,7 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger logger.Log
 
 	// Validate the Fiat currency and source amount.
 	if _, err = HTTPValidateOfferRequest(sourceAmount, precision, fiatCurrency); err != nil {
-		return offer, http.StatusBadRequest, "invalid request", fmt.Errorf("%w", err)
+		return offer, http.StatusBadRequest, constants.GetInvalidRequest(), fmt.Errorf("%w", err)
 	}
 
 	// Compile exchange rate offer.

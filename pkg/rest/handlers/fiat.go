@@ -219,7 +219,7 @@ func ExchangeOfferFiat(
 		if _, err = utilities.HTTPValidateOfferRequest(request.SourceAmount, constants.GetDecimalPlacesFiat(),
 			request.SourceCurrency, request.DestinationCurrency); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid request", Payload: err.Error()})
+				models.HTTPError{Message: constants.GetInvalidRequest(), Payload: err.Error()})
 
 			return
 		}
