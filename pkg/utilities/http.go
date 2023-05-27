@@ -325,7 +325,7 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 		fiatCurrency = source
 	)
 
-	// Configure precision, fiat, and crypto tickers for Crypto sale.
+	// Configure precision and fiat tickers for Crypto sale.
 	if !isPurchase {
 		precision = constants.GetDecimalPlacesCrypto()
 		fiatCurrency = destination
