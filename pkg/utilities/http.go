@@ -345,7 +345,7 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 	}
 
 	// Check to make sure there is a valid Cryptocurrency amount.
-	if offer.Amount.IsZero() {
+	if !offer.Amount.GreaterThan(decimal.NewFromFloat(0)) {
 		msg := "cryptocurrency purchase amount is too small"
 
 		return offer, http.StatusBadRequest, msg, errors.New(msg)

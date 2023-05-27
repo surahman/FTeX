@@ -15,6 +15,7 @@ import (
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
 )
 
@@ -575,6 +576,187 @@ func TestUtilities_HTTPValidateOfferRequest(t *testing.T) {
 				require.NoError(t, expectedCurrency.Scan(test.currencies[idx]), "failed to parse expected currency.")
 				require.Equal(t, expectedCurrency, actualCurrency, "parse currency mismatched.")
 			}
+		})
+	}
+}
+
+func TestUtilities_HTTPPrepareCryptoOffer(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name             string
+		source           string
+		destination      string
+		expectErrMsg     string
+		httpMessage      string
+		httpStatus       int
+		sourceAmount     decimal.Decimal
+		isPurchase       bool
+		quotesAmount     decimal.Decimal
+		quotesRate       decimal.Decimal
+		quotesTimes      int
+		quotesErr        error
+		authEncryptTimes int
+		authEncryptErr   error
+		redisTimes       int
+		redisErr         error
+		expectErr        require.ErrorAssertionFunc
+	}{
+		{
+			name:             "validate offer - purchase",
+			source:           "INVALID",
+			destination:      "BTC",
+			expectErrMsg:     "INVALID",
+			httpMessage:      constants.GetInvalidRequest(),
+			httpStatus:       http.StatusBadRequest,
+			sourceAmount:     decimal.NewFromFloat(23123.12),
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesRate:       decimal.NewFromFloat(23100),
+			quotesTimes:      0,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "crypto conversion - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "quote failure",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			sourceAmount:     decimal.NewFromFloat(23123.12),
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesRate:       decimal.NewFromFloat(23100),
+			quotesTimes:      1,
+			quotesErr:        errors.New("quote failure"),
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "zero amount - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "too small",
+			httpMessage:      "too small",
+			httpStatus:       http.StatusBadRequest,
+			sourceAmount:     decimal.NewFromFloat(23123.12),
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(0),
+			quotesRate:       decimal.NewFromFloat(23100),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "encryption failure - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "failed to encrypt",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			sourceAmount:     decimal.NewFromFloat(23123.12),
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesRate:       decimal.NewFromFloat(23100),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   errors.New("encryption failure"),
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "cache failure - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "failed to store",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			sourceAmount:     decimal.NewFromFloat(23123.12),
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesRate:       decimal.NewFromFloat(23100),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         errors.New("cache failure"),
+			expectErr:        require.Error,
+		}, {
+			name:             "valid - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "",
+			httpMessage:      "",
+			httpStatus:       0,
+			sourceAmount:     decimal.NewFromFloat(23123.12),
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesRate:       decimal.NewFromFloat(23100),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         nil,
+			expectErr:        require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl)
+
+			gomock.InOrder(
+				mockQuotes.EXPECT().CryptoConversion(
+					test.source, test.destination, test.sourceAmount, test.isPurchase, nil).
+					Return(test.quotesRate, test.quotesAmount, test.quotesErr).
+					Times(test.quotesTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("OFFER-ID", test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					Times(test.redisTimes),
+			)
+
+			offer, status, msg, err := HTTPPrepareCryptoOffer(mockAuth, mockCache, zapLogger, mockQuotes,
+				test.source, test.destination, test.sourceAmount, test.isPurchase)
+			test.expectErr(t, err, "error expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+				require.Contains(t, msg, test.httpMessage, "http error message mismatched.")
+				require.Equal(t, test.httpStatus, status, "http status mismatched.")
+
+				return
+			}
+
+			require.Equal(t, test.source, offer.SourceAcc, "source account mismatch.")
+			require.Equal(t, test.destination, offer.DestinationAcc, "destination account mismatch.")
+			require.Equal(t, test.sourceAmount, offer.DebitAmount, "debit amount mismatch.")
+			require.Equal(t, test.quotesRate, offer.Rate, "offer rate mismatch.")
+			require.Equal(t, test.quotesAmount, offer.Amount, "offer amount mismatch.")
 		})
 	}
 }
