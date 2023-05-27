@@ -9,15 +9,19 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
 	"go.uber.org/zap"
 )
+
+const retryMessage = "please retry your request later"
 
 // HTTPGetCachedOffer will retrieve and then evict an offer from the Redis cache.
 func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
@@ -38,7 +42,7 @@ func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string
 
 		logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
 
-		return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+		return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
 	}
 
 	// Remove the offer from Redis.
@@ -49,7 +53,7 @@ func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string
 		if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
 			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
 
-			return offer, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+			return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
 		}
 	}
 
@@ -307,4 +311,66 @@ func HTTPValidateOfferRequest(debitAmount decimal.Decimal, precision int32, fiat
 	}
 
 	return parsedCurrencies, nil
+}
+
+// HTTPPrepareCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
+func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger logger.Logger, quotes quotes.Quotes,
+	source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
+	models.HTTPExchangeOfferResponse, int, string, error) {
+	var (
+		err          error
+		offer        models.HTTPExchangeOfferResponse
+		offerID      = xid.New().String()
+		precision    = constants.GetDecimalPlacesFiat()
+		fiatCurrency = source
+	)
+
+	// Configure precision, fiat, and crypto tickers for Crypto sale.
+	if !isPurchase {
+		precision = constants.GetDecimalPlacesCrypto()
+		fiatCurrency = destination
+	}
+
+	// Validate the Fiat currency and source amount.
+	if _, err = HTTPValidateOfferRequest(sourceAmount, precision, fiatCurrency); err != nil {
+		return offer, http.StatusBadRequest, "invalid request", fmt.Errorf("%w", err)
+	}
+
+	// Compile exchange rate offer.
+	if offer.Rate, offer.Amount, err = quotes.CryptoConversion(
+		source, destination, sourceAmount, isPurchase, nil); err != nil {
+		logger.Warn("failed to retrieve quote for Cryptocurrency purchase", zap.Error(err))
+
+		return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+	}
+
+	// Check to make sure there is a valid Cryptocurrency amount.
+	if offer.Amount.IsZero() {
+		msg := "cryptocurrency purchase amount is too small"
+
+		return offer, http.StatusBadRequest, msg, errors.New(msg)
+	}
+
+	offer.SourceAcc = source
+	offer.DestinationAcc = destination
+	offer.DebitAmount = sourceAmount
+	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+
+	// Encrypt offer ID before returning to client.
+	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
+		msg := "failed to encrypt offer ID for Crypto purchase"
+		logger.Warn(msg, zap.Error(err))
+
+		return offer, http.StatusInternalServerError, retryMessage, errors.New(msg)
+	}
+
+	// Store the offer in Redis.
+	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+		msg := "failed to store Cryptocurrency purchase offer in cache"
+		logger.Warn(msg, zap.Error(err))
+
+		return offer, http.StatusInternalServerError, retryMessage, errors.New(msg)
+	}
+
+	return offer, 0, "", nil
 }
