@@ -122,17 +122,17 @@ func PurchaseOfferCrypto(
 			return
 		}
 
+		if offer.ClientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
 		// Extract and validate the currency.
 		if _, err = utilities.HTTPValidateOfferRequest(
 			request.SourceAmount, constants.GetDecimalPlacesFiat(), request.SourceCurrency); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: "invalid request", Payload: err.Error()})
-
-			return
-		}
-
-		if offer.ClientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
