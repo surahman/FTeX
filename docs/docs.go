@@ -120,7 +120,65 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "a message to confirm the purchase rate for a currency",
+                        "description": "a message to confirm the purchase rate for a Cryptocurrency using a Fiat currency",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/crypto/sell/offer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Purchase a Fiat currency using a Cryptocurrency. The amount must be a positive number with at most eight decimal places and both currency accounts must be opened.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat crypto cryptocurrency currency sell sale offer"
+                ],
+                "summary": "Sell a Cryptocurrency and purchase a Fiat currency.",
+                "operationId": "sellOfferCrypto",
+                "parameters": [
+                    {
+                        "description": "the Cryptocurrency ticker, Fiat currency code, and amount to be converted in the Cryptocurrency",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPExchangeOfferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the purchase rate for a Fiat currency using a Cryptocurrency",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPSuccess"
                         }

@@ -200,7 +200,8 @@ paths:
       - application/json
       responses:
         "200":
-          description: a message to confirm the purchase rate for a currency
+          description: a message to confirm the purchase rate for a Cryptocurrency
+            using a Fiat currency
           schema:
             $ref: '#/definitions/models.HTTPSuccess'
         "400":
@@ -220,6 +221,47 @@ paths:
       summary: Purchase a Cryptocurrency using a Fiat currencies.
       tags:
       - fiat crypto cryptocurrency currency purchase offer
+  /crypto/sell/offer:
+    post:
+      consumes:
+      - application/json
+      description: Purchase a Fiat currency using a Cryptocurrency. The amount must
+        be a positive number with at most eight decimal places and both currency accounts
+        must be opened.
+      operationId: sellOfferCrypto
+      parameters:
+      - description: the Cryptocurrency ticker, Fiat currency code, and amount to
+          be converted in the Cryptocurrency
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPExchangeOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the purchase rate for a Fiat currency
+            using a Cryptocurrency
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Sell a Cryptocurrency and purchase a Fiat currency.
+      tags:
+      - fiat crypto cryptocurrency currency sell sale offer
   /fiat/deposit:
     post:
       consumes:
