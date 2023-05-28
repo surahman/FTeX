@@ -190,17 +190,17 @@ The Fiat currency minimum value helps to mitigate arbitrarily small cryptocurren
 minimum value is set due to cryptocurrency precision restrictions and requirements.
 
 **_Purchase:_**
-* Must have a `USD` account with enough funds to purchase.
-* Purchase value in `USD` will be supplied as a parameter.
+* Must have a Fiat currency account with enough funds to purchase.
+* Purchase value in the Fiat currency will be supplied as a parameter.
 * Purchase quantity will be calculated based upon purchase value supplied.
-* Minimum purchase value of `USD 1.0`.
+* Minimum purchase quantity of the Cryptocurrency must be greater than `0`.
 * Minimum purchase quantity of `1 Satoshi` or `0.00000001` units.
 
 **_Sale:_**
-* Must have a `USD` account to deposit sale proceeds into.
-* Sale quantity will be supplied as a parameter.
+* Must have a Fiat currency account to deposit sale proceeds into.
+* Sale quantity of the Cryptocurrency will be supplied as a parameter.
 * Minimum quantity must be `1 Satoshi` or `0.00000001` units.
-* Sale quantity must have minimum value of `USD 0.01`.
+* Sale quantity must have a minimum Fiat currency value greater than `0`.
 
 <br/>
 
