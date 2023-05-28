@@ -34,6 +34,9 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
       - [Subsequent Page](#subsequent-page)
 - [Crypto Accounts Endpoints `/crypto`](#crypto-accounts-endpoints-crypto)
   - [Open `/open`](#open-open)
+  - [Offer `/offer`](#offer-offer)
+    - [Purchase](#purchase)
+    - [Sell](#sell)
 
 <br/>
 
@@ -601,7 +604,7 @@ _Request:_ All fields are required.
 }
 ```
 
-_Response:_ A valid purchase offer.
+_Response:_ A valid sale offer.
 ```json
 {
   "message": "crypto rate offer",
