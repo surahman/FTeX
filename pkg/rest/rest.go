@@ -122,8 +122,6 @@ func (s *Server) initialize() {
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	cryptoGroup.POST("/purchase/offer",
-		restHandlers.PurchaseOfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 	cryptoGroup.POST("/offer",
 		restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 }
