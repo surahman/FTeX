@@ -124,8 +124,8 @@ func (s *Server) initialize() {
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.POST("/purchase/offer",
 		restHandlers.PurchaseOfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
-	cryptoGroup.POST("/sell/offer",
-		restHandlers.SellOfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
+	cryptoGroup.POST("/offer",
+		restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

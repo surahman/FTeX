@@ -53,6 +53,12 @@ type HTTPExchangeOfferRequest struct {
 	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`
 }
 
+// HTTPCryptoOfferRequest is a request to convert a source to destination currency in the source currency amount.
+type HTTPCryptoOfferRequest struct {
+	HTTPExchangeOfferRequest `json:"request" yaml:"request" validate:"required"`
+	IsPurchase               *bool `json:"isPurchase" yaml:"isPurchase" validate:"required"`
+}
+
 // HTTPExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
 type HTTPExchangeOfferResponse struct {
 	PriceQuote  `json:"offer" yaml:"offer"`

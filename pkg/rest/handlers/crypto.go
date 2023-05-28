@@ -144,22 +144,22 @@ func PurchaseOfferCrypto(
 	}
 }
 
-// SellOfferCrypto will handle an HTTP request to get a sale offer for a Cryptocurrency for a Fiat currency.
+// OfferCrypto will handle an HTTP request to get a purchase or sale offer for a Fiat or Cryptocurrency.
 //
-//	@Summary		Sell a Cryptocurrency and purchase a Fiat currency.
-//	@Description	Purchase a Fiat currency using a Cryptocurrency. The amount must be a positive number with at most eight decimal places and both currency accounts must be opened.
+//	@Summary		Purchase or sell a Cryptocurrency and using a Fiat currency.
+//	@Description	Purchase or sell a Fiat currency using a Cryptocurrency. The amount must be a positive number with at most two or eight decimal places for Fiat and Cryptocurrencies respectively. Both currency accounts must be opened beforehand.
 //	@Tags			fiat crypto cryptocurrency currency sell sale offer
 //	@Id				sellOfferCrypto
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			request	body		models.HTTPExchangeOfferRequest	true	"the Cryptocurrency ticker, Fiat currency code, and amount to be converted in the Cryptocurrency"
-//	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the purchase rate for a Fiat currency using a Cryptocurrency"
+//	@Param			request	body		models.HTTPCryptoOfferRequest	true	"the Cryptocurrency ticker, Fiat currency code, and amount to be converted in the source currency"
+//	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the purchase rate for a Fiat or Cryptocurrency"
 //	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Router			/crypto/sell/offer [post]
-func SellOfferCrypto(
+//	@Router			/crypto/offer [post]
+func OfferCrypto(
 	logger *logger.Logger,
 	auth auth.Auth,
 	cache redis.Redis,
@@ -167,8 +167,9 @@ func SellOfferCrypto(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
+			clientID      uuid.UUID
 			err           error
-			request       models.HTTPExchangeOfferRequest
+			request       models.HTTPCryptoOfferRequest
 			offer         models.HTTPExchangeOfferResponse
 			status        int
 			statusMessage string
@@ -186,14 +187,14 @@ func SellOfferCrypto(
 			return
 		}
 
-		if offer.ClientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
 		offer, status, statusMessage, err = utilities.HTTPPrepareCryptoOffer(auth, cache, logger, quotes,
-			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, true)
+			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, *request.IsPurchase)
 		if err != nil {
 			httpErr := &models.HTTPError{Message: statusMessage}
 			if statusMessage == constants.GetInvalidRequest() {
@@ -205,6 +206,8 @@ func SellOfferCrypto(
 			return
 		}
 
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "purchase rate offer", Payload: offer})
+		offer.ClientID = clientID
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "crypto rate offer", Payload: offer})
 	}
 }

@@ -536,6 +536,7 @@ _Request:_ All fields are required.
   "Currency": "USDT"
 }
 ```
+
 _Response:_ The Client ID and Cryptocurrency ticker that the Crypto account was set up for.
 ```json
 {
@@ -544,5 +545,77 @@ _Response:_ The Client ID and Cryptocurrency ticker that the Crypto account was 
     "cbe0d46b-7668-45f4-8519-6f291914b14c",
     "USDT"
   ]
+}
+```
+
+#### Offer `/offer`
+
+Obtaining a Cryptocurrency purchase or sale offer can be accomplished by submitting a request similar to the one below.
+Please beware that the amount to be debited will be supplied whilst the amount to be credited will be calculated. The
+amounts to be debited and credited must be greater than zero.
+
+######  Purchase
+
+_Request:_ All fields are required.
+```json
+{
+  "isPurchase": true,
+  "request": {
+    "destinationCurrency": "BTC",
+    "sourceAmount": 30000.33,
+    "sourceCurrency": "USD"
+  }
+}
+```
+
+_Response:_ A valid purchase offer.
+```json
+{
+  "message": "crypto rate offer",
+  "payload": {
+    "offer": {
+      "clientId": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "sourceAcc": "USD",
+      "destinationAcc": "BTC",
+      "rate": "0.0000355785337473559388712815",
+      "amount": "1.06736775"
+    },
+    "debitAmount": "30000.33",
+    "offerId": "A3xSTFfAo7J1yL1U1usGvaPg4Vyqtk0DZcWdRYHO6FujwHyoAvj3XiTu--an1ZwE",
+    "expires": 1685316006
+  }
+}
+```
+
+######  Sell
+
+_Request:_ All fields are required.
+```json
+{
+  "isPurchase": false,
+  "request": {
+    "destinationCurrency": "USD",
+    "sourceAmount": 0.12345678,
+    "sourceCurrency": "BTC"
+  }
+}
+```
+
+_Response:_ A valid purchase offer.
+```json
+{
+  "message": "crypto rate offer",
+  "payload": {
+    "offer": {
+      "clientId": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "sourceAcc": "BTC",
+      "destinationAcc": "USD",
+      "rate": "28123.237448135781129837141266",
+      "amount": "3472"
+    },
+    "debitAmount": "0.12345678",
+    "offerId": "qeNMw8NZgK3MaA7VL4hn7cxG7UqGCAIwByVIWGdIRO74ao_EGUoN4PmzHoGs--Wp",
+    "expires": 1685316084
+  }
 }
 ```

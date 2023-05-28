@@ -2,6 +2,16 @@ basePath: /api/rest/v1
 consumes:
 - application/json
 definitions:
+  models.HTTPCryptoOfferRequest:
+    properties:
+      isPurchase:
+        type: boolean
+      request:
+        $ref: '#/definitions/models.HTTPExchangeOfferRequest'
+    required:
+    - isPurchase
+    - request
+    type: object
   models.HTTPDeleteUserRequest:
     properties:
       confirmation:
@@ -141,6 +151,46 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
+  /crypto/offer:
+    post:
+      consumes:
+      - application/json
+      description: Purchase or sell a Fiat currency using a Cryptocurrency. The amount
+        must be a positive number with at most two or eight decimal places for Fiat
+        and Cryptocurrencies respectively. Both currency accounts must be opened beforehand.
+      operationId: sellOfferCrypto
+      parameters:
+      - description: the Cryptocurrency ticker, Fiat currency code, and amount to
+          be converted in the source currency
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPCryptoOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the purchase rate for a Fiat or Cryptocurrency
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Purchase or sell a Cryptocurrency and using a Fiat currency.
+      tags:
+      - fiat crypto cryptocurrency currency sell sale offer
   /crypto/open:
     post:
       consumes:
@@ -221,47 +271,6 @@ paths:
       summary: Purchase a Cryptocurrency using a Fiat currencies.
       tags:
       - fiat crypto cryptocurrency currency purchase offer
-  /crypto/sell/offer:
-    post:
-      consumes:
-      - application/json
-      description: Purchase a Fiat currency using a Cryptocurrency. The amount must
-        be a positive number with at most eight decimal places and both currency accounts
-        must be opened.
-      operationId: sellOfferCrypto
-      parameters:
-      - description: the Cryptocurrency ticker, Fiat currency code, and amount to
-          be converted in the Cryptocurrency
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.HTTPExchangeOfferRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: a message to confirm the purchase rate for a Fiat currency
-            using a Cryptocurrency
-          schema:
-            $ref: '#/definitions/models.HTTPSuccess'
-        "400":
-          description: error message with any available details in payload
-          schema:
-            $ref: '#/definitions/models.HTTPError'
-        "403":
-          description: error message with any available details in payload
-          schema:
-            $ref: '#/definitions/models.HTTPError'
-        "500":
-          description: error message with any available details in payload
-          schema:
-            $ref: '#/definitions/models.HTTPError'
-      security:
-      - ApiKeyAuth: []
-      summary: Sell a Cryptocurrency and purchase a Fiat currency.
-      tags:
-      - fiat crypto cryptocurrency currency sell sale offer
   /fiat/deposit:
     post:
       consumes:
