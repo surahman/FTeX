@@ -138,6 +138,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 		path               string
 		expectedStatus     int
 		request            *models.HTTPCryptoOfferRequest
+		isPurchase         bool
 		authValidateJWTErr error
 		authValidateTimes  int
 		quotesErr          error
@@ -154,6 +155,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			path:               "/purchase-offer-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPCryptoOfferRequest{},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
@@ -176,6 +178,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -187,7 +190,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "no purchase or sale flag",
-			expectedMsg:    "Fiat currency",
+			expectedMsg:    "validation",
 			path:           "/purchase-offer-crypto/invalid-fiat-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPCryptoOfferRequest{
@@ -197,6 +200,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 					SourceAmount:        amountValid,
 				},
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
@@ -219,6 +223,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -241,6 +246,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -263,6 +269,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -285,6 +292,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          errors.New(""),
@@ -307,6 +315,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -329,6 +338,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -351,6 +361,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -373,6 +384,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isPurchase,
 			},
+			isPurchase:         isPurchase,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -395,6 +407,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 				IsPurchase: &isSale,
 			},
+			isPurchase:         isSale,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			quotesErr:          nil,
@@ -428,7 +441,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), *test.request.IsPurchase, nil).
+				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), test.isPurchase, nil).
 					Return(amountValid, test.quotesAmount, test.quotesErr).
 					Times(test.quotesTimes),
 
