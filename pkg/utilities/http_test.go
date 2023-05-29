@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
@@ -828,7 +829,7 @@ func TestUtilities_HTTPPrepareCryptoOffer(t *testing.T) { //nolint: maintidx
 			)
 
 			offer, status, msg, err := HTTPPrepareCryptoOffer(mockAuth, mockCache, zapLogger, mockQuotes,
-				test.source, test.destination, sourceAmount, test.isPurchase)
+				uuid.UUID{}, test.source, test.destination, sourceAmount, test.isPurchase)
 			test.expectErr(t, err, "error expectation failed.")
 
 			if err != nil {

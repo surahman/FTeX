@@ -151,7 +151,7 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
-  /crypto/exchange:
+  /crypto/exchange/:
     post:
       consumes:
       - application/json

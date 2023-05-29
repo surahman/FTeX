@@ -26,7 +26,7 @@
     "host": "localhost:33723",
     "basePath": "/api/rest/v1",
     "paths": {
-        "/crypto/exchange": {
+        "/crypto/exchange/": {
             "post": {
                 "security": [
                     {

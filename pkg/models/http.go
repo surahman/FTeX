@@ -74,10 +74,16 @@ type HTTPTransferRequest struct {
 	OfferID string `json:"offerId" yaml:"offerId" validate:"required"`
 }
 
-// HTTPFiatTransferResponse is the response to a successful exchange conversion request.
+// HTTPFiatTransferResponse is the response to a successful Fiat exchange conversion request.
 type HTTPFiatTransferResponse struct {
 	SrcTxReceipt *postgres.FiatAccountTransferResult `json:"sourceReceipt" yaml:"sourceReceipt"`
 	DstTxReceipt *postgres.FiatAccountTransferResult `json:"destinationReceipt" yaml:"destinationReceipt"`
+}
+
+// HTTPCryptoTransferResponse is the response to a successful Cryptocurrency purchase/sale request.
+type HTTPCryptoTransferResponse struct {
+	FiatTxReceipt   *postgres.FiatJournal   `json:"fiatReceipt" yaml:"fiatReceipt"`
+	CryptoTxReceipt *postgres.CryptoJournal `json:"cryptoReceipt" yaml:"cryptoReceipt"`
 }
 
 // HTTPFiatDetailsPaginated is the response to paginated account details request. It returns a link to the next page of

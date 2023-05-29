@@ -30,7 +30,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/crypto/exchange": {
+        "/crypto/exchange/": {
             "post": {
                 "security": [
                     {

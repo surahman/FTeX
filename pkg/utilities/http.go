@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
@@ -315,7 +316,7 @@ func HTTPValidateOfferRequest(debitAmount decimal.Decimal, precision int32, fiat
 
 // HTTPPrepareCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
 func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
-	source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
+	clientID uuid.UUID, source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
 	models.HTTPExchangeOfferResponse, int, string, error) {
 	var (
 		err          error
@@ -351,10 +352,13 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 		return offer, http.StatusBadRequest, msg, errors.New(msg)
 	}
 
+	offer.PriceQuote.ClientID = clientID
 	offer.SourceAcc = source
 	offer.DestinationAcc = destination
 	offer.DebitAmount = sourceAmount
 	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+	offer.IsCryptoPurchase = isPurchase
+	offer.IsCryptoSale = !isPurchase
 
 	// Encrypt offer ID before returning to client.
 	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {

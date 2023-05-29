@@ -624,3 +624,72 @@ _Response:_ A valid sale offer.
   }
 }
 ```
+
+#### Exchange `/Exchange`
+
+Execute a Cryptocurrency purchase or sale using a valid exchange offer that must be obtained prior using the
+`crypto/offer` endpoint.
+
+######  Purchase
+
+_Request:_ All fields are required.
+```json
+{
+  "offerId": "07QGf82S06_TZAHGPnbDEGs6ZFuc_i4ANEhgDbqyHQXlbWwLsZnJIUsPgiSAZQ6X"
+}
+```
+
+_Response:_ A valid purchase offer.
+```json
+{
+  "message": "funds exchange transfer successful",
+  "payload": {
+    "fiatReceipt": {
+      "currency": "USD",
+      "amount": "-93.89",
+      "transactedAt": "2023-05-29T18:04:11.920849-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "90bb7d41-2dd8-41dd-868f-213040ab6a78"
+    },
+    "cryptoReceipt": {
+      "ticker": "USDC",
+      "amount": "93.90381154",
+      "transactedAt": "2023-05-29T18:04:11.920849-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "90bb7d41-2dd8-41dd-868f-213040ab6a78"
+    }
+  }
+}
+```
+
+######  Sell
+
+_Request:_ All fields are required.
+```json
+{
+  "offerId": "AYCxw8WRxbllHD9jJv6xC8GK0fsuy3r9X5rWHMO0dx4FV5WyAugFihh7amviHsgk"
+}
+```
+
+_Response:_ A valid sale offer.
+```json
+{
+  "message": "funds exchange transfer successful",
+  "payload": {
+    "fiatReceipt": {
+      "currency": "USD",
+      "amount": "13.12",
+      "transactedAt": "2023-05-29T18:02:12.963507-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "f85ed60e-edbf-4c56-b452-cd9f4e497555"
+    },
+    "cryptoReceipt": {
+      "ticker": "USDC",
+      "amount": "-13.12",
+      "transactedAt": "2023-05-29T18:02:12.963507-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "f85ed60e-edbf-4c56-b452-cd9f4e497555"
+    }
+  }
+}
+```
