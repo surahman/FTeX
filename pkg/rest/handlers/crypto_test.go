@@ -304,7 +304,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "crypto conversion amount too small",
-			expectedMsg:    "purchase amount",
+			expectedMsg:    "purchase/sale amount",
 			path:           "/purchase-offer-crypto/crypto-amount-too-small",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPCryptoOfferRequest{

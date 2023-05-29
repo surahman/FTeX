@@ -339,14 +339,14 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 	// Compile exchange rate offer.
 	if offer.Rate, offer.Amount, err = quotes.CryptoConversion(
 		source, destination, sourceAmount, isPurchase, nil); err != nil {
-		logger.Warn("failed to retrieve quote for Cryptocurrency purchase", zap.Error(err))
+		logger.Warn("failed to retrieve quote for Cryptocurrency purchase/sale offer", zap.Error(err))
 
 		return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
 	}
 
 	// Check to make sure there is a valid Cryptocurrency amount.
 	if !offer.Amount.GreaterThan(decimal.NewFromFloat(0)) {
-		msg := "cryptocurrency purchase amount is too small"
+		msg := "cryptocurrency purchase/sale amount is too small"
 
 		return offer, http.StatusBadRequest, msg, errors.New(msg)
 	}
@@ -358,7 +358,7 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 
 	// Encrypt offer ID before returning to client.
 	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
-		msg := "failed to encrypt offer ID for Crypto purchase"
+		msg := "failed to encrypt offer ID for Cryptocurrency purchase/sale offer"
 		logger.Warn(msg, zap.Error(err))
 
 		return offer, http.StatusInternalServerError, retryMessage, errors.New(msg)
@@ -366,7 +366,7 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 
 	// Store the offer in Redis.
 	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
-		msg := "failed to store Cryptocurrency purchase offer in cache"
+		msg := "failed to store Cryptocurrency purchase/sale offer in cache"
 		logger.Warn(msg, zap.Error(err))
 
 		return offer, http.StatusInternalServerError, retryMessage, errors.New(msg)
