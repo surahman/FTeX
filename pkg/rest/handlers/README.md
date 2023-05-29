@@ -580,12 +580,13 @@ _Response:_ A valid purchase offer.
       "clientId": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
       "sourceAcc": "USD",
       "destinationAcc": "BTC",
-      "rate": "0.0000355785337473559388712815",
-      "amount": "1.06736775"
+      "rate": "0.0000355054221882636926868715",
+      "amount": "1.13619446"
     },
-    "debitAmount": "30000.33",
-    "offerId": "A3xSTFfAo7J1yL1U1usGvaPg4Vyqtk0DZcWdRYHO6FujwHyoAvj3XiTu--an1ZwE",
-    "expires": 1685316006
+    "debitAmount": "32000.59",
+    "offerId": "YhFPuLVeZOlXNQST_khxElQMMNZg6lh94XP7eqTkM1Dq10XRdKg3XDeHfMi1ANNQ",
+    "expires": 1685324254,
+    "isCryptoPurchase": true
   }
 }
 ```
@@ -613,12 +614,13 @@ _Response:_ A valid sale offer.
       "clientId": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
       "sourceAcc": "BTC",
       "destinationAcc": "USD",
-      "rate": "28123.237448135781129837141266",
-      "amount": "3472"
+      "rate": "28172.192849404242917641381411",
+      "amount": "3478.05"
     },
     "debitAmount": "0.12345678",
-    "offerId": "qeNMw8NZgK3MaA7VL4hn7cxG7UqGCAIwByVIWGdIRO74ao_EGUoN4PmzHoGs--Wp",
-    "expires": 1685316084
+    "offerId": "hwxHZOdKatf1QJ4iD874j0JeXZzEYpBmr89DZaFIn8x69AQY-dTjxDf_6wj5HU_Z",
+    "expires": 1685324317,
+    "isCryptoSale": true
   }
 }
 ```

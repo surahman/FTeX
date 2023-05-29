@@ -142,6 +142,8 @@ func OfferCrypto(
 		}
 
 		offer.ClientID = clientID
+		offer.IsCryptoPurchase = *request.IsPurchase
+		offer.IsCryptoSale = !*request.IsPurchase
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "crypto rate offer", Payload: offer})
 	}
