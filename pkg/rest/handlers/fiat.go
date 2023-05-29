@@ -356,6 +356,13 @@ func ExchangeTransferFiat(
 			return
 		}
 
+		// Verify the offer is for a Fiat exchange.
+		if offer.IsCryptoPurchase || offer.IsCryptoSale {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "invalid Fiat currency exchange offer"})
+
+			return
+		}
+
 		// Get currency codes.
 		if parsedCurrencies, err = utilities.HTTPValidateOfferRequest(
 			offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
