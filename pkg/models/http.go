@@ -69,8 +69,8 @@ type HTTPExchangeOfferResponse struct {
 	IsCryptoSale     bool            `json:"isCryptoSale,omitempty" yaml:"isCryptoSale,omitempty"`
 }
 
-// HTTPFiatTransferRequest is the request to accept and execute an existing exchange offer.
-type HTTPFiatTransferRequest struct {
+// HTTPTransferRequest is the request to accept and execute an existing exchange offer.
+type HTTPTransferRequest struct {
 	OfferID string `json:"offerId" yaml:"offerId" validate:"required"`
 }
 

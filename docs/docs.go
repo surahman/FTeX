@@ -30,6 +30,70 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/crypto/exchange": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Purchase or sell a Cryptocurrency to/from a Fiat currency accounts. The Offer ID must be valid and have expired.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "crypto fiat currency cryptocurrency exchange convert offer transfer execute"
+                ],
+                "summary": "Transfer funds between Fiat and Crypto accounts using a valid Offer ID.",
+                "operationId": "exchangeCrypto",
+                "parameters": [
+                    {
+                        "description": "the two currency code and amount to be converted",
+                        "name": "offerID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPTransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "408": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/crypto/offer": {
             "post": {
                 "security": [
@@ -288,7 +352,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPFiatTransferRequest"
+                            "$ref": "#/definitions/models.HTTPTransferRequest"
                         }
                     }
                 ],
@@ -991,17 +1055,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.HTTPFiatTransferRequest": {
-            "type": "object",
-            "required": [
-                "offerId"
-            ],
-            "properties": {
-                "offerId": {
-                    "type": "string"
-                }
-            }
-        },
         "models.HTTPOpenCurrencyAccountRequest": {
             "type": "object",
             "required": [
@@ -1020,6 +1073,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.HTTPTransferRequest": {
+            "type": "object",
+            "required": [
+                "offerId"
+            ],
+            "properties": {
+                "offerId": {
+                    "type": "string"
+                }
             }
         },
         "models.JWTAuthResponse": {
