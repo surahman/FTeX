@@ -113,7 +113,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
 		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
-		ExchangeOfferFiat    func(childComplexity int, input models.HTTPFiatExchangeOfferRequest) int
+		ExchangeOfferFiat    func(childComplexity int, input models.HTTPExchangeOfferRequest) int
 		ExchangeTransferFiat func(childComplexity int, offerID string) int
 		LoginUser            func(childComplexity int, input models1.UserLoginCredentials) int
 		OpenFiat             func(childComplexity int, currency string) int
@@ -425,7 +425,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ExchangeOfferFiat(childComplexity, args["input"].(models.HTTPFiatExchangeOfferRequest)), true
+		return e.complexity.Mutation.ExchangeOfferFiat(childComplexity, args["input"].(models.HTTPExchangeOfferRequest)), true
 
 	case "Mutation.exchangeTransferFiat":
 		if e.complexity.Mutation.ExchangeTransferFiat == nil {

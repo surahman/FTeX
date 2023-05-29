@@ -12,10 +12,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 )
 
 func TestHandlers_OpenCrypto(t *testing.T) {
@@ -25,7 +28,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 		name                 string
 		path                 string
 		expectedStatus       int
-		request              *models.HTTPOpenCryptoAccountRequest
+		request              *models.HTTPOpenCurrencyAccountRequest
 		authValidateJWTErr   error
 		authValidateTimes    int
 		cryptoCreateAccErr   error
@@ -35,7 +38,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "valid",
 			path:                 "/open/valid",
 			expectedStatus:       http.StatusCreated,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "BTC"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   nil,
@@ -44,7 +47,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "validation",
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
-			request:              &models.HTTPOpenCryptoAccountRequest{},
+			request:              &models.HTTPOpenCurrencyAccountRequest{},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    0,
 			cryptoCreateAccErr:   nil,
@@ -53,7 +56,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "invalid jwt",
 			path:                 "/open/invalid-jwt",
 			expectedStatus:       http.StatusForbidden,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "BTC"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
 			authValidateJWTErr:   errors.New("invalid jwt"),
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   nil,
@@ -62,7 +65,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "db failure",
 			path:                 "/open/db-failure",
 			expectedStatus:       http.StatusConflict,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "ETH"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "ETH"},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   postgres.ErrCreateFiat,
@@ -71,7 +74,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			name:                 "db failure unknown",
 			path:                 "/open/db-failure-unknown",
 			expectedStatus:       http.StatusInternalServerError,
-			request:              &models.HTTPOpenCryptoAccountRequest{Ticker: "USDC"},
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "USDC"},
 			authValidateJWTErr:   nil,
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   errors.New("unknown server error"),
@@ -114,6 +117,367 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 
 			// Verify responses
 			require.Equal(t, test.expectedStatus, w.Code, "expected status codes do not match")
+		})
+	}
+}
+
+func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
+	t.Parallel()
+
+	var (
+		amountValid           = decimal.NewFromFloat(999)
+		amountInvalidDecimal  = decimal.NewFromFloat(999.999)
+		amountInvalidNegative = decimal.NewFromFloat(-999)
+		isPurchase            = true
+		isSale                = false
+	)
+
+	testCases := []struct {
+		name               string
+		expectedMsg        string
+		path               string
+		expectedStatus     int
+		request            *models.HTTPCryptoOfferRequest
+		isPurchase         bool
+		authValidateJWTErr error
+		authValidateTimes  int
+		quotesErr          error
+		quotesAmount       decimal.Decimal
+		quotesTimes        int
+		authEncryptErr     error
+		authEncryptTimes   int
+		redisErr           error
+		redisTimes         int
+	}{
+		{
+			name:               "empty request",
+			expectedMsg:        "validation",
+			path:               "/purchase-offer-crypto/empty-request",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPCryptoOfferRequest{},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "invalid source currency",
+			expectedMsg:    "Fiat currency",
+			path:           "/purchase-offer-crypto/invalid-fiat-currency",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "INVALID",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "no purchase or sale flag",
+			expectedMsg:    "validation",
+			path:           "/purchase-offer-crypto/invalid-fiat-currency",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "too many decimal places",
+			expectedMsg:    "amount",
+			path:           "/purchase-offer-crypto/too-many-decimal-places",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountInvalidDecimal,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "negative",
+			expectedMsg:    "amount",
+			path:           "/purchase-offer-crypto/negative",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountInvalidNegative,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "invalid jwt",
+			expectedMsg:    "invalid jwt",
+			path:           "/purchase-offer-crypto/invalid-jwt",
+			expectedStatus: http.StatusForbidden,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "crypto conversion rate error",
+			expectedMsg:    "retry",
+			path:           "/purchase-offer-crypto/crypto-rate-error",
+			expectedStatus: http.StatusInternalServerError,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          errors.New(""),
+			quotesAmount:       amountValid,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "crypto conversion amount too small",
+			expectedMsg:    "purchase/sale amount",
+			path:           "/purchase-offer-crypto/crypto-amount-too-small",
+			expectedStatus: http.StatusBadRequest,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       decimal.NewFromFloat(0),
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "encryption error",
+			expectedMsg:    "retry",
+			path:           "/purchase-offer-crypto/encryption-error",
+			expectedStatus: http.StatusInternalServerError,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        1,
+			authEncryptErr:     errors.New(""),
+			authEncryptTimes:   1,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:           "redis error",
+			expectedMsg:    "retry",
+			path:           "/purchase-offer-crypto/redis-error",
+			expectedStatus: http.StatusInternalServerError,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   1,
+			redisErr:           errors.New(""),
+			redisTimes:         1,
+		}, {
+			name:           "valid - purchase",
+			expectedMsg:    "",
+			path:           "/purchase-offer-crypto/valid",
+			expectedStatus: http.StatusOK,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "USD",
+					DestinationCurrency: "BTC",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isPurchase,
+			},
+			isPurchase:         isPurchase,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   1,
+			redisErr:           nil,
+			redisTimes:         1,
+		}, {
+			name:           "valid - sale",
+			expectedMsg:    "",
+			path:           "/sale-offer-crypto/valid",
+			expectedStatus: http.StatusOK,
+			request: &models.HTTPCryptoOfferRequest{
+				HTTPExchangeOfferRequest: models.HTTPExchangeOfferRequest{
+					SourceCurrency:      "BTC",
+					DestinationCurrency: "USD",
+					SourceAmount:        amountValid,
+				},
+				IsPurchase: &isSale,
+			},
+			isPurchase:         isSale,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        1,
+			authEncryptErr:     nil,
+			authEncryptTimes:   1,
+			redisErr:           nil,
+			redisTimes:         1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl)
+
+			offerReqJSON, err := json.Marshal(&test.request)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), test.isPurchase, nil).
+					Return(amountValid, test.quotesAmount, test.quotesErr).
+					Times(test.quotesTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("OFFER-ID", test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					Times(test.redisTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.POST(test.path, OfferCrypto(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			errorMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+
+			// Check for invalid currency codes and amount.
+			if errorMessage == constants.GetInvalidRequest() {
+				payload, ok := resp["payload"].(string)
+				require.True(t, ok, "failed to extract payload from response.")
+				require.Contains(t, payload, test.expectedMsg)
+			} else {
+				require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
+			}
 		})
 	}
 }

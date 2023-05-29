@@ -40,30 +40,33 @@ type HTTPOpenCurrencyAccountRequest struct {
 	Currency string `json:"currency" yaml:"currency" validate:"required"`
 }
 
-// HTTPOpenCryptoAccountRequest is a request to open an account in a specified Cryptocurrency.
-type HTTPOpenCryptoAccountRequest struct {
-	Ticker string `json:"ticker" yaml:"ticker" validate:"required"`
-}
-
 // HTTPDepositCurrencyRequest is a request to deposit currency in to a specified Fiat currency.
 type HTTPDepositCurrencyRequest struct {
 	Amount   decimal.Decimal `json:"amount" yaml:"amount" validate:"required,gt=0"`
 	Currency string          `json:"currency" yaml:"currency" validate:"required"`
 }
 
-// HTTPFiatExchangeOfferRequest is a request to convert a source to destination currency in the source currency amount.
-type HTTPFiatExchangeOfferRequest struct {
+// HTTPExchangeOfferRequest is a request to convert a source to destination currency in the source currency amount.
+type HTTPExchangeOfferRequest struct {
 	SourceCurrency      string          `json:"sourceCurrency" yaml:"sourceCurrency" validate:"required"`
 	DestinationCurrency string          `json:"destinationCurrency" yaml:"destinationCurrency" validate:"required"`
 	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`
 }
 
-// HTTPFiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
-type HTTPFiatExchangeOfferResponse struct {
-	PriceQuote  `json:"offer" yaml:"offer"`
-	DebitAmount decimal.Decimal `json:"debitAmount" yaml:"debitAmount"`
-	OfferID     string          `json:"offerId" yaml:"offerId"`
-	Expires     int64           `json:"expires" yaml:"expires"`
+// HTTPCryptoOfferRequest is a request to convert a source to destination currency in the source currency amount.
+type HTTPCryptoOfferRequest struct {
+	HTTPExchangeOfferRequest `json:"request" yaml:"request" validate:"required"`
+	IsPurchase               *bool `json:"isPurchase" yaml:"isPurchase" validate:"required"`
+}
+
+// HTTPExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type HTTPExchangeOfferResponse struct {
+	PriceQuote       `json:"offer" yaml:"offer"`
+	DebitAmount      decimal.Decimal `json:"debitAmount" yaml:"debitAmount"`
+	OfferID          string          `json:"offerId" yaml:"offerId"`
+	Expires          int64           `json:"expires" yaml:"expires"`
+	IsCryptoPurchase bool            `json:"isCryptoPurchase,omitempty" yaml:"isCryptoPurchase,omitempty"`
+	IsCryptoSale     bool            `json:"isCryptoSale,omitempty" yaml:"isCryptoSale,omitempty"`
 }
 
 // HTTPFiatTransferRequest is the request to accept and execute an existing exchange offer.

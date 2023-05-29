@@ -39,6 +39,7 @@ const (
 	nextPageRESTFormatString      = "?pageCursor=%s&pageSize=%d"
 	specialAccountFiat            = "fiat-currencies"
 	specialAccountCrypto          = "crypto-currencies"
+	invalidRequest                = "invalid request"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -184,4 +185,8 @@ func GetSpecialAccountFiat() string {
 // GetSpecialAccountCrypto special purpose account for Cryptocurrency related operations in the database.
 func GetSpecialAccountCrypto() string {
 	return specialAccountCrypto
+}
+
+func GetInvalidRequest() string {
+	return invalidRequest
 }

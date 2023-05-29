@@ -291,7 +291,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 		expectedMsg        string
 		path               string
 		expectedStatus     int
-		request            *models.HTTPFiatExchangeOfferRequest
+		request            *models.HTTPExchangeOfferRequest
 		authValidateJWTErr error
 		authValidateTimes  int
 		quotesErr          error
@@ -306,7 +306,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "validation",
 			path:               "/exchange-offer-fiat/empty-request",
 			expectedStatus:     http.StatusBadRequest,
-			request:            &models.HTTPFiatExchangeOfferRequest{},
+			request:            &models.HTTPExchangeOfferRequest{},
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
 			quotesErr:          nil,
@@ -317,10 +317,10 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "invalid source currency",
-			expectedMsg:    "source currency",
+			expectedMsg:    "Fiat currency",
 			path:           "/exchange-offer-fiat/invalid-src-currency",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "INVALID",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -335,10 +335,10 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "invalid destination currency",
-			expectedMsg:    "destination currency",
+			expectedMsg:    "Fiat currency",
 			path:           "/exchange-offer-fiat/invalid-dst-currency",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "INVALID",
 				SourceAmount:        amountValid,
@@ -356,7 +356,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "amount",
 			path:           "/exchange-offer-fiat/too-many-decimal-places",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidDecimal,
@@ -374,7 +374,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "amount",
 			path:           "/exchange-offer-fiat/negative",
 			expectedStatus: http.StatusBadRequest,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidNegative,
@@ -392,7 +392,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "invalid jwt",
 			path:           "/exchange-offer-fiat/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -410,7 +410,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "retry",
 			path:           "/exchange-offer-fiat/fiat-conversion-error",
 			expectedStatus: http.StatusInternalServerError,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -428,7 +428,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "retry",
 			path:           "/exchange-offer-fiat/encryption-error",
 			expectedStatus: http.StatusInternalServerError,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -446,7 +446,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "retry",
 			path:           "/exchange-offer-fiat/redis-error",
 			expectedStatus: http.StatusInternalServerError,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -464,7 +464,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:    "",
 			path:           "/exchange-offer-fiat/valid",
 			expectedStatus: http.StatusOK,
-			request: &models.HTTPFiatExchangeOfferRequest{
+			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "USD",
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
@@ -531,7 +531,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == "invalid request" {
+			if errorMessage == constants.GetInvalidRequest() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)
@@ -555,7 +555,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	require.NoError(t, err, "failed to generate invalid client id.")
 
 	validOfferID := []byte("VALID")
-	validOffer := models.HTTPFiatExchangeOfferResponse{
+	validOffer := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       validClientID,
 			SourceAcc:      "USD",
@@ -565,7 +565,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		},
 	}
 
-	invalidOfferClientID := models.HTTPFiatExchangeOfferResponse{
+	invalidOfferClientID := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       invalidClientID,
 			SourceAcc:      "USD",
@@ -575,7 +575,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		},
 	}
 
-	invalidOfferSource := models.HTTPFiatExchangeOfferResponse{
+	invalidOfferSource := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       validClientID,
 			SourceAcc:      "INVALID",
@@ -595,7 +595,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		authValidateTimes  int
 		authDecryptErr     error
 		authDecryptTimes   int
-		redisGetData       models.HTTPFiatExchangeOfferResponse
+		redisGetData       models.HTTPExchangeOfferResponse
 		redisGetErr        error
 		redisGetTimes      int
 		redisDelErr        error
@@ -849,7 +849,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == "invalid request" {
+			if errorMessage == constants.GetInvalidRequest() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)

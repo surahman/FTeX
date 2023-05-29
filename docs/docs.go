@@ -30,6 +30,64 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/crypto/offer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Purchase or sell a Fiat currency using a Cryptocurrency. The amount must be a positive number with at most two or eight decimal places for Fiat and Cryptocurrencies respectively. Both currency accounts must be opened beforehand.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "fiat crypto cryptocurrency currency sell sale offer"
+                ],
+                "summary": "Purchase or sell a Cryptocurrency and using a Fiat currency.",
+                "operationId": "sellOfferCrypto",
+                "parameters": [
+                    {
+                        "description": "the Cryptocurrency ticker, Fiat currency code, and amount to be converted in the source currency",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPCryptoOfferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the purchase rate for a Fiat or Cryptocurrency",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/crypto/open": {
             "post": {
                 "security": [
@@ -37,7 +95,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Creates a Cryptocurrency account for a specified ticker for a user by creating a row in the Crypto Accounts table.",
+                "description": "Creates a Cryptocurrency account for a specified ticker, to be provided as the currency in the request, for a user by creating a row in the Crypto Accounts table.",
                 "consumes": [
                     "application/json"
                 ],
@@ -56,7 +114,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPOpenCryptoAccountRequest"
+                            "$ref": "#/definitions/models.HTTPOpenCurrencyAccountRequest"
                         }
                     }
                 ],
@@ -172,7 +230,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPFiatExchangeOfferRequest"
+                            "$ref": "#/definitions/models.HTTPExchangeOfferRequest"
                         }
                     }
                 ],
@@ -852,6 +910,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.HTTPCryptoOfferRequest": {
+            "type": "object",
+            "required": [
+                "isPurchase",
+                "request"
+            ],
+            "properties": {
+                "isPurchase": {
+                    "type": "boolean"
+                },
+                "request": {
+                    "$ref": "#/definitions/models.HTTPExchangeOfferRequest"
+                }
+            }
+        },
         "models.HTTPDeleteUserRequest": {
             "type": "object",
             "required": [
@@ -899,7 +972,7 @@ const docTemplate = `{
                 "payload": {}
             }
         },
-        "models.HTTPFiatExchangeOfferRequest": {
+        "models.HTTPExchangeOfferRequest": {
             "type": "object",
             "required": [
                 "destinationCurrency",
@@ -925,17 +998,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "offerId": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.HTTPOpenCryptoAccountRequest": {
-            "type": "object",
-            "required": [
-                "ticker"
-            ],
-            "properties": {
-                "ticker": {
                     "type": "string"
                 }
             }

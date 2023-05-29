@@ -15,87 +15,9 @@ import (
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
 )
-
-func TestUtilities_HTTPValidateSourceDestinationAmount(t *testing.T) {
-	t.Parallel()
-
-	amountValid, err := decimal.NewFromString("10101.11")
-	require.NoError(t, err, "failed to parse valid amount.")
-
-	amountInvalidNegative, err := decimal.NewFromString("-10101.11")
-	require.NoError(t, err, "failed to parse invalid negative amount")
-
-	amountInvalidDecimal, err := decimal.NewFromString("10101.111")
-	require.NoError(t, err, "failed to parse invalid decimal amount")
-
-	testCases := []struct {
-		name         string
-		expectErrMsg string
-		srcCurrency  string
-		dstCurrency  string
-		amount       decimal.Decimal
-		expectErr    require.ErrorAssertionFunc
-	}{
-		{
-			name:         "valid",
-			expectErrMsg: "",
-			srcCurrency:  "USD",
-			dstCurrency:  "CAD",
-			amount:       amountValid,
-			expectErr:    require.NoError,
-		}, {
-			name:         "invalid source currency",
-			expectErrMsg: "source currency",
-			srcCurrency:  "INVALID",
-			dstCurrency:  "CAD",
-			amount:       amountValid,
-			expectErr:    require.Error,
-		}, {
-			name:         "invalid destination currency",
-			expectErrMsg: "destination currency",
-			srcCurrency:  "USD",
-			dstCurrency:  "INVALID",
-			amount:       amountValid,
-			expectErr:    require.Error,
-		}, {
-			name:         "invalid negative amount",
-			expectErrMsg: "source amount",
-			srcCurrency:  "USD",
-			dstCurrency:  "CAD",
-			amount:       amountInvalidNegative,
-			expectErr:    require.Error,
-		}, {
-			name:         "invalid decimal amount",
-			expectErrMsg: "source amount",
-			srcCurrency:  "USD",
-			dstCurrency:  "CAD",
-			amount:       amountInvalidDecimal,
-			expectErr:    require.Error,
-		},
-	}
-
-	for _, testCase := range testCases {
-		test := testCase
-
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			src, dst, err := HTTPValidateSourceDestinationAmount(test.srcCurrency, test.dstCurrency, test.amount)
-			test.expectErr(t, err, "error expectation failed.")
-
-			if err != nil {
-				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
-
-				return
-			}
-
-			require.Equal(t, src, postgres.Currency(test.srcCurrency), "source currency mismatched.")
-			require.Equal(t, dst, postgres.Currency(test.dstCurrency), "destination currency mismatched.")
-		})
-	}
-}
 
 func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 	t.Parallel()
@@ -106,7 +28,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 		expectStatus  int
 		expectErr     require.ErrorAssertionFunc
 		redisGetErr   error
-		redisGetData  models.HTTPFiatExchangeOfferResponse
+		redisGetData  models.HTTPExchangeOfferResponse
 		redisGetTimes int
 		redisDelErr   error
 		redisDelTimes int
@@ -117,7 +39,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   errors.New("unknown error"),
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 0,
@@ -127,7 +49,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   redis.ErrCacheUnknown,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 0,
@@ -137,7 +59,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusRequestTimeout,
 			expectErr:     require.Error,
 			redisGetErr:   redis.ErrCacheMiss,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 0,
@@ -147,7 +69,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   errors.New("unknown error"),
 			redisDelTimes: 1,
@@ -157,7 +79,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusInternalServerError,
 			expectErr:     require.Error,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   redis.ErrCacheUnknown,
 			redisDelTimes: 1,
@@ -167,7 +89,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusOK,
 			expectErr:     require.NoError,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   redis.ErrCacheMiss,
 			redisDelTimes: 1,
@@ -177,7 +99,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 			expectStatus:  http.StatusOK,
 			expectErr:     require.NoError,
 			redisGetErr:   nil,
-			redisGetData:  models.HTTPFiatExchangeOfferResponse{},
+			redisGetData:  models.HTTPExchangeOfferResponse{},
 			redisGetTimes: 1,
 			redisDelErr:   nil,
 			redisDelTimes: 1,
@@ -576,6 +498,352 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 			require.Equal(t, pgStart, test.params.PeriodStart, "start timestamp mismatched.")
 			require.Equal(t, pgEnd, test.params.PeriodEnd, "end timestamp mismatched.")
 			require.True(t, len(test.params.NextPage) > 100, "next page cursor is incorrect.")
+		})
+	}
+}
+
+func TestUtilities_HTTPValidateOfferRequest(t *testing.T) {
+	t.Parallel()
+
+	amountValid, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid amount.")
+
+	amountInvalidNegative, err := decimal.NewFromString("-10101.11")
+	require.NoError(t, err, "failed to parse invalid negative amount")
+
+	amountInvalidDecimal, err := decimal.NewFromString("10101.111")
+	require.NoError(t, err, "failed to parse invalid decimal amount")
+
+	testCases := []struct {
+		name         string
+		expectErrMsg string
+		currencies   []string
+		amount       decimal.Decimal
+		expectErr    require.ErrorAssertionFunc
+	}{
+		{
+			name:         "valid",
+			expectErrMsg: "",
+			currencies:   []string{"USD", "CAD"},
+			amount:       amountValid,
+			expectErr:    require.NoError,
+		}, {
+			name:         "invalid source currency",
+			expectErrMsg: "invalid Fiat currency",
+			currencies:   []string{"INVALID", "CAD"},
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid destination currency",
+			expectErrMsg: "invalid Fiat currency",
+			currencies:   []string{"USD", "INVALID"},
+			amount:       amountValid,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid negative amount",
+			expectErrMsg: "source amount",
+			currencies:   []string{"USD", "CAD"},
+			amount:       amountInvalidNegative,
+			expectErr:    require.Error,
+		}, {
+			name:         "invalid decimal amount",
+			expectErrMsg: "source amount",
+			currencies:   []string{"USD", "CAD"},
+			amount:       amountInvalidDecimal,
+			expectErr:    require.Error,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			parsedCurrencies, err := HTTPValidateOfferRequest(test.amount, constants.GetDecimalPlacesFiat(), test.currencies...)
+			test.expectErr(t, err, "error expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+
+				return
+			}
+
+			require.Equal(t, len(test.currencies), len(parsedCurrencies), "incorrect number of parsed currencies returned.")
+
+			for idx, actualCurrency := range parsedCurrencies {
+				var expectedCurrency postgres.Currency
+				require.NoError(t, expectedCurrency.Scan(test.currencies[idx]), "failed to parse expected currency.")
+				require.Equal(t, expectedCurrency, actualCurrency, "parse currency mismatched.")
+			}
+		})
+	}
+}
+
+func TestUtilities_HTTPPrepareCryptoOffer(t *testing.T) { //nolint: maintidx
+	t.Parallel()
+
+	var (
+		sourceAmount = decimal.NewFromFloat(23123.12)
+		quotesRate   = decimal.NewFromFloat(23100)
+	)
+
+	testCases := []struct {
+		name             string
+		source           string
+		destination      string
+		expectErrMsg     string
+		httpMessage      string
+		httpStatus       int
+		isPurchase       bool
+		quotesAmount     decimal.Decimal
+		quotesTimes      int
+		quotesErr        error
+		authEncryptTimes int
+		authEncryptErr   error
+		redisTimes       int
+		redisErr         error
+		expectErr        require.ErrorAssertionFunc
+	}{
+		{
+			name:             "validate offer - purchase",
+			source:           "INVALID",
+			destination:      "BTC",
+			expectErrMsg:     "INVALID",
+			httpMessage:      constants.GetInvalidRequest(),
+			httpStatus:       http.StatusBadRequest,
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      0,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "crypto conversion - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "quote failure",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        errors.New("quote failure"),
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "zero amount - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "too small",
+			httpMessage:      "too small",
+			httpStatus:       http.StatusBadRequest,
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(0),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "encryption failure - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "failed to encrypt",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   errors.New("encryption failure"),
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "cache failure - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "failed to store",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         errors.New("cache failure"),
+			expectErr:        require.Error,
+		}, {
+			name:             "valid - purchase",
+			source:           "USD",
+			destination:      "BTC",
+			expectErrMsg:     "",
+			httpMessage:      "",
+			httpStatus:       0,
+			isPurchase:       true,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         nil,
+			expectErr:        require.NoError,
+		}, {
+			name:             "validate offer - sale",
+			source:           "BTC",
+			destination:      "INVALID",
+			expectErrMsg:     "INVALID",
+			httpMessage:      constants.GetInvalidRequest(),
+			httpStatus:       http.StatusBadRequest,
+			isPurchase:       false,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      0,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "crypto conversion - sale",
+			source:           "BTC",
+			destination:      "USD",
+			expectErrMsg:     "quote failure",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			isPurchase:       false,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        errors.New("quote failure"),
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "zero amount - sale",
+			source:           "BTC",
+			destination:      "USD",
+			expectErrMsg:     "too small",
+			httpMessage:      "too small",
+			httpStatus:       http.StatusBadRequest,
+			isPurchase:       false,
+			quotesAmount:     decimal.NewFromFloat(0),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "encryption failure - sale",
+			source:           "BTC",
+			destination:      "USD",
+			expectErrMsg:     "failed to encrypt",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			isPurchase:       false,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   errors.New("encryption failure"),
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "cache failure - sale",
+			source:           "BTC",
+			destination:      "USD",
+			expectErrMsg:     "failed to store",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			isPurchase:       false,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         errors.New("cache failure"),
+			expectErr:        require.Error,
+		}, {
+			name:             "valid - sell",
+			source:           "BTC",
+			destination:      "USD",
+			expectErrMsg:     "",
+			httpMessage:      "",
+			httpStatus:       0,
+			isPurchase:       false,
+			quotesAmount:     decimal.NewFromFloat(1.23),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         nil,
+			expectErr:        require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl)
+
+			gomock.InOrder(
+				mockQuotes.EXPECT().CryptoConversion(
+					test.source, test.destination, sourceAmount, test.isPurchase, nil).
+					Return(quotesRate, test.quotesAmount, test.quotesErr).
+					Times(test.quotesTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("OFFER-ID", test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					Times(test.redisTimes),
+			)
+
+			offer, status, msg, err := HTTPPrepareCryptoOffer(mockAuth, mockCache, zapLogger, mockQuotes,
+				test.source, test.destination, sourceAmount, test.isPurchase)
+			test.expectErr(t, err, "error expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+				require.Contains(t, msg, test.httpMessage, "http error message mismatched.")
+				require.Equal(t, test.httpStatus, status, "http status mismatched.")
+
+				return
+			}
+
+			require.Equal(t, test.source, offer.SourceAcc, "source account mismatch.")
+			require.Equal(t, test.destination, offer.DestinationAcc, "destination account mismatch.")
+			require.Equal(t, sourceAmount, offer.DebitAmount, "debit amount mismatch.")
+			require.Equal(t, quotesRate, offer.Rate, "offer rate mismatch.")
+			require.Equal(t, test.quotesAmount, offer.Amount, "offer amount mismatch.")
 		})
 	}
 }

@@ -34,6 +34,9 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
       - [Subsequent Page](#subsequent-page)
 - [Crypto Accounts Endpoints `/crypto`](#crypto-accounts-endpoints-crypto)
   - [Open `/open`](#open-open)
+  - [Offer `/offer`](#offer-offer)
+    - [Purchase](#purchase)
+    - [Sell](#sell)
 
 <br/>
 
@@ -526,16 +529,17 @@ Cryptocurrencies to purchase Fiat currencies.
 
 #### Open `/open`
 
-Open a Crypto account with an empty balance for a logged-in user of a specific ticker. Examples of valid tickers can be
+Open a Crypto account with an empty balance for a logged-in user for a specific ticker. Examples of valid tickers can be
 found on [`Coin Market Cap`](https://coinmarketcap.com/all/views/all/). The Cryptocurrency ticker for the new account to
-be opened must be provided in the request.
+be opened must be provided in the `Currency` field of the request payload.
 
 _Request:_ All fields are required.
 ```json
 {
-  "Ticker": "USDT"
+  "Currency": "USDT"
 }
 ```
+
 _Response:_ The Client ID and Cryptocurrency ticker that the Crypto account was set up for.
 ```json
 {
@@ -544,5 +548,79 @@ _Response:_ The Client ID and Cryptocurrency ticker that the Crypto account was 
     "cbe0d46b-7668-45f4-8519-6f291914b14c",
     "USDT"
   ]
+}
+```
+
+#### Offer `/offer`
+
+Obtaining a Cryptocurrency purchase or sale offer can be accomplished by submitting a request similar to the one below.
+Please beware that the amount to be debited will be supplied whilst the amount to be credited will be calculated. The
+amounts to be debited and credited must be greater than zero.
+
+######  Purchase
+
+_Request:_ All fields are required.
+```json
+{
+  "isPurchase": true,
+  "request": {
+    "destinationCurrency": "BTC",
+    "sourceAmount": 30000.33,
+    "sourceCurrency": "USD"
+  }
+}
+```
+
+_Response:_ A valid purchase offer.
+```json
+{
+  "message": "crypto rate offer",
+  "payload": {
+    "offer": {
+      "clientId": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "sourceAcc": "USD",
+      "destinationAcc": "BTC",
+      "rate": "0.0000355054221882636926868715",
+      "amount": "1.13619446"
+    },
+    "debitAmount": "32000.59",
+    "offerId": "YhFPuLVeZOlXNQST_khxElQMMNZg6lh94XP7eqTkM1Dq10XRdKg3XDeHfMi1ANNQ",
+    "expires": 1685324254,
+    "isCryptoPurchase": true
+  }
+}
+```
+
+######  Sell
+
+_Request:_ All fields are required.
+```json
+{
+  "isPurchase": false,
+  "request": {
+    "destinationCurrency": "USD",
+    "sourceAmount": 0.12345678,
+    "sourceCurrency": "BTC"
+  }
+}
+```
+
+_Response:_ A valid sale offer.
+```json
+{
+  "message": "crypto rate offer",
+  "payload": {
+    "offer": {
+      "clientId": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "sourceAcc": "BTC",
+      "destinationAcc": "USD",
+      "rate": "28172.192849404242917641381411",
+      "amount": "3478.05"
+    },
+    "debitAmount": "0.12345678",
+    "offerId": "hwxHZOdKatf1QJ4iD874j0JeXZzEYpBmr89DZaFIn8x69AQY-dTjxDf_6wj5HU_Z",
+    "expires": 1685324317,
+    "isCryptoSale": true
+  }
 }
 ```

@@ -322,7 +322,7 @@ func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
 	resolver := fiatExchangeOfferRequestResolver{}
 	expected := 9876.54
 
-	exchangeOfferRequest := &models.HTTPFiatExchangeOfferRequest{
+	exchangeOfferRequest := &models.HTTPExchangeOfferRequest{
 		SourceCurrency:      "",
 		DestinationCurrency: "",
 		SourceAmount:        decimal.NewFromFloat(123456.78),
@@ -344,7 +344,7 @@ func TestFiatResolver_FiatExchangeOfferResponseResolver(t *testing.T) {
 
 	debitAmount := decimal.NewFromFloat(123456.78)
 
-	exchangeOfferResponse := &models.HTTPFiatExchangeOfferResponse{
+	exchangeOfferResponse := &models.HTTPExchangeOfferResponse{
 		PriceQuote:  models.PriceQuote{},
 		DebitAmount: debitAmount,
 		OfferID:     "",
@@ -584,7 +584,7 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	require.NoError(t, err, "failed to generate invalid client id.")
 
 	validOfferID := []byte("VALID")
-	validOffer := models.HTTPFiatExchangeOfferResponse{
+	validOffer := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       validClientID,
 			SourceAcc:      "USD",
@@ -594,7 +594,7 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		},
 	}
 
-	invalidOfferClientID := models.HTTPFiatExchangeOfferResponse{
+	invalidOfferClientID := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       invalidClientID,
 			SourceAcc:      "USD",
@@ -604,7 +604,7 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		},
 	}
 
-	invalidOfferSource := models.HTTPFiatExchangeOfferResponse{
+	invalidOfferSource := models.HTTPExchangeOfferResponse{
 		PriceQuote: models.PriceQuote{
 			ClientID:       validClientID,
 			SourceAcc:      "INVALID",
@@ -623,7 +623,7 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		authValidateJWTTimes int
 		authDecryptErr       error
 		authDecryptTimes     int
-		redisGetData         models.HTTPFiatExchangeOfferResponse
+		redisGetData         models.HTTPExchangeOfferResponse
 		redisGetErr          error
 		redisGetTimes        int
 		redisDelErr          error

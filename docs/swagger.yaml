@@ -2,6 +2,16 @@ basePath: /api/rest/v1
 consumes:
 - application/json
 definitions:
+  models.HTTPCryptoOfferRequest:
+    properties:
+      isPurchase:
+        type: boolean
+      request:
+        $ref: '#/definitions/models.HTTPExchangeOfferRequest'
+    required:
+    - isPurchase
+    - request
+    type: object
   models.HTTPDeleteUserRequest:
     properties:
       confirmation:
@@ -35,7 +45,7 @@ definitions:
         type: string
       payload: {}
     type: object
-  models.HTTPFiatExchangeOfferRequest:
+  models.HTTPExchangeOfferRequest:
     properties:
       destinationCurrency:
         type: string
@@ -54,13 +64,6 @@ definitions:
         type: string
     required:
     - offerId
-    type: object
-  models.HTTPOpenCryptoAccountRequest:
-    properties:
-      ticker:
-        type: string
-    required:
-    - ticker
     type: object
   models.HTTPOpenCurrencyAccountRequest:
     properties:
@@ -148,12 +151,53 @@ info:
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
   version: 1.0.0
 paths:
+  /crypto/offer:
+    post:
+      consumes:
+      - application/json
+      description: Purchase or sell a Fiat currency using a Cryptocurrency. The amount
+        must be a positive number with at most two or eight decimal places for Fiat
+        and Cryptocurrencies respectively. Both currency accounts must be opened beforehand.
+      operationId: sellOfferCrypto
+      parameters:
+      - description: the Cryptocurrency ticker, Fiat currency code, and amount to
+          be converted in the source currency
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.HTTPCryptoOfferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to confirm the purchase rate for a Fiat or Cryptocurrency
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Purchase or sell a Cryptocurrency and using a Fiat currency.
+      tags:
+      - fiat crypto cryptocurrency currency sell sale offer
   /crypto/open:
     post:
       consumes:
       - application/json
-      description: Creates a Cryptocurrency account for a specified ticker for a user
-        by creating a row in the Crypto Accounts table.
+      description: Creates a Cryptocurrency account for a specified ticker, to be
+        provided as the currency in the request, for a user by creating a row in the
+        Crypto Accounts table.
       operationId: openCrypto
       parameters:
       - description: cryptocurrency ticker for new account
@@ -161,7 +205,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPOpenCryptoAccountRequest'
+          $ref: '#/definitions/models.HTTPOpenCurrencyAccountRequest'
       produces:
       - application/json
       responses:
@@ -238,7 +282,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.HTTPFiatExchangeOfferRequest'
+          $ref: '#/definitions/models.HTTPExchangeOfferRequest'
       produces:
       - application/json
       responses:
