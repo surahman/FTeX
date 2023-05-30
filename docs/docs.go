@@ -51,7 +51,7 @@ const docTemplate = `{
                 "operationId": "exchangeCrypto",
                 "parameters": [
                     {
-                        "description": "the two currency code and amount to be converted",
+                        "description": "the two currency codes and amount to be converted",
                         "name": "offerID",
                         "in": "body",
                         "required": true,

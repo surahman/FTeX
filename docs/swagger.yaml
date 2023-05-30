@@ -159,7 +159,7 @@ paths:
         The Offer ID must be valid and have expired.
       operationId: exchangeCrypto
       parameters:
-      - description: the two currency code and amount to be converted
+      - description: the two currency codes and amount to be converted
         in: body
         name: offerID
         required: true
