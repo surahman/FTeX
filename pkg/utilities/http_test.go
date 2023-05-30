@@ -848,3 +848,296 @@ func TestUtilities_HTTPPrepareCryptoOffer(t *testing.T) { //nolint: maintidx
 		})
 	}
 }
+
+func TestUtilities_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
+	t.Parallel()
+
+	validClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate a valid uuid.")
+
+	invalidClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate a valid uuid.")
+
+	cryptoAmount := decimal.NewFromFloat(1234.56)
+	fiatAmount := decimal.NewFromFloat(78910.11)
+
+	validFiat := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "BTC",
+			DestinationAcc: "USD",
+			Rate:           decimal.Decimal{},
+			Amount:         decimal.Decimal{},
+		},
+		DebitAmount:      decimal.Decimal{},
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: false,
+		IsCryptoSale:     false,
+	}
+
+	invalidSale := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "BTC", // should be Fiat currency ticker.
+			Rate:           decimal.Decimal{},
+			Amount:         fiatAmount,
+		},
+		DebitAmount:      cryptoAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: false,
+		IsCryptoSale:     true,
+	}
+
+	validSale := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "BTC",
+			DestinationAcc: "USD",
+			Rate:           decimal.Decimal{},
+			Amount:         fiatAmount,
+		},
+		DebitAmount:      cryptoAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: false,
+		IsCryptoSale:     true,
+	}
+
+	validPurchase := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "BTC",
+			Rate:           decimal.Decimal{},
+			Amount:         cryptoAmount,
+		},
+		DebitAmount:      fiatAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: true,
+		IsCryptoSale:     false,
+	}
+
+	testCases := []struct {
+		name             string
+		expectErrMsg     string
+		clientID         uuid.UUID
+		httpStatus       int
+		authEncryptTimes int
+		authEncryptErr   error
+		redisGetData     models.HTTPExchangeOfferResponse
+		redisGetTimes    int
+		redisGetErr      error
+		redisDelTimes    int
+		redisDelErr      error
+		purchaseTimes    int
+		purchaseErr      error
+		sellTimes        int
+		sellErr          error
+		expectErr        require.ErrorAssertionFunc
+	}{
+		{
+			name:             "valid - purchase",
+			clientID:         validClientID,
+			expectErrMsg:     "",
+			httpStatus:       0,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validPurchase,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      nil,
+			purchaseTimes:    1,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.NoError,
+		}, {
+			name:             "decrypt failure - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "retry",
+			httpStatus:       http.StatusInternalServerError,
+			authEncryptTimes: 1,
+			authEncryptErr:   errors.New("decrypt failure"),
+			redisGetData:     validSale,
+			redisGetTimes:    0,
+			redisGetErr:      nil,
+			redisDelTimes:    0,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "cache get failure - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "retry",
+			httpStatus:       http.StatusInternalServerError,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validSale,
+			redisGetTimes:    1,
+			redisGetErr:      errors.New("cache get failure"),
+			redisDelTimes:    0,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "cache del failure - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "retry",
+			httpStatus:       http.StatusInternalServerError,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validSale,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      errors.New("cache del failure"),
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "cache del failure - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "invalid",
+			httpStatus:       http.StatusBadRequest,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validFiat,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "clientID mismatch - sell",
+			clientID:         invalidClientID,
+			expectErrMsg:     "retry",
+			httpStatus:       http.StatusInternalServerError,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validSale,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "validation failure - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "Fiat",
+			httpStatus:       http.StatusBadRequest,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     invalidSale,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        0,
+			sellErr:          nil,
+			expectErr:        require.Error,
+		}, {
+			name:             "transaction failure - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "sell failure",
+			httpStatus:       http.StatusInternalServerError,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validSale,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        1,
+			sellErr:          errors.New("sell failure"),
+			expectErr:        require.Error,
+		}, {
+			name:             "valid - sell",
+			clientID:         validClientID,
+			expectErrMsg:     "",
+			httpStatus:       0,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisGetData:     validSale,
+			redisGetTimes:    1,
+			redisGetErr:      nil,
+			redisDelTimes:    1,
+			redisDelErr:      nil,
+			purchaseTimes:    0,
+			purchaseErr:      nil,
+			sellTimes:        1,
+			sellErr:          nil,
+			expectErr:        require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte("OFFER-ID"), test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(test.redisGetErr).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockCache.EXPECT().Del(gomock.Any()).
+					Return(test.redisDelErr).
+					Times(test.redisDelTimes),
+
+				mockPostgres.EXPECT().CryptoPurchase(
+					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
+					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, test.purchaseErr).
+					Times(test.purchaseTimes),
+
+				mockPostgres.EXPECT().CryptoSell(
+					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
+					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, test.sellErr).
+					Times(test.sellTimes),
+			)
+
+			_, status, errMsg, err :=
+				HTTPExchangeCrypto(mockAuth, mockCache, mockPostgres, zapLogger, test.clientID, "offer-id")
+			test.expectErr(t, err, "error expectation failed.")
+
+			require.Equal(t, test.httpStatus, status, "http status code mismatched.")
+			require.Contains(t, errMsg, test.expectErrMsg, "http error message mismatched.")
+		})
+	}
+}
