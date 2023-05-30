@@ -26,6 +26,70 @@
     "host": "localhost:33723",
     "basePath": "/api/rest/v1",
     "paths": {
+        "/crypto/exchange/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Purchase or sell a Cryptocurrency to/from a Fiat currency accounts. The Offer ID must be valid and have expired.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "crypto fiat currency cryptocurrency exchange convert offer transfer execute"
+                ],
+                "summary": "Transfer funds between Fiat and Crypto accounts using a valid Offer ID.",
+                "operationId": "exchangeCrypto",
+                "parameters": [
+                    {
+                        "description": "the two currency codes and amount to be converted",
+                        "name": "offerID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPTransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "a message to confirm the conversion of funds",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "408": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/crypto/offer": {
             "post": {
                 "security": [
@@ -279,12 +343,12 @@
                 "operationId": "exchangeTransferFiat",
                 "parameters": [
                     {
-                        "description": "the two currency code and amount to be converted",
+                        "description": "the two currency codes and amount to be converted",
                         "name": "offerID",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.HTTPFiatTransferRequest"
+                            "$ref": "#/definitions/models.HTTPTransferRequest"
                         }
                     }
                 ],
@@ -987,17 +1051,6 @@
                 }
             }
         },
-        "models.HTTPFiatTransferRequest": {
-            "type": "object",
-            "required": [
-                "offerId"
-            ],
-            "properties": {
-                "offerId": {
-                    "type": "string"
-                }
-            }
-        },
         "models.HTTPOpenCurrencyAccountRequest": {
             "type": "object",
             "required": [
@@ -1016,6 +1069,17 @@
                     "type": "string"
                 },
                 "payload": {}
+            }
+        },
+        "models.HTTPTransferRequest": {
+            "type": "object",
+            "required": [
+                "offerId"
+            ],
+            "properties": {
+                "offerId": {
+                    "type": "string"
+                }
             }
         },
         "models.JWTAuthResponse": {

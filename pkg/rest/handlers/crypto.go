@@ -129,7 +129,7 @@ func OfferCrypto(
 		}
 
 		offer, status, statusMessage, err = utilities.HTTPPrepareCryptoOffer(auth, cache, logger, quotes,
-			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, *request.IsPurchase)
+			clientID, request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, *request.IsPurchase)
 		if err != nil {
 			httpErr := &models.HTTPError{Message: statusMessage}
 			if statusMessage == constants.GetInvalidRequest() {
@@ -142,9 +142,66 @@ func OfferCrypto(
 		}
 
 		offer.ClientID = clientID
-		offer.IsCryptoPurchase = *request.IsPurchase
-		offer.IsCryptoSale = !*request.IsPurchase
 
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "crypto rate offer", Payload: offer})
+	}
+}
+
+// ExchangeCrypto will handle an HTTP request to execute and complete a Cryptocurrency purchase/sale offer. The default
+// action is to purchase a Cryptocurrency using a Fiat.
+//
+//	@Summary		Transfer funds between Fiat and Crypto accounts using a valid Offer ID.
+//	@Description	Purchase or sell a Cryptocurrency to/from a Fiat currency accounts. The Offer ID must be valid and have expired.
+//	@Tags			crypto fiat currency cryptocurrency exchange convert offer transfer execute
+//	@Id				exchangeCrypto
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			offerID	body		models.HTTPTransferRequest	true	"the two currency codes and amount to be converted"
+//	@Success		200		{object}	models.HTTPSuccess			"a message to confirm the conversion of funds"
+//	@Failure		400		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Failure		408		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Router			/crypto/exchange/ [post]
+func ExchangeCrypto(
+	logger *logger.Logger,
+	auth auth.Auth,
+	cache redis.Redis,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			err      error
+			clientID uuid.UUID
+			request  models.HTTPTransferRequest
+		)
+
+		if err = ginCtx.ShouldBindJSON(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if err = validator.ValidateStruct(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		receipt, status, httpErrMsg, err := utilities.HTTPExchangeCrypto(auth, cache, db, logger, clientID, request.OfferID)
+		if err != nil {
+			ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: httpErrMsg})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds exchange transfer successful", Payload: receipt})
 	}
 }

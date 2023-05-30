@@ -276,12 +276,12 @@ func ExchangeOfferFiat(
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			offerID	body		models.HTTPFiatTransferRequest	true	"the two currency code and amount to be converted"
-//	@Success		200		{object}	models.HTTPSuccess				"a message to confirm the conversion of funds"
-//	@Failure		400		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		408		{object}	models.HTTPError				"error message with any available details in payload"
-//	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
+//	@Param			offerID	body		models.HTTPTransferRequest	true	"the two currency codes and amount to be converted"
+//	@Success		200		{object}	models.HTTPSuccess			"a message to confirm the conversion of funds"
+//	@Failure		400		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Failure		408		{object}	models.HTTPError			"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError			"error message with any available details in payload"
 //	@Router			/fiat/exchange/transfer [post]
 func ExchangeTransferFiat(
 	logger *logger.Logger,
@@ -293,7 +293,7 @@ func ExchangeTransferFiat(
 		var (
 			err              error
 			clientID         uuid.UUID
-			request          models.HTTPFiatTransferRequest
+			request          models.HTTPTransferRequest
 			offer            models.HTTPExchangeOfferResponse
 			receipt          models.HTTPFiatTransferResponse
 			offerID          string
@@ -352,6 +352,13 @@ func ExchangeTransferFiat(
 				zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
 			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
 				&models.HTTPError{Message: "please retry your request later"})
+
+			return
+		}
+
+		// Verify the offer is for a Fiat exchange.
+		if offer.IsCryptoPurchase || offer.IsCryptoSale {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "invalid Fiat currency exchange offer"})
 
 			return
 		}

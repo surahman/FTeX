@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
@@ -315,7 +316,7 @@ func HTTPValidateOfferRequest(debitAmount decimal.Decimal, precision int32, fiat
 
 // HTTPPrepareCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
 func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
-	source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
+	clientID uuid.UUID, source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
 	models.HTTPExchangeOfferResponse, int, string, error) {
 	var (
 		err          error
@@ -351,10 +352,13 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 		return offer, http.StatusBadRequest, msg, errors.New(msg)
 	}
 
+	offer.PriceQuote.ClientID = clientID
 	offer.SourceAcc = source
 	offer.DestinationAcc = destination
 	offer.DebitAmount = sourceAmount
 	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+	offer.IsCryptoPurchase = isPurchase
+	offer.IsCryptoSale = !isPurchase
 
 	// Encrypt offer ID before returning to client.
 	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
@@ -373,4 +377,93 @@ func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Lo
 	}
 
 	return offer, 0, "", nil
+}
+
+// HTTPExchangeCrypto will complete a Cryptocurrency exchange.
+func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres, logger *logger.Logger,
+	clientID uuid.UUID, offerID string) (models.HTTPCryptoTransferResponse, int, string, error) {
+	var (
+		err          error
+		offer        models.HTTPExchangeOfferResponse
+		receipt      models.HTTPCryptoTransferResponse
+		cryptoTicker string
+		fiatTicker   string
+		cryptoAmount decimal.Decimal
+		fiatAmount   decimal.Decimal
+		precision    = constants.GetDecimalPlacesCrypto()
+		transferFunc = db.CryptoPurchase
+		fiatCurrency []postgres.Currency
+	)
+
+	// Extract Offer ID from request.
+	{
+		var rawOfferID []byte
+		if rawOfferID, err = auth.DecryptFromString(offerID); err != nil {
+			logger.Warn("failed to decrypt Offer ID for Crypto transfer request", zap.Error(err))
+
+			return receipt, http.StatusInternalServerError, "please retry your request later", fmt.Errorf("%w", err)
+		}
+
+		offerID = string(rawOfferID)
+	}
+
+	// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
+	// the offer. If a database update fails below this point the user will need to re-request an offer.
+	{
+		var (
+			status int
+			msg    string
+		)
+		if offer, status, msg, err = HTTPGetCachedOffer(cache, logger, offerID); err != nil {
+			return receipt, status, msg, fmt.Errorf("%w", err)
+		}
+	}
+
+	// Verify that offer is a Crypto offer.
+	if !(offer.IsCryptoSale || offer.IsCryptoPurchase) {
+		msg := "invalid Cryptocurrency exchange offer"
+
+		return receipt, http.StatusBadRequest, msg, errors.New(msg)
+	}
+
+	// Verify that the client IDs match.
+	if clientID != offer.ClientID {
+		msg := "clientID mismatch with the Crypto Offer stored in Redis"
+		logger.Warn(msg,
+			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
+
+		return receipt, http.StatusInternalServerError, "please retry your request later", errors.New(msg)
+	}
+
+	// Configure transaction parameters. Default action should be to purchase a Cryptocurrency using Fiat.
+	fiatTicker = offer.SourceAcc
+	fiatAmount = offer.DebitAmount
+	cryptoTicker = offer.DestinationAcc
+	cryptoAmount = offer.Amount
+
+	if offer.IsCryptoSale {
+		cryptoTicker = offer.SourceAcc
+		cryptoAmount = offer.DebitAmount
+		fiatTicker = offer.DestinationAcc
+		fiatAmount = offer.Amount
+		precision = constants.GetDecimalPlacesCrypto()
+		transferFunc = db.CryptoSell
+	}
+
+	// Get Fiat currency code.
+	if fiatCurrency, err = HTTPValidateOfferRequest(
+		offer.Amount, precision, fiatTicker); err != nil {
+		msg := "failed to extract Fiat currency from Crypto exchange offer"
+		logger.Warn(msg, zap.Error(err))
+
+		return receipt, http.StatusBadRequest, msg, fmt.Errorf("%w", err)
+	}
+
+	// Execute transfer.
+	if receipt.FiatTxReceipt, receipt.CryptoTxReceipt, err =
+		transferFunc(clientID, fiatCurrency[0], fiatAmount, cryptoTicker, cryptoAmount); err != nil {
+		return receipt, http.StatusInternalServerError, err.Error(), fmt.Errorf("%w", err)
+	}
+
+	return receipt, 0, "", nil
 }

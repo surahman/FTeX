@@ -481,3 +481,215 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 		})
 	}
 }
+
+func TestHandlers_ExchangeCrypto(t *testing.T) {
+	t.Parallel()
+
+	validClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate a valid uuid.")
+
+	cryptoAmount := decimal.NewFromFloat(1234.56)
+	fiatAmount := decimal.NewFromFloat(78910.11)
+
+	validSale := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "BTC",
+			DestinationAcc: "USD",
+			Rate:           decimal.Decimal{},
+			Amount:         fiatAmount,
+		},
+		DebitAmount:      cryptoAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: false,
+		IsCryptoSale:     true,
+	}
+
+	validPurchase := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "BTC",
+			Rate:           decimal.Decimal{},
+			Amount:         cryptoAmount,
+		},
+		DebitAmount:      fiatAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: true,
+		IsCryptoSale:     false,
+	}
+
+	testCases := []struct {
+		name               string
+		expectedMsg        string
+		path               string
+		expectedStatus     int
+		request            *models.HTTPTransferRequest
+		authValidateJWTErr error
+		authValidateTimes  int
+		authEncryptTimes   int
+		authEncryptErr     error
+		redisGetData       models.HTTPExchangeOfferResponse
+		redisGetTimes      int
+		redisDelTimes      int
+		purchaseTimes      int
+		sellTimes          int
+		expectErr          require.ErrorAssertionFunc
+	}{
+		{
+			name:               "invalid jwt",
+			expectedMsg:        "invalid jwt",
+			path:               "/exchange-crypto/invalid-jwt",
+			expectedStatus:     http.StatusForbidden,
+			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
+			authValidateTimes:  1,
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authEncryptTimes:   0,
+			authEncryptErr:     nil,
+			redisGetData:       validPurchase,
+			redisGetTimes:      0,
+			redisDelTimes:      0,
+			purchaseTimes:      0,
+			sellTimes:          0,
+			expectErr:          require.Error,
+		}, {
+			name:               "empty request",
+			expectedMsg:        "validation",
+			path:               "/exchange-crypto/empty-request",
+			expectedStatus:     http.StatusBadRequest,
+			request:            &models.HTTPTransferRequest{},
+			authValidateTimes:  0,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   0,
+			authEncryptErr:     nil,
+			redisGetData:       validPurchase,
+			redisGetTimes:      0,
+			redisDelTimes:      0,
+			purchaseTimes:      0,
+			sellTimes:          0,
+			expectErr:          require.Error,
+		}, {
+			name:               "transaction failure",
+			expectedMsg:        "retry",
+			path:               "/exchange-crypto/transaction-failure",
+			expectedStatus:     http.StatusInternalServerError,
+			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   1,
+			authEncryptErr:     errors.New("transaction failure"),
+			redisGetData:       validPurchase,
+			redisGetTimes:      0,
+			redisDelTimes:      0,
+			purchaseTimes:      0,
+			sellTimes:          0,
+			expectErr:          require.Error,
+		}, {
+			name:               "valid - purchase",
+			expectedMsg:        "successful",
+			path:               "/exchange-crypto/valid-purchase",
+			expectedStatus:     http.StatusOK,
+			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   1,
+			authEncryptErr:     nil,
+			redisGetData:       validPurchase,
+			redisGetTimes:      1,
+			redisDelTimes:      1,
+			purchaseTimes:      1,
+			sellTimes:          0,
+			expectErr:          require.NoError,
+		}, {
+			name:               "valid - sale",
+			expectedMsg:        "successful",
+			path:               "/exchange-crypto/valid-sale",
+			expectedStatus:     http.StatusOK,
+			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   1,
+			authEncryptErr:     nil,
+			redisGetData:       validSale,
+			redisGetTimes:      1,
+			redisDelTimes:      1,
+			purchaseTimes:      0,
+			sellTimes:          1,
+			expectErr:          require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			offerReqJSON, err := json.Marshal(&test.request)
+			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(validClientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte("OFFER-ID"), test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(nil).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockCache.EXPECT().Del(gomock.Any()).
+					Return(nil).
+					Times(test.redisDelTimes),
+
+				mockDB.EXPECT().CryptoPurchase(
+					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
+					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, nil).
+					Times(test.purchaseTimes),
+
+				mockDB.EXPECT().CryptoSell(
+					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
+					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, nil).
+					Times(test.sellTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.POST(test.path, ExchangeCrypto(zapLogger, mockAuth, mockCache, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			errorMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+
+			// Check for invalid currency codes and amount.
+			if errorMessage == constants.GetInvalidRequest() {
+				payload, ok := resp["payload"].(string)
+				require.True(t, ok, "failed to extract payload from response.")
+				require.Contains(t, payload, test.expectedMsg)
+			} else {
+				require.Contains(t, errorMessage, test.expectedMsg, "incorrect response message.")
+			}
+		})
+	}
+}
