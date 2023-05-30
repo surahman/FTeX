@@ -276,7 +276,7 @@ func ExchangeOfferFiat(
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			offerID	body		models.HTTPTransferRequest	true	"the two currency code and amount to be converted"
+//	@Param			offerID	body		models.HTTPTransferRequest	true	"the two currency codes and amount to be converted"
 //	@Success		200		{object}	models.HTTPSuccess			"a message to confirm the conversion of funds"
 //	@Failure		400		{object}	models.HTTPError			"error message with any available details in payload"
 //	@Failure		403		{object}	models.HTTPError			"error message with any available details in payload"
