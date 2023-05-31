@@ -468,8 +468,8 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 	return receipt, 0, "", nil
 }
 
-// HTTPTxDetailsCrypto will retrieve the Cryptocurrency journal entries for a specified transaction.
-func HTTPTxDetailsCrypto(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, txID string) (
+// HTTPTxDetails will retrieve the Cryptocurrency journal entries for a specified transaction.
+func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, txID string) (
 	[]any, int, string, error) {
 	var (
 		cryptoEntries []postgres.CryptoJournal

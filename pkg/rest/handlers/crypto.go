@@ -303,7 +303,7 @@ func TxDetailsCrypto(
 		}
 
 		// Extract and validate the transactionID.
-		journalEntries, status, errMsg, err := utilities.HTTPTxDetailsCrypto(db, logger, clientID, transactionID)
+		journalEntries, status, errMsg, err := utilities.HTTPTxDetails(db, logger, clientID, transactionID)
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(status, models.HTTPError{Message: errMsg})
 

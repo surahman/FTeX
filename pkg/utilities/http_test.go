@@ -1271,7 +1271,7 @@ func TestUtilities_HTTPTxDetailsCrypto(t *testing.T) {
 					Times(test.cryptoTxTimes),
 			)
 
-			_, status, errMsg, err := HTTPTxDetailsCrypto(mockPostgres, zapLogger, uuid.UUID{}, test.txID)
+			_, status, errMsg, err := HTTPTxDetails(mockPostgres, zapLogger, uuid.UUID{}, test.txID)
 			test.expectErr(t, err, "error expectation failed.")
 
 			require.Equal(t, test.httpStatus, status, "http status code mismatched.")
