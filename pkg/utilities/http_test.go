@@ -1148,63 +1148,106 @@ func TestUtilities_HTTPTxDetailsCrypto(t *testing.T) {
 	validTxID, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate uuid.")
 
-	validJournal := []postgres.CryptoJournal{{}, {}}
+	cryptoJournal := []postgres.CryptoJournal{{}, {}}
+	fiatJournal := []postgres.FiatJournal{{}, {}}
 
 	testCases := []struct {
-		name         string
-		txID         string
-		expectErrMsg string
-		httpStatus   int
-		journalEntry []postgres.CryptoJournal
-		getTxErr     error
-		getTxTimes   int
-		expectErr    require.ErrorAssertionFunc
+		name          string
+		txID          string
+		expectErrMsg  string
+		httpStatus    int
+		cryptoJournal []postgres.CryptoJournal
+		fiatJournal   []postgres.FiatJournal
+		cryptoTxErr   error
+		cryptoTxTimes int
+		fiatTxErr     error
+		fiatTxTimes   int
+		expectErr     require.ErrorAssertionFunc
 	}{
 		{
-			name:         "invalid transaction id",
-			txID:         "invalid-transaction-id",
-			expectErrMsg: "invalid transaction ID",
-			httpStatus:   http.StatusBadRequest,
-			journalEntry: validJournal,
-			getTxErr:     nil,
-			getTxTimes:   0,
-			expectErr:    require.Error,
+			name:          "invalid transaction id",
+			txID:          "invalid-transaction-id",
+			expectErrMsg:  "invalid transaction ID",
+			httpStatus:    http.StatusBadRequest,
+			cryptoJournal: cryptoJournal,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   0,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 0,
+			expectErr:     require.Error,
 		}, {
-			name:         "unknown db error",
-			txID:         validTxID.String(),
-			expectErrMsg: "please retry",
-			httpStatus:   http.StatusInternalServerError,
-			journalEntry: validJournal,
-			getTxErr:     errors.New("unknown db error"),
-			getTxTimes:   1,
-			expectErr:    require.Error,
+			name:          "unknown fiat db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "please retry",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     errors.New("unknown db error"),
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 0,
+			expectErr:     require.Error,
 		}, {
-			name:         "known db error",
-			txID:         validTxID.String(),
-			expectErrMsg: "could not complete",
-			httpStatus:   http.StatusInternalServerError,
-			journalEntry: validJournal,
-			getTxErr:     postgres.ErrTransactCrypto,
-			getTxTimes:   1,
-			expectErr:    require.Error,
+			name:          "unknown crypto db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "please retry",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   errors.New("unknown db error"),
+			cryptoTxTimes: 1,
+			expectErr:     require.Error,
 		}, {
-			name:         "empty result set",
-			txID:         validTxID.String(),
-			expectErrMsg: "id not found",
-			httpStatus:   http.StatusNotFound,
-			journalEntry: []postgres.CryptoJournal{},
-			getTxErr:     nil,
-			getTxTimes:   1,
-			expectErr:    require.Error,
+			name:          "known fiat db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "could not complete",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     postgres.ErrTransactFiat,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 0,
+			expectErr:     require.Error,
 		}, {
-			name:         "valid",
-			txID:         validTxID.String(),
-			expectErrMsg: "",
-			httpStatus:   0,
-			journalEntry: validJournal,
-			getTxErr:     nil,
-			getTxTimes:   1,
-			expectErr:    require.NoError,
+			name:          "known crypto db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "could not complete",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   postgres.ErrTransactCrypto,
+			cryptoTxTimes: 1,
+			expectErr:     require.Error,
+		}, {
+			name:          "empty result set",
+			txID:          validTxID.String(),
+			expectErrMsg:  "id not found",
+			httpStatus:    http.StatusNotFound,
+			fiatJournal:   []postgres.FiatJournal{},
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: []postgres.CryptoJournal{},
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 1,
+			expectErr:     require.Error,
+		}, {
+			name:          "valid",
+			txID:          validTxID.String(),
+			expectErrMsg:  "",
+			httpStatus:    0,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 1,
+			expectErr:     require.NoError,
 		},
 	}
 
@@ -1219,9 +1262,13 @@ func TestUtilities_HTTPTxDetailsCrypto(t *testing.T) {
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
+				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return(test.fiatJournal, test.fiatTxErr).
+					Times(test.fiatTxTimes),
+
 				mockPostgres.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
-					Return(test.journalEntry, test.getTxErr).
-					Times(test.getTxTimes),
+					Return(test.cryptoJournal, test.cryptoTxErr).
+					Times(test.cryptoTxTimes),
 			)
 
 			_, status, errMsg, err := HTTPTxDetailsCrypto(mockPostgres, zapLogger, uuid.UUID{}, test.txID)

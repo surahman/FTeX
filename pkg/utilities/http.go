@@ -470,11 +470,12 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 
 // HTTPTxDetailsCrypto will retrieve the Cryptocurrency journal entries for a specified transaction.
 func HTTPTxDetailsCrypto(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, txID string) (
-	[]postgres.CryptoJournal, int, string, error) {
+	[]any, int, string, error) {
 	var (
-		journalEntries []postgres.CryptoJournal
-		transactionID  uuid.UUID
-		err            error
+		cryptoEntries []postgres.CryptoJournal
+		fiatEntries   []postgres.FiatJournal
+		transactionID uuid.UUID
+		err           error
 	)
 
 	// Extract and validate the transactionID.
@@ -482,7 +483,18 @@ func HTTPTxDetailsCrypto(db postgres.Postgres, logger *logger.Logger, clientID u
 		return nil, http.StatusBadRequest, "invalid transaction ID", fmt.Errorf("%w", err)
 	}
 
-	if journalEntries, err = db.CryptoTxDetailsCurrency(clientID, transactionID); err != nil {
+	if fiatEntries, err = db.FiatTxDetailsCurrency(clientID, transactionID); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Crypto account balance transactionID error", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
+	}
+
+	if cryptoEntries, err = db.CryptoTxDetailsCurrency(clientID, transactionID); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
@@ -491,6 +503,17 @@ func HTTPTxDetailsCrypto(db postgres.Postgres, logger *logger.Logger, clientID u
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
+	}
+
+	// Collate journal entries from both Crypto and Fiat for this transaction.
+	journalEntries := make([]any, 0, len(cryptoEntries)+len(fiatEntries))
+
+	for _, item := range fiatEntries {
+		journalEntries = append(journalEntries, item)
+	}
+
+	for _, item := range cryptoEntries {
+		journalEntries = append(journalEntries, item)
 	}
 
 	if len(journalEntries) == 0 {
