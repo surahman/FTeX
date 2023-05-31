@@ -813,8 +813,10 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 		expectedStatus     int
 		authValidateJWTErr error
 		authValidateTimes  int
-		getTxErr           error
-		getTxTimes         int
+		fiatTxErr          error
+		fiatTxTimes        int
+		cryptoTxErr        error
+		cryptoTxTimes      int
 	}{
 		{
 			name:               "invalid jwt",
@@ -822,24 +824,40 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			expectedStatus:     http.StatusForbidden,
 			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
-			getTxErr:           nil,
-			getTxTimes:         0,
+			fiatTxErr:          nil,
+			fiatTxTimes:        0,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      0,
 		}, {
-			name:               "db error",
+			name:               "fiat db error",
 			expectedMsg:        "could not retrieve transaction details",
 			expectedStatus:     http.StatusInternalServerError,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
-			getTxErr:           postgres.ErrTransactCryptoDetails,
-			getTxTimes:         1,
+			fiatTxErr:          postgres.ErrTransactCryptoDetails,
+			fiatTxTimes:        1,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      0,
+		}, {
+			name:               "crypto db error",
+			expectedMsg:        "could not retrieve transaction details",
+			expectedStatus:     http.StatusInternalServerError,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			fiatTxErr:          nil,
+			fiatTxTimes:        1,
+			cryptoTxErr:        postgres.ErrTransactCryptoDetails,
+			cryptoTxTimes:      1,
 		}, {
 			name:               "valid",
 			expectedMsg:        "transaction details",
 			expectedStatus:     http.StatusOK,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
-			getTxErr:           nil,
-			getTxTimes:         1,
+			fiatTxErr:          nil,
+			fiatTxTimes:        1,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      1,
 		},
 	}
 
@@ -860,9 +878,13 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
+				mockDB.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return([]postgres.FiatJournal{{}}, test.fiatTxErr).
+					Times(test.fiatTxTimes),
+
 				mockDB.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
-					Return([]postgres.CryptoJournal{{}}, test.getTxErr).
-					Times(test.getTxTimes),
+					Return([]postgres.CryptoJournal{{}}, test.cryptoTxErr).
+					Times(test.cryptoTxTimes),
 			)
 
 			// Endpoint setup for test.

@@ -235,6 +235,47 @@ paths:
       summary: Retrieve balance for a specific Cryptocurrency.
       tags:
       - crypto cryptocurrency currency balance
+  /crypto/info/transaction/{transactionID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the transaction details for a specific transactionID.
+        The transaction ID must be supplied as a query parameter.
+      operationId: txDetailsCrypto
+      parameters:
+      - description: the transaction ID to retrieve the details for
+        in: path
+        name: transactionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: the transaction details for a specific transaction ID
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve transaction details for a specific transactionID.
+      tags:
+      - crypto cryptocurrency transactionID transaction details
   /crypto/offer:
     post:
       consumes:

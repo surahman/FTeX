@@ -156,6 +156,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/crypto/info/transaction/{transactionID}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the transaction details for a specific transactionID. The transaction ID must be supplied as a query parameter.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "crypto cryptocurrency transactionID transaction details"
+                ],
+                "summary": "Retrieve transaction details for a specific transactionID.",
+                "operationId": "txDetailsCrypto",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the transaction ID to retrieve the details for",
+                        "name": "transactionID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the transaction details for a specific transaction ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPSuccess"
+                        }
+                    },
+                    "400": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "403": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "error message with any available details in payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/crypto/offer": {
             "post": {
                 "security": [

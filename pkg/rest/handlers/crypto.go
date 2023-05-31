@@ -283,7 +283,7 @@ func BalanceCurrencyCrypto(
 //	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
-//	@Router			/fiat/info/transaction/{transactionID} [get]
+//	@Router			/crypto/info/transaction/{transactionID} [get]
 func TxDetailsCrypto(
 	logger *logger.Logger,
 	auth auth.Auth,
