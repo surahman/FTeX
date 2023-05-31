@@ -798,3 +798,89 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
 		})
 	}
 }
+
+func TestHandler_TxDetailsCrypto(t *testing.T) {
+	t.Parallel()
+
+	const basePath = "/crypto/transaction/currency/"
+
+	validTxID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate uuid.")
+
+	testCases := []struct {
+		name               string
+		expectedMsg        string
+		expectedStatus     int
+		authValidateJWTErr error
+		authValidateTimes  int
+		getTxErr           error
+		getTxTimes         int
+	}{
+		{
+			name:               "invalid jwt",
+			expectedMsg:        "invalid jwt",
+			expectedStatus:     http.StatusForbidden,
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authValidateTimes:  1,
+			getTxErr:           nil,
+			getTxTimes:         0,
+		}, {
+			name:               "db error",
+			expectedMsg:        "could not retrieve transaction details",
+			expectedStatus:     http.StatusInternalServerError,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			getTxErr:           postgres.ErrTransactCryptoDetails,
+			getTxTimes:         1,
+		}, {
+			name:               "valid",
+			expectedMsg:        "transaction details",
+			expectedStatus:     http.StatusOK,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			getTxErr:           nil,
+			getTxTimes:         1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockDB.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return([]postgres.CryptoJournal{{}}, test.getTxErr).
+					Times(test.getTxTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.GET(basePath+":transactionID", TxDetailsCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+validTxID.String(), nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			actualMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, actualMessage, test.expectedMsg, "response message mismatch.")
+		})
+	}
+}

@@ -267,3 +267,49 @@ func BalanceCurrencyCrypto(
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balance", Payload: accDetails})
 	}
 }
+
+// TxDetailsCrypto will handle an HTTP request to retrieve information for a specific Crypto transaction.
+//
+//	@Summary		Retrieve transaction details for a specific transactionID.
+//	@Description	Retrieves the transaction details for a specific transactionID. The transaction ID must be supplied as a query parameter.
+//	@Tags			crypto cryptocurrency transactionID transaction details
+//	@Id				txDetailsCrypto
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			transactionID	path		string				true	"the transaction ID to retrieve the details for"
+//	@Success		200				{object}	models.HTTPSuccess	"the transaction details for a specific transaction ID"
+//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/transaction/{transactionID} [get]
+func TxDetailsCrypto(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			clientID      uuid.UUID
+			transactionID = ginCtx.Param("transactionID")
+			err           error
+		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Extract and validate the transactionID.
+		journalEntries, status, errMsg, err := utilities.HTTPTxDetailsCrypto(db, logger, clientID, transactionID)
+		if err != nil {
+			ginCtx.AbortWithStatusJSON(status, models.HTTPError{Message: errMsg})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "transaction details", Payload: journalEntries})
+	}
+}
