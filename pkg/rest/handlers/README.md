@@ -6,8 +6,6 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
 
 ## Table of contents
 
-# Table of contents
-
 - [Authorization Response](#authorization-response)
 - [Error Response](#error-response)
 - [Success Response](#success-response)
@@ -24,7 +22,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Quote `/offer`](#quote-offer)
     - [Convert `/convert`](#convert-convert)
   - [Info `/info`](#info-info)
-    - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balancecurrencycode)
+    - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balanceticker)
     - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
     - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
       - [External Transaction (deposit)](#external-transaction-deposit)
@@ -37,6 +35,14 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
   - [Offer `/offer`](#offer-offer)
     - [Purchase](#purchase)
     - [Sell](#sell)
+  - [Exchange `/Exchange`](#exchange-exchange)
+    - [Purchase](#purchase)
+    - [Sell](#sell)
+  - [Info `/info`](#info-info)
+    - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balanceticker)
+    - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
+      - [Purchase](#purchase)
+      - [Sale](#sale)
 
 <br/>
 
@@ -301,7 +307,7 @@ _Response:_ A transaction receipt with the details of the source and destination
 
 ##### Balance for a Specific Currency `/balance/{ticker}`
 
-_Request:_ A valid currency code must be provided as a path parameter.
+_Request:_ A valid currency ticker must be provided as a path parameter.
 
 _Response:_ Account balance related details associated with the currency.
 ```json
@@ -691,5 +697,79 @@ _Response:_ A valid sale offer.
       "txID": "f85ed60e-edbf-4c56-b452-cd9f4e497555"
     }
   }
+}
+```
+
+#### Info `/info`
+
+##### Balance for a Specific Currency `/balance/{ticker}`
+
+_Request:_ A valid Cryptocurrency ticker must be provided as a path parameter.
+
+_Response:_ Account balance related details associated with the currency.
+```json
+{
+  "message": "account balance",
+  "payload": {
+    "ticker": "USDC",
+    "balance": "111.91731638",
+    "lastTx": "93.90381154",
+    "lastTxTs": "2023-05-29T18:04:11.920849-04:00",
+    "createdAt": "2023-05-26T16:55:03.610748-04:00",
+    "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8"
+  }
+}
+```
+
+##### Transaction Details for a Specific Transaction `/transaction/{transactionID}`
+
+_Request:_ A valid `Transaction ID` must be provided as a path parameter.
+
+_Response:_ Transaction-related details for a specific transaction. There will be one entry for the Fiat currency
+account and another for the Cryptocurrency account.
+
+###### Purchase
+```json
+{
+  "message": "transaction details",
+  "payload": [
+    {
+      "currency": "USD",
+      "amount": "-163.12",
+      "transactedAt": "2023-05-31T19:33:00.355285-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "05bccc5b-18f5-4670-b582-557c7a08871b"
+    },
+    {
+      "ticker": "USDT",
+      "amount": "163.09082074",
+      "transactedAt": "2023-05-31T19:33:00.355285-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "05bccc5b-18f5-4670-b582-557c7a08871b"
+    }
+  ]
+}
+```
+
+###### Sale
+```json
+{
+  "message": "transaction details",
+  "payload": [
+    {
+      "currency": "USD",
+      "amount": "55.34",
+      "transactedAt": "2023-05-31T19:34:30.322262-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "068285c3-5556-4093-9de1-32f6ad4c82d9"
+    },
+    {
+      "ticker": "USDT",
+      "amount": "-55.33",
+      "transactedAt": "2023-05-31T19:34:30.322262-04:00",
+      "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8",
+      "txID": "068285c3-5556-4093-9de1-32f6ad4c82d9"
+    }
+  ]
 }
 ```
