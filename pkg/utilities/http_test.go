@@ -1141,3 +1141,94 @@ func TestUtilities_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 		})
 	}
 }
+
+func TestUtilities_HTTPTxDetailsCrypto(t *testing.T) {
+	t.Parallel()
+
+	validTxID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate uuid.")
+
+	validJournal := []postgres.CryptoJournal{{}, {}}
+
+	testCases := []struct {
+		name         string
+		txID         string
+		expectErrMsg string
+		httpStatus   int
+		journalEntry []postgres.CryptoJournal
+		getTxErr     error
+		getTxTimes   int
+		expectErr    require.ErrorAssertionFunc
+	}{
+		{
+			name:         "invalid transaction id",
+			txID:         "invalid-transaction-id",
+			expectErrMsg: "invalid transaction ID",
+			httpStatus:   http.StatusBadRequest,
+			journalEntry: validJournal,
+			getTxErr:     nil,
+			getTxTimes:   0,
+			expectErr:    require.Error,
+		}, {
+			name:         "unknown db error",
+			txID:         validTxID.String(),
+			expectErrMsg: "please retry",
+			httpStatus:   http.StatusInternalServerError,
+			journalEntry: validJournal,
+			getTxErr:     errors.New("unknown db error"),
+			getTxTimes:   1,
+			expectErr:    require.Error,
+		}, {
+			name:         "known db error",
+			txID:         validTxID.String(),
+			expectErrMsg: "could not complete",
+			httpStatus:   http.StatusInternalServerError,
+			journalEntry: validJournal,
+			getTxErr:     postgres.ErrTransactCrypto,
+			getTxTimes:   1,
+			expectErr:    require.Error,
+		}, {
+			name:         "empty result set",
+			txID:         validTxID.String(),
+			expectErrMsg: "id not found",
+			httpStatus:   http.StatusNotFound,
+			journalEntry: []postgres.CryptoJournal{},
+			getTxErr:     nil,
+			getTxTimes:   1,
+			expectErr:    require.Error,
+		}, {
+			name:         "valid",
+			txID:         validTxID.String(),
+			expectErrMsg: "",
+			httpStatus:   0,
+			journalEntry: validJournal,
+			getTxErr:     nil,
+			getTxTimes:   1,
+			expectErr:    require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockPostgres.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return(test.journalEntry, test.getTxErr).
+					Times(test.getTxTimes),
+			)
+
+			_, status, errMsg, err := HTTPTxDetailsCrypto(mockPostgres, zapLogger, uuid.UUID{}, test.txID)
+			test.expectErr(t, err, "error expectation failed.")
+
+			require.Equal(t, test.httpStatus, status, "http status code mismatched.")
+			require.Contains(t, errMsg, test.expectErrMsg, "http error message mismatched.")
+		})
+	}
+}
