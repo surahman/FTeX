@@ -693,3 +693,108 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
+	t.Parallel()
+
+	const basePath = "/crypto/balance/currency/"
+
+	testCases := []struct {
+		name               string
+		currency           string
+		expectedMsg        string
+		expectedStatus     int
+		authValidateJWTErr error
+		authValidateTimes  int
+		cryptoBalanceErr   error
+		cryptoBalanceTimes int
+	}{
+		{
+			name:               "invalid currency",
+			currency:           "INVALID",
+			expectedMsg:        "invalid currency",
+			expectedStatus:     http.StatusBadRequest,
+			authValidateJWTErr: nil,
+			authValidateTimes:  0,
+			cryptoBalanceErr:   nil,
+			cryptoBalanceTimes: 0,
+		}, {
+			name:               "invalid JWT",
+			currency:           "USDT",
+			expectedMsg:        "invalid JWT",
+			expectedStatus:     http.StatusForbidden,
+			authValidateJWTErr: errors.New("invalid JWT"),
+			authValidateTimes:  1,
+			cryptoBalanceErr:   nil,
+			cryptoBalanceTimes: 0,
+		}, {
+			name:               "unknown db error",
+			currency:           "USDC",
+			expectedMsg:        "retry",
+			expectedStatus:     http.StatusInternalServerError,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			cryptoBalanceErr:   errors.New("unknown error"),
+			cryptoBalanceTimes: 1,
+		}, {
+			name:               "known db error",
+			currency:           "BTC",
+			expectedMsg:        "records not found",
+			expectedStatus:     http.StatusNotFound,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			cryptoBalanceErr:   postgres.ErrNotFound,
+			cryptoBalanceTimes: 1,
+		}, {
+			name:               "valid",
+			currency:           "BTC",
+			expectedMsg:        "account balance",
+			expectedStatus:     http.StatusOK,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			cryptoBalanceErr:   nil,
+			cryptoBalanceTimes: 1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockDB.EXPECT().CryptoBalanceCurrency(gomock.Any(), gomock.Any()).
+					Return(postgres.CryptoAccount{}, test.cryptoBalanceErr).
+					Times(test.cryptoBalanceTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.GET(basePath+":ticker", BalanceCurrencyCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			actualMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, actualMessage, test.expectedMsg, "response message mismatch.")
+		})
+	}
+}

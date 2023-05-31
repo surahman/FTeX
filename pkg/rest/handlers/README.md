@@ -24,7 +24,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Quote `/offer`](#quote-offer)
     - [Convert `/convert`](#convert-convert)
   - [Info `/info`](#info-info)
-    - [Balance for a Specific Currency `/balance/{currencyCode}`](#balance-for-a-specific-currency-balancecurrencycode)
+    - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balancecurrencycode)
     - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
     - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
       - [External Transaction (deposit)](#external-transaction-deposit)
@@ -299,7 +299,7 @@ _Response:_ A transaction receipt with the details of the source and destination
 
 #### Info `/info`
 
-##### Balance for a Specific Currency `/balance/{currencyCode}`
+##### Balance for a Specific Currency `/balance/{ticker}`
 
 _Request:_ A valid currency code must be provided as a path parameter.
 

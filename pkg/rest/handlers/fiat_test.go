@@ -902,7 +902,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_BalanceCurrencyFiat(t *testing.T) {
+func TestHandler_BalanceCurrencyFiat(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/fiat/balance/currency/"
@@ -989,7 +989,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":currencyCode", BalanceCurrencyFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceCurrencyFiat(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

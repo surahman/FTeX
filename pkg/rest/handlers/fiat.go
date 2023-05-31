@@ -398,22 +398,22 @@ func ExchangeTransferFiat(
 	}
 }
 
-// BalanceCurrencyFiat will handle an HTTP request to retrieve a balance for a specific currency.
+// BalanceCurrencyFiat will handle an HTTP request to retrieve a balance for a specific Fiat currency.
 //
-//	@Summary		Retrieve balance for a specific currency.
-//	@Description	Retrieves the balance for a specific currency. The currency code must be supplied as a query parameter.
+//	@Summary		Retrieve balance for a specific Fiat currency.
+//	@Description	Retrieves the balance for a specific Fiat currency. The currency ticker must be supplied as a query parameter.
 //	@Tags			fiat currency balance
 //	@Id				balanceCurrencyFiat
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			currencyCode	path		string				true	"the currency code to retrieve the balance for"
-//	@Success		200				{object}	models.HTTPSuccess	"the details for a specific currency account"
-//	@Failure		400				{object}	models.HTTPError	"error message with any available details in payload"
-//	@Failure		403				{object}	models.HTTPError	"error message with any available details in payload"
-//	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
-//	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
-//	@Router			/fiat/info/balance/{currencyCode} [get]
+//	@Param			ticker	path		string				true	"the currency ticker to retrieve the balance for"
+//	@Success		200		{object}	models.HTTPSuccess	"the details for a specific currency account"
+//	@Failure		400		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/fiat/info/balance/{ticker} [get]
 func BalanceCurrencyFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
@@ -428,9 +428,9 @@ func BalanceCurrencyFiat(
 		)
 
 		// Extract and validate the currency.
-		if err = currency.Scan(ginCtx.Param("currencyCode")); err != nil || !currency.Valid() {
+		if err = currency.Scan(ginCtx.Param("ticker")); err != nil || !currency.Valid() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: ginCtx.Param("currencyCode")})
+				models.HTTPError{Message: "invalid currency", Payload: ginCtx.Param("ticker")})
 
 			return
 		}

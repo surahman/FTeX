@@ -111,7 +111,7 @@ func (s *Server) initialize() {
 		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 	fiatGroup.POST("/exchange/transfer",
 		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.GET("/info/balance/:currencyCode",
+	fiatGroup.GET("/info/balance/:ticker",
 		restHandlers.BalanceCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/balance/",
 		restHandlers.BalanceCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
@@ -126,6 +126,8 @@ func (s *Server) initialize() {
 		restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 	cryptoGroup.POST("/exchange",
 		restHandlers.ExchangeCrypto(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
+	cryptoGroup.GET("/info/balance/:ticker",
+		restHandlers.BalanceCurrencyCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

@@ -205,3 +205,65 @@ func ExchangeCrypto(
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "funds exchange transfer successful", Payload: receipt})
 	}
 }
+
+// BalanceCurrencyCrypto will handle an HTTP request to retrieve a balance for a specific Cryptocurrency.
+//
+//	@Summary		Retrieve balance for a specific Cryptocurrency.
+//	@Description	Retrieves the balance for a specific Cryptocurrency. The currency ticker must be supplied as a query parameter.
+//	@Tags			crypto cryptocurrency currency balance
+//	@Id				balanceCurrencyCrypto
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			ticker	path		string				true	"the Cryptocurrency ticker to retrieve the balance for"
+//	@Success		200		{object}	models.HTTPSuccess	"the details for a specific currency account"
+//	@Failure		400		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/crypto/info/balance/{ticker} [get]
+func BalanceCurrencyCrypto(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			accDetails postgres.CryptoAccount
+			clientID   uuid.UUID
+			ticker     = ginCtx.Param("ticker")
+			err        error
+		)
+
+		// Extract and validate the currency.
+		if len(ticker) < 1 || len(ticker) > 6 {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: "invalid currency", Payload: ticker})
+
+			return
+		}
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if accDetails, err = db.CryptoBalanceCurrency(clientID, ticker); err != nil {
+			var balanceErr *postgres.Error
+			if !errors.As(err, &balanceErr) {
+				logger.Info("failed to unpack Crypto account balance currency error", zap.Error(err))
+				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
+					models.HTTPError{Message: "please retry your request later"})
+
+				return
+			}
+
+			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balance", Payload: accDetails})
+	}
+}
