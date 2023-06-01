@@ -522,3 +522,38 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 
 	return journalEntries, 0, "", nil
 }
+
+// HTTPCryptoBalancePaginatedRequest will convert the encrypted URL query parameter for the ticker and the record
+// limit and covert them to a string and integer record limit. The tickerStr is the encrypted pageCursor passed in.
+func HTTPCryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr string) (string, int32, error) {
+	var (
+		ticker    string
+		decrypted []byte
+		err       error
+		limit     int64
+	)
+
+	// Decrypt currency ticker string.
+	decrypted = []byte("BTC")
+
+	if len(tickerStr) > 0 {
+		if decrypted, err = auth.DecryptFromString(tickerStr); err != nil {
+			return ticker, -1, fmt.Errorf("failed to decrypt next ticker")
+		}
+	}
+
+	ticker = string(decrypted)
+
+	// Convert record limit to int and set base bound for bad input.
+	if len(limitStr) > 0 {
+		if limit, err = strconv.ParseInt(limitStr, 10, 32); err != nil {
+			return ticker, -1, fmt.Errorf("failed to parse record limit")
+		}
+	}
+
+	if limit < 1 {
+		limit = 10
+	}
+
+	return ticker, int32(limit), nil
+}

@@ -1279,3 +1279,86 @@ func TestUtilities_HTTPTxDetailsCrypto(t *testing.T) {
 		})
 	}
 }
+
+func TestUtilities_HTTPCryptoBalancePaginatedRequest(t *testing.T) {
+	t.Parallel()
+
+	encBTC, err := testAuth.EncryptToString([]byte("BTC"))
+	require.NoError(t, err, "failed to encrypt BTC currency.")
+
+	encETH, err := testAuth.EncryptToString([]byte("ETH"))
+	require.NoError(t, err, "failed to encrypt ETH currency.")
+
+	encXRP, err := testAuth.EncryptToString([]byte("XRP"))
+	require.NoError(t, err, "failed to encrypt XRP currency.")
+
+	testCases := []struct {
+		name            string
+		encryptedTicker string
+		limitStr        string
+		expectTicker    string
+		expectLimit     int32
+	}{
+		{
+			name:            "empty currency",
+			encryptedTicker: "",
+			limitStr:        "5",
+			expectTicker:    "BTC",
+			expectLimit:     5,
+		}, {
+			name:            "BTC",
+			encryptedTicker: encBTC,
+			limitStr:        "5",
+			expectTicker:    "BTC",
+			expectLimit:     5,
+		}, {
+			name:            "ETH",
+			encryptedTicker: encETH,
+			limitStr:        "5",
+			expectTicker:    "ETH",
+			expectLimit:     5,
+		}, {
+			name:            "XRP",
+			encryptedTicker: encXRP,
+			limitStr:        "5",
+			expectTicker:    "XRP",
+			expectLimit:     5,
+		}, {
+			name:            "base bound limit",
+			encryptedTicker: encXRP,
+			limitStr:        "0",
+			expectTicker:    "XRP",
+			expectLimit:     10,
+		}, {
+			name:            "above base bound limit",
+			encryptedTicker: encXRP,
+			limitStr:        "999",
+			expectTicker:    "XRP",
+			expectLimit:     999,
+		}, {
+			name:            "empty request",
+			encryptedTicker: "",
+			limitStr:        "",
+			expectTicker:    "BTC",
+			expectLimit:     10,
+		}, {
+			name:            "empty currency",
+			encryptedTicker: "",
+			limitStr:        "999",
+			expectTicker:    "BTC",
+			expectLimit:     999,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			actualTicker, actualLimit, err := HTTPCryptoBalancePaginatedRequest(testAuth, test.encryptedTicker, test.limitStr)
+			require.NoError(t, err, "error returned from query unpacking")
+			require.Equal(t, test.expectTicker, actualTicker, "tickers mismatched.")
+			require.Equal(t, test.expectLimit, actualLimit, "request limit size mismatched.")
+		})
+	}
+}
