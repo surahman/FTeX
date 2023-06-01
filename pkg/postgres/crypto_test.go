@@ -524,3 +524,87 @@ func TestCrypto_CryptoSell(t *testing.T) {
 		require.Equal(t, 0, len(cryptoJournal), "Crypto journal entry for insufficient funds sale found.")
 	})
 }
+func TestCrypto_CryptoGetAllAccounts(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Insert the initial set of test fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Insert initial set of test crypto accounts.
+	resetTestCryptoAccounts(t, clientID1, clientID2)
+
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
+	// Testing grid.
+	testCases := []struct {
+		name           string
+		ticker         string
+		clientID       uuid.UUID
+		limitCnt       int32
+		expectedRowCnt int
+	}{
+		{
+			name:           "ClientID 1 - ALL",
+			ticker:         "BTC",
+			clientID:       clientID1,
+			limitCnt:       3,
+			expectedRowCnt: 3,
+		}, {
+			name:           "ClientID 1 - Limit 1",
+			ticker:         "USDT",
+			clientID:       clientID1,
+			limitCnt:       1,
+			expectedRowCnt: 1,
+		}, {
+			name:           "ClientID 1 - Base ETH",
+			ticker:         "ETH",
+			clientID:       clientID1,
+			limitCnt:       3,
+			expectedRowCnt: 2,
+		}, {
+			name:           "ClientID 1 - Base USDT",
+			ticker:         "USDT",
+			clientID:       clientID1,
+			limitCnt:       3,
+			expectedRowCnt: 1,
+		}, {
+			name:           "ClientID 1 - Base XRP",
+			ticker:         "XRP",
+			clientID:       clientID1,
+			limitCnt:       3,
+			expectedRowCnt: 0,
+		}, {
+			name:           "Non-existent",
+			ticker:         "NON-EXIST",
+			clientID:       uuid.UUID{},
+			limitCnt:       3,
+			expectedRowCnt: 0,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
+			rows, err := connection.Query.cryptoGetAllAccounts(ctx, &cryptoGetAllAccountsParams{
+				ClientID: testCase.clientID,
+				Ticker:   testCase.ticker,
+				Limit:    testCase.limitCnt,
+			})
+			require.NoError(t, err, "error expectation failed.")
+			require.Equal(t, testCase.expectedRowCnt, len(rows), "expected row count mismatch.")
+		})
+	}
+}

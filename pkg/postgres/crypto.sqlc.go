@@ -57,6 +57,48 @@ func (q *Queries) cryptoGetAccount(ctx context.Context, arg *cryptoGetAccountPar
 	return i, err
 }
 
+const cryptoGetAllAccounts = `-- name: cryptoGetAllAccounts :many
+SELECT ticker, balance, last_tx, last_tx_ts, created_at, client_id
+FROM crypto_accounts
+WHERE client_id=$1 AND ticker >= $2
+ORDER BY ticker
+LIMIT $3
+`
+
+type cryptoGetAllAccountsParams struct {
+	ClientID uuid.UUID `json:"clientID"`
+	Ticker   string    `json:"ticker"`
+	Limit    int32     `json:"limit"`
+}
+
+// cryptoGetAllAccounts will retrieve all accounts associated with a specific user.
+func (q *Queries) cryptoGetAllAccounts(ctx context.Context, arg *cryptoGetAllAccountsParams) ([]CryptoAccount, error) {
+	rows, err := q.db.Query(ctx, cryptoGetAllAccounts, arg.ClientID, arg.Ticker, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CryptoAccount
+	for rows.Next() {
+		var i CryptoAccount
+		if err := rows.Scan(
+			&i.Ticker,
+			&i.Balance,
+			&i.LastTx,
+			&i.LastTxTs,
+			&i.CreatedAt,
+			&i.ClientID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const cryptoGetJournalTransaction = `-- name: cryptoGetJournalTransaction :many
 SELECT ticker, amount, transacted_at, client_id, tx_id
 FROM crypto_journal
