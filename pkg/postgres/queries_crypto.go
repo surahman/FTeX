@@ -164,3 +164,23 @@ func (p *postgresImpl) CryptoSell(
 
 	return &fiatJournal[0], &cryptoJournal[0], nil
 }
+
+// CryptoBalancePaginated is the interface through which external methods can retrieve all Crypto account balances
+// for a specific client.
+func (p *postgresImpl) CryptoBalancePaginated(clientID uuid.UUID, ticker string, limit int32) (
+	[]CryptoAccount, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	balance, err := p.Query.cryptoGetAllAccounts(ctx, &cryptoGetAllAccountsParams{
+		ClientID: clientID,
+		Ticker:   ticker,
+		Limit:    limit,
+	})
+	if err != nil {
+		return []CryptoAccount{}, ErrNotFound
+	}
+
+	return balance, nil
+}

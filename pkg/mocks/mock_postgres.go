@@ -68,6 +68,21 @@ func (mr *MockPostgresMockRecorder) CryptoBalanceCurrency(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoBalanceCurrency", reflect.TypeOf((*MockPostgres)(nil).CryptoBalanceCurrency), arg0, arg1)
 }
 
+// CryptoBalancePaginated mocks base method.
+func (m *MockPostgres) CryptoBalancePaginated(arg0 uuid.UUID, arg1 string, arg2 int32) ([]postgres.CryptoAccount, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CryptoBalancePaginated", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]postgres.CryptoAccount)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoBalancePaginated indicates an expected call of CryptoBalancePaginated.
+func (mr *MockPostgresMockRecorder) CryptoBalancePaginated(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoBalancePaginated", reflect.TypeOf((*MockPostgres)(nil).CryptoBalancePaginated), arg0, arg1, arg2)
+}
+
 // CryptoCreateAccount mocks base method.
 func (m *MockPostgres) CryptoCreateAccount(arg0 uuid.UUID, arg1 string) error {
 	m.ctrl.T.Helper()

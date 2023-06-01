@@ -332,3 +332,87 @@ func TestQueries_CryptoSell(t *testing.T) {
 	// Wait (tie-threads).
 	wg.Wait()
 }
+
+func TestCrypto_CryptoBalancePaginated(t *testing.T) {
+	// Integration test check.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Insert the initial set of test fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Insert initial set of test crypto accounts.
+	resetTestCryptoAccounts(t, clientID1, clientID2)
+
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
+	testCases := []struct {
+		name      string
+		ticker    string
+		limit     int32
+		expectLen int
+	}{
+		{
+			name:      "BTC All",
+			ticker:    "BTC",
+			limit:     3,
+			expectLen: 3,
+		}, {
+			name:      "BTC One",
+			ticker:    "BTC",
+			limit:     1,
+			expectLen: 1,
+		}, {
+			name:      "BTC Two",
+			ticker:    "BTC",
+			limit:     2,
+			expectLen: 2,
+		}, {
+			name:      "ETH All",
+			ticker:    "ETH",
+			limit:     3,
+			expectLen: 2,
+		}, {
+			name:      "ETH One",
+			ticker:    "ETH",
+			limit:     1,
+			expectLen: 1,
+		}, {
+			name:      "USDT All",
+			ticker:    "USDT",
+			limit:     3,
+			expectLen: 1,
+		}, {
+			name:      "USDT One",
+			ticker:    "USDT",
+			limit:     1,
+			expectLen: 1,
+		}, {
+			name:      "LTC invalid but okay",
+			ticker:    "LTC",
+			limit:     3,
+			expectLen: 1,
+		}, {
+			name:      "XRP invalid and not okay",
+			ticker:    "XRP",
+			limit:     3,
+			expectLen: 0,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			balances, err := connection.CryptoBalancePaginated(clientID1, testCase.ticker, testCase.limit)
+			require.NoError(t, err, "failed to retrieve results.")
+			require.Equal(t, testCase.expectLen, len(balances), "incorrect number of records returned.")
+		})
+	}
+}
