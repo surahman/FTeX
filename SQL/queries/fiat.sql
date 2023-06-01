@@ -67,7 +67,7 @@ WITH deposit AS (
     SELECT
         @source_account::uuid,
         @source_currency::currency,
-        round_half_even(@debit_amount::numeric(18, 2), 2),
+        round_half_even(-1 * @debit_amount::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at

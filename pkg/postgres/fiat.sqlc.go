@@ -298,7 +298,7 @@ WITH deposit AS (
     SELECT
         $4::uuid,
         $5::currency,
-        round_half_even($6::numeric(18, 2), 2),
+        round_half_even(-1 * $6::numeric(18, 2), 2),
         now(),
         gen_random_uuid()
     RETURNING tx_id, transacted_at

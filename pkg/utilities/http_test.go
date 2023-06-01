@@ -1141,3 +1141,141 @@ func TestUtilities_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 		})
 	}
 }
+
+func TestUtilities_HTTPTxDetailsCrypto(t *testing.T) {
+	t.Parallel()
+
+	validTxID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate uuid.")
+
+	cryptoJournal := []postgres.CryptoJournal{{}, {}}
+	fiatJournal := []postgres.FiatJournal{{}, {}}
+
+	testCases := []struct {
+		name          string
+		txID          string
+		expectErrMsg  string
+		httpStatus    int
+		cryptoJournal []postgres.CryptoJournal
+		fiatJournal   []postgres.FiatJournal
+		cryptoTxErr   error
+		cryptoTxTimes int
+		fiatTxErr     error
+		fiatTxTimes   int
+		expectErr     require.ErrorAssertionFunc
+	}{
+		{
+			name:          "invalid transaction id",
+			txID:          "invalid-transaction-id",
+			expectErrMsg:  "invalid transaction ID",
+			httpStatus:    http.StatusBadRequest,
+			cryptoJournal: cryptoJournal,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   0,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 0,
+			expectErr:     require.Error,
+		}, {
+			name:          "unknown fiat db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "please retry",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     errors.New("unknown db error"),
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 0,
+			expectErr:     require.Error,
+		}, {
+			name:          "unknown crypto db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "please retry",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   errors.New("unknown db error"),
+			cryptoTxTimes: 1,
+			expectErr:     require.Error,
+		}, {
+			name:          "known fiat db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "could not complete",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     postgres.ErrTransactFiat,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 0,
+			expectErr:     require.Error,
+		}, {
+			name:          "known crypto db error",
+			txID:          validTxID.String(),
+			expectErrMsg:  "could not complete",
+			httpStatus:    http.StatusInternalServerError,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   postgres.ErrTransactCrypto,
+			cryptoTxTimes: 1,
+			expectErr:     require.Error,
+		}, {
+			name:          "empty result set",
+			txID:          validTxID.String(),
+			expectErrMsg:  "id not found",
+			httpStatus:    http.StatusNotFound,
+			fiatJournal:   []postgres.FiatJournal{},
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: []postgres.CryptoJournal{},
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 1,
+			expectErr:     require.Error,
+		}, {
+			name:          "valid",
+			txID:          validTxID.String(),
+			expectErrMsg:  "",
+			httpStatus:    0,
+			fiatJournal:   fiatJournal,
+			fiatTxErr:     nil,
+			fiatTxTimes:   1,
+			cryptoJournal: cryptoJournal,
+			cryptoTxErr:   nil,
+			cryptoTxTimes: 1,
+			expectErr:     require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return(test.fiatJournal, test.fiatTxErr).
+					Times(test.fiatTxTimes),
+
+				mockPostgres.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return(test.cryptoJournal, test.cryptoTxErr).
+					Times(test.cryptoTxTimes),
+			)
+
+			_, status, errMsg, err := HTTPTxDetails(mockPostgres, zapLogger, uuid.UUID{}, test.txID)
+			test.expectErr(t, err, "error expectation failed.")
+
+			require.Equal(t, test.httpStatus, status, "http status code mismatched.")
+			require.Contains(t, errMsg, test.expectErrMsg, "http error message mismatched.")
+		})
+	}
+}

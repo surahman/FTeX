@@ -285,6 +285,8 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 	// Insert internal fiat journal transactions.
 	testCases, txRows := insertTestInternalFiatGeneralLedger(t, clientID1, clientID2)
 
+	negOne := decimal.NewFromFloat(-1)
+
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
 
 	defer cancel()
@@ -313,7 +315,7 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 			require.Equal(t, dstRecord[0].Currency, tx.DestinationCurrency, "destination currency mismatch.")
 			require.Equal(t, srcRecord[0].ClientID, tx.SourceAccount, "source client id mismatch.")
 			require.Equal(t, dstRecord[0].ClientID, tx.DestinationAccount, "destination client id mismatch.")
-			require.Equal(t, srcRecord[0].Amount, tx.DebitAmount, "source amount mismatch.")
+			require.Equal(t, srcRecord[0].Amount, tx.DebitAmount.Mul(negOne), "source amount mismatch.")
 			require.Equal(t, dstRecord[0].Amount, tx.CreditAmount, "destination amount mismatch.")
 		})
 	}

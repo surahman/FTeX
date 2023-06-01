@@ -194,6 +194,88 @@ paths:
         ID.
       tags:
       - crypto fiat currency cryptocurrency exchange convert offer transfer execute
+  /crypto/info/balance/{ticker}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the balance for a specific Cryptocurrency. The currency
+        ticker must be supplied as a query parameter.
+      operationId: balanceCurrencyCrypto
+      parameters:
+      - description: the Cryptocurrency ticker to retrieve the balance for
+        in: path
+        name: ticker
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: the details for a specific currency account
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve balance for a specific Cryptocurrency.
+      tags:
+      - crypto cryptocurrency currency balance
+  /crypto/info/transaction/{transactionID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the transaction details for a specific transactionID.
+        The transaction ID must be supplied as a query parameter.
+      operationId: txDetailsCrypto
+      parameters:
+      - description: the transaction ID to retrieve the details for
+        in: path
+        name: transactionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: the transaction details for a specific transaction ID
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve transaction details for a specific transactionID.
+      tags:
+      - crypto cryptocurrency transactionID transaction details
   /crypto/offer:
     post:
       consumes:
@@ -441,17 +523,17 @@ paths:
       summary: Retrieve all the currency balances for a specific client.
       tags:
       - fiat currency balance
-  /fiat/info/balance/{currencyCode}:
+  /fiat/info/balance/{ticker}:
     get:
       consumes:
       - application/json
-      description: Retrieves the balance for a specific currency. The currency code
-        must be supplied as a query parameter.
+      description: Retrieves the balance for a specific Fiat currency. The currency
+        ticker must be supplied as a query parameter.
       operationId: balanceCurrencyFiat
       parameters:
-      - description: the currency code to retrieve the balance for
+      - description: the currency ticker to retrieve the balance for
         in: path
-        name: currencyCode
+        name: ticker
         required: true
         type: string
       produces:
@@ -479,7 +561,7 @@ paths:
             $ref: '#/definitions/models.HTTPError'
       security:
       - ApiKeyAuth: []
-      summary: Retrieve balance for a specific currency.
+      summary: Retrieve balance for a specific Fiat currency.
       tags:
       - fiat currency balance
   /fiat/info/transaction/{transactionID}:
