@@ -1015,79 +1015,101 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 	txID, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate new UUID.")
 
-	journalEntries := []postgres.FiatJournal{{}}
+	cryptoJournal := []postgres.CryptoJournal{{}}
+	fiatJournal := []postgres.FiatJournal{{}}
 
 	testCases := []struct {
 		name               string
 		transactionID      string
 		expectedMsg        string
 		expectedStatus     int
-		journalEntries     []postgres.FiatJournal
+		fiatJournal        []postgres.FiatJournal
+		cryptoJournal      []postgres.CryptoJournal
 		authValidateJWTErr error
 		authValidateTimes  int
-		fiatTxDetailsErr   error
-		fiatTxDetailsTimes int
+		fiatTxErr          error
+		fiatTxTimes        int
+		cryptoTxErr        error
+		cryptoTxTimes      int
 	}{
 		{
 			name:               "invalid transaction ID",
 			transactionID:      "INVALID",
 			expectedMsg:        "invalid transaction ID",
 			expectedStatus:     http.StatusBadRequest,
-			journalEntries:     journalEntries,
+			fiatJournal:        fiatJournal,
+			cryptoJournal:      cryptoJournal,
 			authValidateJWTErr: nil,
-			authValidateTimes:  0,
-			fiatTxDetailsErr:   nil,
-			fiatTxDetailsTimes: 0,
+			authValidateTimes:  1,
+			fiatTxErr:          nil,
+			fiatTxTimes:        0,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      0,
 		}, {
 			name:               "invalid JWT",
 			transactionID:      txID.String(),
 			expectedMsg:        "invalid JWT",
 			expectedStatus:     http.StatusForbidden,
-			journalEntries:     journalEntries,
+			fiatJournal:        fiatJournal,
+			cryptoJournal:      cryptoJournal,
 			authValidateJWTErr: errors.New("invalid JWT"),
 			authValidateTimes:  1,
-			fiatTxDetailsErr:   nil,
-			fiatTxDetailsTimes: 0,
+			fiatTxErr:          nil,
+			fiatTxTimes:        0,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      0,
 		}, {
 			name:               "unknown db error",
 			transactionID:      txID.String(),
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
-			journalEntries:     journalEntries,
+			fiatJournal:        fiatJournal,
+			cryptoJournal:      cryptoJournal,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
-			fiatTxDetailsErr:   errors.New("unknown error"),
-			fiatTxDetailsTimes: 1,
+			fiatTxErr:          errors.New("unknown error"),
+			fiatTxTimes:        1,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      0,
 		}, {
 			name:               "known db error",
 			transactionID:      txID.String(),
 			expectedMsg:        "records not found",
 			expectedStatus:     http.StatusNotFound,
-			journalEntries:     journalEntries,
+			fiatJournal:        fiatJournal,
+			cryptoJournal:      cryptoJournal,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
-			fiatTxDetailsErr:   postgres.ErrNotFound,
-			fiatTxDetailsTimes: 1,
+			fiatTxErr:          postgres.ErrNotFound,
+			fiatTxTimes:        1,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      0,
 		}, {
 			name:               "transaction id not found",
 			transactionID:      txID.String(),
 			expectedMsg:        "transaction id not found",
-			journalEntries:     nil,
+			fiatJournal:        nil,
+			cryptoJournal:      nil,
 			expectedStatus:     http.StatusNotFound,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
-			fiatTxDetailsErr:   nil,
-			fiatTxDetailsTimes: 1,
+			fiatTxErr:          nil,
+			fiatTxTimes:        1,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      1,
 		}, {
 			name:               "valid",
 			transactionID:      txID.String(),
 			expectedMsg:        "transaction details",
-			journalEntries:     journalEntries,
+			fiatJournal:        fiatJournal,
+			cryptoJournal:      cryptoJournal,
 			expectedStatus:     http.StatusOK,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
-			fiatTxDetailsErr:   nil,
-			fiatTxDetailsTimes: 1,
+			fiatTxErr:          nil,
+			fiatTxTimes:        1,
+			cryptoTxErr:        nil,
+			cryptoTxTimes:      1,
 		},
 	}
 
@@ -1109,13 +1131,17 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 					Times(test.authValidateTimes),
 
 				mockDB.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
-					Return(test.journalEntries, test.fiatTxDetailsErr).
-					Times(test.fiatTxDetailsTimes),
+					Return(test.fiatJournal, test.fiatTxErr).
+					Times(test.fiatTxTimes),
+
+				mockDB.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+					Return(test.cryptoJournal, test.cryptoTxErr).
+					Times(test.cryptoTxTimes),
 			)
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":transactionID", TxDetailsCurrencyFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":transactionID", TxDetailsFiat(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.transactionID, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

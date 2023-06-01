@@ -116,7 +116,7 @@ func (s *Server) initialize() {
 	fiatGroup.GET("/info/balance/",
 		restHandlers.BalanceCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/:transactionID",
-		restHandlers.TxDetailsCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.TxDetailsFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/all/:currencyCode",
 		restHandlers.TxDetailsCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
