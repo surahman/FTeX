@@ -409,7 +409,7 @@ liquibase update
 
 ```bash
 # Main database rollback. Specify number of steps.
-liquibase rollback-count 9
+liquibase rollback-count 11
 ```
 
 
@@ -420,5 +420,5 @@ liquibase update --defaultsFile liquibase_testsuite.properties
 
 ```bash
 # Test suite setup
-liquibase rollback-count 9 --defaultsFile liquibase_testsuite.properties
+liquibase rollback-count 11 --defaultsFile liquibase_testsuite.properties
 ```
