@@ -557,3 +557,52 @@ func HTTPCryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr strin
 
 	return ticker, int32(limit), nil
 }
+
+// HTTPCryptoTxPaginated retrieves a page of data from the Cryptocurrency account balances and prepares a link to the
+// next page of data.
+func HTTPCryptoTxPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+	clientID uuid.UUID, pageCursor, pageSizeStr string) (models.HTTPCryptoDetailsPaginated, int, string, error) {
+	var (
+		ticker        string
+		err           error
+		pageSize      int32
+		cryptoDetails models.HTTPCryptoDetailsPaginated
+	)
+
+	// Extract and assemble the page cursor and page size.
+	if ticker, pageSize, err = HTTPCryptoBalancePaginatedRequest(auth, pageCursor, pageSizeStr); err != nil {
+		return cryptoDetails, http.StatusBadRequest, "invalid page cursor or page size", fmt.Errorf("%w", err)
+	}
+
+	if cryptoDetails.AccountBalances, err = db.CryptoBalancePaginated(clientID, ticker, pageSize+1); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+
+			return cryptoDetails, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return cryptoDetails, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
+	}
+
+	// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
+	lastRecordIdx := int(pageSize)
+	if len(cryptoDetails.AccountBalances) == lastRecordIdx+1 {
+		// Generate next page link.
+		if cryptoDetails.Links.NextPage, err =
+			auth.EncryptToString([]byte(cryptoDetails.AccountBalances[pageSize].Ticker)); err != nil {
+			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
+
+			return cryptoDetails, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		// Remove last element.
+		cryptoDetails.AccountBalances = cryptoDetails.AccountBalances[:pageSize]
+
+		// Generate naked next page link.
+		cryptoDetails.Links.NextPage =
+			fmt.Sprintf(constants.GetNextPageRESTFormatString(), cryptoDetails.Links.NextPage, pageSize)
+	}
+
+	return cryptoDetails, 0, "", nil
+}
