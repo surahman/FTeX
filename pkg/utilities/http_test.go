@@ -486,7 +486,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			code, err := HTTPFiatTxParseQueryParams(testAuth, zapLogger, test.params)
+			code, err := HTTPTxParseQueryParams(testAuth, zapLogger, test.params)
 			test.expectErr(t, err, "error expectation failed.")
 			require.Equal(t, test.expectErrCode, code, "error codes mismatched.")
 

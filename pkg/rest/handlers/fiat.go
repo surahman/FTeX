@@ -671,7 +671,7 @@ func TxDetailsCurrencyFiatPaginated(
 		}
 
 		// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
-		httpCode, err := utilities.HTTPFiatTxParseQueryParams(auth, logger, &params)
+		httpCode, err := utilities.HTTPTxParseQueryParams(auth, logger, &params)
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(httpCode, models.HTTPError{Message: err.Error()})
 

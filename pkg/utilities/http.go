@@ -240,9 +240,9 @@ type HTTPFiatPaginatedTxParams struct {
 	PeriodEnd   pgtype.Timestamptz
 }
 
-// HTTPFiatTxParseQueryParams will parse the HTTP request input parameters in database query parameters for the
+// HTTPTxParseQueryParams will parse the HTTP request input parameters in database query parameters for the
 // paginated Fiat transactions requests.
-func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPFiatPaginatedTxParams) (int, error) {
+func HTTPTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPFiatPaginatedTxParams) (int, error) {
 	var (
 		err            error
 		periodStartStr string
