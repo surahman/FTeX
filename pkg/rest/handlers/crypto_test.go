@@ -906,3 +906,214 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 		})
 	}
 }
+
+func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
+	t.Parallel()
+
+	const basePath = "/crypto/balance/details/paginated"
+
+	accDetails := []postgres.CryptoAccount{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                string
+		path                string
+		querySegment        string
+		expectedMsg         string
+		expectedStatus      int
+		accBalances         []postgres.CryptoAccount
+		authValidateJWTErr  error
+		authValidateTimes   int
+		authDecryptStrErr   error
+		authDecryptStrTimes int
+		cryptoBalanceErr    error
+		cryptoBalanceTimes  int
+		authEncryptStrErr   error
+		authEncryptStrTimes int
+	}{
+		{
+			name:                "invalid JWT",
+			path:                "invalid-jwt",
+			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
+			expectedMsg:         "invalid JWT",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusForbidden,
+			authValidateJWTErr:  errors.New("invalid JWT"),
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 0,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  0,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 0,
+		}, {
+			name:                "decrypt cursor failure",
+			path:                "decrypt-cursor-failure",
+			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
+			expectedMsg:         "invalid page cursor or page size",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusBadRequest,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   errors.New("decrypt failure"),
+			authDecryptStrTimes: 1,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  0,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 0,
+		}, {
+			name:                "known db error",
+			path:                "known-db-error",
+			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
+			expectedMsg:         "not found",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusNotFound,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 1,
+			cryptoBalanceErr:    postgres.ErrNotFound,
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 0,
+		}, {
+			name:                "unknown db error",
+			path:                "unknown-db-error",
+			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
+			expectedMsg:         "retry",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusInternalServerError,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 1,
+			cryptoBalanceErr:    errors.New("unknown db error"),
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 0,
+		}, {
+			name:                "encrypt cursor failure",
+			path:                "encrypt-cursor-failure",
+			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
+			expectedMsg:         "retry",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusInternalServerError,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 1,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   errors.New("encrypt string error"),
+			authEncryptStrTimes: 1,
+		}, {
+			name:                "valid without query and 10 records",
+			path:                "valid-no-query-10-records",
+			querySegment:        "",
+			expectedMsg:         "account balances",
+			accBalances:         []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			expectedStatus:      http.StatusOK,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 0,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 0,
+		}, {
+			name:                "valid without query and 11 records",
+			path:                "valid-no-query-11-records",
+			querySegment:        "",
+			expectedMsg:         "account balances",
+			accBalances:         []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			expectedStatus:      http.StatusOK,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 0,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 1,
+		}, {
+			name:                "valid without query",
+			path:                "valid-no-query",
+			querySegment:        "",
+			expectedMsg:         "account balances",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusOK,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 0,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 0,
+		}, {
+			name:                "valid with query",
+			path:                "valid-with-query",
+			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
+			expectedMsg:         "account balances",
+			accBalances:         accDetails,
+			expectedStatus:      http.StatusOK,
+			authValidateJWTErr:  nil,
+			authValidateTimes:   1,
+			authDecryptStrErr:   nil,
+			authDecryptStrTimes: 1,
+			cryptoBalanceErr:    nil,
+			cryptoBalanceTimes:  1,
+			authEncryptStrErr:   nil,
+			authEncryptStrTimes: 1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte{}, test.authDecryptStrErr).
+					Times(test.authDecryptStrTimes),
+
+				mockDB.EXPECT().CryptoBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.accBalances, test.cryptoBalanceErr).
+					Times(test.cryptoBalanceTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-page-cursor", test.authEncryptStrErr).
+					Times(test.authEncryptStrTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.GET(basePath+test.path, BalanceCurrencyCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			actualMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, actualMessage, test.expectedMsg, "response message mismatch.")
+		})
+	}
+}

@@ -1159,10 +1159,10 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) {
+func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
-	const basePath = "/fiat/transaction/details/paginated/"
+	const basePath = "/fiat/balances/details/paginated/"
 
 	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
 

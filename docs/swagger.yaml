@@ -194,6 +194,54 @@ paths:
         ID.
       tags:
       - crypto fiat currency cryptocurrency exchange convert offer transfer execute
+  /crypto/info/balance:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all the Cryptocurrency balances for a specific client.
+        The initial request will only contain (optionally) the page size. Subsequent
+        requests will require a cursors to the next page that will be returned in
+        a previous call to the endpoint. The user may choose to change the page size
+        in any sequence of calls.
+      operationId: balanceCurrencyCryptoPaginated
+      parameters:
+      - description: The page cursor into the query results records.
+        in: query
+        name: pageCursor
+        type: string
+      - description: The number of records to retrieve on this page.
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: a message to with a page of account balances for the client's
+            accounts
+          schema:
+            $ref: '#/definitions/models.HTTPSuccess'
+        "400":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "403":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: error message with any available details in payload
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve all the Cryptocurrency balances for a specific client.
+      tags:
+      - crypto cryptocurrency currency balance
   /crypto/info/balance/{ticker}:
     get:
       consumes:

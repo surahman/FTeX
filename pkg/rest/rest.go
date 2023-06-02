@@ -130,6 +130,8 @@ func (s *Server) initialize() {
 		restHandlers.BalanceCurrencyCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/transaction/:transactionID",
 		restHandlers.TxDetailsCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	cryptoGroup.GET("/info/balance/",
+		restHandlers.BalanceCurrencyCryptoPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }
 
 // Run brings the HTTP service up.

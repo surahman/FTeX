@@ -23,7 +23,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Convert `/convert`](#convert-convert)
   - [Info `/info`](#info-info)
     - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balanceticker)
-    - [Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
+    - [Balance for all Currencies for a Client `/fiat/info/balance?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-fiatinfobalancepagecursorpagecurs0rpagesize3)
     - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
       - [External Transaction (deposit)](#external-transaction-deposit)
       - [Internal Transfer (currency conversion/exchange)](#internal-transfer-currency-conversionexchange)
@@ -40,6 +40,7 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Sell](#sell)
   - [Info `/info`](#info-info)
     - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balanceticker)
+    - [Balance for all Currencies for a Client `/crypto/info/balance?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-cryptoinfobalancepagecursorpagecurs0rpagesize3)
     - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
       - [Purchase](#purchase)
       - [Sale](#sale)
@@ -324,12 +325,12 @@ _Response:_ Account balance related details associated with the currency.
 }
 ```
 
-##### Balance for all Currencies for a Client `/fiat/info/balance/?pageCursor=PaGeCuRs0R==&pageSize=3`
+##### Balance for all Currencies for a Client `/fiat/info/balance?pageCursor=PaGeCuRs0R==&pageSize=3`
 
 _Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
 subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
 
-> fiat/info/balance/?pageCursor=QW9bg6pXqXdwegEf7PVEuqoPzAJ28tO0r4TSh-t8qQ==&pageSize=3
+> fiat/info/balance?pageCursor=QW9bg6pXqXdwegEf7PVEuqoPzAJ28tO0r4TSh-t8qQ==&pageSize=3
 
 
 _Response:_ Account balances for the Client will be limited to the `Page Size` specified and is `10` by default. A
@@ -717,6 +718,73 @@ _Response:_ Account balance related details associated with the currency.
     "lastTxTs": "2023-05-29T18:04:11.920849-04:00",
     "createdAt": "2023-05-26T16:55:03.610748-04:00",
     "clientID": "ab01f4fa-6224-47af-bae3-dccbc116cbc8"
+  }
+}
+```
+
+##### Balance for all Currencies for a Client `/crypto/info/balance?pageCursor=PaGeCuRs0R==&pageSize=3`
+
+_Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
+subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
+
+> crypto/info/balance?pageCursor=BS8bOzgKH4mjAsjs2icIsUtZ-kQMFJrsQ08f7p1a4iY=&pageSize=3
+
+
+_Response:_ Account balances for the Client will be limited to the `Page Size` specified and is `10` by default. A
+`Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the `links.nextPage` JSON
+field.
+
+```json
+{
+  "message": "account balances",
+  "payload": {
+    "accountBalances": [
+      {
+        "ticker": "BTC",
+        "balance": "372.38089712",
+        "lastTx": "372.37720953",
+        "lastTxTs": "2023-06-01T22:14:07.799366-04:00",
+        "createdAt": "2023-06-01T22:11:20.995352-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518"
+      },
+      {
+        "ticker": "ETH",
+        "balance": "422.08834918",
+        "lastTx": "422.08834918",
+        "lastTxTs": "2023-06-01T22:14:38.64713-04:00",
+        "createdAt": "2023-06-01T22:11:29.307956-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518"
+      },
+      {
+        "ticker": "USDC",
+        "balance": "45704.51327281",
+        "lastTx": "45704.51327281",
+        "lastTxTs": "2023-06-01T22:15:26.944568-04:00",
+        "createdAt": "2023-06-01T22:11:38.774851-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518"
+      }
+    ],
+    "links": {
+      "nextPage": "?pageCursor=BS8bOzgKH4mjAsjs2icIsUtZ-kQMFJrsQ08f7p1a4iY=&pageSize=3"
+    }
+  }
+}
+```
+```json
+{
+  "message": "account balances",
+  "payload": {
+    "accountBalances": [
+      {
+        "ticker": "USDT",
+        "balance": "178977.37910991",
+        "lastTx": "178977.37910991",
+        "lastTxTs": "2023-06-01T22:16:23.794356-04:00",
+        "createdAt": "2023-06-01T22:11:33.883411-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518"
+      }
+    ],
+    "links": {}
   }
 }
 ```
