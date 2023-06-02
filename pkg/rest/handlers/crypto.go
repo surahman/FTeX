@@ -355,7 +355,7 @@ func BalanceCurrencyCryptoPaginated(
 			return
 		}
 
-		accDetails, httpStatus, httpMessage, err = utilities.HTTPCryptoTxPaginated(auth, db, logger,
+		accDetails, httpStatus, httpMessage, err = utilities.HTTPCryptoBalancePaginated(auth, db, logger,
 			clientID, ginCtx.Query("pageCursor"), ginCtx.Query("pageSize"))
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})

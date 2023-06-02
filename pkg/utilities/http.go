@@ -558,9 +558,9 @@ func HTTPCryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr strin
 	return ticker, int32(limit), nil
 }
 
-// HTTPCryptoTxPaginated retrieves a page of data from the Cryptocurrency account balances and prepares a link to the
-// next page of data.
-func HTTPCryptoTxPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+// HTTPCryptoBalancePaginated retrieves a page of data from the Cryptocurrency account balances and prepares a link to
+// the next page of data.
+func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
 	clientID uuid.UUID, pageCursor, pageSizeStr string) (models.HTTPCryptoDetailsPaginated, int, string, error) {
 	var (
 		ticker        string

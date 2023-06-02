@@ -1536,7 +1536,7 @@ func TestUtilities_HTTPCryptoTxPaginated(t *testing.T) {
 					Times(test.encryptStingTimes),
 			)
 
-			actualDetails, status, errMsg, err := HTTPCryptoTxPaginated(mockAuth, mockPostgres, zapLogger,
+			actualDetails, status, errMsg, err := HTTPCryptoBalancePaginated(mockAuth, mockPostgres, zapLogger,
 				uuid.UUID{}, pageCursor, test.pageSize)
 			test.expectErr(t, err, "error expectation failed.")
 
