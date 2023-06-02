@@ -640,7 +640,7 @@ func TxDetailsCurrencyFiatPaginated(
 			currency       postgres.Currency
 			err            error
 
-			params = utilities.HTTPFiatPaginatedTxParams{
+			params = utilities.HTTPPaginatedTxParams{
 				PageSizeStr:   ginCtx.Query("pageSize"),
 				PageCursorStr: ginCtx.Query("pageCursor"),
 				TimezoneStr:   ginCtx.Query("timezone"),

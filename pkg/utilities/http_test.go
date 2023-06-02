@@ -413,7 +413,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 	require.NoError(t, err, "failed to create page cursor with offset 33.")
 
 	testCases := []struct {
-		params         *HTTPFiatPaginatedTxParams
+		params         *HTTPPaginatedTxParams
 		name           string
 		expectOffset   int32
 		expectPageSize int32
@@ -423,7 +423,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 	}{
 		{
 			name: "invalid page size",
-			params: &HTTPFiatPaginatedTxParams{
+			params: &HTTPPaginatedTxParams{
 				PageSizeStr:   "bad-input",
 				PageCursorStr: cursorOffset33,
 			},
@@ -434,7 +434,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 			expectErr:      require.Error,
 		}, {
 			name: "valid - page size na, offset 33 request",
-			params: &HTTPFiatPaginatedTxParams{
+			params: &HTTPPaginatedTxParams{
 				PageCursorStr: cursorOffset33,
 			},
 			expectOffset:   33,
@@ -444,7 +444,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 			expectErr:      require.NoError,
 		}, {
 			name: "valid - page size 7, offset 33 request",
-			params: &HTTPFiatPaginatedTxParams{
+			params: &HTTPPaginatedTxParams{
 				PageSizeStr:   "7",
 				PageCursorStr: cursorOffset33,
 			},
@@ -455,7 +455,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 			expectErr:      require.NoError,
 		}, {
 			name: "valid - page size 3, offset 10 request",
-			params: &HTTPFiatPaginatedTxParams{
+			params: &HTTPPaginatedTxParams{
 				PageSizeStr:   "3",
 				PageCursorStr: cursorOffset10,
 			},
@@ -466,7 +466,7 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 			expectErr:      require.NoError,
 		}, {
 			name: "valid - initial request",
-			params: &HTTPFiatPaginatedTxParams{
+			params: &HTTPPaginatedTxParams{
 				PageSizeStr:   "3",
 				PageCursorStr: "",
 				TimezoneStr:   "-04:00",

@@ -453,7 +453,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 		clientID       uuid.UUID
 		currency       postgres.Currency
 		err            error
-		params         utilities.HTTPFiatPaginatedTxParams
+		params         utilities.HTTPPaginatedTxParams
 	)
 
 	if input.PageSize == nil {

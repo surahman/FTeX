@@ -223,8 +223,8 @@ func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	return startPGTS, components[0], endPGTS, components[1], int32(offset), nil
 }
 
-// HTTPFiatPaginatedTxParams contains the HTTP request as well as the database query parameters.
-type HTTPFiatPaginatedTxParams struct {
+// HTTPPaginatedTxParams contains the HTTP request as well as the database query parameters.
+type HTTPPaginatedTxParams struct {
 	// HTTP request input parameters.
 	PageSizeStr   string
 	PageCursorStr string
@@ -242,7 +242,7 @@ type HTTPFiatPaginatedTxParams struct {
 
 // HTTPTxParseQueryParams will parse the HTTP request input parameters in database query parameters for the
 // paginated Fiat transactions requests.
-func HTTPTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPFiatPaginatedTxParams) (int, error) {
+func HTTPTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPPaginatedTxParams) (int, error) {
 	var (
 		err            error
 		periodStartStr string
