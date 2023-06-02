@@ -241,12 +241,12 @@ func TestUtilities_EncryptDecryptTransactionPageCursor(t *testing.T) {
 
 	t.Run("successful encryption-decryption", func(t *testing.T) {
 		t.Parallel()
-		encrypted, err := HTTPFiatTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
+		encrypted, err := HTTPTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
 		require.NoError(t, err, "failed to encrypt cursor.")
 		require.True(t, len(encrypted) > 0, "empty encrypted cursor returned.")
 
 		actualStart, actualStartStr, actualEnd, actualEndStr, actualOffset, err :=
-			HTTPFiatTransactionUnpackPageCursor(testAuth, encrypted)
+			HTTPTransactionUnpackPageCursor(testAuth, encrypted)
 		require.NoError(t, err, "failed to decrypt page cursor.")
 		require.Equal(t, pgStart, actualStart, "start period mismatch.")
 		require.Equal(t, startStr, actualStartStr, "start period string mismatch.")
@@ -259,7 +259,7 @@ func TestUtilities_EncryptDecryptTransactionPageCursor(t *testing.T) {
 		t.Parallel()
 		input, err := testAuth.EncryptToString([]byte("start,end"))
 		require.NoError(t, err, "failed to encrypt missing offset.")
-		_, _, _, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
+		_, _, _, _, _, err = HTTPTransactionUnpackPageCursor(testAuth, input)
 		require.Error(t, err, "decrypted invalid page cursor.")
 	})
 
@@ -267,7 +267,7 @@ func TestUtilities_EncryptDecryptTransactionPageCursor(t *testing.T) {
 		t.Parallel()
 		input, err := testAuth.EncryptToString([]byte("start,end,invalid-offset"))
 		require.NoError(t, err, "failed to encrypt invalid offset.")
-		_, _, _, _, _, err = HTTPFiatTransactionUnpackPageCursor(testAuth, input)
+		_, _, _, _, _, err = HTTPTransactionUnpackPageCursor(testAuth, input)
 		require.Error(t, err, "decrypted invalid page cursor.")
 	})
 }
@@ -406,10 +406,10 @@ func TestUtilities_HTTPFiatPaginatedTxParams(t *testing.T) {
 	require.NoError(t, pgEnd.Scan(endTS), "failed to scan start timestamp to pg.")
 
 	// Encrypted page cursors.
-	cursorOffset10, err := HTTPFiatTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
+	cursorOffset10, err := HTTPTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
 	require.NoError(t, err, "failed to create page cursor with offset 10.")
 
-	cursorOffset33, err := HTTPFiatTransactionGeneratePageCursor(testAuth, startStr, endStr, 33)
+	cursorOffset33, err := HTTPTransactionGeneratePageCursor(testAuth, startStr, endStr, 33)
 	require.NoError(t, err, "failed to create page cursor with offset 33.")
 
 	testCases := []struct {

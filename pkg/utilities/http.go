@@ -162,23 +162,23 @@ func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, 
 	}
 
 	// Prepare page cursor.
-	if pageCursor, err = HTTPFiatTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, pageSize); err != nil {
+	if pageCursor, err = HTTPTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, pageSize); err != nil {
 		return periodStart, periodEnd, pageCursor, fmt.Errorf("failed to encrypt page cursor %w", err)
 	}
 
 	return periodStart, periodEnd, pageCursor, nil
 }
 
-// HTTPFiatTransactionGeneratePageCursor will generate the encrypted page cursor.
+// HTTPTransactionGeneratePageCursor will generate the encrypted page cursor.
 //
 //nolint:wrapcheck
-func HTTPFiatTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int32) (
+func HTTPTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int32) (
 	string, error) {
 	return auth.EncryptToString([]byte(fmt.Sprintf("%s,%s,%d", periodStartStr, periodEndStr, offset)))
 }
 
-// HTTPFiatTransactionUnpackPageCursor will unpack an encrypted page cursor to its component parts.
-func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
+// HTTPTransactionUnpackPageCursor will unpack an encrypted page cursor to its component parts.
+func HTTPTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	pgtype.Timestamptz, string, pgtype.Timestamptz, string, int32, error) {
 	var (
 		startPGTS pgtype.Timestamptz
@@ -267,12 +267,12 @@ func HTTPTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPP
 	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
 	if len(params.PageCursorStr) > 0 {
 		if params.PeriodStart, periodStartStr, params.PeriodEnd, periodEndStr, params.Offset, err =
-			HTTPFiatTransactionUnpackPageCursor(auth, params.PageCursorStr); err != nil {
+			HTTPTransactionUnpackPageCursor(auth, params.PageCursorStr); err != nil {
 			return http.StatusBadRequest, fmt.Errorf("invalid next page")
 		}
 
 		// Prepare next page cursor. Adjust offset to move along to next record set.
-		if params.NextPage, err = HTTPFiatTransactionGeneratePageCursor(
+		if params.NextPage, err = HTTPTransactionGeneratePageCursor(
 			auth, periodStartStr, periodEndStr, params.Offset+params.PageSize); err != nil {
 			logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
 
