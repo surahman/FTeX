@@ -523,9 +523,9 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 	return journalEntries, 0, "", nil
 }
 
-// HTTPCryptoBalancePaginatedRequest will convert the encrypted URL query parameter for the ticker and the record
+// cryptoBalancePaginatedRequest will convert the encrypted URL query parameter for the ticker and the record
 // limit and covert them to a string and integer record limit. The tickerStr is the encrypted pageCursor passed in.
-func HTTPCryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr string) (string, int32, error) {
+func cryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr string) (string, int32, error) {
 	var (
 		ticker    string
 		decrypted []byte
@@ -570,7 +570,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 	)
 
 	// Extract and assemble the page cursor and page size.
-	if ticker, pageSize, err = HTTPCryptoBalancePaginatedRequest(auth, pageCursor, pageSizeStr); err != nil {
+	if ticker, pageSize, err = cryptoBalancePaginatedRequest(auth, pageCursor, pageSizeStr); err != nil {
 		return cryptoDetails, http.StatusBadRequest, "invalid page cursor or page size", fmt.Errorf("%w", err)
 	}
 

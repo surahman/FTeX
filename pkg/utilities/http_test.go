@@ -1355,7 +1355,7 @@ func TestUtilities_HTTPCryptoBalancePaginatedRequest(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			actualTicker, actualLimit, err := HTTPCryptoBalancePaginatedRequest(testAuth, test.encryptedTicker, test.limitStr)
+			actualTicker, actualLimit, err := cryptoBalancePaginatedRequest(testAuth, test.encryptedTicker, test.limitStr)
 			require.NoError(t, err, "error returned from query unpacking")
 			require.Equal(t, test.expectTicker, actualTicker, "tickers mismatched.")
 			require.Equal(t, test.expectLimit, actualLimit, "request limit size mismatched.")
