@@ -411,7 +411,7 @@ func TestCrypto_CryptoBalancePaginated(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			balances, err := connection.CryptoBalancePaginated(clientID1, testCase.ticker, testCase.limit)
+			balances, err := connection.CryptoBalancesPaginated(clientID1, testCase.ticker, testCase.limit)
 			require.NoError(t, err, "failed to retrieve results.")
 			require.Equal(t, testCase.expectLen, len(balances), "incorrect number of records returned.")
 		})

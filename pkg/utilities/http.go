@@ -575,7 +575,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 		return cryptoDetails, http.StatusBadRequest, "invalid page cursor or page size", fmt.Errorf("%w", err)
 	}
 
-	if cryptoDetails.AccountBalances, err = db.CryptoBalancePaginated(clientID, ticker, pageSize+1); err != nil {
+	if cryptoDetails.AccountBalances, err = db.CryptoBalancesPaginated(clientID, ticker, pageSize+1); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))

@@ -98,7 +98,7 @@ type Postgres interface {
 
 	// CryptoBalancePaginated is the interface through which external methods can retrieve all Crypto account balances
 	// for a specific client.
-	CryptoBalancePaginated(uuid.UUID, string, int32) ([]CryptoAccount, error)
+	CryptoBalancesPaginated(uuid.UUID, string, int32) ([]CryptoAccount, error)
 
 	// CryptoTransactionsPaginated is the interface through which external methods can retrieve transactions on a Crypto
 	// account for a specific client during a specific month.
