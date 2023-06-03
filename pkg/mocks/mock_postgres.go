@@ -129,6 +129,21 @@ func (mr *MockPostgresMockRecorder) CryptoSell(arg0, arg1, arg2, arg3, arg4 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoSell", reflect.TypeOf((*MockPostgres)(nil).CryptoSell), arg0, arg1, arg2, arg3, arg4)
 }
 
+// CryptoTransactionsPaginated mocks base method.
+func (m *MockPostgres) CryptoTransactionsPaginated(arg0 uuid.UUID, arg1 string, arg2, arg3 int32, arg4, arg5 pgtype.Timestamptz) ([]postgres.CryptoJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CryptoTransactionsPaginated", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].([]postgres.CryptoJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CryptoTransactionsPaginated indicates an expected call of CryptoTransactionsPaginated.
+func (mr *MockPostgresMockRecorder) CryptoTransactionsPaginated(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoTransactionsPaginated", reflect.TypeOf((*MockPostgres)(nil).CryptoTransactionsPaginated), arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
 // CryptoTxDetailsCurrency mocks base method.
 func (m *MockPostgres) CryptoTxDetailsCurrency(arg0, arg1 uuid.UUID) ([]postgres.CryptoJournal, error) {
 	m.ctrl.T.Helper()

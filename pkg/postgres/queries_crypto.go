@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 )
@@ -180,6 +181,34 @@ func (p *postgresImpl) CryptoBalancePaginated(clientID uuid.UUID, ticker string,
 	})
 	if err != nil {
 		return []CryptoAccount{}, ErrNotFound
+	}
+
+	return balance, nil
+}
+
+// CryptoTransactionsPaginated is the interface through which external methods can retrieve transactions on a Crypto
+// account for a specific client during a specific month.
+func (p *postgresImpl) CryptoTransactionsPaginated(
+	clientID uuid.UUID,
+	ticker string,
+	limit,
+	offset int32,
+	startTime,
+	endTime pgtype.Timestamptz) ([]CryptoJournal, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+
+	defer cancel()
+
+	balance, err := p.Query.cryptoGetAllJournalTransactionPaginated(ctx, &cryptoGetAllJournalTransactionPaginatedParams{
+		ClientID:  clientID,
+		Ticker:    ticker,
+		Offset:    offset,
+		Limit:     limit,
+		StartTime: startTime,
+		EndTime:   endTime,
+	})
+	if err != nil {
+		return []CryptoJournal{}, ErrNotFound
 	}
 
 	return balance, nil

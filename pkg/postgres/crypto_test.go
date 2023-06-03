@@ -608,3 +608,180 @@ func TestCrypto_CryptoGetAllAccounts(t *testing.T) {
 		})
 	}
 }
+
+func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Insert the initial set of test fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Insert initial set of test crypto accounts.
+	resetTestCryptoAccounts(t, clientID1, clientID2)
+
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
+	// Context setup for no hold-and-wait.
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	// Prepare the journals.
+	{
+		_, err := connection.FiatExternalTransfer(ctx, &FiatTransactionDetails{
+			ClientID: clientID1,
+			Currency: CurrencyUSD,
+			Amount:   decimal.NewFromFloat(10203040.56),
+		})
+		require.NoError(t, err, "failed to deposit Fiat money for client 1.")
+
+		_, err = connection.FiatExternalTransfer(ctx, &FiatTransactionDetails{
+			ClientID: clientID2,
+			Currency: CurrencyUSD,
+			Amount:   decimal.NewFromFloat(10304055.78),
+		})
+		require.NoError(t, err, "failed to deposit Fiat money for client 2.")
+
+		parameters := getTestCryptoPurchaseParams(clientID1, clientID2)
+		for runs := 0; runs < 4; runs++ {
+			for _, item := range parameters {
+				parameter := item
+				for idx := 0; idx < 3; idx++ {
+					parameter[idx].TransactionID, err = uuid.NewV4()
+					require.NoError(t, err, "failed to generate tx id.")
+
+					err := connection.Query.cryptoPurchase(ctx, &parameter[idx])
+					require.NoError(t, err, "error expectation failed.")
+				}
+			}
+		}
+	}
+
+	// Setup time intervals.
+	var (
+		timePoint    = time.Now().UTC()
+		minuteAhead  = pgtype.Timestamptz{}
+		minuteBehind = pgtype.Timestamptz{}
+		hourAhead    = pgtype.Timestamptz{}
+		hourBehind   = pgtype.Timestamptz{}
+	)
+
+	require.NoError(t, minuteAhead.Scan(timePoint.Add(time.Minute)))
+	require.NoError(t, minuteBehind.Scan(timePoint.Add(-time.Minute)))
+	require.NoError(t, hourAhead.Scan(timePoint.Add(time.Hour)))
+	require.NoError(t, hourBehind.Scan(timePoint.Add(-time.Hour)))
+
+	// Test grid.
+	testCases := []struct { //nolint:dupl
+		name         string
+		expectedCont int
+		parameters   cryptoGetAllJournalTransactionPaginatedParams
+	}{
+		{
+			name:         "ClientID1 BTC: Before-After",
+			expectedCont: 4,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Ticker:    "BTC",
+				Offset:    0,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 BTC: Before-After, 2 items page 1",
+			expectedCont: 2,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Ticker:    "BTC",
+				Offset:    0,
+				Limit:     2,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 BTC: Before-After, 2 items page 2",
+			expectedCont: 2,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Ticker:    "BTC",
+				Offset:    2,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 BTC: Before-After, 3 items page 2",
+			expectedCont: 3,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Ticker:    "BTC",
+				Offset:    1,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID1 BTC: Before",
+			expectedCont: 0,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Ticker:    "BTC",
+				Offset:    0,
+				Limit:     4,
+				StartTime: hourBehind,
+				EndTime:   minuteBehind,
+			},
+		}, {
+			name:         "ClientID1 BTC: After",
+			expectedCont: 0,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID1,
+				Ticker:    "BTC",
+				Offset:    0,
+				Limit:     4,
+				StartTime: minuteAhead,
+				EndTime:   hourAhead,
+			},
+		}, {
+			name:         "ClientID2 - ETH: Before-After",
+			expectedCont: 4,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID2,
+				Ticker:    "ETH",
+				Offset:    0,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		}, {
+			name:         "ClientID2 - XFR: Before-After",
+			expectedCont: 0,
+			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+				ClientID:  clientID2,
+				Ticker:    "XFR",
+				Offset:    0,
+				Limit:     4,
+				StartTime: minuteBehind,
+				EndTime:   minuteAhead,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
+			rows, err := connection.Query.cryptoGetAllJournalTransactionPaginated(ctx, &testCase.parameters)
+			require.NoError(t, err, "error expectation failed.")
+			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
+		})
+	}
+}

@@ -276,3 +276,63 @@ func getTestCryptoAccounts(clientID1, clientID2 uuid.UUID) map[string][]cryptoCr
 		},
 	}
 }
+
+// getTestCryptoPurchaseParams generates a number of test crypto purchase requests.
+func getTestCryptoPurchaseParams(clientID1, clientID2 uuid.UUID) map[string][]cryptoPurchaseParams {
+	var (
+		amount1 = decimal.NewFromFloat(1024.55)
+		amount2 = decimal.NewFromFloat(4096.89)
+		amount3 = decimal.NewFromFloat(256.44)
+	)
+
+	return map[string][]cryptoPurchaseParams{
+		"clientID1": {
+			{
+				TransactionID:      uuid.UUID{},
+				ClientID:           clientID1,
+				FiatCurrency:       CurrencyUSD,
+				CryptoTicker:       "BTC",
+				FiatDebitAmount:    amount1,
+				CryptoCreditAmount: amount3,
+			}, {
+				TransactionID:      uuid.UUID{},
+				ClientID:           clientID1,
+				FiatCurrency:       CurrencyUSD,
+				CryptoTicker:       "ETH",
+				FiatDebitAmount:    amount3,
+				CryptoCreditAmount: amount2,
+			}, {
+				TransactionID:      uuid.UUID{},
+				ClientID:           clientID1,
+				FiatCurrency:       CurrencyUSD,
+				CryptoTicker:       "USDT",
+				FiatDebitAmount:    amount2,
+				CryptoCreditAmount: amount1,
+			},
+		},
+		"clientID2": {
+			{
+				TransactionID:      uuid.UUID{},
+				ClientID:           clientID2,
+				FiatCurrency:       CurrencyUSD,
+				CryptoTicker:       "BTC",
+				FiatDebitAmount:    amount1,
+				CryptoCreditAmount: amount2,
+			}, {
+				TransactionID:      uuid.UUID{},
+				ClientID:           clientID2,
+				FiatCurrency:       CurrencyUSD,
+				CryptoTicker:       "ETH",
+				FiatDebitAmount:    amount2,
+				CryptoCreditAmount: amount3,
+			}, {
+				TransactionID:      uuid.UUID{},
+				ClientID:           clientID2,
+				FiatCurrency:       CurrencyUSD,
+				CryptoTicker:       "USDT",
+				FiatDebitAmount:    amount3,
+				CryptoCreditAmount: amount1,
+			},
+		},
+	}
+}

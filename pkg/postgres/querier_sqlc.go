@@ -18,6 +18,9 @@ type Querier interface {
 	cryptoGetAccount(ctx context.Context, arg *cryptoGetAccountParams) (CryptoAccount, error)
 	// cryptoGetAllAccounts will retrieve all accounts associated with a specific user.
 	cryptoGetAllAccounts(ctx context.Context, arg *cryptoGetAllAccountsParams) ([]CryptoAccount, error)
+	// cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+	// in a date range.
+	cryptoGetAllJournalTransactionPaginated(ctx context.Context, arg *cryptoGetAllJournalTransactionPaginatedParams) ([]CryptoJournal, error)
 	// cryptoGetJournalTransaction will retrieve the journal entries associated with a transaction.
 	cryptoGetJournalTransaction(ctx context.Context, arg *cryptoGetJournalTransactionParams) ([]CryptoJournal, error)
 	// cryptoPurchase will execute a transaction to purchase a Cryptocurrency using a Fiat currency.

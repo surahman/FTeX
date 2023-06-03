@@ -30,3 +30,17 @@ FROM crypto_accounts
 WHERE client_id=$1 AND ticker >= $2
 ORDER BY ticker
 LIMIT $3;
+
+-- name: cryptoGetAllJournalTransactionPaginated :many
+-- cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+-- in a date range.
+SELECT *
+FROM crypto_journal
+WHERE client_id = $1
+      AND ticker = $2
+      AND transacted_at
+          BETWEEN @start_time::timestamptz
+              AND @end_time::timestamptz
+ORDER BY transacted_at DESC
+OFFSET $3
+LIMIT $4;
