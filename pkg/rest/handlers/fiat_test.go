@@ -989,7 +989,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceCurrencyFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceFiat(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1352,7 +1352,7 @@ func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path, BalanceCurrencyFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path, BalanceFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1564,7 +1564,7 @@ func TestHandler_TxDetailsCurrencyFiatPaginated(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path+":currencyCode",
-				TxDetailsCurrencyFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+				TxDetailsFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
 				basePath+test.path+test.currency+test.querySegment, nil)
 			recorder := httptest.NewRecorder()

@@ -398,7 +398,7 @@ func ExchangeTransferFiat(
 	}
 }
 
-// BalanceCurrencyFiat will handle an HTTP request to retrieve a balance for a specific Fiat currency.
+// BalanceFiat will handle an HTTP request to retrieve a balance for a specific Fiat currency.
 //
 //	@Summary		Retrieve balance for a specific Fiat currency.
 //	@Description	Retrieves the balance for a specific Fiat currency. The currency ticker must be supplied as a query parameter.
@@ -414,7 +414,7 @@ func ExchangeTransferFiat(
 //	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/balance/{ticker} [get]
-func BalanceCurrencyFiat(
+func BalanceFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
@@ -506,8 +506,8 @@ func TxDetailsFiat(
 	}
 }
 
-// BalanceCurrencyFiatPaginated will handle an HTTP request to retrieve a balance for all currency accounts held by a
-// single client.
+// BalanceFiatPaginated will handle an HTTP request to retrieve a balance for all currency accounts held by a single
+// client.
 //
 // If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
 // available to for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
@@ -527,7 +527,7 @@ func TxDetailsFiat(
 //	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/balance [get]
-func BalanceCurrencyFiatPaginated(
+func BalanceFiatPaginated(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
@@ -602,8 +602,8 @@ func BalanceCurrencyFiatPaginated(
 	}
 }
 
-// TxDetailsCurrencyFiatPaginated will handle an HTTP request to retrieve all transaction details for a currency account
-// held by a single client for a given month.
+// TxDetailsFiatPaginated will handle an HTTP request to retrieve all transaction details for a currency account held by
+// a single client for a given month.
 //
 // If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
 // available to for retrieval. The page cursor will be the encrypted date range for the month as well as the offset.
@@ -628,7 +628,7 @@ func BalanceCurrencyFiatPaginated(
 //	@Failure		416				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/transaction/all/{currencyCode}/ [get]
-func TxDetailsCurrencyFiatPaginated(
+func TxDetailsFiatPaginated(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,

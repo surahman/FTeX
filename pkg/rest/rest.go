@@ -112,13 +112,13 @@ func (s *Server) initialize() {
 	fiatGroup.POST("/exchange/transfer",
 		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.BalanceFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/balance/",
-		restHandlers.BalanceCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/:transactionID",
 		restHandlers.TxDetailsFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/all/:currencyCode",
-		restHandlers.TxDetailsCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
