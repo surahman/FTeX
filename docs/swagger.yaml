@@ -334,7 +334,7 @@ paths:
         requests will require a cursors to the next page that will be returned in
         the previous call to the endpoint. The user may choose to change the page
         size in any sequence of calls.
-      operationId: TxDetailsCryptoPaginated
+      operationId: txDetailsCryptoPaginated
       parameters:
       - description: the currency ticker to retrieve the transaction details for.
         in: path

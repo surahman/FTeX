@@ -376,7 +376,7 @@ func BalanceCurrencyCryptoPaginated(
 //	@Summary		Retrieve all the transactions for a currency account for a specific client during a specified month.
 //	@Description	Retrieves all the transaction details for currency a specific client during the specified month. The initial request will contain (optionally) the page size and, month, year, and timezone (option, defaults to UTC). Subsequent requests will require a cursors to the next page that will be returned in the previous call to the endpoint. The user may choose to change the page size in any sequence of calls.
 //	@Tags			crypto cryptocurrency currency transaction
-//	@Id				TxDetailsCryptoPaginated
+//	@Id				txDetailsCryptoPaginated
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth

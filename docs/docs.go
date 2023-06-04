@@ -241,7 +241,7 @@ const docTemplate = `{
                     "crypto cryptocurrency currency transaction"
                 ],
                 "summary": "Retrieve all the transactions for a currency account for a specific client during a specified month.",
-                "operationId": "TxDetailsCryptoPaginated",
+                "operationId": "txDetailsCryptoPaginated",
                 "parameters": [
                     {
                         "type": "string",
