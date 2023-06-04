@@ -206,7 +206,7 @@ func ExchangeCrypto(
 	}
 }
 
-// BalanceCurrencyCrypto will handle an HTTP request to retrieve a balance for a specific Cryptocurrency.
+// BalanceCrypto will handle an HTTP request to retrieve a balance for a specific Cryptocurrency.
 //
 //	@Summary		Retrieve balance for a specific Cryptocurrency.
 //	@Description	Retrieves the balance for a specific Cryptocurrency. The currency ticker must be supplied as a query parameter.
@@ -222,7 +222,7 @@ func ExchangeCrypto(
 //	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/crypto/info/balance/{ticker} [get]
-func BalanceCurrencyCrypto(
+func BalanceCrypto(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
@@ -314,8 +314,8 @@ func TxDetailsCrypto(
 	}
 }
 
-// BalanceCurrencyCryptoPaginated will handle an HTTP request to retrieve a balance for all Cryptocurrency accounts held
-// by a single client.
+// BalanceCryptoPaginated will handle an HTTP request to retrieve a balance for all Cryptocurrency accounts held by a
+// single client.
 //
 // If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
 // available to for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
@@ -335,7 +335,7 @@ func TxDetailsCrypto(
 //	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/crypto/info/balance [get]
-func BalanceCurrencyCryptoPaginated(
+func BalanceCryptoPaginated(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
