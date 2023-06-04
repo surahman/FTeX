@@ -614,10 +614,12 @@ func HTTPCryptoTXPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.
 	var (
 		err          error
 		httpCode     int
+		monthStrLen  = len(params.MonthStr)
 		transactions models.HTTPCryptoTransactionsPaginated
 	)
+
 	// Check for required parameters.
-	if len(params.PageCursorStr) == 0 && (len(params.MonthStr) == 0 || len(params.YearStr) == 0) {
+	if len(params.PageCursorStr) == 0 && (monthStrLen < 1 || monthStrLen > 2 || len(params.YearStr) != 4) {
 		msg := "missing required parameters"
 
 		return transactions, http.StatusBadRequest, msg, errors.New(msg)

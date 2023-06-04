@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -1102,6 +1103,203 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			router := gin.Default()
 			router.GET(basePath+test.path, BalanceCurrencyCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
+
+			var resp map[string]interface{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
+
+			actualMessage, ok := resp["message"].(string)
+			require.True(t, ok, "failed to extract response message.")
+			require.Contains(t, actualMessage, test.expectedMsg, "response message mismatch.")
+		})
+	}
+}
+
+func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
+	t.Parallel()
+
+	const basePath = "/crypto/transaction/details-journal/paginated/"
+
+	decryptedCursor := fmt.Sprintf("%s,%s,%d",
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		10)
+
+	journalEntries := []postgres.CryptoJournal{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                   string
+		path                   string
+		ticker                 string
+		querySegment           string
+		expectedMsg            string
+		expectedStatus         int
+		journalEntries         []postgres.CryptoJournal
+		authValidateJWTErr     error
+		authValidateTimes      int
+		authDecryptCursorErr   error
+		authDecryptCursorTimes int
+		authEncryptCursorErr   error
+		authEncryptCursorTimes int
+		cryptoTxPaginatedErr   error
+		cryptoTxPaginatedTimes int
+	}{
+		{
+			name:                   "auth failure",
+			path:                   "auth-failure/",
+			ticker:                 "ETH",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "auth failure",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusForbidden,
+			authValidateJWTErr:     errors.New("auth failure"),
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 0,
+		}, {
+			name:                   "no cursor or params",
+			path:                   "no-cursor-or-params/",
+			ticker:                 "ETH",
+			querySegment:           "?",
+			expectedMsg:            "missing required parameters",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusBadRequest,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 0,
+		}, {
+			name:                   "db failure",
+			path:                   "db-failure/",
+			ticker:                 "ETH",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "records not found",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusNotFound,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   postgres.ErrNotFound,
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name:                   "unknown db failure",
+			path:                   "unknown-db-failure/",
+			ticker:                 "ETH",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "retry",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusInternalServerError,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   errors.New("db failure"),
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name:                   "no transactions",
+			path:                   "no-transactions/",
+			ticker:                 "ETH",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "no transactions",
+			journalEntries:         []postgres.CryptoJournal{},
+			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name:                   "valid with cursor",
+			path:                   "valid-with-cursor/",
+			ticker:                 "ETH",
+			querySegment:           "?pageCursor=page-cursor",
+			expectedMsg:            "account transactions",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusOK,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name:                   "valid with query",
+			path:                   "valid-with-query/",
+			ticker:                 "ETH",
+			querySegment:           "?month=6&year=2023&timezone=%2B04:00&pageSize=3",
+			expectedMsg:            "account transactions",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusOK,
+			authValidateJWTErr:     nil,
+			authValidateTimes:      1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 1,
+		},
+	}
+
+	for _, testCase := range testCases { //nolint:dupl
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
+					Times(test.authDecryptCursorTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-cursor", test.authEncryptCursorErr).
+					Times(test.authEncryptCursorTimes),
+
+				mockDB.EXPECT().CryptoTransactionsPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.journalEntries, test.cryptoTxPaginatedErr).
+					Times(test.cryptoTxPaginatedTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.GET(basePath+test.path+":ticker",
+				TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+				basePath+test.path+test.ticker+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
