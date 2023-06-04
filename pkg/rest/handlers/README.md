@@ -44,6 +44,9 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
     - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
       - [Purchase](#purchase)
       - [Sale](#sale)
+    - [Transaction Details for a Specific Currency `/transaction/all/{ticker}`](#transaction-details-for-a-specific-currency-transactionallticker)
+      - [Initial Page](#initial-page)
+      - [Subsequent Page](#subsequent-page)
 
 <br/>
 
@@ -438,6 +441,7 @@ one for the source and the other for the destination accounts.
   ]
 }
 ```
+
 ##### Transaction Details for a Specific Currency `/transaction/all/{currencyCode}`
 
 _Request:_ A valid `Currency Code` must be provided as a path parameter. The path parameters accepted are listed below.
@@ -839,5 +843,84 @@ account and another for the Cryptocurrency account.
       "txID": "068285c3-5556-4093-9de1-32f6ad4c82d9"
     }
   ]
+}
+```
+
+##### Transaction Details for a Specific Currency `/transaction/all/{ticker}`
+
+_Request:_ A valid Cryptocurrency `ticker` must be provided as a path parameter. The path parameters accepted are listed
+below.  If a `pageCursor` is supplied, all other parameters except for the `pageSize` are ignored.
+
+Optional:
+* `pageCursor`: Defaults to 10.
+
+Initial Page (required):
+* `month`: Month for which the transactions are being requested.
+* `year`: Year for which the transactions are being requested.
+* `timezone`: Timezone for which the transactions are being requested.
+
+Subsequent Pages (required)
+* `pageCursor`: Hashed page cursor for the next page of data.
+
+_Response:_ All Transaction-related details for a specific currency in a given timezone and date are returned.
+
+###### Initial Page
+```json
+{
+  "message": "account transactions",
+  "payload": {
+    "transactionDetails": [
+      {
+        "ticker": "ETH",
+        "amount": "-379.45",
+        "transactedAt": "2023-06-04T12:08:56.782415-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "8b417f37-d1c6-4e0a-a391-31992cd25fa6"
+      },
+      {
+        "ticker": "ETH",
+        "amount": "-0.1235489",
+        "transactedAt": "2023-06-04T12:07:50.786845-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "99dfdfa6-0342-453c-8f31-14fd78afa1e0"
+      },
+      {
+        "ticker": "ETH",
+        "amount": "2.57850794",
+        "transactedAt": "2023-06-04T12:06:53.442182-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "ae64e5de-44e0-4ef4-ac61-241ddb72bf73"
+      }
+    ],
+    "links": {
+      "nextPage": "?pageCursor=4xywMzjoUUjzXAT7ilkxeHLGDSUGhP2f4hxEM_F39QDw4ElDx9vPSCcxwSh9wWeNr743k2PwNFrc6vAE9_4Tn4GLF6HRtpdq-diJe72sq6UI&pageSize=3"
+    }
+  }
+}
+```
+
+###### Subsequent Page
+```json
+{
+  "message": "account transactions",
+  "payload": {
+    "transactionDetails": [
+      {
+        "ticker": "ETH",
+        "amount": "1.24490627",
+        "transactedAt": "2023-06-04T12:06:14.698309-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "686178d7-58c3-4ca9-9fd3-d07e6462a283"
+      },
+      {
+        "ticker": "ETH",
+        "amount": "422.08834918",
+        "transactedAt": "2023-06-01T22:14:38.64713-04:00",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "ef42c206-42c1-444a-806a-3737d360d48f"
+      }
+    ],
+    "links": {}
+  }
 }
 ```
