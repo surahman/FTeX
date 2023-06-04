@@ -98,9 +98,9 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 	return currency, int32(limit), nil
 }
 
-// HTTPFiatTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
+// HTTPTransactionInfoPaginatedRequest will generate the month bounds and record limits using supplied query
 // parameters.
-func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, timezoneStr string, pageSize int32) (
+func HTTPTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, timezoneStr string, pageSize int32) (
 	pgtype.Timestamptz, pgtype.Timestamptz, string, error) {
 	var (
 		startYear      int64
@@ -162,23 +162,23 @@ func HTTPFiatTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, 
 	}
 
 	// Prepare page cursor.
-	if pageCursor, err = HTTPFiatTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, pageSize); err != nil {
+	if pageCursor, err = HTTPTransactionGeneratePageCursor(auth, periodStartStr, periodEndStr, pageSize); err != nil {
 		return periodStart, periodEnd, pageCursor, fmt.Errorf("failed to encrypt page cursor %w", err)
 	}
 
 	return periodStart, periodEnd, pageCursor, nil
 }
 
-// HTTPFiatTransactionGeneratePageCursor will generate the encrypted page cursor.
+// HTTPTransactionGeneratePageCursor will generate the encrypted page cursor.
 //
 //nolint:wrapcheck
-func HTTPFiatTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int32) (
+func HTTPTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int32) (
 	string, error) {
 	return auth.EncryptToString([]byte(fmt.Sprintf("%s,%s,%d", periodStartStr, periodEndStr, offset)))
 }
 
-// HTTPFiatTransactionUnpackPageCursor will unpack an encrypted page cursor to its component parts.
-func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
+// HTTPTransactionUnpackPageCursor will unpack an encrypted page cursor to its component parts.
+func HTTPTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	pgtype.Timestamptz, string, pgtype.Timestamptz, string, int32, error) {
 	var (
 		startPGTS pgtype.Timestamptz
@@ -223,8 +223,8 @@ func HTTPFiatTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	return startPGTS, components[0], endPGTS, components[1], int32(offset), nil
 }
 
-// HTTPFiatPaginatedTxParams contains the HTTP request as well as the database query parameters.
-type HTTPFiatPaginatedTxParams struct {
+// HTTPPaginatedTxParams contains the HTTP request as well as the database query parameters.
+type HTTPPaginatedTxParams struct {
 	// HTTP request input parameters.
 	PageSizeStr   string
 	PageCursorStr string
@@ -240,9 +240,10 @@ type HTTPFiatPaginatedTxParams struct {
 	PeriodEnd   pgtype.Timestamptz
 }
 
-// HTTPFiatTxParseQueryParams will parse the HTTP request input parameters in database query parameters for the
-// paginated Fiat transactions requests.
-func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPFiatPaginatedTxParams) (int, error) {
+// HTTPTxParseQueryParams will parse the HTTP request input parameters in database query parameters for the
+// paginated Fiat/Crypto transactions requests. It will update the pageCursor to the one required for the
+// subsequent query.
+func HTTPTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPPaginatedTxParams) (int, error) {
 	var (
 		err            error
 		periodStartStr string
@@ -267,12 +268,12 @@ func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *H
 	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
 	if len(params.PageCursorStr) > 0 {
 		if params.PeriodStart, periodStartStr, params.PeriodEnd, periodEndStr, params.Offset, err =
-			HTTPFiatTransactionUnpackPageCursor(auth, params.PageCursorStr); err != nil {
+			HTTPTransactionUnpackPageCursor(auth, params.PageCursorStr); err != nil {
 			return http.StatusBadRequest, fmt.Errorf("invalid next page")
 		}
 
 		// Prepare next page cursor. Adjust offset to move along to next record set.
-		if params.NextPage, err = HTTPFiatTransactionGeneratePageCursor(
+		if params.NextPage, err = HTTPTransactionGeneratePageCursor(
 			auth, periodStartStr, periodEndStr, params.Offset+params.PageSize); err != nil {
 			logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
 
@@ -280,7 +281,7 @@ func HTTPFiatTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *H
 		}
 	} else {
 		if params.PeriodStart, params.PeriodEnd, params.NextPage, err =
-			HTTPFiatTransactionInfoPaginatedRequest(auth,
+			HTTPTransactionInfoPaginatedRequest(auth,
 				params.MonthStr, params.YearStr, params.TimezoneStr, params.PageSize); err != nil {
 			logger.Info("failed to prepare time periods for paginated Fiat transaction details", zap.Error(err))
 
@@ -521,4 +522,142 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 	}
 
 	return journalEntries, 0, "", nil
+}
+
+// cryptoBalancePaginatedRequest will convert the encrypted URL query parameter for the ticker and the record
+// limit and covert them to a string and integer record limit. The tickerStr is the encrypted pageCursor passed in.
+func cryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr string) (string, int32, error) {
+	var (
+		ticker    string
+		decrypted []byte
+		err       error
+		limit     int64
+	)
+
+	// Decrypt currency ticker string.
+	decrypted = []byte("BTC")
+
+	if len(tickerStr) > 0 {
+		if decrypted, err = auth.DecryptFromString(tickerStr); err != nil {
+			return ticker, -1, fmt.Errorf("failed to decrypt next ticker")
+		}
+	}
+
+	ticker = string(decrypted)
+
+	// Convert record limit to int and set base bound for bad input.
+	if len(limitStr) > 0 {
+		if limit, err = strconv.ParseInt(limitStr, 10, 32); err != nil {
+			return ticker, -1, fmt.Errorf("failed to parse record limit")
+		}
+	}
+
+	if limit < 1 {
+		limit = 10
+	}
+
+	return ticker, int32(limit), nil
+}
+
+// HTTPCryptoBalancePaginated retrieves a page of data from the Cryptocurrency account balances and prepares a link to
+// the next page of data.
+func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+	clientID uuid.UUID, pageCursor, pageSizeStr string) (models.HTTPCryptoDetailsPaginated, int, string, error) {
+	var (
+		ticker        string
+		err           error
+		pageSize      int32
+		cryptoDetails models.HTTPCryptoDetailsPaginated
+	)
+
+	// Extract and assemble the page cursor and page size.
+	if ticker, pageSize, err = cryptoBalancePaginatedRequest(auth, pageCursor, pageSizeStr); err != nil {
+		return cryptoDetails, http.StatusBadRequest, "invalid page cursor or page size", fmt.Errorf("%w", err)
+	}
+
+	if cryptoDetails.AccountBalances, err = db.CryptoBalancesPaginated(clientID, ticker, pageSize+1); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+
+			return cryptoDetails, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return cryptoDetails, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
+	}
+
+	// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
+	lastRecordIdx := int(pageSize)
+	if len(cryptoDetails.AccountBalances) == lastRecordIdx+1 {
+		// Generate next page link.
+		if cryptoDetails.Links.NextPage, err =
+			auth.EncryptToString([]byte(cryptoDetails.AccountBalances[pageSize].Ticker)); err != nil {
+			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
+
+			return cryptoDetails, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		// Remove last element.
+		cryptoDetails.AccountBalances = cryptoDetails.AccountBalances[:pageSize]
+
+		// Generate naked next page link.
+		cryptoDetails.Links.NextPage =
+			fmt.Sprintf(constants.GetNextPageRESTFormatString(), cryptoDetails.Links.NextPage, pageSize)
+	}
+
+	return cryptoDetails, 0, "", nil
+}
+
+// HTTPCryptoTXPaginated will retrieve a page of Cryptocurrency transactions based on a time range.
+func HTTPCryptoTXPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, params *HTTPPaginatedTxParams,
+	clientID uuid.UUID, ticker string) (models.HTTPCryptoTransactionsPaginated, int, string, error) {
+	var (
+		err          error
+		httpCode     int
+		monthStrLen  = len(params.MonthStr)
+		transactions models.HTTPCryptoTransactionsPaginated
+	)
+
+	// Check for required parameters.
+	if len(params.PageCursorStr) == 0 && (monthStrLen < 1 || monthStrLen > 2 || len(params.YearStr) != 4) {
+		msg := "missing required parameters"
+
+		return transactions, http.StatusBadRequest, msg, errors.New(msg)
+	}
+
+	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
+	if httpCode, err = HTTPTxParseQueryParams(auth, logger, params); err != nil {
+		return transactions, httpCode, err.Error(), fmt.Errorf("%w", err)
+	}
+
+	// Retrieve transaction details page.
+	if transactions.TransactionDetails, err = db.CryptoTransactionsPaginated(
+		clientID, ticker, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack transactions request error", zap.Error(err))
+
+			return transactions, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return transactions, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
+	}
+
+	if len(transactions.TransactionDetails) == 0 {
+		msg := "no transactions"
+
+		return transactions, http.StatusRequestedRangeNotSatisfiable, msg, errors.New(msg)
+	}
+
+	// Generate naked next page link. The params will have had the nextPage link generated in the prior methods called.
+	transactions.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+
+	// Check if there are further pages of data. If not, set the next link to be empty.
+	if len(transactions.TransactionDetails) > int(params.PageSize) {
+		transactions.TransactionDetails = transactions.TransactionDetails[:int(params.PageSize)]
+	} else {
+		transactions.Links.NextPage = ""
+	}
+
+	return transactions, 0, "", nil
 }

@@ -313,3 +313,121 @@ func TxDetailsCrypto(
 		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "transaction details", Payload: journalEntries})
 	}
 }
+
+// BalanceCurrencyCryptoPaginated will handle an HTTP request to retrieve a balance for all Cryptocurrency accounts held
+// by a single client.
+//
+// If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
+// available to for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
+//
+//	@Summary		Retrieve all the Cryptocurrency balances for a specific client.
+//	@Description	Retrieves all the Cryptocurrency balances for a specific client. The initial request will only contain (optionally) the page size. Subsequent requests will require a cursors to the next page that will be returned in a previous call to the endpoint. The user may choose to change the page size in any sequence of calls.
+//	@Tags			crypto cryptocurrency currency balance
+//	@Id				balanceCurrencyCryptoPaginated
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			pageCursor	query		string				false	"The page cursor into the query results records."
+//	@Param			pageSize	query		int					false	"The number of records to retrieve on this page."
+//	@Success		200			{object}	models.HTTPSuccess	"a message to with a page of account balances for the client's accounts"
+//	@Failure		400			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/crypto/info/balance [get]
+func BalanceCurrencyCryptoPaginated(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			accDetails  models.HTTPCryptoDetailsPaginated
+			httpStatus  int
+			httpMessage string
+			clientID    uuid.UUID
+			err         error
+		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		accDetails, httpStatus, httpMessage, err = utilities.HTTPCryptoBalancePaginated(auth, db, logger,
+			clientID, ginCtx.Query("pageCursor"), ginCtx.Query("pageSize"))
+		if err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances", Payload: accDetails})
+	}
+}
+
+// TxDetailsCryptoPaginated will handle an HTTP request to retrieve all transaction details for a currency account
+// held by a single client for a given month.
+//
+// If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
+// available to for retrieval. The page cursor will be the encrypted date range for the month as well as the offset.
+//
+//	@Summary		Retrieve all the transactions for a currency account for a specific client during a specified month.
+//	@Description	Retrieves all the transaction details for currency a specific client during the specified month. The initial request will contain (optionally) the page size and, month, year, and timezone (option, defaults to UTC). Subsequent requests will require a cursors to the next page that will be returned in the previous call to the endpoint. The user may choose to change the page size in any sequence of calls.
+//	@Tags			crypto cryptocurrency currency transaction
+//	@Id				txDetailsCryptoPaginated
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			ticker		path		string				true	"the currency ticker to retrieve the transaction details for."
+//	@Param			pageCursor	query		string				false	"The page cursor into the query results records."
+//	@Param			timezone	query		string				false	"The timezone for the month in question."
+//	@Param			month		query		int					false	"The month for which transaction records are being requested."
+//	@Param			year		query		int					false	"The year for the month for which transaction records are being requested."
+//	@Param			pageSize	query		int					false	"The number of records to retrieve on this page."
+//	@Success		200			{object}	models.HTTPSuccess	"a message to confirm the conversion of funds"
+//	@Failure		400			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		403			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		416			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
+//	@Router			/crypto/info/transaction/all/{ticker}/ [get]
+func TxDetailsCryptoPaginated(
+	logger *logger.Logger,
+	auth auth.Auth,
+	db postgres.Postgres,
+	authHeaderKey string) gin.HandlerFunc {
+	return func(ginCtx *gin.Context) {
+		var (
+			clientID       uuid.UUID
+			ticker         = ginCtx.Param("ticker")
+			err            error
+			journalEntries models.HTTPCryptoTransactionsPaginated
+			httpStatus     int
+			httpMessage    string
+			params         = utilities.HTTPPaginatedTxParams{
+				PageSizeStr:   ginCtx.Query("pageSize"),
+				PageCursorStr: ginCtx.Query("pageCursor"),
+				TimezoneStr:   ginCtx.Query("timezone"),
+				MonthStr:      ginCtx.Query("month"),
+				YearStr:       ginCtx.Query("year"),
+			}
+		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		if journalEntries, httpStatus, httpMessage, err =
+			utilities.HTTPCryptoTXPaginated(auth, db, logger, &params, clientID, ticker); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
+
+			return
+		}
+
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account transactions", Payload: journalEntries})
+	}
+}

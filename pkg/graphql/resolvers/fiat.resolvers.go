@@ -453,7 +453,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 		clientID       uuid.UUID
 		currency       postgres.Currency
 		err            error
-		params         utilities.HTTPFiatPaginatedTxParams
+		params         utilities.HTTPPaginatedTxParams
 	)
 
 	if input.PageSize == nil {
@@ -496,7 +496,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 	}
 
 	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
-	if _, err = utilities.HTTPFiatTxParseQueryParams(r.auth, r.logger, &params); err != nil {
+	if _, err = utilities.HTTPTxParseQueryParams(r.auth, r.logger, &params); err != nil {
 		return nil, errors.New(err.Error())
 	}
 

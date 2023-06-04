@@ -105,3 +105,17 @@ type HTTPLinks struct {
 	NextPage   string `json:"nextPage,omitempty"`
 	PageCursor string `json:"pageCursor,omitempty"`
 }
+
+// HTTPCryptoDetailsPaginated is the response to paginated account details request. It returns a link to the next page
+// of information.
+type HTTPCryptoDetailsPaginated struct {
+	AccountBalances []postgres.CryptoAccount `json:"accountBalances"`
+	Links           HTTPLinks                `json:"links"`
+}
+
+// HTTPCryptoTransactionsPaginated is the response to paginated account transactions request. It returns a link to the
+// next page of information.
+type HTTPCryptoTransactionsPaginated struct {
+	TransactionDetails []postgres.CryptoJournal `json:"transactionDetails"`
+	Links              HTTPLinks                `json:"links,omitempty"`
+}

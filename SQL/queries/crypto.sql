@@ -22,3 +22,25 @@ WHERE client_id = $1 AND tx_id = $2;
 -- name: cryptoSell :exec
 -- cryptoSell will execute a transaction to sell a Cryptocurrency and purchase a Fiat currency.
 CALL sell_cryptocurrency($1,$2,$3, @fiat_credit_amount::numeric(18, 2), $4, @crypto_debit_amount::numeric(24, 8));
+
+-- name: cryptoGetAllAccounts :many
+-- cryptoGetAllAccounts will retrieve all accounts associated with a specific user.
+SELECT *
+FROM crypto_accounts
+WHERE client_id=$1 AND ticker >= $2
+ORDER BY ticker
+LIMIT $3;
+
+-- name: cryptoGetAllJournalTransactionPaginated :many
+-- cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+-- in a date range.
+SELECT *
+FROM crypto_journal
+WHERE client_id = $1
+      AND ticker = $2
+      AND transacted_at
+          BETWEEN @start_time::timestamptz
+              AND @end_time::timestamptz
+ORDER BY transacted_at DESC
+OFFSET $3
+LIMIT $4;

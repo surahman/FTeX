@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 )
 
@@ -55,6 +56,105 @@ func (q *Queries) cryptoGetAccount(ctx context.Context, arg *cryptoGetAccountPar
 		&i.ClientID,
 	)
 	return i, err
+}
+
+const cryptoGetAllAccounts = `-- name: cryptoGetAllAccounts :many
+SELECT ticker, balance, last_tx, last_tx_ts, created_at, client_id
+FROM crypto_accounts
+WHERE client_id=$1 AND ticker >= $2
+ORDER BY ticker
+LIMIT $3
+`
+
+type cryptoGetAllAccountsParams struct {
+	ClientID uuid.UUID `json:"clientID"`
+	Ticker   string    `json:"ticker"`
+	Limit    int32     `json:"limit"`
+}
+
+// cryptoGetAllAccounts will retrieve all accounts associated with a specific user.
+func (q *Queries) cryptoGetAllAccounts(ctx context.Context, arg *cryptoGetAllAccountsParams) ([]CryptoAccount, error) {
+	rows, err := q.db.Query(ctx, cryptoGetAllAccounts, arg.ClientID, arg.Ticker, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CryptoAccount
+	for rows.Next() {
+		var i CryptoAccount
+		if err := rows.Scan(
+			&i.Ticker,
+			&i.Balance,
+			&i.LastTx,
+			&i.LastTxTs,
+			&i.CreatedAt,
+			&i.ClientID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const cryptoGetAllJournalTransactionPaginated = `-- name: cryptoGetAllJournalTransactionPaginated :many
+SELECT ticker, amount, transacted_at, client_id, tx_id
+FROM crypto_journal
+WHERE client_id = $1
+      AND ticker = $2
+      AND transacted_at
+          BETWEEN $5::timestamptz
+              AND $6::timestamptz
+ORDER BY transacted_at DESC
+OFFSET $3
+LIMIT $4
+`
+
+type cryptoGetAllJournalTransactionPaginatedParams struct {
+	ClientID  uuid.UUID          `json:"clientID"`
+	Ticker    string             `json:"ticker"`
+	Offset    int32              `json:"offset"`
+	Limit     int32              `json:"limit"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
+}
+
+// cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+// in a date range.
+func (q *Queries) cryptoGetAllJournalTransactionPaginated(ctx context.Context, arg *cryptoGetAllJournalTransactionPaginatedParams) ([]CryptoJournal, error) {
+	rows, err := q.db.Query(ctx, cryptoGetAllJournalTransactionPaginated,
+		arg.ClientID,
+		arg.Ticker,
+		arg.Offset,
+		arg.Limit,
+		arg.StartTime,
+		arg.EndTime,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CryptoJournal
+	for rows.Next() {
+		var i CryptoJournal
+		if err := rows.Scan(
+			&i.Ticker,
+			&i.Amount,
+			&i.TransactedAt,
+			&i.ClientID,
+			&i.TxID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const cryptoGetJournalTransaction = `-- name: cryptoGetJournalTransaction :many

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -331,4 +332,255 @@ func TestQueries_CryptoSell(t *testing.T) {
 
 	// Wait (tie-threads).
 	wg.Wait()
+}
+
+func TestCrypto_CryptoBalancePaginated(t *testing.T) {
+	// Integration test check.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Insert the initial set of test fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Insert initial set of test crypto accounts.
+	resetTestCryptoAccounts(t, clientID1, clientID2)
+
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
+	testCases := []struct {
+		name      string
+		ticker    string
+		limit     int32
+		expectLen int
+	}{
+		{
+			name:      "BTC All",
+			ticker:    "BTC",
+			limit:     3,
+			expectLen: 3,
+		}, {
+			name:      "BTC One",
+			ticker:    "BTC",
+			limit:     1,
+			expectLen: 1,
+		}, {
+			name:      "BTC Two",
+			ticker:    "BTC",
+			limit:     2,
+			expectLen: 2,
+		}, {
+			name:      "ETH All",
+			ticker:    "ETH",
+			limit:     3,
+			expectLen: 2,
+		}, {
+			name:      "ETH One",
+			ticker:    "ETH",
+			limit:     1,
+			expectLen: 1,
+		}, {
+			name:      "USDT All",
+			ticker:    "USDT",
+			limit:     3,
+			expectLen: 1,
+		}, {
+			name:      "USDT One",
+			ticker:    "USDT",
+			limit:     1,
+			expectLen: 1,
+		}, {
+			name:      "LTC invalid but okay",
+			ticker:    "LTC",
+			limit:     3,
+			expectLen: 1,
+		}, {
+			name:      "XRP invalid and not okay",
+			ticker:    "XRP",
+			limit:     3,
+			expectLen: 0,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			balances, err := connection.CryptoBalancesPaginated(clientID1, testCase.ticker, testCase.limit)
+			require.NoError(t, err, "failed to retrieve results.")
+			require.Equal(t, testCase.expectLen, len(balances), "incorrect number of records returned.")
+		})
+	}
+}
+
+func TestCrypto_CryptoTransactionsPaginated(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		return
+	}
+
+	// Insert test users.
+	insertTestUsers(t)
+
+	// Insert initial set of test fiat accounts.
+	clientID1, clientID2 := resetTestFiatAccounts(t)
+
+	// Insert the initial set of test fiat journal entries.
+	resetTestFiatJournal(t, clientID1, clientID2)
+
+	// Insert initial set of test crypto accounts.
+	resetTestCryptoAccounts(t, clientID1, clientID2)
+
+	// Reset Crypto Journal entries.
+	resetTestCryptoJournal(t)
+
+	// Context setup for no hold-and-wait.
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+
+	defer cancel()
+
+	// Prepare the journals.
+	{
+		_, err := connection.FiatExternalTransfer(ctx, &FiatTransactionDetails{
+			ClientID: clientID1,
+			Currency: CurrencyUSD,
+			Amount:   decimal.NewFromFloat(10203040.56),
+		})
+		require.NoError(t, err, "failed to deposit Fiat money for client 1.")
+
+		_, err = connection.FiatExternalTransfer(ctx, &FiatTransactionDetails{
+			ClientID: clientID2,
+			Currency: CurrencyUSD,
+			Amount:   decimal.NewFromFloat(10304055.78),
+		})
+		require.NoError(t, err, "failed to deposit Fiat money for client 2.")
+
+		parameters := getTestCryptoPurchaseParams(clientID1, clientID2)
+		for runs := 0; runs < 4; runs++ {
+			for _, item := range parameters {
+				parameter := item
+				for idx := 0; idx < 3; idx++ {
+					parameter[idx].TransactionID, err = uuid.NewV4()
+					require.NoError(t, err, "failed to generate tx id.")
+
+					err := connection.Query.cryptoPurchase(ctx, &parameter[idx])
+					require.NoError(t, err, "error expectation failed.")
+				}
+			}
+		}
+	}
+
+	// Setup time intervals.
+	var (
+		timePoint    = time.Now().UTC()
+		minuteAhead  = pgtype.Timestamptz{}
+		minuteBehind = pgtype.Timestamptz{}
+		hourAhead    = pgtype.Timestamptz{}
+		hourBehind   = pgtype.Timestamptz{}
+	)
+
+	require.NoError(t, minuteAhead.Scan(timePoint.Add(time.Minute)))
+	require.NoError(t, minuteBehind.Scan(timePoint.Add(-time.Minute)))
+	require.NoError(t, hourAhead.Scan(timePoint.Add(time.Hour)))
+	require.NoError(t, hourBehind.Scan(timePoint.Add(-time.Hour)))
+
+	// Test grid.
+	testCases := []struct {
+		name         string
+		ticker       string
+		clientID     uuid.UUID
+		startTime    pgtype.Timestamptz
+		endTime      pgtype.Timestamptz
+		offset       int32
+		limit        int32
+		expectedCont int
+	}{
+		{
+			name:         "ClientID1 BTC: Before-After",
+			expectedCont: 4,
+			clientID:     clientID1,
+			ticker:       "BTC",
+			offset:       0,
+			limit:        4,
+			startTime:    minuteBehind,
+			endTime:      minuteAhead,
+		}, {
+			name:         "ClientID1 BTC: Before-After, 2 items page 1",
+			expectedCont: 2,
+			clientID:     clientID1,
+			ticker:       "BTC",
+			offset:       0,
+			limit:        2,
+			startTime:    minuteBehind,
+			endTime:      minuteAhead,
+		}, {
+			name:         "ClientID1 BTC: Before-After, 2 items page 2",
+			expectedCont: 2,
+			clientID:     clientID1,
+			ticker:       "BTC",
+			offset:       2,
+			limit:        4,
+			startTime:    minuteBehind,
+			endTime:      minuteAhead,
+		}, {
+			name:         "ClientID1 BTC: Before-After, 3 items page 2",
+			expectedCont: 3,
+			clientID:     clientID1,
+			ticker:       "BTC",
+			offset:       1,
+			limit:        4,
+			startTime:    minuteBehind,
+			endTime:      minuteAhead,
+		}, {
+			name:         "ClientID1 BTC: Before",
+			expectedCont: 0,
+			clientID:     clientID1,
+			ticker:       "BTC",
+			offset:       0,
+			limit:        4,
+			startTime:    hourBehind,
+			endTime:      minuteBehind,
+		}, {
+			name:         "ClientID1 BTC: After",
+			expectedCont: 0,
+			clientID:     clientID1,
+			ticker:       "BTC",
+			offset:       0,
+			limit:        4,
+			startTime:    minuteAhead,
+			endTime:      hourAhead,
+		}, {
+			name:         "ClientID2 - ETH: Before-After",
+			expectedCont: 4,
+			clientID:     clientID2,
+			ticker:       "ETH",
+			offset:       0,
+			limit:        4,
+			startTime:    minuteBehind,
+			endTime:      minuteAhead,
+		}, {
+			name:         "ClientID2 - XFR: Before-After",
+			expectedCont: 0,
+			clientID:     clientID2,
+			ticker:       "XFR",
+			offset:       0,
+			limit:        4,
+			startTime:    minuteBehind,
+			endTime:      minuteAhead,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
+			rows, err := connection.CryptoTransactionsPaginated(testCase.clientID, testCase.ticker,
+				testCase.limit, testCase.offset, testCase.startTime, testCase.endTime)
+			require.NoError(t, err, "error expectation failed.")
+			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
+		})
+	}
 }

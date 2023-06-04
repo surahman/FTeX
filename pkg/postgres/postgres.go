@@ -95,6 +95,15 @@ type Postgres interface {
 
 	// CryptoSell is the interface through which external methods can sell a specific Cryptocurrency.
 	CryptoSell(uuid.UUID, Currency, decimal.Decimal, string, decimal.Decimal) (*FiatJournal, *CryptoJournal, error)
+
+	// CryptoBalancePaginated is the interface through which external methods can retrieve all Crypto account balances
+	// for a specific client.
+	CryptoBalancesPaginated(uuid.UUID, string, int32) ([]CryptoAccount, error)
+
+	// CryptoTransactionsPaginated is the interface through which external methods can retrieve transactions on a Crypto
+	// account for a specific client during a specific month.
+	CryptoTransactionsPaginated(uuid.UUID, string, int32, int32, pgtype.Timestamptz, pgtype.Timestamptz) (
+		[]CryptoJournal, error)
 }
 
 // Check to ensure the Postgres interface has been implemented.

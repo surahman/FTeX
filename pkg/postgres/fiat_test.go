@@ -619,7 +619,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 	require.NoError(t, hourBehind.Scan(timePoint.Add(-time.Hour)))
 
 	// Test grid.
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name         string
 		expectedCont int
 		parameters   fiatGetAllJournalTransactionPaginatedParams
