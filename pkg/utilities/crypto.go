@@ -20,8 +20,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// HTTPPrepareCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
-func HTTPPrepareCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
+// HTTPCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
+func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
 	clientID uuid.UUID, source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (
 	models.HTTPExchangeOfferResponse, int, string, error) {
 	var (

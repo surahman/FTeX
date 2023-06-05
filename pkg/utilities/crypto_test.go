@@ -192,7 +192,7 @@ func TestUtilities_HTTPCryptoTxPaginated(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPPrepareCryptoOffer(t *testing.T) { //nolint: maintidx
+func TestUtilities_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 	t.Parallel()
 
 	var (
@@ -439,7 +439,7 @@ func TestUtilities_HTTPPrepareCryptoOffer(t *testing.T) { //nolint: maintidx
 					Times(test.redisTimes),
 			)
 
-			offer, status, msg, err := HTTPPrepareCryptoOffer(mockAuth, mockCache, zapLogger, mockQuotes,
+			offer, status, msg, err := HTTPCryptoOffer(mockAuth, mockCache, zapLogger, mockQuotes,
 				uuid.UUID{}, test.source, test.destination, sourceAmount, test.isPurchase)
 			test.expectErr(t, err, "error expectation failed.")
 

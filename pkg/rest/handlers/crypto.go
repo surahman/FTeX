@@ -128,7 +128,7 @@ func OfferCrypto(
 			return
 		}
 
-		offer, status, statusMessage, err = utilities.HTTPPrepareCryptoOffer(auth, cache, logger, quotes,
+		offer, status, statusMessage, err = utilities.HTTPCryptoOffer(auth, cache, logger, quotes,
 			clientID, request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, *request.IsPurchase)
 		if err != nil {
 			httpErr := &models.HTTPError{Message: statusMessage}
