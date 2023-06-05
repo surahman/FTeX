@@ -13,7 +13,7 @@ import (
 //nolint:lll
 type config struct {
 	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
-	Connection     connectionConfig     `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+	Connection     connectionConfig     `json:"connection,omitempty"     yaml:"connection,omitempty"     mapstructure:"connection"`
 }
 
 // authenticationConfig contains the Redis session authentication information.
@@ -26,12 +26,12 @@ type authenticationConfig struct {
 //
 //nolint:lll
 type connectionConfig struct {
-	Addr            string `json:"addr,omitempty" yaml:"addr,omitempty" mapstructure:"addr" validate:"required"`
+	Addr            string `json:"addr,omitempty"            yaml:"addr,omitempty"            mapstructure:"addr"            validate:"required"`
 	MaxConnAttempts int    `json:"maxConnAttempts,omitempty" yaml:"maxConnAttempts,omitempty" mapstructure:"maxConnAttempts" validate:"required,min=1"`
-	MaxRetries      int    `json:"maxRetries,omitempty" yaml:"maxRetries,omitempty" mapstructure:"maxRetries" validate:"required,min=1"`
-	PoolSize        int    `json:"poolSize,omitempty" yaml:"poolSize,omitempty" mapstructure:"poolSize" validate:"required,min=1"`
-	MinIdleConns    int    `json:"minIdleConns,omitempty" yaml:"minIdleConns,omitempty" mapstructure:"minIdleConns" validate:"required,min=1"`
-	MaxIdleConns    int    `json:"maxIdleConns,omitempty" yaml:"maxIdleConns,omitempty" mapstructure:"maxIdleConns"`
+	MaxRetries      int    `json:"maxRetries,omitempty"      yaml:"maxRetries,omitempty"      mapstructure:"maxRetries"      validate:"required,min=1"`
+	PoolSize        int    `json:"poolSize,omitempty"        yaml:"poolSize,omitempty"        mapstructure:"poolSize"        validate:"required,min=1"`
+	MinIdleConns    int    `json:"minIdleConns,omitempty"    yaml:"minIdleConns,omitempty"    mapstructure:"minIdleConns"    validate:"required,min=1"`
+	MaxIdleConns    int    `json:"maxIdleConns,omitempty"    yaml:"maxIdleConns,omitempty"    mapstructure:"maxIdleConns"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

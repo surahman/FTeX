@@ -149,7 +149,7 @@ func tearDown() error {
 
 // apiCredentials contains the API credentials used in the test suite.
 type apiCredentials struct {
-	Fiat   string `json:"fiatCurrency" yaml:"fiatCurrency"`
+	Fiat   string `json:"fiatCurrency"   yaml:"fiatCurrency"`
 	Crypto string `json:"cryptoCurrency" yaml:"cryptoCurrency"`
 }
 

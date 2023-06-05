@@ -13,7 +13,7 @@ import (
 //
 //nolint:lll
 type config struct {
-	Server        serverConfig        `json:"server,omitempty" yaml:"server,omitempty" mapstructure:"server" validate:"required"`
+	Server        serverConfig        `json:"server,omitempty"        yaml:"server,omitempty"        mapstructure:"server"        validate:"required"`
 	Authorization authorizationConfig `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization" validate:"required"`
 }
 
@@ -21,13 +21,13 @@ type config struct {
 //
 //nolint:lll
 type serverConfig struct {
-	BasePath          string        `json:"basePath,omitempty" yaml:"basePath,omitempty" mapstructure:"basePath" validate:"required"`
-	PlaygroundPath    string        `json:"playgroundPath,omitempty" yaml:"playgroundPath,omitempty" mapstructure:"playgroundPath" validate:"required"`
-	QueryPath         string        `json:"queryPath,omitempty" yaml:"queryPath,omitempty" mapstructure:"queryPath" validate:"required"`
-	PortNumber        int           `json:"portNumber,omitempty" yaml:"portNumber,omitempty" mapstructure:"portNumber" validate:"required,min=1000"`
-	ShutdownDelay     time.Duration `json:"shutdownDelay,omitempty" yaml:"shutdownDelay,omitempty" mapstructure:"shutdownDelay" validate:"required,min=0"`
-	ReadTimeout       time.Duration `json:"readTimeout,omitempty" yaml:"readTimeout,omitempty" mapstructure:"readTimeout" validate:"required,min=1"`
-	WriteTimeout      time.Duration `json:"writeTimeout,omitempty" yaml:"writeTimeout,omitempty" mapstructure:"writeTimeout" validate:"required,min=1"`
+	BasePath          string        `json:"basePath,omitempty"          yaml:"basePath,omitempty"          mapstructure:"basePath"          validate:"required"`
+	PlaygroundPath    string        `json:"playgroundPath,omitempty"    yaml:"playgroundPath,omitempty"    mapstructure:"playgroundPath"    validate:"required"`
+	QueryPath         string        `json:"queryPath,omitempty"         yaml:"queryPath,omitempty"         mapstructure:"queryPath"         validate:"required"`
+	PortNumber        int           `json:"portNumber,omitempty"        yaml:"portNumber,omitempty"        mapstructure:"portNumber"        validate:"required,min=1000"`
+	ShutdownDelay     time.Duration `json:"shutdownDelay,omitempty"     yaml:"shutdownDelay,omitempty"     mapstructure:"shutdownDelay"     validate:"required,min=0"`
+	ReadTimeout       time.Duration `json:"readTimeout,omitempty"       yaml:"readTimeout,omitempty"       mapstructure:"readTimeout"       validate:"required,min=1"`
+	WriteTimeout      time.Duration `json:"writeTimeout,omitempty"      yaml:"writeTimeout,omitempty"      mapstructure:"writeTimeout"      validate:"required,min=1"`
 	ReadHeaderTimeout time.Duration `json:"readHeaderTimeout,omitempty" yaml:"readHeaderTimeout,omitempty" mapstructure:"readHeaderTimeout" validate:"required,min=1"`
 }
 

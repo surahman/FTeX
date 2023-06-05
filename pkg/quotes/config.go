@@ -13,16 +13,16 @@ import (
 //
 //nolint:lll
 type config struct {
-	FiatCurrency   apiConfig        `json:"fiatCurrency,omitempty" yaml:"fiatCurrency,omitempty" mapstructure:"fiatCurrency" validate:"required"`
+	FiatCurrency   apiConfig        `json:"fiatCurrency,omitempty"   yaml:"fiatCurrency,omitempty"   mapstructure:"fiatCurrency"   validate:"required"`
 	CryptoCurrency apiConfig        `json:"cryptoCurrency,omitempty" yaml:"cryptoCurrency,omitempty" mapstructure:"cryptoCurrency" validate:"required"`
-	Connection     connectionConfig `json:"connection,omitempty" yaml:"connection,omitempty" mapstructure:"connection"`
+	Connection     connectionConfig `json:"connection,omitempty"     yaml:"connection,omitempty"     mapstructure:"connection"`
 }
 
 // apiConfig contains the API Key and URL information for a currency exchange endpoint.
 type apiConfig struct {
-	APIKey    string `json:"apiKey,omitempty" yaml:"apiKey,omitempty" mapstructure:"apiKey" validate:"required"`
+	APIKey    string `json:"apiKey,omitempty"    yaml:"apiKey,omitempty"    mapstructure:"apiKey"    validate:"required"`
 	HeaderKey string `json:"headerKey,omitempty" yaml:"headerKey,omitempty" mapstructure:"headerKey" validate:"required"`
-	Endpoint  string `json:"endpoint,omitempty" yaml:"endpoint,omitempty" mapstructure:"endpoint" validate:"required"`
+	Endpoint  string `json:"endpoint,omitempty"  yaml:"endpoint,omitempty"  mapstructure:"endpoint"  validate:"required"`
 }
 
 // connectionConfig contains HTTP connection attempt information.
@@ -30,7 +30,7 @@ type apiConfig struct {
 //nolint:lll
 type connectionConfig struct {
 	UserAgent string        `json:"userAgent,omitempty" yaml:"userAgent,omitempty" mapstructure:"userAgent" validate:"required"`
-	Timeout   time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty" mapstructure:"timeout" validate:"required"`
+	Timeout   time.Duration `json:"timeout,omitempty"   yaml:"timeout,omitempty"   mapstructure:"timeout"   validate:"required"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

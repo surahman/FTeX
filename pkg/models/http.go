@@ -11,8 +11,8 @@ import (
 //
 //nolint:lll
 type JWTAuthResponse struct {
-	Token     string `json:"token" yaml:"token" validate:"required"`         // JWT string sent to and validated by the server.
-	Expires   int64  `json:"expires" yaml:"expires" validate:"required"`     // Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.
+	Token     string `json:"token"     yaml:"token"     validate:"required"` // JWT string sent to and validated by the server.
+	Expires   int64  `json:"expires"   yaml:"expires"   validate:"required"` // Expiration time as unix time stamp. Strictly used by client to gauge when to refresh the token.
 	Threshold int64  `json:"threshold" yaml:"threshold" validate:"required"` // The window in seconds before expiration during which the token can be refreshed.
 }
 
@@ -42,31 +42,31 @@ type HTTPOpenCurrencyAccountRequest struct {
 
 // HTTPDepositCurrencyRequest is a request to deposit currency in to a specified Fiat currency.
 type HTTPDepositCurrencyRequest struct {
-	Amount   decimal.Decimal `json:"amount" yaml:"amount" validate:"required,gt=0"`
+	Amount   decimal.Decimal `json:"amount"   yaml:"amount"   validate:"required,gt=0"`
 	Currency string          `json:"currency" yaml:"currency" validate:"required"`
 }
 
 // HTTPExchangeOfferRequest is a request to convert a source to destination currency in the source currency amount.
 type HTTPExchangeOfferRequest struct {
-	SourceCurrency      string          `json:"sourceCurrency" yaml:"sourceCurrency" validate:"required"`
+	SourceCurrency      string          `json:"sourceCurrency"      yaml:"sourceCurrency"      validate:"required"`
 	DestinationCurrency string          `json:"destinationCurrency" yaml:"destinationCurrency" validate:"required"`
-	SourceAmount        decimal.Decimal `json:"sourceAmount" yaml:"sourceAmount" validate:"required,gt=0"`
+	SourceAmount        decimal.Decimal `json:"sourceAmount"        yaml:"sourceAmount"        validate:"required,gt=0"`
 }
 
 // HTTPCryptoOfferRequest is a request to convert a source to destination currency in the source currency amount.
 type HTTPCryptoOfferRequest struct {
-	HTTPExchangeOfferRequest `json:"request" yaml:"request" validate:"required"`
+	HTTPExchangeOfferRequest `json:"request"    yaml:"request"    validate:"required"`
 	IsPurchase               *bool `json:"isPurchase" yaml:"isPurchase" validate:"required"`
 }
 
 // HTTPExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
 type HTTPExchangeOfferResponse struct {
-	PriceQuote       `json:"offer" yaml:"offer"`
-	DebitAmount      decimal.Decimal `json:"debitAmount" yaml:"debitAmount"`
-	OfferID          string          `json:"offerId" yaml:"offerId"`
-	Expires          int64           `json:"expires" yaml:"expires"`
+	PriceQuote       `json:"offer"                      yaml:"offer"`
+	DebitAmount      decimal.Decimal `json:"debitAmount"                yaml:"debitAmount"`
+	OfferID          string          `json:"offerId"                    yaml:"offerId"`
+	Expires          int64           `json:"expires"                    yaml:"expires"`
 	IsCryptoPurchase bool            `json:"isCryptoPurchase,omitempty" yaml:"isCryptoPurchase,omitempty"`
-	IsCryptoSale     bool            `json:"isCryptoSale,omitempty" yaml:"isCryptoSale,omitempty"`
+	IsCryptoSale     bool            `json:"isCryptoSale,omitempty"     yaml:"isCryptoSale,omitempty"`
 }
 
 // HTTPTransferRequest is the request to accept and execute an existing exchange offer.
@@ -76,13 +76,13 @@ type HTTPTransferRequest struct {
 
 // HTTPFiatTransferResponse is the response to a successful Fiat exchange conversion request.
 type HTTPFiatTransferResponse struct {
-	SrcTxReceipt *postgres.FiatAccountTransferResult `json:"sourceReceipt" yaml:"sourceReceipt"`
+	SrcTxReceipt *postgres.FiatAccountTransferResult `json:"sourceReceipt"      yaml:"sourceReceipt"`
 	DstTxReceipt *postgres.FiatAccountTransferResult `json:"destinationReceipt" yaml:"destinationReceipt"`
 }
 
 // HTTPCryptoTransferResponse is the response to a successful Cryptocurrency purchase/sale request.
 type HTTPCryptoTransferResponse struct {
-	FiatTxReceipt   *postgres.FiatJournal   `json:"fiatReceipt" yaml:"fiatReceipt"`
+	FiatTxReceipt   *postgres.FiatJournal   `json:"fiatReceipt"   yaml:"fiatReceipt"`
 	CryptoTxReceipt *postgres.CryptoJournal `json:"cryptoReceipt" yaml:"cryptoReceipt"`
 }
 
