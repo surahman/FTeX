@@ -117,7 +117,7 @@ func (r *fiatJournalResolver) TxID(ctx context.Context, obj *postgres.FiatJourna
 func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) {
 	var (
 		clientID   uuid.UUID
-		pgCurrency postgres.Currency
+		errMessage string
 		err        error
 	)
 
@@ -125,20 +125,8 @@ func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*mode
 		return nil, errors.New("authorization failure")
 	}
 
-	// Extract and validate the currency.
-	if err = pgCurrency.Scan(currency); err != nil || !pgCurrency.Valid() {
-		return nil, errors.New("invalid currency")
-	}
-
-	if err = r.db.FiatCreateAccount(clientID, pgCurrency); err != nil {
-		var createErr *postgres.Error
-		if !errors.As(err, &createErr) {
-			r.logger.Info("failed to unpack open Fiat account error", zap.Error(err))
-
-			return nil, errors.New("please retry your request later")
-		}
-
-		return nil, errors.New(createErr.Message)
+	if _, errMessage, err = utilities.HTTPFiatOpen(r.db, r.logger, clientID, currency); err != nil {
+		return nil, errors.New(errMessage)
 	}
 
 	return &models.FiatOpenAccountResponse{ClientID: clientID.String(), Currency: currency}, nil

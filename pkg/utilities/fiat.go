@@ -1,12 +1,44 @@
 package utilities
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 
+	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"go.uber.org/zap"
 )
+
+// HTTPFiatOpen opens a Fiat account.
+func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, currency string) (
+	int, string, error) {
+	var (
+		pgCurrency postgres.Currency
+		err        error
+	)
+
+	// Extract and validate the currency.
+	if err = pgCurrency.Scan(currency); err != nil || !pgCurrency.Valid() {
+		return http.StatusBadRequest, "invalid currency", fmt.Errorf("%w", err)
+	}
+
+	if err = db.FiatCreateAccount(clientID, pgCurrency); err != nil {
+		var createErr *postgres.Error
+		if !errors.As(err, &createErr) {
+			logger.Info("failed to unpack open Fiat account error", zap.Error(err))
+
+			return http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return createErr.Code, createErr.Message, fmt.Errorf("%w", err)
+	}
+
+	return 0, "", nil
+}
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit
 // and covert them to a currency and integer record limit. The currencyStr is the encrypted pageCursor passed in.

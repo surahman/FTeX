@@ -40,11 +40,18 @@ import (
 func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			clientID uuid.UUID
-			currency postgres.Currency
-			err      error
-			request  models.HTTPOpenCurrencyAccountRequest
+			clientID    uuid.UUID
+			err         error
+			request     models.HTTPOpenCurrencyAccountRequest
+			httpStatus  int
+			httpMessage string
 		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
@@ -58,31 +65,8 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 			return
 		}
 
-		// Extract and validate the currency.
-		if err = currency.Scan(request.Currency); err != nil || !currency.Valid() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: request.Currency})
-
-			return
-		}
-
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		if err = db.FiatCreateAccount(clientID, currency); err != nil {
-			var createErr *postgres.Error
-			if !errors.As(err, &createErr) {
-				logger.Info("failed to unpack open Fiat account error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(createErr.Code, models.HTTPError{Message: createErr.Message})
+		if httpStatus, httpMessage, err = utilities.HTTPFiatOpen(db, logger, clientID, request.Currency); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: request.Currency})
 
 			return
 		}
