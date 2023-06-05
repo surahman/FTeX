@@ -6,13 +6,18 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/rs/xid"
+	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
+	"github.com/surahman/FTeX/pkg/redis"
 	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -83,6 +88,63 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 	}
 
 	return transferReceipt, 0, "", nil, nil
+}
+
+// HTTPFiatOffer retrieves an exchange rate offer from a quote provider and stores it in the Redis session cache.
+func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes, clientID uuid.UUID,
+	request *models.HTTPExchangeOfferRequest) (*models.HTTPExchangeOfferResponse, int, string, any, error) {
+	var (
+		err     error
+		offer   models.HTTPExchangeOfferResponse
+		offerID = xid.New().String()
+	)
+
+	if err = validator.ValidateStruct(request); err != nil {
+		return nil, http.StatusBadRequest, "validation", err.Error(), fmt.Errorf("%w", err)
+	}
+
+	// Extract and validate the currency.
+	if _, err = HTTPValidateOfferRequest(request.SourceAmount, constants.GetDecimalPlacesFiat(),
+		request.SourceCurrency, request.DestinationCurrency); err != nil {
+		return nil, http.StatusBadRequest, constants.GetInvalidRequest(), err.Error(), fmt.Errorf("%w", err)
+	}
+
+	// Compile exchange rate offer.
+	if offer.Rate, offer.Amount, err = quotes.FiatConversion(
+		request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, nil); err != nil {
+		logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
+
+		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+	}
+
+	// Check to make sure there is a valid Cryptocurrency amount.
+	if !offer.Amount.GreaterThan(decimal.NewFromFloat(0)) {
+		msg := "cryptocurrency purchase/sale amount is too small"
+
+		return nil, http.StatusBadRequest, msg, nil, errors.New(msg)
+	}
+
+	offer.ClientID = clientID
+	offer.SourceAcc = request.SourceCurrency
+	offer.DestinationAcc = request.DestinationCurrency
+	offer.DebitAmount = request.SourceAmount
+	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+
+	// Encrypt offer ID before returning to client.
+	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
+		logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
+
+		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+	}
+
+	// Store the offer in Redis.
+	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+		logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
+
+		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+	}
+
+	return &offer, 0, "", nil, nil
 }
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit

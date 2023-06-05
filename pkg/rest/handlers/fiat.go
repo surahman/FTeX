@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
-	"github.com/rs/xid"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
@@ -149,11 +147,20 @@ func ExchangeOfferFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err     error
-			request models.HTTPExchangeOfferRequest
-			offer   models.HTTPExchangeOfferResponse
-			offerID = xid.New().String()
+			clientID    uuid.UUID
+			err         error
+			httpStatus  int
+			httpMessage string
+			payload     any
+			request     models.HTTPExchangeOfferRequest
+			offer       *models.HTTPExchangeOfferResponse
 		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
@@ -161,56 +168,9 @@ func ExchangeOfferFiat(
 			return
 		}
 
-		if err = validator.ValidateStruct(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
-
-			return
-		}
-
-		// Extract and validate the currency.
-		if _, err = utilities.HTTPValidateOfferRequest(request.SourceAmount, constants.GetDecimalPlacesFiat(),
-			request.SourceCurrency, request.DestinationCurrency); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetInvalidRequest(), Payload: err.Error()})
-
-			return
-		}
-
-		if offer.ClientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		// Compile exchange rate offer.
-		if offer.Rate, offer.Amount, err = quotes.FiatConversion(
-			request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, nil); err != nil {
-			logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		offer.SourceAcc = request.SourceCurrency
-		offer.DestinationAcc = request.DestinationCurrency
-		offer.DebitAmount = request.SourceAmount
-		offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
-
-		// Encrypt offer ID before returning to client.
-		if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
-			logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		// Store the offer in Redis.
-		if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
-			logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
+		if offer, httpStatus, httpMessage, payload, err =
+			utilities.HTTPFiatOffer(auth, cache, logger, quotes, clientID, &request); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
 		}

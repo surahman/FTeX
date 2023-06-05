@@ -9,9 +9,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/quotes"
 )
 
 func TestUtilities_HTTPFiatOpen(t *testing.T) {
@@ -201,6 +203,186 @@ func TestUtilities_HTTPFiatDeposit(t *testing.T) {
 			test.expectNilPayload(t, payload, "nil payload expectation failed.")
 			require.Equal(t, test.expectErrCode, actualErrCode, "error codes mismatched.")
 			require.Contains(t, actualErrMsg, test.expectErrMsg, "expected error message mismatched.")
+		})
+	}
+}
+
+func TestUtilities_HTTPFiatOffer(t *testing.T) {
+	t.Parallel()
+
+	var (
+		sourceAmount = decimal.NewFromFloat(23123.12)
+		quotesAmount = decimal.NewFromFloat(23100.44)
+		quotesRate   = decimal.NewFromFloat(1.35)
+		validRequest = models.HTTPExchangeOfferRequest{
+			SourceCurrency:      "USD",
+			DestinationCurrency: "CAD",
+			SourceAmount:        sourceAmount,
+		}
+	)
+
+	testCases := []struct {
+		name             string
+		source           string
+		destination      string
+		expectErrMsg     string
+		httpMessage      string
+		httpStatus       int
+		request          *models.HTTPExchangeOfferRequest
+		quotesAmount     decimal.Decimal
+		quotesTimes      int
+		quotesErr        error
+		authEncryptTimes int
+		authEncryptErr   error
+		redisTimes       int
+		redisErr         error
+		expectErr        require.ErrorAssertionFunc
+		expectNilPayload require.ValueAssertionFunc
+	}{
+		{
+			name:         "validate offer - purchase",
+			source:       "INVALID",
+			destination:  "CAD",
+			expectErrMsg: "INVALID",
+			httpMessage:  constants.GetInvalidRequest(),
+			httpStatus:   http.StatusBadRequest,
+			request: &models.HTTPExchangeOfferRequest{
+				SourceCurrency:      "INVALID",
+				DestinationCurrency: "CAD",
+				SourceAmount:        sourceAmount,
+			},
+			quotesAmount:     quotesAmount,
+			quotesTimes:      0,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+			expectNilPayload: require.NotNil,
+		}, {
+			name:             "crypto conversion - purchase",
+			expectErrMsg:     "quote failure",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			request:          &validRequest,
+			quotesAmount:     quotesAmount,
+			quotesTimes:      1,
+			quotesErr:        errors.New("quote failure"),
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+			expectNilPayload: require.Nil,
+		}, {
+			name:             "zero amount",
+			expectErrMsg:     "too small",
+			httpMessage:      "too small",
+			httpStatus:       http.StatusBadRequest,
+			request:          &validRequest,
+			quotesAmount:     decimal.NewFromFloat(0),
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 0,
+			authEncryptErr:   nil,
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+			expectNilPayload: require.Nil,
+		}, {
+			name:             "encryption failure",
+			expectErrMsg:     "encryption failure",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			request:          &validRequest,
+			quotesAmount:     quotesAmount,
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   errors.New("encryption failure"),
+			redisTimes:       0,
+			redisErr:         nil,
+			expectErr:        require.Error,
+			expectNilPayload: require.Nil,
+		}, {
+			name:             "cache failure",
+			expectErrMsg:     "cache failure",
+			httpMessage:      retryMessage,
+			httpStatus:       http.StatusInternalServerError,
+			request:          &validRequest,
+			quotesAmount:     quotesAmount,
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         errors.New("cache failure"),
+			expectErr:        require.Error,
+			expectNilPayload: require.Nil,
+		}, {
+			name:             "valid",
+			expectErrMsg:     "",
+			httpMessage:      "",
+			httpStatus:       0,
+			request:          &validRequest,
+			quotesAmount:     quotesAmount,
+			quotesTimes:      1,
+			quotesErr:        nil,
+			authEncryptTimes: 1,
+			authEncryptErr:   nil,
+			redisTimes:       1,
+			redisErr:         nil,
+			expectErr:        require.NoError,
+			expectNilPayload: require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl)
+
+			gomock.InOrder(
+				mockQuotes.EXPECT().FiatConversion(
+					test.request.SourceCurrency, test.request.DestinationCurrency, test.request.SourceAmount, nil).
+					Return(quotesRate, test.quotesAmount, test.quotesErr).
+					Times(test.quotesTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("OFFER-ID", test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockCache.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.redisErr).
+					Times(test.redisTimes),
+			)
+
+			offer, status, msg, payload, err := HTTPFiatOffer(mockAuth, mockCache, zapLogger, mockQuotes,
+				uuid.UUID{}, test.request)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectNilPayload(t, payload, "nil payload expectation failed.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message is incorrect.")
+				require.Contains(t, msg, test.httpMessage, "http error message mismatched.")
+				require.Equal(t, test.httpStatus, status, "http status mismatched.")
+
+				return
+			}
+
+			require.Equal(t, test.request.SourceCurrency, offer.SourceAcc, "source account mismatch.")
+			require.Equal(t, test.request.DestinationCurrency, offer.DestinationAcc, "destination account mismatch.")
+			require.Equal(t, test.request.SourceAmount, offer.DebitAmount, "debit amount mismatch.")
+			require.Equal(t, quotesRate, offer.Rate, "offer rate mismatch.")
+			require.Equal(t, test.quotesAmount, offer.Amount, "offer amount mismatch.")
 		})
 	}
 }

@@ -9,17 +9,14 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/rs/xid"
 	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/constants"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/utilities"
-	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
 
@@ -157,54 +154,24 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 // ExchangeOfferFiat is the resolver for the exchangeOfferFiat field.
 func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPExchangeOfferRequest) (*models.HTTPExchangeOfferResponse, error) {
 	var (
-		err     error
-		offer   models.HTTPExchangeOfferResponse
-		offerID = xid.New().String()
+		clientID    uuid.UUID
+		err         error
+		httpMessage string
+		payload     any
+		offer       *models.HTTPExchangeOfferResponse
 	)
 
-	if err = validator.ValidateStruct(&input); err != nil {
-		return nil, fmt.Errorf("validation %w", err)
-	}
-
-	// Extract and validate the currency.
-	if _, err = utilities.HTTPValidateOfferRequest(
-		input.SourceAmount, constants.GetDecimalPlacesFiat(), input.SourceCurrency, input.DestinationCurrency); err != nil {
-
-		return nil, errors.New(constants.GetInvalidRequest())
-	}
-
-	if offer.ClientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
-	// Compile exchange rate offer.
-	if offer.Rate, offer.Amount, err = r.quotes.FiatConversion(
-		input.SourceCurrency, input.DestinationCurrency, input.SourceAmount, nil); err != nil {
-		r.logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
+	if offer, _, httpMessage, payload, err =
+		utilities.HTTPFiatOffer(r.auth, r.cache, r.logger, r.quotes, clientID, &input); err != nil {
 
-		return nil, errors.New("please retry your request later")
+		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
 	}
 
-	offer.SourceAcc = input.SourceCurrency
-	offer.DestinationAcc = input.DestinationCurrency
-	offer.DebitAmount = input.SourceAmount
-	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
-
-	// Encrypt offer ID before returning to client.
-	if offer.OfferID, err = r.auth.EncryptToString([]byte(offerID)); err != nil {
-		r.logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
-
-		return nil, errors.New("please retry your request later")
-	}
-
-	// Store the offer in Redis.
-	if err = r.cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
-		r.logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
-
-		return nil, errors.New("please retry your request later")
-	}
-
-	return &offer, nil
+	return offer, nil
 }
 
 // ExchangeTransferFiat is the resolver for the exchangeTransferFiat field.
