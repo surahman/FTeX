@@ -136,42 +136,19 @@ func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*mode
 func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDepositCurrencyRequest) (*postgres.FiatAccountTransferResult, error) {
 	var (
 		clientID        uuid.UUID
-		currency        postgres.Currency
 		err             error
+		httpMessage     string
 		transferReceipt *postgres.FiatAccountTransferResult
 	)
-
-	if err = validator.ValidateStruct(&input); err != nil {
-		return nil, fmt.Errorf("validation %w", err)
-	}
-
-	// Extract and validate the currency.
-	if err = currency.Scan(input.Currency); err != nil || !currency.Valid() {
-		return nil, fmt.Errorf("invalid currency")
-	}
-
-	// Check for correct decimal places.
-	if !input.Amount.Equal(input.Amount.Truncate(constants.GetDecimalPlacesFiat())) || input.Amount.IsNegative() {
-		return nil, fmt.Errorf("invalid amount")
-	}
 
 	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
-	if transferReceipt, err = r.db.FiatExternalTransfer(context.Background(),
-		&postgres.FiatTransactionDetails{
-			ClientID: clientID,
-			Currency: currency,
-			Amount:   input.Amount}); err != nil {
-		var createErr *postgres.Error
-		if !errors.As(err, &createErr) {
-			r.logger.Info("failed to unpack deposit Fiat account error", zap.Error(err))
+	if transferReceipt, _, httpMessage, _, err =
+		utilities.HTTPFiatDeposit(r.db, r.logger, clientID, &input); err != nil {
 
-			return nil, errors.New("please retry your request later")
-		}
-
-		return nil, errors.New(createErr.Message)
+		return nil, errors.New(httpMessage)
 	}
 
 	return transferReceipt, nil

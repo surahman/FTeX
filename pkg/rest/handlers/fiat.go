@@ -95,39 +95,13 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID        uuid.UUID
-			currency        postgres.Currency
 			err             error
+			httpMessage     string
+			httpStatus      int
+			payload         any
 			request         models.HTTPDepositCurrencyRequest
 			transferReceipt *postgres.FiatAccountTransferResult
 		)
-
-		if err = ginCtx.ShouldBindJSON(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		if err = validator.ValidateStruct(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
-
-			return
-		}
-
-		// Extract and validate the currency.
-		if err = currency.Scan(request.Currency); err != nil || !currency.Valid() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: request.Currency})
-
-			return
-		}
-
-		// Check for correct decimal places.
-		if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || request.Amount.IsNegative() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid amount", Payload: request.Amount.String()})
-
-			return
-		}
 
 		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
@@ -135,21 +109,15 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			return
 		}
 
-		if transferReceipt, err = db.FiatExternalTransfer(context.Background(),
-			&postgres.FiatTransactionDetails{
-				ClientID: clientID,
-				Currency: currency,
-				Amount:   request.Amount}); err != nil {
-			var createErr *postgres.Error
-			if !errors.As(err, &createErr) {
-				logger.Info("failed to unpack deposit Fiat account error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
+		if err = ginCtx.ShouldBindJSON(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
 
-				return
-			}
+			return
+		}
 
-			ginCtx.AbortWithStatusJSON(createErr.Code, models.HTTPError{Message: createErr.Message})
+		if transferReceipt, httpStatus, httpMessage, payload, err =
+			utilities.HTTPFiatDeposit(db, logger, clientID, &request); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
 		}

@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,8 +9,11 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
+	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
+	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +42,47 @@ func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUI
 	}
 
 	return 0, "", nil
+}
+
+// HTTPFiatDeposit deposits a valid amount into a Fiat account.
+func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID,
+	request *models.HTTPDepositCurrencyRequest) (*postgres.FiatAccountTransferResult, int, string, any, error) {
+	var (
+		pgCurrency      postgres.Currency
+		err             error
+		transferReceipt *postgres.FiatAccountTransferResult
+	)
+
+	if err = validator.ValidateStruct(request); err != nil {
+		return nil, http.StatusBadRequest, "validation", err.Error(), fmt.Errorf("%w", err)
+	}
+
+	// Extract and validate the currency.
+	if err = pgCurrency.Scan(request.Currency); err != nil || !pgCurrency.Valid() {
+		return nil, http.StatusBadRequest, "invalid currency", request.Currency, fmt.Errorf("%w", err)
+	}
+
+	// Check for correct decimal places.
+	if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || request.Amount.IsNegative() {
+		return nil, http.StatusBadRequest, "invalid amount", request.Amount, fmt.Errorf("%w", err)
+	}
+
+	if transferReceipt, err = db.FiatExternalTransfer(context.Background(),
+		&postgres.FiatTransactionDetails{
+			ClientID: clientID,
+			Currency: pgCurrency,
+			Amount:   request.Amount}); err != nil {
+		var createErr *postgres.Error
+		if !errors.As(err, &createErr) {
+			logger.Info("failed to unpack deposit Fiat account error", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		}
+
+		return nil, createErr.Code, createErr.Message, nil, fmt.Errorf("%w", err)
+	}
+
+	return transferReceipt, 0, "", nil, nil
 }
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit

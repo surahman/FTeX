@@ -147,13 +147,23 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		extTransferTimes   int
 	}{
 		{
+			name:               "invalid jwt",
+			expectedMsg:        "invalid jwt",
+			path:               "/fiat-deposit/invalid-jwt",
+			expectedStatus:     http.StatusForbidden,
+			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authValidateTimes:  1,
+			extTransferErr:     nil,
+			extTransferTimes:   0,
+		}, {
 			name:               "empty request",
 			expectedMsg:        "validation",
 			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{},
 			authValidateJWTErr: nil,
-			authValidateTimes:  0,
+			authValidateTimes:  1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -163,7 +173,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
 			authValidateJWTErr: nil,
-			authValidateTimes:  0,
+			authValidateTimes:  1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -173,7 +183,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
 			authValidateJWTErr: nil,
-			authValidateTimes:  0,
+			authValidateTimes:  1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -183,16 +193,6 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
 			authValidateJWTErr: nil,
-			authValidateTimes:  0,
-			extTransferErr:     nil,
-			extTransferTimes:   0,
-		}, {
-			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
-			path:               "/fiat-deposit/invalid-jwt",
-			expectedStatus:     http.StatusForbidden,
-			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,

@@ -219,8 +219,8 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 		fiatDepositAccTimes  int
 	}{
 		{
-			name:                 "empty request",
-			path:                 "/deposit-fiat/empty-request",
+			name:                 "invalid jwt",
+			path:                 "/deposit-fiat/invalid-jwt",
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.56, "USD"),
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("authorization failure"),
@@ -233,7 +233,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.56, "INVALID"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -242,7 +242,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.567, "USD"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -251,7 +251,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], -1234.56, "USD"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
