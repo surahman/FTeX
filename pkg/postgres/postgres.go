@@ -62,33 +62,33 @@ type Postgres interface {
 	FiatInternalTransfer(context.Context, *FiatTransactionDetails, *FiatTransactionDetails) (
 		*FiatAccountTransferResult, *FiatAccountTransferResult, error)
 
-	// FiatBalanceCurrency is the interface through which external methods can retrieve a Fiat account balance for a
-	// specific currency.
-	FiatBalanceCurrency(uuid.UUID, Currency) (FiatAccount, error)
+	// FiatBalance is the interface through which external methods can retrieve a Fiat account balance for a specific
+	// currency.
+	FiatBalance(uuid.UUID, Currency) (FiatAccount, error)
 
-	// FiatTxDetailsCurrency is the interface through which external methods can retrieve a Fiat transaction details for a
+	// FiatTxDetails is the interface through which external methods can retrieve a Fiat transaction details for a
 	// specific transaction.
-	FiatTxDetailsCurrency(uuid.UUID, uuid.UUID) ([]FiatJournal, error)
+	FiatTxDetails(uuid.UUID, uuid.UUID) ([]FiatJournal, error)
 
-	// FiatBalanceCurrencyPaginated is the interface through which external methods can retrieve all Fiat account balances
+	// FiatBalancePaginated is the interface through which external methods can retrieve all Fiat account balances
 	// for a specific client.
-	FiatBalanceCurrencyPaginated(uuid.UUID, Currency, int32) ([]FiatAccount, error)
+	FiatBalancePaginated(uuid.UUID, Currency, int32) ([]FiatAccount, error)
 
-	// FiatTransactionsCurrencyPaginated is the interface through which external methods can retrieve transactions on a
+	// FiatTransactionsPaginated is the interface through which external methods can retrieve transactions on a
 	// Fiat account for a specific client during a specific month.
-	FiatTransactionsCurrencyPaginated(uuid.UUID, Currency, int32, int32, pgtype.Timestamptz, pgtype.Timestamptz) (
+	FiatTransactionsPaginated(uuid.UUID, Currency, int32, int32, pgtype.Timestamptz, pgtype.Timestamptz) (
 		[]FiatJournal, error)
 
 	// CryptoCreateAccount is the interface through which external methods can create a Crypto account.
 	CryptoCreateAccount(uuid.UUID, string) error
 
-	// CryptoBalanceCurrency is the interface through which external methods can retrieve a Fiat account balance for a
-	// specific cryptocurrency.
-	CryptoBalanceCurrency(uuid.UUID, string) (CryptoAccount, error)
+	// CryptoBalance is the interface through which external methods can retrieve a Fiat account balance for a specific
+	// cryptocurrency.
+	CryptoBalance(uuid.UUID, string) (CryptoAccount, error)
 
-	// CryptoTxDetailsCurrency is the interface through which external methods can retrieve a Crypto transaction details
-	// for a specific transaction.
-	CryptoTxDetailsCurrency(uuid.UUID, uuid.UUID) ([]CryptoJournal, error)
+	// CryptoTxDetails is the interface through which external methods can retrieve a Crypto transaction details for a
+	// specific transaction.
+	CryptoTxDetails(uuid.UUID, uuid.UUID) ([]CryptoJournal, error)
 
 	// CryptoPurchase is the interface through which external methods can purchase a specific Cryptocurrency.
 	CryptoPurchase(uuid.UUID, Currency, decimal.Decimal, string, decimal.Decimal) (*FiatJournal, *CryptoJournal, error)

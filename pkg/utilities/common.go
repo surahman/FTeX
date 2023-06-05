@@ -291,7 +291,7 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 		return nil, http.StatusBadRequest, "invalid transaction ID", fmt.Errorf("%w", err)
 	}
 
-	if fiatEntries, err = db.FiatTxDetailsCurrency(clientID, transactionID); err != nil {
+	if fiatEntries, err = db.FiatTxDetails(clientID, transactionID); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Crypto account balance transactionID error", zap.Error(err))
@@ -302,7 +302,7 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
 	}
 
-	if cryptoEntries, err = db.CryptoTxDetailsCurrency(clientID, transactionID); err != nil {
+	if cryptoEntries, err = db.CryptoTxDetails(clientID, transactionID); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))

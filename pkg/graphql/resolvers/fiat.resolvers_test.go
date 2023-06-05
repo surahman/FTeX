@@ -1003,7 +1003,7 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
 
-				mockPostgres.EXPECT().FiatBalanceCurrency(gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 			)
@@ -1206,7 +1206,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 					Return([]byte{}, test.authDecryptStrErr).
 					Times(test.authDecryptStrTimes),
 
-				mockPostgres.EXPECT().FiatBalanceCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.accDetails, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 
@@ -1408,7 +1408,7 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
 
-				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.journalEntries, test.fiatTxDetailsErr).
 					Times(test.fiatTxDetailsTimes),
 			)
@@ -1614,7 +1614,7 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 					Return("encrypted-cursor", test.authEncryptCursorErr).
 					Times(test.authEncryptCursorTimes),
 
-				mockPostgres.EXPECT().FiatTransactionsCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+				mockPostgres.EXPECT().FiatTransactionsPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.journalEntries, test.fiatTxPaginatedErr).
 					Times(test.fiatTxPaginatedTimes),

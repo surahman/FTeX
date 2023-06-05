@@ -72,7 +72,7 @@ func TestQueries_CryptoBalanceCurrency(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			_, err := connection.CryptoBalanceCurrency(clientIDs[0], testCase.ticker)
+			_, err := connection.CryptoBalance(clientIDs[0], testCase.ticker)
 			testCase.expectErr(t, err, "error expectation failed.")
 		})
 	}

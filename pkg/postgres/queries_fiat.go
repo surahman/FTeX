@@ -25,9 +25,9 @@ func (p *postgresImpl) FiatCreateAccount(clientID uuid.UUID, currency Currency) 
 	return nil
 }
 
-// FiatBalanceCurrency is the interface through which external methods can retrieve a Fiat account balance for a
-// specific currency.
-func (p *postgresImpl) FiatBalanceCurrency(clientID uuid.UUID, currency Currency) (FiatAccount, error) {
+// FiatBalance is the interface through which external methods can retrieve a Fiat account balance for a specific
+// currency.
+func (p *postgresImpl) FiatBalance(clientID uuid.UUID, currency Currency) (FiatAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
 
 	defer cancel()
@@ -40,9 +40,9 @@ func (p *postgresImpl) FiatBalanceCurrency(clientID uuid.UUID, currency Currency
 	return balance, nil
 }
 
-// FiatTxDetailsCurrency is the interface through which external methods can retrieve a Fiat transaction details for a
-// specific transaction.
-func (p *postgresImpl) FiatTxDetailsCurrency(clientID uuid.UUID, transactionID uuid.UUID) ([]FiatJournal, error) {
+// FiatTxDetails is the interface through which external methods can retrieve a Fiat transaction details for a specific
+// transaction.
+func (p *postgresImpl) FiatTxDetails(clientID uuid.UUID, transactionID uuid.UUID) ([]FiatJournal, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
 
 	defer cancel()
@@ -55,9 +55,9 @@ func (p *postgresImpl) FiatTxDetailsCurrency(clientID uuid.UUID, transactionID u
 	return journal, nil
 }
 
-// FiatBalanceCurrencyPaginated is the interface through which external methods can retrieve all Fiat account balances
-// for a specific client.
-func (p *postgresImpl) FiatBalanceCurrencyPaginated(clientID uuid.UUID, baseCurrency Currency, limit int32) (
+// FiatBalancePaginated is the interface through which external methods can retrieve all Fiat account balances for a
+// specific client.
+func (p *postgresImpl) FiatBalancePaginated(clientID uuid.UUID, baseCurrency Currency, limit int32) (
 	[]FiatAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
 
@@ -75,9 +75,9 @@ func (p *postgresImpl) FiatBalanceCurrencyPaginated(clientID uuid.UUID, baseCurr
 	return balance, nil
 }
 
-// FiatTransactionsCurrencyPaginated is the interface through which external methods can retrieve transactions on a Fiat
+// FiatTransactionsPaginated is the interface through which external methods can retrieve transactions on a Fiat
 // account for a specific client during a specific month.
-func (p *postgresImpl) FiatTransactionsCurrencyPaginated(
+func (p *postgresImpl) FiatTransactionsPaginated(
 	clientID uuid.UUID,
 	currency Currency,
 	limit,

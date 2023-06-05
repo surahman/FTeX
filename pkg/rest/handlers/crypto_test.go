@@ -775,7 +775,7 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockDB.EXPECT().CryptoBalanceCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.CryptoAccount{}, test.cryptoBalanceErr).
 					Times(test.cryptoBalanceTimes),
 			)
@@ -879,11 +879,11 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockDB.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.FiatJournal{{}}, test.fiatTxErr).
 					Times(test.fiatTxTimes),
 
-				mockDB.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.CryptoJournal{{}}, test.cryptoTxErr).
 					Times(test.cryptoTxTimes),
 			)

@@ -249,7 +249,7 @@ func BalanceCrypto(
 			return
 		}
 
-		if accDetails, err = db.CryptoBalanceCurrency(clientID, ticker); err != nil {
+		if accDetails, err = db.CryptoBalance(clientID, ticker); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {
 				logger.Info("failed to unpack Crypto account balance currency error", zap.Error(err))

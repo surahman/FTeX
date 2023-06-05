@@ -982,7 +982,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) { //nolint:dupl
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockDB.EXPECT().FiatBalanceCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 			)
@@ -1130,11 +1130,11 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockDB.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.fiatJournal, test.fiatTxErr).
 					Times(test.fiatTxTimes),
 
-				mockDB.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.cryptoJournal, test.cryptoTxErr).
 					Times(test.cryptoTxTimes),
 			)
@@ -1341,7 +1341,7 @@ func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) { //nolint:dupl
 					Return([]byte{}, test.authDecryptStrErr).
 					Times(test.authDecryptStrTimes),
 
-				mockDB.EXPECT().FiatBalanceCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().FiatBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.accDetails, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 
@@ -1555,7 +1555,7 @@ func TestHandler_TxDetailsCurrencyFiatPaginated(t *testing.T) {
 					Return("encrypted-cursor", test.authEncryptCursorErr).
 					Times(test.authEncryptCursorTimes),
 
-				mockDB.EXPECT().FiatTransactionsCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+				mockDB.EXPECT().FiatTransactionsPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.journalEntries, test.fiatTxPaginatedErr).
 					Times(test.fiatTxPaginatedTimes),

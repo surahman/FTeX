@@ -334,7 +334,7 @@ func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*
 		return nil, errors.New("authorization failure")
 	}
 
-	if accDetails, err = r.db.FiatBalanceCurrency(clientID, currency); err != nil {
+	if accDetails, err = r.db.FiatBalance(clientID, currency); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			r.logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
@@ -376,7 +376,7 @@ func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, 
 		return nil, errors.New("invalid page cursor or page size")
 	}
 
-	if accDetails, err = r.db.FiatBalanceCurrencyPaginated(clientID, currency, *pageSize+1); err != nil {
+	if accDetails, err = r.db.FiatBalancePaginated(clientID, currency, *pageSize+1); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			r.logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
@@ -428,7 +428,7 @@ func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionI
 		return nil, errors.New("authorization failure")
 	}
 
-	if journalEntries, err = r.db.FiatTxDetailsCurrency(clientID, txID); err != nil {
+	if journalEntries, err = r.db.FiatTxDetails(clientID, txID); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
 			r.logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
@@ -501,7 +501,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 	}
 
 	// Retrieve transaction details page.
-	if journalEntries, err = r.db.FiatTransactionsCurrencyPaginated(
+	if journalEntries, err = r.db.FiatTransactionsPaginated(
 		clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {

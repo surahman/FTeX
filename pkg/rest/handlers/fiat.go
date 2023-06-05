@@ -441,7 +441,7 @@ func BalanceFiat(
 			return
 		}
 
-		if accDetails, err = db.FiatBalanceCurrency(clientID, currency); err != nil {
+		if accDetails, err = db.FiatBalance(clientID, currency); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {
 				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
@@ -558,7 +558,7 @@ func BalanceFiatPaginated(
 			return
 		}
 
-		if accDetails, err = db.FiatBalanceCurrencyPaginated(clientID, currency, pageSize+1); err != nil {
+		if accDetails, err = db.FiatBalancePaginated(clientID, currency, pageSize+1); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {
 				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
@@ -679,7 +679,7 @@ func TxDetailsFiatPaginated(
 		}
 
 		// Retrieve transaction details page.
-		if journalEntries, err = db.FiatTransactionsCurrencyPaginated(
+		if journalEntries, err = db.FiatTransactionsPaginated(
 			clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {

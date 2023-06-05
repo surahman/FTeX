@@ -617,11 +617,11 @@ func TestUtilities_HTTPTxDetails(t *testing.T) {
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.fiatJournal, test.fiatTxErr).
 					Times(test.fiatTxTimes),
 
-				mockPostgres.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.cryptoJournal, test.cryptoTxErr).
 					Times(test.cryptoTxTimes),
 			)
