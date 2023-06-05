@@ -1090,7 +1090,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 					Return([]byte{}, test.authDecryptStrErr).
 					Times(test.authDecryptStrTimes),
 
-				mockDB.EXPECT().CryptoBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoBalancesPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.accBalances, test.cryptoBalanceErr).
 					Times(test.cryptoBalanceTimes),
 

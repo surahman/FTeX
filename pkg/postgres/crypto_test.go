@@ -684,12 +684,12 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 	testCases := []struct { //nolint:dupl
 		name         string
 		expectedCont int
-		parameters   cryptoGetAllJournalTransactionPaginatedParams
+		parameters   cryptoGetAllJournalTransactionsPaginatedParams
 	}{
 		{
 			name:         "ClientID1 BTC: Before-After",
 			expectedCont: 4,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Ticker:    "BTC",
 				Offset:    0,
@@ -700,7 +700,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 BTC: Before-After, 2 items page 1",
 			expectedCont: 2,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Ticker:    "BTC",
 				Offset:    0,
@@ -711,7 +711,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 BTC: Before-After, 2 items page 2",
 			expectedCont: 2,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Ticker:    "BTC",
 				Offset:    2,
@@ -722,7 +722,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 BTC: Before-After, 3 items page 2",
 			expectedCont: 3,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Ticker:    "BTC",
 				Offset:    1,
@@ -733,7 +733,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 BTC: Before",
 			expectedCont: 0,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Ticker:    "BTC",
 				Offset:    0,
@@ -744,7 +744,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 BTC: After",
 			expectedCont: 0,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Ticker:    "BTC",
 				Offset:    0,
@@ -755,7 +755,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID2 - ETH: Before-After",
 			expectedCont: 4,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID2,
 				Ticker:    "ETH",
 				Offset:    0,
@@ -766,7 +766,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID2 - XFR: Before-After",
 			expectedCont: 0,
-			parameters: cryptoGetAllJournalTransactionPaginatedParams{
+			parameters: cryptoGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID2,
 				Ticker:    "XFR",
 				Offset:    0,
@@ -779,7 +779,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.cryptoGetAllJournalTransactionPaginated(ctx, &testCase.parameters)
+			rows, err := connection.Query.cryptoGetAllJournalTransactionsPaginated(ctx, &testCase.parameters)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})

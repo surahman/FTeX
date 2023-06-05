@@ -622,12 +622,12 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 	testCases := []struct { //nolint:dupl
 		name         string
 		expectedCont int
-		parameters   fiatGetAllJournalTransactionPaginatedParams
+		parameters   fiatGetAllJournalTransactionsPaginatedParams
 	}{
 		{
 			name:         "ClientID1 USD: Before-After",
 			expectedCont: 4,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				Offset:    0,
@@ -638,7 +638,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: Before-After, 2 items page 1",
 			expectedCont: 2,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				Offset:    0,
@@ -649,7 +649,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: Before-After, 2 items page 2",
 			expectedCont: 2,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				Offset:    2,
@@ -660,7 +660,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: Before-After, 3 items page 2",
 			expectedCont: 3,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				Offset:    1,
@@ -671,7 +671,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: Before",
 			expectedCont: 0,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				Offset:    0,
@@ -682,7 +682,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID1 USD: After",
 			expectedCont: 0,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID1,
 				Currency:  "USD",
 				Offset:    0,
@@ -693,7 +693,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID2 - AED: Before-After",
 			expectedCont: 4,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID2,
 				Currency:  "AED",
 				Offset:    0,
@@ -704,7 +704,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		}, {
 			name:         "ClientID2 - PKR: Before-After",
 			expectedCont: 0,
-			parameters: fiatGetAllJournalTransactionPaginatedParams{
+			parameters: fiatGetAllJournalTransactionsPaginatedParams{
 				ClientID:  clientID2,
 				Currency:  "PKR",
 				Offset:    0,
@@ -717,7 +717,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.fiatGetAllJournalTransactionPaginated(ctx, &testCase.parameters)
+			rows, err := connection.Query.fiatGetAllJournalTransactionsPaginated(ctx, &testCase.parameters)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})

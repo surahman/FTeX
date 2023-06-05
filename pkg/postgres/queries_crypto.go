@@ -199,7 +199,7 @@ func (p *postgresImpl) CryptoTransactionsPaginated(
 
 	defer cancel()
 
-	balance, err := p.Query.cryptoGetAllJournalTransactionPaginated(ctx, &cryptoGetAllJournalTransactionPaginatedParams{
+	balance, err := p.Query.cryptoGetAllJournalTransactionsPaginated(ctx, &cryptoGetAllJournalTransactionsPaginatedParams{
 		ClientID:  clientID,
 		Ticker:    ticker,
 		Offset:    offset,

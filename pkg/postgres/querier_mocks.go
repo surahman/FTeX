@@ -81,19 +81,19 @@ func (mr *MockQuerierMockRecorder) cryptoGetAllAccounts(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoGetAllAccounts", reflect.TypeOf((*MockQuerier)(nil).cryptoGetAllAccounts), arg0, arg1)
 }
 
-// cryptoGetAllJournalTransactionPaginated mocks base method.
-func (m *MockQuerier) cryptoGetAllJournalTransactionPaginated(arg0 context.Context, arg1 *cryptoGetAllJournalTransactionPaginatedParams) ([]CryptoJournal, error) {
+// cryptoGetAllJournalTransactionsPaginated mocks base method.
+func (m *MockQuerier) cryptoGetAllJournalTransactionsPaginated(arg0 context.Context, arg1 *cryptoGetAllJournalTransactionsPaginatedParams) ([]CryptoJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "cryptoGetAllJournalTransactionPaginated", arg0, arg1)
+	ret := m.ctrl.Call(m, "cryptoGetAllJournalTransactionsPaginated", arg0, arg1)
 	ret0, _ := ret[0].([]CryptoJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// cryptoGetAllJournalTransactionPaginated indicates an expected call of cryptoGetAllJournalTransactionPaginated.
-func (mr *MockQuerierMockRecorder) cryptoGetAllJournalTransactionPaginated(arg0, arg1 interface{}) *gomock.Call {
+// cryptoGetAllJournalTransactionsPaginated indicates an expected call of cryptoGetAllJournalTransactionsPaginated.
+func (mr *MockQuerierMockRecorder) cryptoGetAllJournalTransactionsPaginated(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoGetAllJournalTransactionPaginated", reflect.TypeOf((*MockQuerier)(nil).cryptoGetAllJournalTransactionPaginated), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoGetAllJournalTransactionsPaginated", reflect.TypeOf((*MockQuerier)(nil).cryptoGetAllJournalTransactionsPaginated), arg0, arg1)
 }
 
 // cryptoGetJournalTransaction mocks base method.
@@ -199,19 +199,19 @@ func (mr *MockQuerierMockRecorder) fiatGetAllAccounts(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAllAccounts", reflect.TypeOf((*MockQuerier)(nil).fiatGetAllAccounts), arg0, arg1)
 }
 
-// fiatGetAllJournalTransactionPaginated mocks base method.
-func (m *MockQuerier) fiatGetAllJournalTransactionPaginated(arg0 context.Context, arg1 *fiatGetAllJournalTransactionPaginatedParams) ([]FiatJournal, error) {
+// fiatGetAllJournalTransactionsPaginated mocks base method.
+func (m *MockQuerier) fiatGetAllJournalTransactionsPaginated(arg0 context.Context, arg1 *fiatGetAllJournalTransactionsPaginatedParams) ([]FiatJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "fiatGetAllJournalTransactionPaginated", arg0, arg1)
+	ret := m.ctrl.Call(m, "fiatGetAllJournalTransactionsPaginated", arg0, arg1)
 	ret0, _ := ret[0].([]FiatJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// fiatGetAllJournalTransactionPaginated indicates an expected call of fiatGetAllJournalTransactionPaginated.
-func (mr *MockQuerierMockRecorder) fiatGetAllJournalTransactionPaginated(arg0, arg1 interface{}) *gomock.Call {
+// fiatGetAllJournalTransactionsPaginated indicates an expected call of fiatGetAllJournalTransactionsPaginated.
+func (mr *MockQuerierMockRecorder) fiatGetAllJournalTransactionsPaginated(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAllJournalTransactionPaginated", reflect.TypeOf((*MockQuerier)(nil).fiatGetAllJournalTransactionPaginated), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "fiatGetAllJournalTransactionsPaginated", reflect.TypeOf((*MockQuerier)(nil).fiatGetAllJournalTransactionsPaginated), arg0, arg1)
 }
 
 // fiatGetJournalTransaction mocks base method.

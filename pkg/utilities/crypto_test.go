@@ -1000,7 +1000,7 @@ func TestUtilities_HTTPCryptoBalancePaginated(t *testing.T) {
 					Return([]byte("decrypted-string"), test.decryptStringErr).
 					Times(test.decryptStringTimes),
 
-				mockPostgres.EXPECT().CryptoBalancePaginated(gomock.Any(), gomock.Any(), test.expectedPageSize+1).
+				mockPostgres.EXPECT().CryptoBalancesPaginated(gomock.Any(), gomock.Any(), test.expectedPageSize+1).
 					Return(test.balanceData, test.balanceErr).
 					Times(test.balanceTimes),
 

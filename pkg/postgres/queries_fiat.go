@@ -88,7 +88,7 @@ func (p *postgresImpl) FiatTransactionsCurrencyPaginated(
 
 	defer cancel()
 
-	balance, err := p.Query.fiatGetAllJournalTransactionPaginated(ctx, &fiatGetAllJournalTransactionPaginatedParams{
+	balance, err := p.Query.fiatGetAllJournalTransactionsPaginated(ctx, &fiatGetAllJournalTransactionsPaginatedParams{
 		ClientID:  clientID,
 		Currency:  currency,
 		Offset:    offset,
