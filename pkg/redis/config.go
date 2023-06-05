@@ -12,26 +12,26 @@ import (
 //
 //nolint:lll
 type config struct {
-	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
-	Connection     connectionConfig     `json:"connection,omitempty"     yaml:"connection,omitempty"     mapstructure:"connection"`
+	Authentication authenticationConfig `json:"authentication,omitempty" mapstructure:"authentication" yaml:"authentication,omitempty"`
+	Connection     connectionConfig     `json:"connection,omitempty"     mapstructure:"connection"     yaml:"connection,omitempty"`
 }
 
 // authenticationConfig contains the Redis session authentication information.
 type authenticationConfig struct {
-	Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
-	Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password"`
+	Username string `json:"username,omitempty" mapstructure:"username" validate:"required"       yaml:"username,omitempty"`
+	Password string `json:"password,omitempty" mapstructure:"password" yaml:"password,omitempty"`
 }
 
 // connectionConfig contains the Redis session connection information.
 //
 //nolint:lll
 type connectionConfig struct {
-	Addr            string `json:"addr,omitempty"            yaml:"addr,omitempty"            mapstructure:"addr"            validate:"required"`
-	MaxConnAttempts int    `json:"maxConnAttempts,omitempty" yaml:"maxConnAttempts,omitempty" mapstructure:"maxConnAttempts" validate:"required,min=1"`
-	MaxRetries      int    `json:"maxRetries,omitempty"      yaml:"maxRetries,omitempty"      mapstructure:"maxRetries"      validate:"required,min=1"`
-	PoolSize        int    `json:"poolSize,omitempty"        yaml:"poolSize,omitempty"        mapstructure:"poolSize"        validate:"required,min=1"`
-	MinIdleConns    int    `json:"minIdleConns,omitempty"    yaml:"minIdleConns,omitempty"    mapstructure:"minIdleConns"    validate:"required,min=1"`
-	MaxIdleConns    int    `json:"maxIdleConns,omitempty"    yaml:"maxIdleConns,omitempty"    mapstructure:"maxIdleConns"`
+	Addr            string `json:"addr,omitempty"            mapstructure:"addr"            validate:"required"           yaml:"addr,omitempty"`
+	MaxConnAttempts int    `json:"maxConnAttempts,omitempty" mapstructure:"maxConnAttempts" validate:"required,min=1"     yaml:"maxConnAttempts,omitempty"`
+	MaxRetries      int    `json:"maxRetries,omitempty"      mapstructure:"maxRetries"      validate:"required,min=1"     yaml:"maxRetries,omitempty"`
+	PoolSize        int    `json:"poolSize,omitempty"        mapstructure:"poolSize"        validate:"required,min=1"     yaml:"poolSize,omitempty"`
+	MinIdleConns    int    `json:"minIdleConns,omitempty"    mapstructure:"minIdleConns"    validate:"required,min=1"     yaml:"minIdleConns,omitempty"`
+	MaxIdleConns    int    `json:"maxIdleConns,omitempty"    mapstructure:"maxIdleConns"    yaml:"maxIdleConns,omitempty"`
 }
 
 // newConfig creates a blank configuration struct for Redis.

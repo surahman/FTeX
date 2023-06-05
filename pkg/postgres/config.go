@@ -13,35 +13,35 @@ import (
 //
 //nolint:lll
 type config struct {
-	Authentication authenticationConfig `json:"authentication,omitempty" yaml:"authentication,omitempty" mapstructure:"authentication"`
-	Connection     connectionConfig     `json:"connection,omitempty"     yaml:"connection,omitempty"     mapstructure:"connection"`
-	Pool           poolConfig           `json:"pool,omitempty"           yaml:"pool,omitempty"           mapstructure:"pool"`
+	Authentication authenticationConfig `json:"authentication,omitempty" mapstructure:"authentication" yaml:"authentication,omitempty"`
+	Connection     connectionConfig     `json:"connection,omitempty"     mapstructure:"connection"     yaml:"connection,omitempty"`
+	Pool           poolConfig           `json:"pool,omitempty"           mapstructure:"pool"           yaml:"pool,omitempty"`
 }
 
 // authenticationConfig contains the Postgres session authentication information.
 type authenticationConfig struct {
-	Username string `json:"username,omitempty" yaml:"username,omitempty" mapstructure:"username" validate:"required"`
-	Password string `json:"password,omitempty" yaml:"password,omitempty" mapstructure:"password" validate:"required"`
+	Username string `json:"username,omitempty" mapstructure:"username" validate:"required" yaml:"username,omitempty"`
+	Password string `json:"password,omitempty" mapstructure:"password" validate:"required" yaml:"password,omitempty"`
 }
 
 // connectionConfig contains the Postgres session connection information.
 //
 //nolint:lll
 type connectionConfig struct {
-	Database        string `json:"database,omitempty"              yaml:"database,omitempty"              mapstructure:"database"              validate:"required"`
-	Host            string `json:"host,omitempty"                  yaml:"host,omitempty"                  mapstructure:"host"                  validate:"required"`
-	MaxConnAttempts int    `json:"maxConnectionAttempts,omitempty" yaml:"maxConnectionAttempts,omitempty" mapstructure:"maxConnectionAttempts" validate:"required,min=1"`
-	Timeout         int    `json:"timeout,omitempty"               yaml:"timeout,omitempty"               mapstructure:"timeout"               validate:"required,min=5"`
-	Port            uint16 `json:"port,omitempty"                  yaml:"port,omitempty"                  mapstructure:"port"                  validate:"required"`
+	Database        string `json:"database,omitempty"              mapstructure:"database"              validate:"required"       yaml:"database,omitempty"`
+	Host            string `json:"host,omitempty"                  mapstructure:"host"                  validate:"required"       yaml:"host,omitempty"`
+	MaxConnAttempts int    `json:"maxConnectionAttempts,omitempty" mapstructure:"maxConnectionAttempts" validate:"required,min=1" yaml:"maxConnectionAttempts,omitempty"`
+	Timeout         int    `json:"timeout,omitempty"               mapstructure:"timeout"               validate:"required,min=5" yaml:"timeout,omitempty"`
+	Port            uint16 `json:"port,omitempty"                  mapstructure:"port"                  validate:"required"       yaml:"port,omitempty"`
 }
 
 // poolConfig contains the Postgres session connection pool specific information.
 //
 //nolint:lll
 type poolConfig struct {
-	HealthCheckPeriod time.Duration `json:"healthCheckPeriod,omitempty" yaml:"healthCheckPeriod,omitempty" mapstructure:"healthCheckPeriod" validate:"omitempty,min=5s"`
-	MaxConns          int32         `json:"maxConns,omitempty"          yaml:"maxConns,omitempty"          mapstructure:"maxConns"          validate:"required,gte=4"`
-	MinConns          int32         `json:"minConns,omitempty"          yaml:"minConns,omitempty"          mapstructure:"minConns"          validate:"required,gte=4"`
+	HealthCheckPeriod time.Duration `json:"healthCheckPeriod,omitempty" mapstructure:"healthCheckPeriod" validate:"omitempty,min=5s" yaml:"healthCheckPeriod,omitempty"`
+	MaxConns          int32         `json:"maxConns,omitempty"          mapstructure:"maxConns"          validate:"required,gte=4"   yaml:"maxConns,omitempty"`
+	MinConns          int32         `json:"minConns,omitempty"          mapstructure:"minConns"          validate:"required,gte=4"   yaml:"minConns,omitempty"`
 }
 
 // newConfig creates a blank configuration struct for Postgres.

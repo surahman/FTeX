@@ -13,24 +13,24 @@ import (
 //
 //nolint:lll
 type config struct {
-	FiatCurrency   apiConfig        `json:"fiatCurrency,omitempty"   yaml:"fiatCurrency,omitempty"   mapstructure:"fiatCurrency"   validate:"required"`
-	CryptoCurrency apiConfig        `json:"cryptoCurrency,omitempty" yaml:"cryptoCurrency,omitempty" mapstructure:"cryptoCurrency" validate:"required"`
-	Connection     connectionConfig `json:"connection,omitempty"     yaml:"connection,omitempty"     mapstructure:"connection"`
+	FiatCurrency   apiConfig        `json:"fiatCurrency,omitempty"   mapstructure:"fiatCurrency"   validate:"required"         yaml:"fiatCurrency,omitempty"`
+	CryptoCurrency apiConfig        `json:"cryptoCurrency,omitempty" mapstructure:"cryptoCurrency" validate:"required"         yaml:"cryptoCurrency,omitempty"`
+	Connection     connectionConfig `json:"connection,omitempty"     mapstructure:"connection"     yaml:"connection,omitempty"`
 }
 
 // apiConfig contains the API Key and URL information for a currency exchange endpoint.
 type apiConfig struct {
-	APIKey    string `json:"apiKey,omitempty"    yaml:"apiKey,omitempty"    mapstructure:"apiKey"    validate:"required"`
-	HeaderKey string `json:"headerKey,omitempty" yaml:"headerKey,omitempty" mapstructure:"headerKey" validate:"required"`
-	Endpoint  string `json:"endpoint,omitempty"  yaml:"endpoint,omitempty"  mapstructure:"endpoint"  validate:"required"`
+	APIKey    string `json:"apiKey,omitempty"    mapstructure:"apiKey"    validate:"required" yaml:"apiKey,omitempty"`
+	HeaderKey string `json:"headerKey,omitempty" mapstructure:"headerKey" validate:"required" yaml:"headerKey,omitempty"`
+	Endpoint  string `json:"endpoint,omitempty"  mapstructure:"endpoint"  validate:"required" yaml:"endpoint,omitempty"`
 }
 
 // connectionConfig contains HTTP connection attempt information.
 //
 //nolint:lll
 type connectionConfig struct {
-	UserAgent string        `json:"userAgent,omitempty" yaml:"userAgent,omitempty" mapstructure:"userAgent" validate:"required"`
-	Timeout   time.Duration `json:"timeout,omitempty"   yaml:"timeout,omitempty"   mapstructure:"timeout"   validate:"required"`
+	UserAgent string        `json:"userAgent,omitempty" mapstructure:"userAgent" validate:"required" yaml:"userAgent,omitempty"`
+	Timeout   time.Duration `json:"timeout,omitempty"   mapstructure:"timeout"   validate:"required" yaml:"timeout,omitempty"`
 }
 
 // newConfig creates a blank configuration struct for Redis.
