@@ -20,7 +20,6 @@ linters:
     - nosnakecase
     - structcheck
     - scopelint
-    - tagalign
     - testpackage
     - varcheck
 linters-settings:

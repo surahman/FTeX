@@ -15,8 +15,8 @@ type User struct {
 type UserAccount struct {
 	UserLoginCredentials
 	FirstName string `json:"firstName,omitempty" validate:"required,max=64"`
-	LastName  string `json:"lastName,omitempty" validate:"required,max=64"`
-	Email     string `json:"email,omitempty" validate:"required,email,max=64"`
+	LastName  string `json:"lastName,omitempty"  validate:"required,max=64"`
+	Email     string `json:"email,omitempty"     validate:"required,email,max=64"`
 }
 
 // UserLoginCredentials will contain the login credentials. This will also be used for login requests.

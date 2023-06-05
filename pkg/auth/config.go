@@ -10,26 +10,26 @@ import (
 
 // Config contains all the configurations for authentication.
 type config struct {
-	JWTConfig jwtConfig     `json:"jwt,omitempty" yaml:"jwt,omitempty" mapstructure:"jwt" validate:"required"`
-	General   generalConfig `json:"general,omitempty" yaml:"general,omitempty" mapstructure:"general" validate:"required"`
+	JWTConfig jwtConfig     `json:"jwt,omitempty"     mapstructure:"jwt"     validate:"required" yaml:"jwt,omitempty"`
+	General   generalConfig `json:"general,omitempty" mapstructure:"general" validate:"required" yaml:"general,omitempty"`
 }
 
 // jwtConfig contains the configurations for JWT creation and verification.
 //
 //nolint:lll
 type jwtConfig struct {
-	Key                string `json:"key,omitempty" yaml:"key,omitempty" mapstructure:"key" validate:"required,min=8,max=256"`
-	Issuer             string `json:"issuer,omitempty" yaml:"issuer,omitempty" mapstructure:"issuer" validate:"required"`
-	ExpirationDuration int64  `json:"expirationDuration,omitempty" yaml:"expirationDuration,omitempty" mapstructure:"expirationDuration" validate:"required,min=60,gtefield=RefreshThreshold"`
-	RefreshThreshold   int64  `json:"refreshThreshold,omitempty" yaml:"refreshThreshold,omitempty" mapstructure:"refreshThreshold" validate:"required,min=1,ltefield=ExpirationDuration"`
+	Key                string `json:"key,omitempty"                mapstructure:"key"                validate:"required,min=8,max=256"                     yaml:"key,omitempty"`
+	Issuer             string `json:"issuer,omitempty"             mapstructure:"issuer"             validate:"required"                                   yaml:"issuer,omitempty"`
+	ExpirationDuration int64  `json:"expirationDuration,omitempty" mapstructure:"expirationDuration" validate:"required,min=60,gtefield=RefreshThreshold"  yaml:"expirationDuration,omitempty"`
+	RefreshThreshold   int64  `json:"refreshThreshold,omitempty"   mapstructure:"refreshThreshold"   validate:"required,min=1,ltefield=ExpirationDuration" yaml:"refreshThreshold,omitempty"`
 }
 
 // generalConfig contains the configurations for general encryption.
 //
 //nolint:lll
 type generalConfig struct {
-	BcryptCost   int    `json:"bcryptCost,omitempty" yaml:"bcryptCost,omitempty" mapstructure:"bcryptCost" validate:"required,min=4,max=31"`
-	CryptoSecret string `json:"cryptoSecret,omitempty" yaml:"cryptoSecret,omitempty" mapstructure:"cryptoSecret" validate:"required,len=32"`
+	BcryptCost   int    `json:"bcryptCost,omitempty"   mapstructure:"bcryptCost"   validate:"required,min=4,max=31" yaml:"bcryptCost,omitempty"`
+	CryptoSecret string `json:"cryptoSecret,omitempty" mapstructure:"cryptoSecret" validate:"required,len=32"       yaml:"cryptoSecret,omitempty"`
 }
 
 // newConfig creates a blank configuration struct for the authorization.

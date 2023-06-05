@@ -13,26 +13,26 @@ import (
 //
 //nolint:lll
 type config struct {
-	Server        serverConfig        `json:"server,omitempty" yaml:"server,omitempty" mapstructure:"server" validate:"required"`
-	Authorization authorizationConfig `json:"authorization,omitempty" yaml:"authorization,omitempty" mapstructure:"authorization" validate:"required"`
+	Server        serverConfig        `json:"server,omitempty"        mapstructure:"server"        validate:"required" yaml:"server,omitempty"`
+	Authorization authorizationConfig `json:"authorization,omitempty" mapstructure:"authorization" validate:"required" yaml:"authorization,omitempty"`
 }
 
 // serverConfig contains the configurations for the HTTP REST server.
 //
 //nolint:lll
 type serverConfig struct {
-	BasePath          string        `json:"basePath,omitempty" yaml:"basePath,omitempty" mapstructure:"basePath" validate:"required"`
-	SwaggerPath       string        `json:"swaggerPath,omitempty" yaml:"swaggerPath,omitempty" mapstructure:"swaggerPath" validate:"required"`
-	PortNumber        int           `json:"portNumber,omitempty" yaml:"portNumber,omitempty" mapstructure:"portNumber" validate:"required,min=1000"`
-	ShutdownDelay     time.Duration `json:"shutdownDelay,omitempty" yaml:"shutdownDelay,omitempty" mapstructure:"shutdownDelay" validate:"required,min=0"`
-	ReadTimeout       time.Duration `json:"readTimeout,omitempty" yaml:"readTimeout,omitempty" mapstructure:"readTimeout" validate:"required,min=1"`
-	WriteTimeout      time.Duration `json:"writeTimeout,omitempty" yaml:"writeTimeout,omitempty" mapstructure:"writeTimeout" validate:"required,min=1"`
-	ReadHeaderTimeout time.Duration `json:"readHeaderTimeout,omitempty" yaml:"readHeaderTimeout,omitempty" mapstructure:"readHeaderTimeout" validate:"required,min=1"`
+	BasePath          string        `json:"basePath,omitempty"          mapstructure:"basePath"          validate:"required"          yaml:"basePath,omitempty"`
+	SwaggerPath       string        `json:"swaggerPath,omitempty"       mapstructure:"swaggerPath"       validate:"required"          yaml:"swaggerPath,omitempty"`
+	PortNumber        int           `json:"portNumber,omitempty"        mapstructure:"portNumber"        validate:"required,min=1000" yaml:"portNumber,omitempty"`
+	ShutdownDelay     time.Duration `json:"shutdownDelay,omitempty"     mapstructure:"shutdownDelay"     validate:"required,min=0"    yaml:"shutdownDelay,omitempty"`
+	ReadTimeout       time.Duration `json:"readTimeout,omitempty"       mapstructure:"readTimeout"       validate:"required,min=1"    yaml:"readTimeout,omitempty"`
+	WriteTimeout      time.Duration `json:"writeTimeout,omitempty"      mapstructure:"writeTimeout"      validate:"required,min=1"    yaml:"writeTimeout,omitempty"`
+	ReadHeaderTimeout time.Duration `json:"readHeaderTimeout,omitempty" mapstructure:"readHeaderTimeout" validate:"required,min=1"    yaml:"readHeaderTimeout,omitempty"`
 }
 
 // authorizationConfig contains the configurations for request authorization.
 type authorizationConfig struct {
-	HeaderKey string `json:"headerKey,omitempty" yaml:"headerKey,omitempty" mapstructure:"headerKey" validate:"required"`
+	HeaderKey string `json:"headerKey,omitempty" mapstructure:"headerKey" validate:"required" yaml:"headerKey,omitempty"`
 }
 
 // newConfig creates a blank configuration struct for the authorization.
