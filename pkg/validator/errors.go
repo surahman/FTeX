@@ -8,7 +8,7 @@ import (
 // FieldError contains information on JSON validation errors.
 type FieldError struct {
 	Field string `json:"field" yaml:"field"` // Field name where the validation error occurred.
-	Tag   string `json:"tag" yaml:"tag"`     // The reason for the validation failure.
+	Tag   string `json:"tag"   yaml:"tag"`   // The reason for the validation failure.
 	Value any    `json:"value" yaml:"value"` // The value(s) associated with the failure.
 }
 
