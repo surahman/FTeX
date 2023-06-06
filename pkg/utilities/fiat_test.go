@@ -14,6 +14,7 @@ import (
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
+	"github.com/surahman/FTeX/pkg/redis"
 )
 
 func TestUtilities_HTTPFiatOpen(t *testing.T) {
@@ -383,6 +384,325 @@ func TestUtilities_HTTPFiatOffer(t *testing.T) {
 			require.Equal(t, test.request.SourceAmount, offer.DebitAmount, "debit amount mismatch.")
 			require.Equal(t, quotesRate, offer.Rate, "offer rate mismatch.")
 			require.Equal(t, test.quotesAmount, offer.Amount, "offer amount mismatch.")
+		})
+	}
+}
+
+func TestUtilities_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
+	t.Parallel()
+
+	validDecimal, err := decimal.NewFromString("10101.11")
+	require.NoError(t, err, "failed to parse valid decimal.")
+
+	validClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate valid client id.")
+
+	invalidClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate invalid client id.")
+
+	validOfferID := []byte("VALID")
+	validOffer := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	invalidOfferClientID := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       invalidClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	invalidOfferSource := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "INVALID",
+			DestinationAcc: "CAD",
+			Rate:           validDecimal,
+			Amount:         validDecimal,
+		},
+	}
+
+	testCases := []struct {
+		name              string
+		expectedMsg       string
+		expectedStatus    int
+		request           models.HTTPTransferRequest
+		authDecryptErr    error
+		authDecryptTimes  int
+		redisGetData      models.HTTPExchangeOfferResponse
+		redisGetErr       error
+		redisGetTimes     int
+		redisDelErr       error
+		redisDelTimes     int
+		internalXferErr   error
+		internalXferTimes int
+		expectErr         require.ErrorAssertionFunc
+		expectNilResponse require.ValueAssertionFunc
+		expectNilPayload  require.ValueAssertionFunc
+	}{
+		{
+			name:              "empty request",
+			expectedMsg:       "validation",
+			expectedStatus:    http.StatusBadRequest,
+			request:           models.HTTPTransferRequest{},
+			authDecryptErr:    nil,
+			authDecryptTimes:  0,
+			redisGetData:      validOffer,
+			redisGetErr:       nil,
+			redisGetTimes:     0,
+			redisDelErr:       nil,
+			redisDelTimes:     0,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.NotNil,
+		}, {
+			name:              "decrypt offer ID",
+			expectedMsg:       "retry",
+			expectedStatus:    http.StatusInternalServerError,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    errors.New("decrypt offer id"),
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       nil,
+			redisGetTimes:     0,
+			redisDelErr:       nil,
+			redisDelTimes:     0,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "cache unknown error",
+			expectedMsg:       "retry",
+			expectedStatus:    http.StatusInternalServerError,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       errors.New("unknown error"),
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     0,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "cache expired",
+			expectedMsg:       "expired",
+			expectedStatus:    http.StatusRequestTimeout,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       redis.ErrCacheMiss,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     0,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "cache del failure",
+			expectedMsg:       "retry",
+			expectedStatus:    http.StatusInternalServerError,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       redis.ErrCacheUnknown,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "cache del expired",
+			expectedMsg:       "",
+			expectedStatus:    0,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       redis.ErrCacheMiss,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 1,
+			expectErr:         require.NoError,
+			expectNilResponse: require.NotNil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "client id mismatch",
+			expectedMsg:       "retry",
+			expectedStatus:    http.StatusInternalServerError,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      invalidOfferClientID,
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:             "crypto purchase",
+			expectedMsg:      "invalid Fiat currency",
+			expectedStatus:   http.StatusBadRequest,
+			request:          models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:   nil,
+			authDecryptTimes: 1,
+			redisGetData: models.HTTPExchangeOfferResponse{
+				PriceQuote:       validOffer.PriceQuote,
+				IsCryptoPurchase: true,
+				IsCryptoSale:     false,
+			},
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:             "crypto sale",
+			expectedMsg:      "invalid Fiat currency",
+			expectedStatus:   http.StatusBadRequest,
+			request:          models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:   nil,
+			authDecryptTimes: 1,
+			redisGetData: models.HTTPExchangeOfferResponse{
+				PriceQuote:       validOffer.PriceQuote,
+				IsCryptoPurchase: false,
+				IsCryptoSale:     true,
+			},
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "invalid source destination amount",
+			expectedMsg:       "invalid",
+			expectedStatus:    http.StatusBadRequest,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      invalidOfferSource,
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 0,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "transaction failure",
+			expectedMsg:       "both currency accounts and enough funds",
+			expectedStatus:    http.StatusBadRequest,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     1,
+			internalXferErr:   errors.New("transaction failure"),
+			internalXferTimes: 1,
+			expectErr:         require.Error,
+			expectNilResponse: require.Nil,
+			expectNilPayload:  require.Nil,
+		}, {
+			name:              "valid",
+			expectedMsg:       "",
+			expectedStatus:    0,
+			request:           models.HTTPTransferRequest{OfferID: "VALID"},
+			authDecryptErr:    nil,
+			authDecryptTimes:  1,
+			redisGetData:      validOffer,
+			redisGetErr:       nil,
+			redisGetTimes:     1,
+			redisDelErr:       nil,
+			redisDelTimes:     1,
+			internalXferErr:   nil,
+			internalXferTimes: 1,
+			expectErr:         require.NoError,
+			expectNilResponse: require.NotNil,
+			expectNilPayload:  require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockCache := mocks.NewMockRedis(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return(validOfferID, test.authDecryptErr).
+					Times(test.authDecryptTimes),
+
+				mockCache.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(test.redisGetErr).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockCache.EXPECT().Del(gomock.Any()).
+					Return(test.redisDelErr).
+					Times(test.redisDelTimes),
+
+				mockDB.EXPECT().FiatInternalTransfer(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, nil, test.internalXferErr).
+					Times(test.internalXferTimes),
+			)
+
+			response, httpStatus, httpMessage, payload, err :=
+				HTTPFiatTransfer(mockAuth, mockCache, mockDB, zapLogger, validClientID, &test.request)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectNilResponse(t, response, "nil response expectation failed.")
+			test.expectNilPayload(t, payload, "nil payload expectation failed.")
+			require.Equal(t, test.expectedStatus, httpStatus, "expected http status mismatched.")
+			require.Contains(t, httpMessage, test.expectedMsg, "expected message mismatched.")
 		})
 	}
 }

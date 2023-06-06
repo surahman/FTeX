@@ -12,7 +12,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
-	"github.com/surahman/FTeX/pkg/constants"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
@@ -83,6 +82,16 @@ func (r *fiatDepositResponseResolver) Currency(ctx context.Context, obj *postgre
 // DebitAmount is the resolver for the DebitAmount field.
 func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error) {
 	return obj.DebitAmount.InexactFloat64(), nil
+}
+
+// SourceReceipt is the resolver for the sourceReceipt field.
+func (r *fiatExchangeTransferResponseResolver) SourceReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error) {
+	return obj.SrcTxReceipt, nil
+}
+
+// DestinationReceipt is the resolver for the destinationReceipt field.
+func (r *fiatExchangeTransferResponseResolver) DestinationReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error) {
+	return obj.DstTxReceipt, nil
 }
 
 // Currency is the resolver for the currency field.
@@ -175,77 +184,25 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 }
 
 // ExchangeTransferFiat is the resolver for the exchangeTransferFiat field.
-func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.FiatExchangeTransferResponse, error) {
+func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.HTTPFiatTransferResponse, error) {
 	var (
-		err              error
-		clientID         uuid.UUID
-		offer            models.HTTPExchangeOfferResponse
-		receipt          models.FiatExchangeTransferResponse
-		parsedCurrencies []postgres.Currency
+		err         error
+		clientID    uuid.UUID
+		httpMessage string
+		payload     any
+		receipt     *models.HTTPFiatTransferResponse
 	)
 
 	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
-	// Extract Offer ID from request.
-	{
-		var rawOfferID []byte
-		if rawOfferID, err = r.auth.DecryptFromString(offerID); err != nil {
-			r.logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
-
-			return nil, errors.New("please retry your request later")
-		}
-
-		offerID = string(rawOfferID)
+	if receipt, _, httpMessage, payload, err = utilities.HTTPFiatTransfer(r.auth, r.cache, r.db, r.logger,
+		clientID, &models.HTTPTransferRequest{OfferID: offerID}); err != nil {
+		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
 	}
 
-	// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
-	// the offer. If a database update fails below this point the user will need to re-request an offer.
-	{
-		var msg string
-		if offer, _, msg, err = utilities.HTTPGetCachedOffer(r.cache, r.logger, offerID); err != nil {
-			return nil, errors.New(msg)
-		}
-	}
-
-	// Verify that the client IDs match.
-	if clientID != offer.ClientID {
-		r.logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
-			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
-
-		return nil, errors.New("please retry your request later")
-	}
-
-	// Get currency codes.
-	if parsedCurrencies, err = utilities.HTTPValidateOfferRequest(
-		offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
-		r.logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
-			zap.Error(err))
-
-		return nil, errors.New(err.Error())
-	}
-
-	// Execute exchange.
-	srcTxDetails := &postgres.FiatTransactionDetails{
-		ClientID: offer.ClientID,
-		Currency: parsedCurrencies[0],
-		Amount:   offer.DebitAmount,
-	}
-	dstTxDetails := &postgres.FiatTransactionDetails{
-		ClientID: offer.ClientID,
-		Currency: parsedCurrencies[1],
-		Amount:   offer.Amount,
-	}
-
-	if receipt.SourceReceipt, receipt.DestinationReceipt, err = r.db.
-		FiatInternalTransfer(context.Background(), srcTxDetails, dstTxDetails); err != nil {
-		r.logger.Warn("failed to complete internal Fiat transfer", zap.Error(err))
-
-		return nil, errors.New("please check you have both currency accounts and enough funds")
-	}
-
-	return &receipt, nil
+	return receipt, nil
 }
 
 // BalanceFiat is the resolver for the balanceFiat field.
@@ -493,6 +450,11 @@ func (r *Resolver) FiatExchangeOfferResponse() graphql_generated.FiatExchangeOff
 	return &fiatExchangeOfferResponseResolver{r}
 }
 
+// FiatExchangeTransferResponse returns graphql_generated.FiatExchangeTransferResponseResolver implementation.
+func (r *Resolver) FiatExchangeTransferResponse() graphql_generated.FiatExchangeTransferResponseResolver {
+	return &fiatExchangeTransferResponseResolver{r}
+}
+
 // FiatJournal returns graphql_generated.FiatJournalResolver implementation.
 func (r *Resolver) FiatJournal() graphql_generated.FiatJournalResolver {
 	return &fiatJournalResolver{r}
@@ -511,6 +473,7 @@ func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOffe
 type fiatAccountResolver struct{ *Resolver }
 type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeOfferResponseResolver struct{ *Resolver }
+type fiatExchangeTransferResponseResolver struct{ *Resolver }
 type fiatJournalResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
 type fiatExchangeOfferRequestResolver struct{ *Resolver }

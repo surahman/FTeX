@@ -37,6 +37,10 @@ type FiatDepositResponseResolver interface {
 type FiatExchangeOfferResponseResolver interface {
 	DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error)
 }
+type FiatExchangeTransferResponseResolver interface {
+	SourceReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error)
+	DestinationReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error)
+}
 type FiatJournalResolver interface {
 	Currency(ctx context.Context, obj *postgres.FiatJournal) (string, error)
 	Amount(ctx context.Context, obj *postgres.FiatJournal) (float64, error)
@@ -888,7 +892,7 @@ func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_expires(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeTransferResponse_sourceReceipt(ctx context.Context, field graphql.CollectedField, obj *models.FiatExchangeTransferResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatExchangeTransferResponse_sourceReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeTransferResponse_sourceReceipt(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -902,7 +906,7 @@ func (ec *executionContext) _FiatExchangeTransferResponse_sourceReceipt(ctx cont
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SourceReceipt, nil
+		return ec.resolvers.FiatExchangeTransferResponse().SourceReceipt(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -923,8 +927,8 @@ func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_sourceRece
 	fc = &graphql.FieldContext{
 		Object:     "FiatExchangeTransferResponse",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "txId":
@@ -946,7 +950,7 @@ func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_sourceRece
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeTransferResponse_destinationReceipt(ctx context.Context, field graphql.CollectedField, obj *models.FiatExchangeTransferResponse) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatExchangeTransferResponse_destinationReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeTransferResponse_destinationReceipt(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -960,7 +964,7 @@ func (ec *executionContext) _FiatExchangeTransferResponse_destinationReceipt(ctx
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DestinationReceipt, nil
+		return ec.resolvers.FiatExchangeTransferResponse().DestinationReceipt(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -981,8 +985,8 @@ func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_destinatio
 	fc = &graphql.FieldContext{
 		Object:     "FiatExchangeTransferResponse",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "txId":
@@ -2053,7 +2057,7 @@ func (ec *executionContext) _FiatExchangeOfferResponse(ctx context.Context, sel 
 
 var fiatExchangeTransferResponseImplementors = []string{"FiatExchangeTransferResponse"}
 
-func (ec *executionContext) _FiatExchangeTransferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.FiatExchangeTransferResponse) graphql.Marshaler {
+func (ec *executionContext) _FiatExchangeTransferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPFiatTransferResponse) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, fiatExchangeTransferResponseImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -2062,19 +2066,45 @@ func (ec *executionContext) _FiatExchangeTransferResponse(ctx context.Context, s
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("FiatExchangeTransferResponse")
 		case "sourceReceipt":
+			field := field
 
-			out.Values[i] = ec._FiatExchangeTransferResponse_sourceReceipt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatExchangeTransferResponse_sourceReceipt(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "destinationReceipt":
+			field := field
 
-			out.Values[i] = ec._FiatExchangeTransferResponse_destinationReceipt(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatExchangeTransferResponse_destinationReceipt(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2417,11 +2447,11 @@ func (ec *executionContext) marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋ
 	return ec._FiatExchangeOfferResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFiatExchangeTransferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatExchangeTransferResponse(ctx context.Context, sel ast.SelectionSet, v models.FiatExchangeTransferResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatExchangeTransferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPFiatTransferResponse) graphql.Marshaler {
 	return ec._FiatExchangeTransferResponse(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFiatExchangeTransferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatExchangeTransferResponse(ctx context.Context, sel ast.SelectionSet, v *models.FiatExchangeTransferResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatExchangeTransferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatTransferResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

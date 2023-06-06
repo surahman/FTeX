@@ -25,7 +25,7 @@ type MutationResolver interface {
 	OpenFiat(ctx context.Context, currency string) (*models1.FiatOpenAccountResponse, error)
 	DepositFiat(ctx context.Context, input models1.HTTPDepositCurrencyRequest) (*postgres.FiatAccountTransferResult, error)
 	ExchangeOfferFiat(ctx context.Context, input models1.HTTPExchangeOfferRequest) (*models1.HTTPExchangeOfferResponse, error)
-	ExchangeTransferFiat(ctx context.Context, offerID string) (*models1.FiatExchangeTransferResponse, error)
+	ExchangeTransferFiat(ctx context.Context, offerID string) (*models1.HTTPFiatTransferResponse, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -599,9 +599,9 @@ func (ec *executionContext) _Mutation_exchangeTransferFiat(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models1.FiatExchangeTransferResponse)
+	res := resTmp.(*models1.HTTPFiatTransferResponse)
 	fc.Result = res
-	return ec.marshalNFiatExchangeTransferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatExchangeTransferResponse(ctx, field.Selections, res)
+	return ec.marshalNFiatExchangeTransferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransferResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_exchangeTransferFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {

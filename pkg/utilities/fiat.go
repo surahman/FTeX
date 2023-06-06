@@ -147,6 +147,90 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	return &offer, 0, "", nil, nil
 }
 
+// HTTPFiatTransfer will retrieve an offer from the session cache, validate it, then update the database.
+func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, logger *logger.Logger,
+	clientID uuid.UUID, request *models.HTTPTransferRequest) (*models.HTTPFiatTransferResponse, int, string, any, error) {
+	var (
+		err              error
+		offer            models.HTTPExchangeOfferResponse
+		receipt          models.HTTPFiatTransferResponse
+		offerID          string
+		parsedCurrencies []postgres.Currency
+	)
+
+	if err = validator.ValidateStruct(request); err != nil {
+		return nil, http.StatusBadRequest, "validation", err.Error(), fmt.Errorf("%w", err)
+	}
+
+	// Extract Offer ID from request.
+	{
+		var rawOfferID []byte
+		if rawOfferID, err = auth.DecryptFromString(request.OfferID); err != nil {
+			logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		}
+
+		offerID = string(rawOfferID)
+	}
+
+	// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of the
+	// offer. If a database update fails below this point the user will need to re-request an offer.
+	{
+		var (
+			httpStatus int
+			httpMsg    string
+		)
+		if offer, httpStatus, httpMsg, err = HTTPGetCachedOffer(cache, logger, offerID); err != nil {
+			return nil, httpStatus, httpMsg, nil, fmt.Errorf("%w", err)
+		}
+	}
+
+	// Verify that the client IDs match.
+	if clientID != offer.ClientID {
+		logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
+			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
+
+		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+	}
+
+	// Verify the offer is for a Fiat exchange.
+	if offer.IsCryptoPurchase || offer.IsCryptoSale {
+		return nil, http.StatusBadRequest, "invalid Fiat currency exchange offer", nil, fmt.Errorf("%w", err)
+	}
+
+	// Get currency codes.
+	if parsedCurrencies, err = HTTPValidateOfferRequest(
+		offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
+		logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
+			zap.Error(err))
+
+		return nil, http.StatusBadRequest, err.Error(), nil, fmt.Errorf("%w", err)
+	}
+
+	// Execute exchange.
+	srcTxDetails := &postgres.FiatTransactionDetails{
+		ClientID: offer.ClientID,
+		Currency: parsedCurrencies[0],
+		Amount:   offer.DebitAmount,
+	}
+	dstTxDetails := &postgres.FiatTransactionDetails{
+		ClientID: offer.ClientID,
+		Currency: parsedCurrencies[1],
+		Amount:   offer.Amount,
+	}
+
+	if receipt.SrcTxReceipt, receipt.DstTxReceipt, err = db.
+		FiatInternalTransfer(context.Background(), srcTxDetails, dstTxDetails); err != nil {
+		logger.Warn("failed to complete internal Fiat transfer", zap.Error(err))
+
+		return nil, http.StatusBadRequest, "please check you have both currency accounts and enough funds.",
+			nil, fmt.Errorf("%w", err)
+	}
+
+	return &receipt, 0, "", nil, nil
+}
+
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit
 // and covert them to a currency and integer record limit. The currencyStr is the encrypted pageCursor passed in.
 func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr string) (postgres.Currency, int32, error) {

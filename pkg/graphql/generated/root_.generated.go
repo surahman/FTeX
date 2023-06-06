@@ -34,6 +34,7 @@ type ResolverRoot interface {
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
 	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
+	FiatExchangeTransferResponse() FiatExchangeTransferResponseResolver
 	FiatJournal() FiatJournalResolver
 	Mutation() MutationResolver
 	PriceQuote() PriceQuoteResolver

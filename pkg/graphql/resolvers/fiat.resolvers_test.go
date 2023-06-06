@@ -571,6 +571,39 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 	}
 }
 
+func TestFiatResolver_FiatExchangeTransferResponseResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatExchangeTransferResponseResolver{}
+
+	response := &models.HTTPFiatTransferResponse{
+		SrcTxReceipt: &postgres.FiatAccountTransferResult{
+			TxID:     uuid.UUID{},
+			ClientID: uuid.UUID{},
+			TxTS:     pgtype.Timestamptz{},
+			Balance:  decimal.Decimal{},
+			LastTx:   decimal.Decimal{},
+			Currency: "",
+		},
+		DstTxReceipt: &postgres.FiatAccountTransferResult{
+			TxID:     uuid.UUID{},
+			ClientID: uuid.UUID{},
+			TxTS:     pgtype.Timestamptz{},
+			Balance:  decimal.Decimal{},
+			LastTx:   decimal.Decimal{},
+			Currency: "",
+		},
+	}
+
+	source, err := resolver.SourceReceipt(context.TODO(), response)
+	require.NoError(t, err, "source should always return a nil error.")
+	require.Equal(t, response.SrcTxReceipt, source, "source and returned struct addresses mismatched.")
+
+	destination, err := resolver.SourceReceipt(context.TODO(), response)
+	require.NoError(t, err, "destinations should always return a nil error.")
+	require.Equal(t, response.DstTxReceipt, destination, "destination and returned struct addresses mismatched.")
+}
+
 func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 

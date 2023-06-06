@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -203,26 +202,14 @@ func ExchangeTransferFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err              error
-			clientID         uuid.UUID
-			request          models.HTTPTransferRequest
-			offer            models.HTTPExchangeOfferResponse
-			receipt          models.HTTPFiatTransferResponse
-			offerID          string
-			parsedCurrencies []postgres.Currency
+			err         error
+			clientID    uuid.UUID
+			receipt     *models.HTTPFiatTransferResponse
+			request     models.HTTPTransferRequest
+			httpStatus  int
+			httpMessage string
+			payload     any
 		)
-
-		if err = ginCtx.ShouldBindJSON(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		if err = validator.ValidateStruct(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
-
-			return
-		}
 
 		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
@@ -230,78 +217,15 @@ func ExchangeTransferFiat(
 			return
 		}
 
-		// Extract Offer ID from request.
-		{
-			var rawOfferID []byte
-			if rawOfferID, err = auth.DecryptFromString(request.OfferID); err != nil {
-				logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					&models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			offerID = string(rawOfferID)
-		}
-
-		// Retrieve the offer from Redis. Once retrieved, the entry must be removed from the cache to block re-use of
-		// the offer. If a database update fails below this point the user will need to re-request an offer.
-		{
-			var (
-				status int
-				msg    string
-			)
-			if offer, status, msg, err = utilities.HTTPGetCachedOffer(cache, logger, offerID); err != nil {
-				ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: msg})
-
-				return
-			}
-		}
-
-		// Verify that the client IDs match.
-		if clientID != offer.ClientID {
-			logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
-				zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
+		if err = ginCtx.ShouldBindJSON(&request); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
-		// Verify the offer is for a Fiat exchange.
-		if offer.IsCryptoPurchase || offer.IsCryptoSale {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: "invalid Fiat currency exchange offer"})
-
-			return
-		}
-
-		// Get currency codes.
-		if parsedCurrencies, err = utilities.HTTPValidateOfferRequest(
-			offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
-			logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
-				zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		// Execute exchange.
-		srcTxDetails := &postgres.FiatTransactionDetails{
-			ClientID: offer.ClientID,
-			Currency: parsedCurrencies[0],
-			Amount:   offer.DebitAmount,
-		}
-		dstTxDetails := &postgres.FiatTransactionDetails{
-			ClientID: offer.ClientID,
-			Currency: parsedCurrencies[1],
-			Amount:   offer.Amount,
-		}
-
-		if receipt.SrcTxReceipt, receipt.DstTxReceipt, err = db.
-			FiatInternalTransfer(context.Background(), srcTxDetails, dstTxDetails); err != nil {
-			logger.Warn("failed to complete internal Fiat transfer", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: "please check you have both currency accounts and enough funds."})
+		if receipt, httpStatus, httpMessage, payload, err =
+			utilities.HTTPFiatTransfer(auth, cache, db, logger, clientID, &request); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
 		}
