@@ -173,3 +173,7 @@ func TestGetSpecialAccountCrypto(t *testing.T) {
 func TestGetInvalidRequest(t *testing.T) {
 	require.Equal(t, invalidRequest, GetInvalidRequest(), "Incorrect invalid request string.")
 }
+
+func TestGetValidationString(t *testing.T) {
+	require.Equal(t, validationSting, GetValidationString(), "Incorrect validation string.")
+}

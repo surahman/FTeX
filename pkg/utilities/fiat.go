@@ -59,7 +59,7 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, "validation", err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract and validate the currency.
@@ -100,7 +100,7 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, "validation", err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract and validate the currency.
@@ -159,7 +159,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, "validation", err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract Offer ID from request.

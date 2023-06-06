@@ -40,6 +40,7 @@ const (
 	specialAccountFiat            = "fiat-currencies"
 	specialAccountCrypto          = "crypto-currencies"
 	invalidRequest                = "invalid request"
+	validationSting               = "validation"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -189,4 +190,8 @@ func GetSpecialAccountCrypto() string {
 
 func GetInvalidRequest() string {
 	return invalidRequest
+}
+
+func GetValidationString() string {
+	return validationSting
 }

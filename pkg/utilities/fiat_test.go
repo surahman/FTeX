@@ -111,7 +111,7 @@ func TestUtilities_HTTPFiatDeposit(t *testing.T) {
 			depositErr:       nil,
 			depositTimes:     0,
 			expectErrCode:    http.StatusBadRequest,
-			expectErrMsg:     "validation",
+			expectErrMsg:     constants.GetValidationString(),
 			expectErr:        require.Error,
 			expectNilReceipt: require.Nil,
 			expectNilPayload: require.NotNil,
@@ -451,7 +451,7 @@ func TestUtilities_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:              "empty request",
-			expectedMsg:       "validation",
+			expectedMsg:       constants.GetValidationString(),
 			expectedStatus:    http.StatusBadRequest,
 			request:           models.HTTPTransferRequest{},
 			authDecryptErr:    nil,

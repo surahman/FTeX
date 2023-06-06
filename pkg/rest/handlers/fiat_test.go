@@ -55,7 +55,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
-			name:               "validation",
+			name:               constants.GetValidationString(),
 			path:               "/open/validation",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPOpenCurrencyAccountRequest{},
@@ -158,7 +158,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			extTransferTimes:   0,
 		}, {
 			name:               "empty request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{},
@@ -321,7 +321,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:               "empty request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			path:               "/exchange-offer-fiat/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPExchangeOfferRequest{},
@@ -623,7 +623,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		}, {
 			name:               "empty request",
 			path:               "/exchange-xfer-fiat/empty-request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{},
 			authValidateJWTErr: nil,

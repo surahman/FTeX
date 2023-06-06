@@ -45,7 +45,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 1,
 		}, {
-			name:                 "validation",
+			name:                 constants.GetValidationString(),
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
 			request:              &models.HTTPOpenCurrencyAccountRequest{},
@@ -152,7 +152,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:               "empty request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			path:               "/purchase-offer-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPCryptoOfferRequest{},
@@ -191,7 +191,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "no purchase or sale flag",
-			expectedMsg:    "validation",
+			expectedMsg:    constants.GetValidationString(),
 			path:           "/purchase-offer-crypto/invalid-fiat-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPCryptoOfferRequest{
@@ -557,7 +557,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			expectErr:          require.Error,
 		}, {
 			name:               "empty request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			path:               "/exchange-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPTransferRequest{},
