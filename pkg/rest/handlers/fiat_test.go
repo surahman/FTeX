@@ -902,7 +902,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_BalanceCurrencyFiat(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceCurrencyFiat(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/fiat/balance/currency/"
@@ -918,20 +918,20 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) { //nolint:dupl
 		fiatBalanceTimes   int
 	}{
 		{
-			name:               "invalid currency",
-			currency:           "INVALID",
-			expectedMsg:        "invalid currency",
-			expectedStatus:     http.StatusBadRequest,
-			authValidateJWTErr: nil,
-			authValidateTimes:  0,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   0,
-		}, {
 			name:               "invalid JWT",
 			currency:           "EUR",
 			expectedMsg:        "invalid JWT",
 			expectedStatus:     http.StatusForbidden,
 			authValidateJWTErr: errors.New("invalid JWT"),
+			authValidateTimes:  1,
+			fiatBalanceErr:     nil,
+			fiatBalanceTimes:   0,
+		}, {
+			name:               "invalid currency",
+			currency:           "INVALID",
+			expectedMsg:        constants.GetInvalidCurrencyString(),
+			expectedStatus:     http.StatusBadRequest,
+			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			fiatBalanceErr:     nil,
 			fiatBalanceTimes:   0,
@@ -965,7 +965,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) { //nolint:dupl
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -1420,7 +1420,7 @@ func TestHandler_TxDetailsCurrencyFiatPaginated(t *testing.T) {
 			path:                   "bad-currency/",
 			currency:               "INVALID",
 			querySegment:           "?pageCursor=page-cursor",
-			expectedMsg:            "invalid currency",
+			expectedMsg:            constants.GetInvalidCurrencyString(),
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
 			authValidateJWTErr:     nil,

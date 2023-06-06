@@ -973,19 +973,19 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 		fiatBalanceTimes     int
 	}{
 		{
+			name:                 "invalid JWT",
+			path:                 "/balance-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+		}, {
 			name:                 "invalid currency",
 			path:                 "/balance-fiat/invalid-currency",
 			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "INVALID"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
-			fiatBalanceErr:       nil,
-			fiatBalanceTimes:     0,
-		}, {
-			name:                 "invalid JWT",
-			path:                 "/balance-fiat/invalid-jwt",
-			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
-			authValidateJWTErr:   errors.New("invalid JWT"),
 			authValidateJWTTimes: 1,
 			fiatBalanceErr:       nil,
 			fiatBalanceTimes:     0,

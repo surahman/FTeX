@@ -241,7 +241,7 @@ func BalanceCrypto(
 		// Extract and validate the currency.
 		if len(ticker) < 1 || len(ticker) > 6 {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: ticker})
+				models.HTTPError{Message: constants.GetInvalidCurrencyString(), Payload: ticker})
 
 			return
 		}

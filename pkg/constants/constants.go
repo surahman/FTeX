@@ -41,6 +41,7 @@ const (
 	specialAccountCrypto          = "crypto-currencies"
 	invalidRequest                = "invalid request"
 	validationSting               = "validation"
+	invalidCurrencyString         = "invalid currency"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -188,10 +189,17 @@ func GetSpecialAccountCrypto() string {
 	return specialAccountCrypto
 }
 
+// GetInvalidRequest is the error string message for an invalid request.
 func GetInvalidRequest() string {
 	return invalidRequest
 }
 
+// GetValidationString is the error message for a struct validation failure.
 func GetValidationString() string {
 	return validationSting
+}
+
+// GetInvalidCurrencyString is the error message for an invalid currency.
+func GetInvalidCurrencyString() string {
+	return invalidCurrencyString
 }

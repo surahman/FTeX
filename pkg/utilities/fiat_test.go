@@ -35,7 +35,7 @@ func TestUtilities_HTTPFiatOpen(t *testing.T) {
 			openAccErr:    nil,
 			openAccTimes:  0,
 			expectErrCode: http.StatusBadRequest,
-			expectErrMsg:  "invalid currency",
+			expectErrMsg:  constants.GetInvalidCurrencyString(),
 			expectErr:     require.Error,
 		}, {
 			name:          "unknown db failure",
@@ -121,7 +121,7 @@ func TestUtilities_HTTPFiatDeposit(t *testing.T) {
 			depositErr:       nil,
 			depositTimes:     0,
 			expectErrCode:    http.StatusBadRequest,
-			expectErrMsg:     "invalid currency",
+			expectErrMsg:     constants.GetInvalidCurrencyString(),
 			expectErr:        require.Error,
 			expectNilReceipt: require.Nil,
 			expectNilPayload: require.NotNil,
@@ -703,6 +703,89 @@ func TestUtilities_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 			test.expectNilPayload(t, payload, "nil payload expectation failed.")
 			require.Equal(t, test.expectedStatus, httpStatus, "expected http status mismatched.")
 			require.Contains(t, httpMessage, test.expectedMsg, "expected message mismatched.")
+		})
+	}
+}
+
+func TestUtilities__HTTPFiatBalance(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name                string
+		ticker              string
+		expectedMsg         string
+		expectedStatus      int
+		fiatBalanceErr      error
+		fiatBalanceTimes    int
+		expectErr           require.ErrorAssertionFunc
+		expectNilAccDetails require.ValueAssertionFunc
+		expectNilPayload    require.ValueAssertionFunc
+	}{
+		{
+			name:                "invalid currency",
+			ticker:              "INVALID",
+			expectedMsg:         constants.GetInvalidCurrencyString(),
+			expectedStatus:      http.StatusBadRequest,
+			fiatBalanceErr:      nil,
+			fiatBalanceTimes:    0,
+			expectErr:           require.Error,
+			expectNilAccDetails: require.Nil,
+			expectNilPayload:    require.NotNil,
+		}, {
+			name:                "unknown db error",
+			ticker:              "AED",
+			expectedMsg:         "retry",
+			expectedStatus:      http.StatusInternalServerError,
+			fiatBalanceErr:      errors.New("unknown error"),
+			fiatBalanceTimes:    1,
+			expectErr:           require.Error,
+			expectNilAccDetails: require.Nil,
+			expectNilPayload:    require.Nil,
+		}, {
+			name:                "known db error",
+			ticker:              "CAD",
+			expectedMsg:         "records not found",
+			expectedStatus:      http.StatusNotFound,
+			fiatBalanceErr:      postgres.ErrNotFound,
+			fiatBalanceTimes:    1,
+			expectErr:           require.Error,
+			expectNilAccDetails: require.Nil,
+			expectNilPayload:    require.Nil,
+		}, {
+			name:                "valid",
+			ticker:              "USD",
+			expectedMsg:         "",
+			expectedStatus:      0,
+			fiatBalanceErr:      nil,
+			fiatBalanceTimes:    1,
+			expectErr:           require.NoError,
+			expectNilAccDetails: require.NotNil,
+			expectNilPayload:    require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			mockDB.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
+				Return(postgres.FiatAccount{}, test.fiatBalanceErr).
+				Times(test.fiatBalanceTimes)
+
+			accDetails, httpStatus, httpMessage, payload, err :=
+				HTTPFiatBalance(mockDB, zapLogger, uuid.UUID{}, test.ticker)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectNilAccDetails(t, accDetails, "nil account details expectation failed.")
+			test.expectNilPayload(t, payload, "nil payload expectation failed.")
+			require.Equal(t, test.expectedStatus, httpStatus, "http status mismatched.")
+			require.Contains(t, httpMessage, test.expectedMsg, "http message mismatched.")
 		})
 	}
 }

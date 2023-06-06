@@ -32,7 +32,7 @@ func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUI
 
 	// Extract and validate the currency.
 	if err = pgCurrency.Scan(currency); err != nil || !pgCurrency.Valid() {
-		return http.StatusBadRequest, "invalid currency", fmt.Errorf("%w", err)
+		return http.StatusBadRequest, constants.GetInvalidCurrencyString(), fmt.Errorf("%w", err)
 	}
 
 	if err = db.FiatCreateAccount(clientID, pgCurrency); err != nil {
@@ -64,7 +64,7 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 
 	// Extract and validate the currency.
 	if err = pgCurrency.Scan(request.Currency); err != nil || !pgCurrency.Valid() {
-		return nil, http.StatusBadRequest, "invalid currency", request.Currency, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), request.Currency, fmt.Errorf("%w", err)
 	}
 
 	// Check for correct decimal places.
@@ -229,6 +229,34 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 	}
 
 	return &receipt, 0, "", nil, nil
+}
+
+// HTTPFiatBalance retrieves the account balance for a specific Fiat currency.
+func HTTPFiatBalance(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, ticker string) (
+	*postgres.FiatAccount, int, string, any, error) {
+	var (
+		accDetails postgres.FiatAccount
+		currency   postgres.Currency
+		err        error
+	)
+
+	// Extract and validate the currency.
+	if err = currency.Scan(ticker); err != nil || !currency.Valid() {
+		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
+	}
+
+	if accDetails, err = db.FiatBalance(clientID, currency); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		}
+
+		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
+	}
+
+	return &accDetails, 0, "", nil, nil
 }
 
 // HTTPFiatBalancePaginatedRequest will convert the encrypted URL query parameter for the currency and the record limit

@@ -258,19 +258,13 @@ func BalanceFiat(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			accDetails postgres.FiatAccount
-			clientID   uuid.UUID
-			currency   postgres.Currency
-			err        error
+			accDetails  *postgres.FiatAccount
+			clientID    uuid.UUID
+			err         error
+			httpStatus  int
+			httpMessage string
+			payload     any
 		)
-
-		// Extract and validate the currency.
-		if err = currency.Scan(ginCtx.Param("ticker")); err != nil || !currency.Valid() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: ginCtx.Param("ticker")})
-
-			return
-		}
 
 		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
@@ -278,17 +272,9 @@ func BalanceFiat(
 			return
 		}
 
-		if accDetails, err = db.FiatBalance(clientID, currency); err != nil {
-			var balanceErr *postgres.Error
-			if !errors.As(err, &balanceErr) {
-				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+		if accDetails, httpStatus, httpMessage, payload, err =
+			utilities.HTTPFiatBalance(db, logger, clientID, ginCtx.Param("ticker")); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
 		}
@@ -495,7 +481,7 @@ func TxDetailsFiatPaginated(
 		// Extract and validate the currency.
 		if err = currency.Scan(ginCtx.Param("currencyCode")); err != nil || !currency.Valid() {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: ginCtx.Param("currencyCode")})
+				models.HTTPError{Message: constants.GetInvalidCurrencyString(), Payload: ginCtx.Param("currencyCode")})
 
 			return
 		}
