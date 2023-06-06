@@ -902,7 +902,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_BalanceCurrencyFiat(t *testing.T) {
+func TestHandler_BalanceFiat(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/fiat/balance/currency/"
@@ -1007,7 +1007,7 @@ func TestHandler_BalanceCurrencyFiat(t *testing.T) {
 	}
 }
 
-func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
+func TestHandler_TxDetailsFiat(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/fiat/transaction/details/"
@@ -1159,7 +1159,7 @@ func TestHandler_TxDetailsCurrencyFiat(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/fiat/balances/details/paginated/"
@@ -1370,7 +1370,7 @@ func TestHandler_BalanceCurrencyFiatPaginated(t *testing.T) { //nolint:dupl
 	}
 }
 
-func TestHandler_TxDetailsCurrencyFiatPaginated(t *testing.T) {
+func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/fiat/transaction/details-journal/paginated/"

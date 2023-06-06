@@ -707,7 +707,7 @@ func TestUtilities_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestUtilities__HTTPFiatBalance(t *testing.T) {
+func TestUtilities_HTTPFiatBalance(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -869,6 +869,186 @@ func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 			require.NoError(t, err, "error returned from query unpacking")
 			require.Equal(t, test.expectCurrency, actualCurr, "currencies mismatched.")
 			require.Equal(t, test.expectLimit, actualLimit, "request limit size mismatched.")
+		})
+	}
+}
+
+func TestUtilities_HTTPFiatBalancePaginated(t *testing.T) {
+	t.Parallel()
+
+	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                 string
+		pageCursor           string
+		pageSize             string
+		expectedMsg          string
+		expectedStatus       int
+		accDetails           []postgres.FiatAccount
+		authDecryptStrErr    error
+		authDecryptStrTimes  int
+		fiatBalanceErr       error
+		fiatBalanceTimes     int
+		authEncryptStrErr    error
+		authEncryptStrTimes  int
+		expectErr            require.ErrorAssertionFunc
+		expectNilFiatAccount require.ValueAssertionFunc
+	}{
+		{
+			name:                 "decrypt cursor failure",
+			pageCursor:           "PaGeCuRs0R==",
+			pageSize:             "3",
+			expectedMsg:          "invalid page cursor or page size",
+			accDetails:           accDetails,
+			expectedStatus:       http.StatusBadRequest,
+			authDecryptStrErr:    errors.New("decrypt failure"),
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+			expectErr:            require.Error,
+			expectNilFiatAccount: require.Nil,
+		}, {
+			name:                 "known db error",
+			pageCursor:           "PaGeCuRs0R==",
+			pageSize:             "3",
+			expectedMsg:          "not found",
+			accDetails:           accDetails,
+			expectedStatus:       http.StatusNotFound,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       postgres.ErrNotFound,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+			expectErr:            require.Error,
+			expectNilFiatAccount: require.Nil,
+		}, {
+			name:                 "unknown db error",
+			pageCursor:           "PaGeCuRs0R==",
+			pageSize:             "3",
+			expectedMsg:          "retry",
+			accDetails:           accDetails,
+			expectedStatus:       http.StatusInternalServerError,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       errors.New("unknown db error"),
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+			expectErr:            require.Error,
+			expectNilFiatAccount: require.Nil,
+		}, {
+			name:                 "encrypt cursor failure",
+			pageCursor:           "PaGeCuRs0R==",
+			pageSize:             "3",
+			expectedMsg:          "retry",
+			accDetails:           accDetails,
+			expectedStatus:       http.StatusInternalServerError,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    errors.New("encrypt string error"),
+			authEncryptStrTimes:  1,
+			expectErr:            require.Error,
+			expectNilFiatAccount: require.Nil,
+		}, {
+			name:                 "valid without query and 10 records",
+			pageCursor:           "",
+			pageSize:             "",
+			expectedMsg:          "",
+			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			expectedStatus:       0,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+			expectErr:            require.NoError,
+			expectNilFiatAccount: require.NotNil,
+		}, {
+			name:                 "valid without query and 11 records",
+			pageCursor:           "",
+			pageSize:             "",
+			expectedMsg:          "",
+			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			expectedStatus:       0,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  1,
+			expectErr:            require.NoError,
+			expectNilFiatAccount: require.NotNil,
+		}, {
+			name:                 "valid without query",
+			pageCursor:           "",
+			pageSize:             "",
+			expectedMsg:          "",
+			accDetails:           accDetails,
+			expectedStatus:       0,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+			expectErr:            require.NoError,
+			expectNilFiatAccount: require.NotNil,
+		}, {
+			name:                 "valid with query",
+			pageCursor:           "PaGeCuRs0R==",
+			pageSize:             "3",
+			expectedMsg:          "",
+			accDetails:           accDetails,
+			expectedStatus:       0,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  1,
+			expectErr:            require.NoError,
+			expectNilFiatAccount: require.NotNil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte{}, test.authDecryptStrErr).
+					Times(test.authDecryptStrTimes),
+
+				mockDB.EXPECT().FiatBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.accDetails, test.fiatBalanceErr).
+					Times(test.fiatBalanceTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-page-cursor", test.authEncryptStrErr).
+					Times(test.authEncryptStrTimes),
+			)
+
+			fiatAccount, httpStatus, httpMessage, err :=
+				HTTPFiatBalancePaginated(mockAuth, mockDB, zapLogger, uuid.UUID{}, test.pageCursor, test.pageSize, true)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectNilFiatAccount(t, fiatAccount, "nil fiat account expectation failed.")
+			require.Equal(t, test.expectedStatus, httpStatus, "http status mismatched.")
+			require.Contains(t, httpMessage, test.expectedMsg, "http message mismatched.")
 		})
 	}
 }

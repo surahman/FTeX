@@ -357,12 +357,11 @@ func BalanceFiatPaginated(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			accDetails []postgres.FiatAccount
-			clientID   uuid.UUID
-			currency   postgres.Currency
-			err        error
-			nextPage   string
-			pageSize   int32
+			accDetails  *models.HTTPFiatDetailsPaginated
+			clientID    uuid.UUID
+			err         error
+			httpStatus  int
+			httpMessage string
 		)
 
 		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
@@ -371,57 +370,14 @@ func BalanceFiatPaginated(
 			return
 		}
 
-		// Extract and assemble the page cursor and page size.
-		if currency, pageSize, err = utilities.HTTPFiatBalancePaginatedRequest(
-			auth,
-			ginCtx.Query("pageCursor"),
-			ginCtx.Query("pageSize")); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "invalid page cursor or page size"})
+		if accDetails, httpStatus, httpMessage, err = utilities.HTTPFiatBalancePaginated(auth, db, logger,
+			clientID, ginCtx.Query("pageCursor"), ginCtx.Query("pageSize"), true); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
 
 			return
 		}
 
-		if accDetails, err = db.FiatBalancePaginated(clientID, currency, pageSize+1); err != nil {
-			var balanceErr *postgres.Error
-			if !errors.As(err, &balanceErr) {
-				logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
-
-			return
-		}
-
-		// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
-		lastRecordIdx := int(pageSize)
-		if len(accDetails) == lastRecordIdx+1 {
-			// Generate next page link.
-			if nextPage, err = auth.EncryptToString([]byte(accDetails[pageSize].Currency)); err != nil {
-				logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			// Remove last element.
-			accDetails = accDetails[:pageSize]
-
-			// Generate naked next page link.
-			nextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
-		}
-
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances",
-			Payload: models.HTTPFiatDetailsPaginated{
-				AccountBalances: accDetails,
-				Links: models.HTTPLinks{
-					NextPage: nextPage,
-				},
-			}})
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account balances", Payload: accDetails})
 	}
 }
 

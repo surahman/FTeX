@@ -295,3 +295,54 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 
 	return currency, int32(limit), nil
 }
+
+// HTTPFiatBalancePaginated will retrieve a page of all Fiat account balances.
+func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID,
+	pageCursorStr, pageSizeStr string, isREST bool) (*models.HTTPFiatDetailsPaginated, int, string, error) {
+	var (
+		accDetails models.HTTPFiatDetailsPaginated
+		currency   postgres.Currency
+		err        error
+		nextPage   string
+		pageSize   int32
+	)
+
+	// Extract and assemble the page cursor and page size.
+	if currency, pageSize, err = HTTPFiatBalancePaginatedRequest(auth, pageCursorStr, pageSizeStr); err != nil {
+		return nil, http.StatusBadRequest, "invalid page cursor or page size", fmt.Errorf("%w", err)
+	}
+
+	if accDetails.AccountBalances, err = db.FiatBalancePaginated(clientID, currency, pageSize+1); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
+	}
+
+	// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
+	lastRecordIdx := int(pageSize)
+	if len(accDetails.AccountBalances) == lastRecordIdx+1 {
+		// Generate next page link.
+		if nextPage, err = auth.EncryptToString([]byte(accDetails.AccountBalances[pageSize].Currency)); err != nil {
+			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		// Remove last element.
+		accDetails.AccountBalances = accDetails.AccountBalances[:pageSize]
+
+		// Generate naked next page link for REST.
+		if isREST {
+			accDetails.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
+		} else {
+			accDetails.Links.PageCursor = nextPage
+		}
+	}
+
+	return &accDetails, 0, "", nil
+}
