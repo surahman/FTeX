@@ -2,10 +2,6 @@
 
 package models
 
-import (
-	"github.com/surahman/FTeX/pkg/postgres"
-)
-
 type FiatOpenAccountResponse struct {
 	ClientID string `json:"clientID"`
 	Currency string `json:"currency"`
@@ -18,9 +14,4 @@ type FiatPaginatedTxDetailsRequest struct {
 	Timezone   *string `json:"timezone,omitempty"`
 	Month      *string `json:"month,omitempty"`
 	Year       *string `json:"year,omitempty"`
-}
-
-type FiatTransactionsPaginated struct {
-	Transactions []postgres.FiatJournal `json:"transactions"`
-	Links        *HTTPLinks             `json:"links,omitempty"`
 }

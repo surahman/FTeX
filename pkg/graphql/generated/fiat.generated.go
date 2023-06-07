@@ -48,6 +48,9 @@ type FiatJournalResolver interface {
 	ClientID(ctx context.Context, obj *postgres.FiatJournal) (string, error)
 	TxID(ctx context.Context, obj *postgres.FiatJournal) (string, error)
 }
+type FiatTransactionsPaginatedResolver interface {
+	Transactions(ctx context.Context, obj *models.HTTPFiatTransactionsPaginated) ([]postgres.FiatJournal, error)
+}
 
 type FiatDepositRequestResolver interface {
 	Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error
@@ -1316,7 +1319,7 @@ func (ec *executionContext) fieldContext_FiatOpenAccountResponse_currency(ctx co
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField, obj *models.FiatTransactionsPaginated) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransactionsPaginated) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatTransactionsPaginated_transactions(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1330,7 +1333,7 @@ func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Transactions, nil
+		return ec.resolvers.FiatTransactionsPaginated().Transactions(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1351,8 +1354,8 @@ func (ec *executionContext) fieldContext_FiatTransactionsPaginated_transactions(
 	fc = &graphql.FieldContext{
 		Object:     "FiatTransactionsPaginated",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "currency":
@@ -1372,7 +1375,7 @@ func (ec *executionContext) fieldContext_FiatTransactionsPaginated_transactions(
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.FiatTransactionsPaginated) (ret graphql.Marshaler) {
+func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransactionsPaginated) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatTransactionsPaginated_links(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1393,11 +1396,14 @@ func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.HTTPLinks)
+	res := resTmp.(models.HTTPLinks)
 	fc.Result = res
-	return ec.marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+	return ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2274,7 +2280,7 @@ func (ec *executionContext) _FiatOpenAccountResponse(ctx context.Context, sel as
 
 var fiatTransactionsPaginatedImplementors = []string{"FiatTransactionsPaginated"}
 
-func (ec *executionContext) _FiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.FiatTransactionsPaginated) graphql.Marshaler {
+func (ec *executionContext) _FiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPFiatTransactionsPaginated) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, fiatTransactionsPaginatedImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -2283,16 +2289,32 @@ func (ec *executionContext) _FiatTransactionsPaginated(ctx context.Context, sel 
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("FiatTransactionsPaginated")
 		case "transactions":
+			field := field
 
-			out.Values[i] = ec._FiatTransactionsPaginated_transactions(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FiatTransactionsPaginated_transactions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "links":
 
 			out.Values[i] = ec._FiatTransactionsPaginated_links(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2528,11 +2550,11 @@ func (ec *executionContext) unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcom
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFiatTransactionsPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v models.FiatTransactionsPaginated) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatTransactionsPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v models.HTTPFiatTransactionsPaginated) graphql.Marshaler {
 	return ec._FiatTransactionsPaginated(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.FiatTransactionsPaginated) graphql.Marshaler {
+func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatTransactionsPaginated) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -2544,13 +2566,6 @@ func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋ
 
 func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v models.HTTPLinks) graphql.Marshaler {
 	return ec._Links(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOLinks2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v *models.HTTPLinks) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Links(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************

@@ -1678,3 +1678,15 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 		})
 	}
 }
+
+func TestFiatResolver_FiatTransactionsPaginatedResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatTransactionsPaginatedResolver{}
+
+	transactions := &models.HTTPFiatTransactionsPaginated{}
+
+	actual, err := resolver.Transactions(context.TODO(), transactions)
+	require.NoError(t, err, "error should always be nil.")
+	require.Equal(t, transactions.TransactionDetails, actual, "actual and returned addresses do not match.")
+}

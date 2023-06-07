@@ -2,6 +2,7 @@ package utilities
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -1048,6 +1049,193 @@ func TestUtilities_HTTPFiatBalancePaginated(t *testing.T) {
 			test.expectErr(t, err, "error expectation failed.")
 			test.expectNilFiatAccount(t, fiatAccount, "nil fiat account expectation failed.")
 			require.Equal(t, test.expectedStatus, httpStatus, "http status mismatched.")
+			require.Contains(t, httpMessage, test.expectedMsg, "http message mismatched.")
+		})
+	}
+}
+
+func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
+	t.Parallel()
+
+	decryptedCursor := fmt.Sprintf("%s,%s,%d",
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		10)
+
+	journalEntries := []postgres.FiatJournal{{}, {}, {}, {}}
+
+	paramsCursor := &HTTPPaginatedTxParams{PageCursorStr: "page-cursor"}
+
+	testCases := []struct {
+		name                   string
+		ticker                 string
+		expectedMsg            string
+		expectedStatus         int
+		params                 *HTTPPaginatedTxParams
+		journalEntries         []postgres.FiatJournal
+		authDecryptCursorErr   error
+		authDecryptCursorTimes int
+		authEncryptCursorErr   error
+		authEncryptCursorTimes int
+		fiatTxPaginatedErr     error
+		fiatTxPaginatedTimes   int
+		expectErr              require.ErrorAssertionFunc
+		expectNilJournal       require.ValueAssertionFunc
+		expectNilPayload       require.ValueAssertionFunc
+	}{
+		{
+			name:                   "bad currency",
+			ticker:                 "INVALID",
+			params:                 paramsCursor,
+			expectedMsg:            constants.GetInvalidCurrencyString(),
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusBadRequest,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+			expectErr:              require.Error,
+			expectNilJournal:       require.Nil,
+			expectNilPayload:       require.NotNil,
+		}, {
+			name:                   "no cursor or params",
+			ticker:                 "USD",
+			params:                 &HTTPPaginatedTxParams{},
+			expectedMsg:            "missing required parameters",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusBadRequest,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+			expectErr:              require.Error,
+			expectNilJournal:       require.Nil,
+			expectNilPayload:       require.Nil,
+		}, {
+			name:                   "db failure",
+			ticker:                 "USD",
+			params:                 paramsCursor,
+			expectedMsg:            "records not found",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusNotFound,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     postgres.ErrNotFound,
+			fiatTxPaginatedTimes:   1,
+			expectErr:              require.Error,
+			expectNilJournal:       require.Nil,
+			expectNilPayload:       require.Nil,
+		}, {
+			name:                   "unknown db failure",
+			ticker:                 "USD",
+			params:                 paramsCursor,
+			expectedMsg:            "retry",
+			journalEntries:         journalEntries,
+			expectedStatus:         http.StatusInternalServerError,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     errors.New("db failure"),
+			fiatTxPaginatedTimes:   1,
+			expectErr:              require.Error,
+			expectNilJournal:       require.Nil,
+			expectNilPayload:       require.Nil,
+		}, {
+			name:                   "no transactions",
+			ticker:                 "USD",
+			params:                 paramsCursor,
+			expectedMsg:            "no transactions",
+			journalEntries:         []postgres.FiatJournal{},
+			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+			expectErr:              require.Error,
+			expectNilJournal:       require.Nil,
+			expectNilPayload:       require.Nil,
+		}, {
+			name:                   "valid with cursor",
+			ticker:                 "USD",
+			params:                 paramsCursor,
+			expectedMsg:            "",
+			journalEntries:         journalEntries,
+			expectedStatus:         0,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+			expectErr:              require.NoError,
+			expectNilJournal:       require.NotNil,
+			expectNilPayload:       require.Nil,
+		}, {
+			name:   "valid with query",
+			ticker: "USD",
+			params: &HTTPPaginatedTxParams{
+				PageSizeStr: "3",
+				TimezoneStr: "-04:00",
+				MonthStr:    "6",
+				YearStr:     "2023",
+			},
+			expectedMsg:            "",
+			journalEntries:         journalEntries,
+			expectedStatus:         0,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+			expectErr:              require.NoError,
+			expectNilJournal:       require.NotNil,
+			expectNilPayload:       require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
+					Times(test.authDecryptCursorTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-cursor", test.authEncryptCursorErr).
+					Times(test.authEncryptCursorTimes),
+
+				mockDB.EXPECT().FiatTransactionsPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.journalEntries, test.fiatTxPaginatedErr).
+					Times(test.fiatTxPaginatedTimes),
+			)
+
+			actualEntries, httpStatus, httpMessage, payload, err :=
+				HTTPFiatTransactionsPaginated(mockAuth, mockDB, zapLogger, uuid.UUID{}, test.ticker, test.params, true)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectNilJournal(t, actualEntries, "nil journal expectation failed.")
+			test.expectNilPayload(t, payload, "nil payload expectation failed.")
+			require.Equal(t, test.expectedStatus, httpStatus, "http status codes mismatched.")
 			require.Contains(t, httpMessage, test.expectedMsg, "http message mismatched.")
 		})
 	}

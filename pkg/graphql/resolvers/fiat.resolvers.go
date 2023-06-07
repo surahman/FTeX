@@ -119,6 +119,11 @@ func (r *fiatJournalResolver) TxID(ctx context.Context, obj *postgres.FiatJourna
 	return obj.TxID.String(), nil
 }
 
+// Transactions is the resolver for the transactions field.
+func (r *fiatTransactionsPaginatedResolver) Transactions(ctx context.Context, obj *models.HTTPFiatTransactionsPaginated) ([]postgres.FiatJournal, error) {
+	return obj.TransactionDetails, nil
+}
+
 // OpenFiat is the resolver for the openFiat field.
 func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) {
 	var (
@@ -293,13 +298,14 @@ func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionI
 }
 
 // TransactionDetailsAllFiat is the resolver for the transactionDetailsAllFiat field.
-func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.FiatTransactionsPaginated, error) {
+func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.HTTPFiatTransactionsPaginated, error) {
 	var (
-		journalEntries []postgres.FiatJournal
+		journalEntries *models.HTTPFiatTransactionsPaginated
 		clientID       uuid.UUID
-		currency       postgres.Currency
 		err            error
 		params         utilities.HTTPPaginatedTxParams
+		httpMessage    string
+		payload        any
 	)
 
 	if input.PageSize == nil {
@@ -331,51 +337,13 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 		return nil, errors.New("authorization failure")
 	}
 
-	// Extract and validate the currency.
-	if err = currency.Scan(input.Currency); err != nil || !currency.Valid() {
-		return nil, fmt.Errorf("invalid currency %s", currency)
+	if journalEntries, _, httpMessage, payload, err = utilities.HTTPFiatTransactionsPaginated(r.auth, r.db,
+		r.logger, clientID, input.Currency, &params, false); err != nil {
+
+		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
 	}
 
-	// Check for required parameters.
-	if len(*input.PageCursor) == 0 && (len(*input.Month) == 0 || len(*input.Year) == 0) {
-		return nil, errors.New("missing required parameters")
-	}
-
-	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
-	if _, err = utilities.HTTPTxParseQueryParams(r.auth, r.logger, &params); err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	// Retrieve transaction details page.
-	if journalEntries, err = r.db.FiatTransactionsPaginated(
-		clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
-		var balanceErr *postgres.Error
-		if !errors.As(err, &balanceErr) {
-			r.logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
-
-			return nil, errors.New("please retry your request later")
-		}
-
-		return nil, errors.New(balanceErr.Message)
-	}
-
-	if len(journalEntries) == 0 {
-		return nil, errors.New("no transactions")
-	}
-
-	// Check if there are further pages of data. If not, set the next link to be empty.
-	if len(journalEntries) > int(params.PageSize) {
-		journalEntries = journalEntries[:int(params.PageSize)]
-	} else {
-		params.NextPage = ""
-	}
-
-	return &models.FiatTransactionsPaginated{
-		Transactions: journalEntries,
-		Links: &models.HTTPLinks{
-			PageCursor: params.NextPage,
-		},
-	}, nil
+	return journalEntries, nil
 }
 
 // Amount is the resolver for the amount field.
@@ -417,6 +385,11 @@ func (r *Resolver) FiatJournal() graphql_generated.FiatJournalResolver {
 	return &fiatJournalResolver{r}
 }
 
+// FiatTransactionsPaginated returns graphql_generated.FiatTransactionsPaginatedResolver implementation.
+func (r *Resolver) FiatTransactionsPaginated() graphql_generated.FiatTransactionsPaginatedResolver {
+	return &fiatTransactionsPaginatedResolver{r}
+}
+
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
 func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver {
 	return &fiatDepositRequestResolver{r}
@@ -432,5 +405,6 @@ type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeOfferResponseResolver struct{ *Resolver }
 type fiatExchangeTransferResponseResolver struct{ *Resolver }
 type fiatJournalResolver struct{ *Resolver }
+type fiatTransactionsPaginatedResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
 type fiatExchangeOfferRequestResolver struct{ *Resolver }

@@ -1,8 +1,6 @@
 package rest
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +14,6 @@ import (
 	"github.com/surahman/FTeX/pkg/redis"
 	"github.com/surahman/FTeX/pkg/utilities"
 	"github.com/surahman/FTeX/pkg/validator"
-	"go.uber.org/zap"
 )
 
 // OpenFiat will handle an HTTP request to open a Fiat account.
@@ -414,10 +411,12 @@ func TxDetailsFiatPaginated(
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			journalEntries []postgres.FiatJournal
+			journalEntries *models.HTTPFiatTransactionsPaginated
 			clientID       uuid.UUID
-			currency       postgres.Currency
 			err            error
+			httpStatus     int
+			httpMessage    string
+			payload        any
 
 			params = utilities.HTTPPaginatedTxParams{
 				PageSizeStr:   ginCtx.Query("pageSize"),
@@ -434,69 +433,13 @@ func TxDetailsFiatPaginated(
 			return
 		}
 
-		// Extract and validate the currency.
-		if err = currency.Scan(ginCtx.Param("currencyCode")); err != nil || !currency.Valid() {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetInvalidCurrencyString(), Payload: ginCtx.Param("currencyCode")})
+		if journalEntries, httpStatus, httpMessage, payload, err = utilities.HTTPFiatTransactionsPaginated(auth, db,
+			logger, clientID, ginCtx.Param("currencyCode"), &params, true); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
 		}
 
-		// Check for required parameters.
-		if len(params.PageCursorStr) == 0 && (len(params.MonthStr) == 0 || len(params.YearStr) == 0) {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "missing required parameters"})
-
-			return
-		}
-
-		// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
-		httpCode, err := utilities.HTTPTxParseQueryParams(auth, logger, &params)
-		if err != nil {
-			ginCtx.AbortWithStatusJSON(httpCode, models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		// Retrieve transaction details page.
-		if journalEntries, err = db.FiatTransactionsPaginated(
-			clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
-			var balanceErr *postgres.Error
-			if !errors.As(err, &balanceErr) {
-				logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
-
-			return
-		}
-
-		if len(journalEntries) == 0 {
-			ginCtx.AbortWithStatusJSON(http.StatusRequestedRangeNotSatisfiable,
-				models.HTTPError{Message: "no transactions"})
-
-			return
-		}
-
-		// Generate naked next page link.
-		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
-
-		// Check if there are further pages of data. If not, set the next link to be empty.
-		if len(journalEntries) > int(params.PageSize) {
-			journalEntries = journalEntries[:int(params.PageSize)]
-		} else {
-			params.NextPage = ""
-		}
-
-		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account transactions",
-			Payload: models.HTTPFiatTransactionsPaginated{
-				TransactionDetails: journalEntries,
-				Links: models.HTTPLinks{
-					NextPage: params.NextPage,
-				},
-			}})
+		ginCtx.JSON(http.StatusOK, models.HTTPSuccess{Message: "account transactions", Payload: journalEntries})
 	}
 }

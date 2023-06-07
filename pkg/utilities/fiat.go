@@ -346,3 +346,70 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 
 	return &accDetails, 0, "", nil
 }
+
+// HTTPFiatTransactionsPaginated will retrieve a page of all Fiat transactions for a specific account and period.
+//
+//nolint:cyclop
+func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID,
+	ticker string, params *HTTPPaginatedTxParams, isREST bool) (
+	*models.HTTPFiatTransactionsPaginated, int, string, any, error) {
+	var (
+		journalEntries models.HTTPFiatTransactionsPaginated
+		currency       postgres.Currency
+		err            error
+	)
+
+	// Extract and validate the currency.
+	if err = currency.Scan(ticker); err != nil || !currency.Valid() {
+		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
+	}
+
+	// Check for required parameters.
+	if len(params.PageCursorStr) == 0 && (len(params.MonthStr) == 0 || len(params.YearStr) == 0) {
+		return nil, http.StatusBadRequest, "missing required parameters", nil, fmt.Errorf("%w", err)
+	}
+
+	// Decrypt values from page cursor, if present. Otherwise, prepare values using query strings.
+	httpCode, err := HTTPTxParseQueryParams(auth, logger, params)
+	if err != nil {
+		return nil, httpCode, err.Error(), nil, fmt.Errorf("%w", err)
+	}
+
+	// Retrieve transaction details page.
+	if journalEntries.TransactionDetails, err = db.FiatTransactionsPaginated(
+		clientID, currency, params.PageSize+1, params.Offset, params.PeriodStart, params.PeriodEnd); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		}
+
+		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
+	}
+
+	if len(journalEntries.TransactionDetails) == 0 {
+		return nil, http.StatusRequestedRangeNotSatisfiable, "no transactions", nil, fmt.Errorf("%w", err)
+	}
+
+	// Generate naked next page link for REST.
+	if isREST {
+		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+	}
+
+	// Check if there are further pages of data. If not, set the next link to be empty.
+	if len(journalEntries.TransactionDetails) > int(params.PageSize) {
+		journalEntries.TransactionDetails = journalEntries.TransactionDetails[:int(params.PageSize)]
+	} else {
+		params.NextPage = ""
+	}
+
+	// Setup next page or cursor link depending on REST or GraphQL request type.
+	if isREST {
+		journalEntries.Links.NextPage = params.NextPage
+	} else {
+		journalEntries.Links.PageCursor = params.NextPage
+	}
+
+	return &journalEntries, 0, "", nil, nil
+}
