@@ -16,11 +16,14 @@ var zapLogger *logger.Logger
 // testAuthHeaderKey is the authorization header key.
 var testAuthHeaderKey = "Authorization"
 
-// testUserQuery is the test user account related queries.
+// testUserQuery is the test user account related mutations and queries.
 var testUserQuery = getUsersQuery()
 
-// testFiatQuery is the test Fiat related queries.
+// testFiatQuery is the test Fiat related mutations and queries.
 var testFiatQuery = getFiatQuery()
+
+// testCryptoQuery is the test Crypto related mutations and queries.
+var testCryptoQuery = getCryptoQuery()
 
 func TestMain(m *testing.M) {
 	var err error

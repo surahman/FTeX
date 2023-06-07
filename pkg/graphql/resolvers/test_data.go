@@ -7,7 +7,7 @@ func getHealthcheckQuery() string {
 	}`
 }
 
-// getUsersQuery is a map of test user queries.
+// getUsersQuery is a map of test user mutations and queries.
 //
 //nolint:lll
 func getUsersQuery() map[string]string {
@@ -30,7 +30,7 @@ func getUsersQuery() map[string]string {
 	}
 }
 
-// getFiatQuery is a map of test Fiat queries.
+// getFiatQuery is a map of test Fiat mutations and queries.
 //
 //nolint:lll
 func getFiatQuery() map[string]string {
@@ -73,6 +73,15 @@ func getFiatQuery() map[string]string {
 
 		"transactionDetailsAllFiatSubsequent": `{
 		"query": "query { transactionDetailsAllFiat(input: { currency: \"%s\", pageSize:\"%d\", pageCursor:\"%s\" }) { transactions { currency, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
+	}
+}
+
+// getCryptoQuery is a map of test Crypto mutations and queries.
+func getCryptoQuery() map[string]string {
+	return map[string]string{
+		"openCrypto": `{
+		"query": "mutation { openCrypto(ticker: \"%s\") { clientID, ticker } }"
 		}`,
 	}
 }
