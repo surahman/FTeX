@@ -112,13 +112,13 @@ func (s *Server) initialize() {
 	fiatGroup.POST("/exchange/transfer",
 		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceCurrencyFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.BalanceFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/balance/",
-		restHandlers.BalanceCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/:transactionID",
 		restHandlers.TxDetailsFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/transaction/all/:currencyCode",
-		restHandlers.TxDetailsCurrencyFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
@@ -127,11 +127,11 @@ func (s *Server) initialize() {
 	cryptoGroup.POST("/exchange",
 		restHandlers.ExchangeCrypto(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceCurrencyCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.BalanceCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/transaction/:transactionID",
 		restHandlers.TxDetailsCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/balance/",
-		restHandlers.BalanceCurrencyCryptoPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.BalanceCryptoPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/transaction/all/:ticker",
 		restHandlers.TxDetailsCryptoPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 }

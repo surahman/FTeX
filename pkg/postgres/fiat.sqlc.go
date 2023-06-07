@@ -154,7 +154,7 @@ func (q *Queries) fiatGetAllAccounts(ctx context.Context, arg *fiatGetAllAccount
 	return items, nil
 }
 
-const fiatGetAllJournalTransactionPaginated = `-- name: fiatGetAllJournalTransactionPaginated :many
+const fiatGetAllJournalTransactionsPaginated = `-- name: fiatGetAllJournalTransactionsPaginated :many
 SELECT currency, amount, transacted_at, client_id, tx_id
 FROM fiat_journal
 WHERE client_id = $1
@@ -167,7 +167,7 @@ OFFSET $3
 LIMIT $4
 `
 
-type fiatGetAllJournalTransactionPaginatedParams struct {
+type fiatGetAllJournalTransactionsPaginatedParams struct {
 	ClientID  uuid.UUID          `json:"clientID"`
 	Currency  Currency           `json:"currency"`
 	Offset    int32              `json:"offset"`
@@ -176,10 +176,10 @@ type fiatGetAllJournalTransactionPaginatedParams struct {
 	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
-// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+// fiatGetAllJournalTransactionsPaginated will retrieve the journal entries associated with a specific account
 // in a date range.
-func (q *Queries) fiatGetAllJournalTransactionPaginated(ctx context.Context, arg *fiatGetAllJournalTransactionPaginatedParams) ([]FiatJournal, error) {
-	rows, err := q.db.Query(ctx, fiatGetAllJournalTransactionPaginated,
+func (q *Queries) fiatGetAllJournalTransactionsPaginated(ctx context.Context, arg *fiatGetAllJournalTransactionsPaginatedParams) ([]FiatJournal, error) {
+	rows, err := q.db.Query(ctx, fiatGetAllJournalTransactionsPaginated,
 		arg.ClientID,
 		arg.Currency,
 		arg.Offset,

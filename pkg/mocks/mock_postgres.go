@@ -53,22 +53,22 @@ func (mr *MockPostgresMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockPostgres)(nil).Close))
 }
 
-// CryptoBalanceCurrency mocks base method.
-func (m *MockPostgres) CryptoBalanceCurrency(arg0 uuid.UUID, arg1 string) (postgres.CryptoAccount, error) {
+// CryptoBalance mocks base method.
+func (m *MockPostgres) CryptoBalance(arg0 uuid.UUID, arg1 string) (postgres.CryptoAccount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CryptoBalanceCurrency", arg0, arg1)
+	ret := m.ctrl.Call(m, "CryptoBalance", arg0, arg1)
 	ret0, _ := ret[0].(postgres.CryptoAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CryptoBalanceCurrency indicates an expected call of CryptoBalanceCurrency.
-func (mr *MockPostgresMockRecorder) CryptoBalanceCurrency(arg0, arg1 interface{}) *gomock.Call {
+// CryptoBalance indicates an expected call of CryptoBalance.
+func (mr *MockPostgresMockRecorder) CryptoBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoBalanceCurrency", reflect.TypeOf((*MockPostgres)(nil).CryptoBalanceCurrency), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoBalance", reflect.TypeOf((*MockPostgres)(nil).CryptoBalance), arg0, arg1)
 }
 
-// CryptoBalancePaginated mocks base method.
+// CryptoBalancesPaginated mocks base method.
 func (m *MockPostgres) CryptoBalancesPaginated(arg0 uuid.UUID, arg1 string, arg2 int32) ([]postgres.CryptoAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CryptoBalancesPaginated", arg0, arg1, arg2)
@@ -77,8 +77,8 @@ func (m *MockPostgres) CryptoBalancesPaginated(arg0 uuid.UUID, arg1 string, arg2
 	return ret0, ret1
 }
 
-// CryptoBalancePaginated indicates an expected call of CryptoBalancePaginated.
-func (mr *MockPostgresMockRecorder) CryptoBalancePaginated(arg0, arg1, arg2 interface{}) *gomock.Call {
+// CryptoBalancesPaginated indicates an expected call of CryptoBalancesPaginated.
+func (mr *MockPostgresMockRecorder) CryptoBalancesPaginated(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoBalancesPaginated", reflect.TypeOf((*MockPostgres)(nil).CryptoBalancesPaginated), arg0, arg1, arg2)
 }
@@ -144,49 +144,49 @@ func (mr *MockPostgresMockRecorder) CryptoTransactionsPaginated(arg0, arg1, arg2
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoTransactionsPaginated", reflect.TypeOf((*MockPostgres)(nil).CryptoTransactionsPaginated), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
-// CryptoTxDetailsCurrency mocks base method.
-func (m *MockPostgres) CryptoTxDetailsCurrency(arg0, arg1 uuid.UUID) ([]postgres.CryptoJournal, error) {
+// CryptoTxDetails mocks base method.
+func (m *MockPostgres) CryptoTxDetails(arg0, arg1 uuid.UUID) ([]postgres.CryptoJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CryptoTxDetailsCurrency", arg0, arg1)
+	ret := m.ctrl.Call(m, "CryptoTxDetails", arg0, arg1)
 	ret0, _ := ret[0].([]postgres.CryptoJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CryptoTxDetailsCurrency indicates an expected call of CryptoTxDetailsCurrency.
-func (mr *MockPostgresMockRecorder) CryptoTxDetailsCurrency(arg0, arg1 interface{}) *gomock.Call {
+// CryptoTxDetails indicates an expected call of CryptoTxDetails.
+func (mr *MockPostgresMockRecorder) CryptoTxDetails(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoTxDetailsCurrency", reflect.TypeOf((*MockPostgres)(nil).CryptoTxDetailsCurrency), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CryptoTxDetails", reflect.TypeOf((*MockPostgres)(nil).CryptoTxDetails), arg0, arg1)
 }
 
-// FiatBalanceCurrency mocks base method.
-func (m *MockPostgres) FiatBalanceCurrency(arg0 uuid.UUID, arg1 postgres.Currency) (postgres.FiatAccount, error) {
+// FiatBalance mocks base method.
+func (m *MockPostgres) FiatBalance(arg0 uuid.UUID, arg1 postgres.Currency) (postgres.FiatAccount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatBalanceCurrency", arg0, arg1)
+	ret := m.ctrl.Call(m, "FiatBalance", arg0, arg1)
 	ret0, _ := ret[0].(postgres.FiatAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatBalanceCurrency indicates an expected call of FiatBalanceCurrency.
-func (mr *MockPostgresMockRecorder) FiatBalanceCurrency(arg0, arg1 interface{}) *gomock.Call {
+// FiatBalance indicates an expected call of FiatBalance.
+func (mr *MockPostgresMockRecorder) FiatBalance(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatBalanceCurrency", reflect.TypeOf((*MockPostgres)(nil).FiatBalanceCurrency), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatBalance", reflect.TypeOf((*MockPostgres)(nil).FiatBalance), arg0, arg1)
 }
 
-// FiatBalanceCurrencyPaginated mocks base method.
-func (m *MockPostgres) FiatBalanceCurrencyPaginated(arg0 uuid.UUID, arg1 postgres.Currency, arg2 int32) ([]postgres.FiatAccount, error) {
+// FiatBalancePaginated mocks base method.
+func (m *MockPostgres) FiatBalancePaginated(arg0 uuid.UUID, arg1 postgres.Currency, arg2 int32) ([]postgres.FiatAccount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatBalanceCurrencyPaginated", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "FiatBalancePaginated", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]postgres.FiatAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatBalanceCurrencyPaginated indicates an expected call of FiatBalanceCurrencyPaginated.
-func (mr *MockPostgresMockRecorder) FiatBalanceCurrencyPaginated(arg0, arg1, arg2 interface{}) *gomock.Call {
+// FiatBalancePaginated indicates an expected call of FiatBalancePaginated.
+func (mr *MockPostgresMockRecorder) FiatBalancePaginated(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatBalanceCurrencyPaginated", reflect.TypeOf((*MockPostgres)(nil).FiatBalanceCurrencyPaginated), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatBalancePaginated", reflect.TypeOf((*MockPostgres)(nil).FiatBalancePaginated), arg0, arg1, arg2)
 }
 
 // FiatCreateAccount mocks base method.
@@ -234,34 +234,34 @@ func (mr *MockPostgresMockRecorder) FiatInternalTransfer(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatInternalTransfer", reflect.TypeOf((*MockPostgres)(nil).FiatInternalTransfer), arg0, arg1, arg2)
 }
 
-// FiatTransactionsCurrencyPaginated mocks base method.
-func (m *MockPostgres) FiatTransactionsCurrencyPaginated(arg0 uuid.UUID, arg1 postgres.Currency, arg2, arg3 int32, arg4, arg5 pgtype.Timestamptz) ([]postgres.FiatJournal, error) {
+// FiatTransactionsPaginated mocks base method.
+func (m *MockPostgres) FiatTransactionsPaginated(arg0 uuid.UUID, arg1 postgres.Currency, arg2, arg3 int32, arg4, arg5 pgtype.Timestamptz) ([]postgres.FiatJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatTransactionsCurrencyPaginated", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "FiatTransactionsPaginated", arg0, arg1, arg2, arg3, arg4, arg5)
 	ret0, _ := ret[0].([]postgres.FiatJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatTransactionsCurrencyPaginated indicates an expected call of FiatTransactionsCurrencyPaginated.
-func (mr *MockPostgresMockRecorder) FiatTransactionsCurrencyPaginated(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+// FiatTransactionsPaginated indicates an expected call of FiatTransactionsPaginated.
+func (mr *MockPostgresMockRecorder) FiatTransactionsPaginated(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTransactionsCurrencyPaginated", reflect.TypeOf((*MockPostgres)(nil).FiatTransactionsCurrencyPaginated), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTransactionsPaginated", reflect.TypeOf((*MockPostgres)(nil).FiatTransactionsPaginated), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
-// FiatTxDetailsCurrency mocks base method.
-func (m *MockPostgres) FiatTxDetailsCurrency(arg0, arg1 uuid.UUID) ([]postgres.FiatJournal, error) {
+// FiatTxDetails mocks base method.
+func (m *MockPostgres) FiatTxDetails(arg0, arg1 uuid.UUID) ([]postgres.FiatJournal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FiatTxDetailsCurrency", arg0, arg1)
+	ret := m.ctrl.Call(m, "FiatTxDetails", arg0, arg1)
 	ret0, _ := ret[0].([]postgres.FiatJournal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FiatTxDetailsCurrency indicates an expected call of FiatTxDetailsCurrency.
-func (mr *MockPostgresMockRecorder) FiatTxDetailsCurrency(arg0, arg1 interface{}) *gomock.Call {
+// FiatTxDetails indicates an expected call of FiatTxDetails.
+func (mr *MockPostgresMockRecorder) FiatTxDetails(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTxDetailsCurrency", reflect.TypeOf((*MockPostgres)(nil).FiatTxDetailsCurrency), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiatTxDetails", reflect.TypeOf((*MockPostgres)(nil).FiatTxDetails), arg0, arg1)
 }
 
 // Healthcheck mocks base method.

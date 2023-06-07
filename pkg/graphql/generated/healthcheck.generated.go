@@ -23,7 +23,7 @@ type QueryResolver interface {
 	BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error)
 	BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error)
 	TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error)
-	TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.FiatTransactionsPaginated, error)
+	TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.HTTPFiatTransactionsPaginated, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -389,9 +389,9 @@ func (ec *executionContext) _Query_transactionDetailsAllFiat(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.FiatTransactionsPaginated)
+	res := resTmp.(*models.HTTPFiatTransactionsPaginated)
 	fc.Result = res
-	return ec.marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatTransactionsPaginated(ctx, field.Selections, res)
+	return ec.marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransactionsPaginated(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_transactionDetailsAllFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {

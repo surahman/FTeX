@@ -219,8 +219,8 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 		fiatDepositAccTimes  int
 	}{
 		{
-			name:                 "empty request",
-			path:                 "/deposit-fiat/empty-request",
+			name:                 "invalid jwt",
+			path:                 "/deposit-fiat/invalid-jwt",
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.56, "USD"),
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("authorization failure"),
@@ -233,7 +233,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.56, "INVALID"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -242,7 +242,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.567, "USD"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -251,7 +251,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["depositFiat"], -1234.56, "USD"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -381,12 +381,25 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 		redisTimes           int
 	}{
 		{
+			name:                 "invalid jwt",
+			path:                 "/exchange-offer-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   errors.New("invalid jwt"),
+			authValidateJWTTimes: 1,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
 			name:                 "empty request",
 			path:                 "/exchange-offer-fiat/empty-request",
 			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "", "", 101.11),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -399,7 +412,7 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "INVALID", "CAD", 101.11),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -412,7 +425,7 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "INVALID", 101.11),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -425,7 +438,7 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.111),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -438,19 +451,6 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", -101.11),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
-			quotesErr:            nil,
-			quotesTimes:          0,
-			authEncryptErr:       nil,
-			authEncryptTimes:     0,
-			redisErr:             nil,
-			redisTimes:           0,
-		}, {
-			name:                 "invalid jwt",
-			path:                 "/exchange-offer-fiat/invalid-jwt",
-			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
-			expectErr:            true,
-			authValidateJWTErr:   errors.New("invalid jwt"),
 			authValidateJWTTimes: 1,
 			quotesErr:            nil,
 			quotesTimes:          0,
@@ -569,6 +569,39 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFiatResolver_FiatExchangeTransferResponseResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatExchangeTransferResponseResolver{}
+
+	response := &models.HTTPFiatTransferResponse{
+		SrcTxReceipt: &postgres.FiatAccountTransferResult{
+			TxID:     uuid.UUID{},
+			ClientID: uuid.UUID{},
+			TxTS:     pgtype.Timestamptz{},
+			Balance:  decimal.Decimal{},
+			LastTx:   decimal.Decimal{},
+			Currency: "",
+		},
+		DstTxReceipt: &postgres.FiatAccountTransferResult{
+			TxID:     uuid.UUID{},
+			ClientID: uuid.UUID{},
+			TxTS:     pgtype.Timestamptz{},
+			Balance:  decimal.Decimal{},
+			LastTx:   decimal.Decimal{},
+			Currency: "",
+		},
+	}
+
+	source, err := resolver.SourceReceipt(context.TODO(), response)
+	require.NoError(t, err, "source should always return a nil error.")
+	require.Equal(t, response.SrcTxReceipt, source, "source and returned struct addresses mismatched.")
+
+	destination, err := resolver.SourceReceipt(context.TODO(), response)
+	require.NoError(t, err, "destinations should always return a nil error.")
+	require.Equal(t, response.DstTxReceipt, destination, "destination and returned struct addresses mismatched.")
 }
 
 func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
@@ -940,19 +973,19 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 		fiatBalanceTimes     int
 	}{
 		{
+			name:                 "invalid JWT",
+			path:                 "/balance-fiat/invalid-jwt",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+		}, {
 			name:                 "invalid currency",
 			path:                 "/balance-fiat/invalid-currency",
 			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "INVALID"),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
-			fiatBalanceErr:       nil,
-			fiatBalanceTimes:     0,
-		}, {
-			name:                 "invalid JWT",
-			path:                 "/balance-fiat/invalid-jwt",
-			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
-			authValidateJWTErr:   errors.New("invalid JWT"),
 			authValidateJWTTimes: 1,
 			fiatBalanceErr:       nil,
 			fiatBalanceTimes:     0,
@@ -1003,7 +1036,7 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
 
-				mockPostgres.EXPECT().FiatBalanceCurrency(gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 			)
@@ -1206,7 +1239,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 					Return([]byte{}, test.authDecryptStrErr).
 					Times(test.authDecryptStrTimes),
 
-				mockPostgres.EXPECT().FiatBalanceCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.accDetails, test.fiatBalanceErr).
 					Times(test.fiatBalanceTimes),
 
@@ -1327,22 +1360,22 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 		fiatTxDetailsTimes   int
 	}{
 		{
-			name:                 "invalid transaction ID",
-			path:                 "/transaction-details-fiat/invalid-transaction-id",
-			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], "invalid-tx-id"),
-			expectErr:            true,
-			journalEntries:       journalEntries,
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
-			fiatTxDetailsErr:     nil,
-			fiatTxDetailsTimes:   0,
-		}, {
 			name:                 "invalid JWT",
 			path:                 "/transaction-details-fiat/invalid-jwt",
 			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
 			expectErr:            true,
 			journalEntries:       journalEntries,
 			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+		}, {
+			name:                 "invalid transaction ID",
+			path:                 "/transaction-details-fiat/invalid-transaction-id",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], "invalid-tx-id"),
+			expectErr:            true,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
 			fiatTxDetailsErr:     nil,
 			fiatTxDetailsTimes:   0,
@@ -1408,7 +1441,7 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
 
-				mockPostgres.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.journalEntries, test.fiatTxDetailsErr).
 					Times(test.fiatTxDetailsTimes),
 			)
@@ -1614,7 +1647,7 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 					Return("encrypted-cursor", test.authEncryptCursorErr).
 					Times(test.authEncryptCursorTimes),
 
-				mockPostgres.EXPECT().FiatTransactionsCurrencyPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+				mockPostgres.EXPECT().FiatTransactionsPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
 					gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.journalEntries, test.fiatTxPaginatedErr).
 					Times(test.fiatTxPaginatedTimes),
@@ -1644,4 +1677,16 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFiatResolver_FiatTransactionsPaginatedResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := fiatTransactionsPaginatedResolver{}
+
+	transactions := &models.HTTPFiatTransactionsPaginated{}
+
+	actual, err := resolver.Transactions(context.TODO(), transactions)
+	require.NoError(t, err, "error should always be nil.")
+	require.Equal(t, transactions.TransactionDetails, actual, "actual and returned addresses do not match.")
 }

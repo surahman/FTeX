@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/common"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
-	"github.com/surahman/FTeX/pkg/utilities"
 	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -48,7 +48,8 @@ func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 		}
 
 		if err = validator.ValidateStruct(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
 
 			return
 		}
@@ -117,7 +118,8 @@ func OfferCrypto(
 		}
 
 		if err = validator.ValidateStruct(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
 
 			return
 		}
@@ -128,7 +130,7 @@ func OfferCrypto(
 			return
 		}
 
-		offer, status, statusMessage, err = utilities.HTTPPrepareCryptoOffer(auth, cache, logger, quotes,
+		offer, status, statusMessage, err = common.HTTPCryptoOffer(auth, cache, logger, quotes,
 			clientID, request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, *request.IsPurchase)
 		if err != nil {
 			httpErr := &models.HTTPError{Message: statusMessage}
@@ -184,7 +186,8 @@ func ExchangeCrypto(
 		}
 
 		if err = validator.ValidateStruct(&request); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: "validation", Payload: err})
+			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
+				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
 
 			return
 		}
@@ -195,7 +198,7 @@ func ExchangeCrypto(
 			return
 		}
 
-		receipt, status, httpErrMsg, err := utilities.HTTPExchangeCrypto(auth, cache, db, logger, clientID, request.OfferID)
+		receipt, status, httpErrMsg, err := common.HTTPExchangeCrypto(auth, cache, db, logger, clientID, request.OfferID)
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(status, &models.HTTPError{Message: httpErrMsg})
 
@@ -206,7 +209,7 @@ func ExchangeCrypto(
 	}
 }
 
-// BalanceCurrencyCrypto will handle an HTTP request to retrieve a balance for a specific Cryptocurrency.
+// BalanceCrypto will handle an HTTP request to retrieve a balance for a specific Cryptocurrency.
 //
 //	@Summary		Retrieve balance for a specific Cryptocurrency.
 //	@Description	Retrieves the balance for a specific Cryptocurrency. The currency ticker must be supplied as a query parameter.
@@ -222,7 +225,7 @@ func ExchangeCrypto(
 //	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/crypto/info/balance/{ticker} [get]
-func BalanceCurrencyCrypto(
+func BalanceCrypto(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
@@ -238,7 +241,7 @@ func BalanceCurrencyCrypto(
 		// Extract and validate the currency.
 		if len(ticker) < 1 || len(ticker) > 6 {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: "invalid currency", Payload: ticker})
+				models.HTTPError{Message: constants.GetInvalidCurrencyString(), Payload: ticker})
 
 			return
 		}
@@ -249,7 +252,7 @@ func BalanceCurrencyCrypto(
 			return
 		}
 
-		if accDetails, err = db.CryptoBalanceCurrency(clientID, ticker); err != nil {
+		if accDetails, err = db.CryptoBalance(clientID, ticker); err != nil {
 			var balanceErr *postgres.Error
 			if !errors.As(err, &balanceErr) {
 				logger.Info("failed to unpack Crypto account balance currency error", zap.Error(err))
@@ -303,7 +306,7 @@ func TxDetailsCrypto(
 		}
 
 		// Extract and validate the transactionID.
-		journalEntries, status, errMsg, err := utilities.HTTPTxDetails(db, logger, clientID, transactionID)
+		journalEntries, status, errMsg, err := common.HTTPTxDetails(db, logger, clientID, transactionID)
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(status, models.HTTPError{Message: errMsg})
 
@@ -314,8 +317,8 @@ func TxDetailsCrypto(
 	}
 }
 
-// BalanceCurrencyCryptoPaginated will handle an HTTP request to retrieve a balance for all Cryptocurrency accounts held
-// by a single client.
+// BalanceCryptoPaginated will handle an HTTP request to retrieve a balance for all Cryptocurrency accounts held by a
+// single client.
 //
 // If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
 // available to for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
@@ -335,7 +338,7 @@ func TxDetailsCrypto(
 //	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/crypto/info/balance [get]
-func BalanceCurrencyCryptoPaginated(
+func BalanceCryptoPaginated(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
@@ -355,7 +358,7 @@ func BalanceCurrencyCryptoPaginated(
 			return
 		}
 
-		accDetails, httpStatus, httpMessage, err = utilities.HTTPCryptoBalancePaginated(auth, db, logger,
+		accDetails, httpStatus, httpMessage, err = common.HTTPCryptoBalancePaginated(auth, db, logger,
 			clientID, ginCtx.Query("pageCursor"), ginCtx.Query("pageSize"))
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
@@ -406,7 +409,7 @@ func TxDetailsCryptoPaginated(
 			journalEntries models.HTTPCryptoTransactionsPaginated
 			httpStatus     int
 			httpMessage    string
-			params         = utilities.HTTPPaginatedTxParams{
+			params         = common.HTTPPaginatedTxParams{
 				PageSizeStr:   ginCtx.Query("pageSize"),
 				PageCursorStr: ginCtx.Query("pageCursor"),
 				TimezoneStr:   ginCtx.Query("timezone"),
@@ -422,7 +425,7 @@ func TxDetailsCryptoPaginated(
 		}
 
 		if journalEntries, httpStatus, httpMessage, err =
-			utilities.HTTPCryptoTXPaginated(auth, db, logger, &params, clientID, ticker); err != nil {
+			common.HTTPCryptoTXPaginated(auth, db, logger, &params, clientID, ticker); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
 
 			return

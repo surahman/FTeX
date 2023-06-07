@@ -45,7 +45,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 1,
 		}, {
-			name:                 "validation",
+			name:                 constants.GetValidationString(),
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
 			request:              &models.HTTPOpenCurrencyAccountRequest{},
@@ -152,7 +152,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:               "empty request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			path:               "/purchase-offer-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPCryptoOfferRequest{},
@@ -191,7 +191,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "no purchase or sale flag",
-			expectedMsg:    "validation",
+			expectedMsg:    constants.GetValidationString(),
 			path:           "/purchase-offer-crypto/invalid-fiat-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPCryptoOfferRequest{
@@ -557,7 +557,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			expectErr:          require.Error,
 		}, {
 			name:               "empty request",
-			expectedMsg:        "validation",
+			expectedMsg:        constants.GetValidationString(),
 			path:               "/exchange-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPTransferRequest{},
@@ -695,7 +695,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceCurrencyCrypto(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/crypto/balance/currency/"
@@ -713,7 +713,7 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
 		{
 			name:               "invalid currency",
 			currency:           "INVALID",
-			expectedMsg:        "invalid currency",
+			expectedMsg:        constants.GetInvalidCurrencyString(),
 			expectedStatus:     http.StatusBadRequest,
 			authValidateJWTErr: nil,
 			authValidateTimes:  0,
@@ -758,7 +758,7 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -775,14 +775,14 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockDB.EXPECT().CryptoBalanceCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.CryptoAccount{}, test.cryptoBalanceErr).
 					Times(test.cryptoBalanceTimes),
 			)
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceCurrencyCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -879,11 +879,11 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
 
-				mockDB.EXPECT().FiatTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.FiatJournal{{}}, test.fiatTxErr).
 					Times(test.fiatTxTimes),
 
-				mockDB.EXPECT().CryptoTxDetailsCurrency(gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.CryptoJournal{{}}, test.cryptoTxErr).
 					Times(test.cryptoTxTimes),
 			)
@@ -1090,7 +1090,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 					Return([]byte{}, test.authDecryptStrErr).
 					Times(test.authDecryptStrTimes),
 
-				mockDB.EXPECT().CryptoBalancePaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+				mockDB.EXPECT().CryptoBalancesPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.accBalances, test.cryptoBalanceErr).
 					Times(test.cryptoBalanceTimes),
 
@@ -1101,7 +1101,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path, BalanceCurrencyCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path, BalanceCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

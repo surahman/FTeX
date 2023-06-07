@@ -100,7 +100,7 @@ func (q *Queries) cryptoGetAllAccounts(ctx context.Context, arg *cryptoGetAllAcc
 	return items, nil
 }
 
-const cryptoGetAllJournalTransactionPaginated = `-- name: cryptoGetAllJournalTransactionPaginated :many
+const cryptoGetAllJournalTransactionsPaginated = `-- name: cryptoGetAllJournalTransactionsPaginated :many
 SELECT ticker, amount, transacted_at, client_id, tx_id
 FROM crypto_journal
 WHERE client_id = $1
@@ -113,7 +113,7 @@ OFFSET $3
 LIMIT $4
 `
 
-type cryptoGetAllJournalTransactionPaginatedParams struct {
+type cryptoGetAllJournalTransactionsPaginatedParams struct {
 	ClientID  uuid.UUID          `json:"clientID"`
 	Ticker    string             `json:"ticker"`
 	Offset    int32              `json:"offset"`
@@ -122,10 +122,10 @@ type cryptoGetAllJournalTransactionPaginatedParams struct {
 	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
-// cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+// cryptoGetAllJournalTransactionsPaginated will retrieve the journal entries associated with a specific account
 // in a date range.
-func (q *Queries) cryptoGetAllJournalTransactionPaginated(ctx context.Context, arg *cryptoGetAllJournalTransactionPaginatedParams) ([]CryptoJournal, error) {
-	rows, err := q.db.Query(ctx, cryptoGetAllJournalTransactionPaginated,
+func (q *Queries) cryptoGetAllJournalTransactionsPaginated(ctx context.Context, arg *cryptoGetAllJournalTransactionsPaginatedParams) ([]CryptoJournal, error) {
+	rows, err := q.db.Query(ctx, cryptoGetAllJournalTransactionsPaginated,
 		arg.ClientID,
 		arg.Ticker,
 		arg.Offset,

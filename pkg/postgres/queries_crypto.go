@@ -26,9 +26,9 @@ func (p *postgresImpl) CryptoCreateAccount(clientID uuid.UUID, ticker string) er
 	return nil
 }
 
-// CryptoBalanceCurrency is the interface through which external methods can retrieve a Crypto account balance for a
+// CryptoBalance is the interface through which external methods can retrieve a Crypto account balance for a
 // specific cryptocurrency.
-func (p *postgresImpl) CryptoBalanceCurrency(clientID uuid.UUID, ticker string) (CryptoAccount, error) {
+func (p *postgresImpl) CryptoBalance(clientID uuid.UUID, ticker string) (CryptoAccount, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
 
 	defer cancel()
@@ -41,9 +41,9 @@ func (p *postgresImpl) CryptoBalanceCurrency(clientID uuid.UUID, ticker string) 
 	return balance, nil
 }
 
-// CryptoTxDetailsCurrency is the interface through which external methods can retrieve a Crypto transaction details for
+// CryptoTxDetails is the interface through which external methods can retrieve a Crypto transaction details for
 // a specific transaction.
-func (p *postgresImpl) CryptoTxDetailsCurrency(clientID uuid.UUID, transactionID uuid.UUID) ([]CryptoJournal, error) {
+func (p *postgresImpl) CryptoTxDetails(clientID uuid.UUID, transactionID uuid.UUID) ([]CryptoJournal, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
 
 	defer cancel()
@@ -199,7 +199,7 @@ func (p *postgresImpl) CryptoTransactionsPaginated(
 
 	defer cancel()
 
-	balance, err := p.Query.cryptoGetAllJournalTransactionPaginated(ctx, &cryptoGetAllJournalTransactionPaginatedParams{
+	balance, err := p.Query.cryptoGetAllJournalTransactionsPaginated(ctx, &cryptoGetAllJournalTransactionsPaginatedParams{
 		ClientID:  clientID,
 		Ticker:    ticker,
 		Offset:    offset,

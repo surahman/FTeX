@@ -34,7 +34,9 @@ type ResolverRoot interface {
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
 	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
+	FiatExchangeTransferResponse() FiatExchangeTransferResponseResolver
 	FiatJournal() FiatJournalResolver
+	FiatTransactionsPaginated() FiatTransactionsPaginatedResolver
 	Mutation() MutationResolver
 	PriceQuote() PriceQuoteResolver
 	Query() QueryResolver
@@ -717,7 +719,7 @@ type FiatBalancesPaginated {
 # FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
 type FiatTransactionsPaginated {
     transactions:   [FiatJournal!]!
-    links:          Links
+    links:          Links!
 }
 
 # FiatDepositRequest is a request to deposit Fiat currency from an external source.

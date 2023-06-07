@@ -18,9 +18,9 @@ type Querier interface {
 	cryptoGetAccount(ctx context.Context, arg *cryptoGetAccountParams) (CryptoAccount, error)
 	// cryptoGetAllAccounts will retrieve all accounts associated with a specific user.
 	cryptoGetAllAccounts(ctx context.Context, arg *cryptoGetAllAccountsParams) ([]CryptoAccount, error)
-	// cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+	// cryptoGetAllJournalTransactionsPaginated will retrieve the journal entries associated with a specific account
 	// in a date range.
-	cryptoGetAllJournalTransactionPaginated(ctx context.Context, arg *cryptoGetAllJournalTransactionPaginatedParams) ([]CryptoJournal, error)
+	cryptoGetAllJournalTransactionsPaginated(ctx context.Context, arg *cryptoGetAllJournalTransactionsPaginatedParams) ([]CryptoJournal, error)
 	// cryptoGetJournalTransaction will retrieve the journal entries associated with a transaction.
 	cryptoGetJournalTransaction(ctx context.Context, arg *cryptoGetJournalTransactionParams) ([]CryptoJournal, error)
 	// cryptoPurchase will execute a transaction to purchase a Cryptocurrency using a Fiat currency.
@@ -35,9 +35,9 @@ type Querier interface {
 	fiatGetAccount(ctx context.Context, arg *fiatGetAccountParams) (FiatAccount, error)
 	// fiatGetAllAccounts will retrieve all accounts associated with a specific user.
 	fiatGetAllAccounts(ctx context.Context, arg *fiatGetAllAccountsParams) ([]FiatAccount, error)
-	// fiatGetJournalTransactionForAccountBetweenDates will retrieve the journal entries associated with a specific account
+	// fiatGetAllJournalTransactionsPaginated will retrieve the journal entries associated with a specific account
 	// in a date range.
-	fiatGetAllJournalTransactionPaginated(ctx context.Context, arg *fiatGetAllJournalTransactionPaginatedParams) ([]FiatJournal, error)
+	fiatGetAllJournalTransactionsPaginated(ctx context.Context, arg *fiatGetAllJournalTransactionsPaginatedParams) ([]FiatJournal, error)
 	// fiatGetJournalTransaction will retrieve the journal entries associated with a transaction.
 	fiatGetJournalTransaction(ctx context.Context, arg *fiatGetJournalTransactionParams) ([]FiatJournal, error)
 	// fiatGetJournalTransactionForAccount will retrieve the journal entries associated with a specific account.

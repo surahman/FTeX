@@ -31,8 +31,8 @@ WHERE client_id=$1 AND ticker >= $2
 ORDER BY ticker
 LIMIT $3;
 
--- name: cryptoGetAllJournalTransactionPaginated :many
--- cryptoGetAllJournalTransactionPaginated will retrieve the journal entries associated with a specific account
+-- name: cryptoGetAllJournalTransactionsPaginated :many
+-- cryptoGetAllJournalTransactionsPaginated will retrieve the journal entries associated with a specific account
 -- in a date range.
 SELECT *
 FROM crypto_journal
