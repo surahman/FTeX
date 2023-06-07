@@ -17,7 +17,68 @@ import (
 	"github.com/surahman/FTeX/pkg/quotes"
 )
 
-func TestUtilities_HTTPCryptoTxPaginated(t *testing.T) {
+func TestCommon_HTTPCryptoOpen(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name          string
+		tickerStr     string
+		expectErrMsg  string
+		expectErrCode int
+		openAccErr    error
+		openAccTimes  int
+		expectErr     require.ErrorAssertionFunc
+	}{
+		{
+			name:          "unknown db failure",
+			tickerStr:     "BTC",
+			openAccErr:    errors.New("unknown error"),
+			openAccTimes:  1,
+			expectErrCode: http.StatusInternalServerError,
+			expectErrMsg:  retryMessage,
+			expectErr:     require.Error,
+		}, {
+			name:          "known db failure",
+			tickerStr:     "BTC",
+			openAccErr:    postgres.ErrNotFound,
+			openAccTimes:  1,
+			expectErrCode: http.StatusNotFound,
+			expectErrMsg:  "records not found",
+			expectErr:     require.Error,
+		}, {
+			name:          "BTC",
+			tickerStr:     "BTC",
+			openAccErr:    nil,
+			openAccTimes:  1,
+			expectErrCode: 0,
+			expectErrMsg:  "",
+			expectErr:     require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			mockDB.EXPECT().CryptoCreateAccount(gomock.Any(), gomock.Any()).
+				Return(test.openAccErr).
+				Times(test.openAccTimes)
+
+			actualErrCode, actualErrMsg, err := HTTPCryptoOpen(mockDB, zapLogger, uuid.UUID{}, test.tickerStr)
+			test.expectErr(t, err, "error expectation failed.")
+			require.Equal(t, test.expectErrCode, actualErrCode, "error codes mismatched.")
+			require.Contains(t, actualErrMsg, test.expectErrMsg, "expected error message mismatched.")
+		})
+	}
+}
+
+func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 	t.Parallel()
 
 	var (
@@ -192,7 +253,7 @@ func TestUtilities_HTTPCryptoTxPaginated(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
+func TestCommon_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 	t.Parallel()
 
 	var (
@@ -460,7 +521,7 @@ func TestUtilities_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 	}
 }
 
-func TestUtilities_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
+func TestCommon_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 	t.Parallel()
 
 	validClientID, err := uuid.NewV4()
@@ -753,7 +814,7 @@ func TestUtilities_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 	}
 }
 
-func TestUtilities_CryptoBalancePaginatedRequest(t *testing.T) {
+func TestCommon_CryptoBalancePaginatedRequest(t *testing.T) {
 	t.Parallel()
 
 	encBTC, err := testAuth.EncryptToString([]byte("BTC"))
@@ -836,7 +897,7 @@ func TestUtilities_CryptoBalancePaginatedRequest(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPCryptoBalancePaginated(t *testing.T) {
+func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 	t.Parallel()
 
 	var (

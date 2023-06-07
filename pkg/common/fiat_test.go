@@ -18,7 +18,7 @@ import (
 	"github.com/surahman/FTeX/pkg/redis"
 )
 
-func TestUtilities_HTTPFiatOpen(t *testing.T) {
+func TestCommon_HTTPFiatOpen(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -87,7 +87,7 @@ func TestUtilities_HTTPFiatOpen(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPFiatDeposit(t *testing.T) {
+func TestCommon_HTTPFiatDeposit(t *testing.T) {
 	t.Parallel()
 
 	validRequest := models.HTTPDepositCurrencyRequest{
@@ -209,7 +209,7 @@ func TestUtilities_HTTPFiatDeposit(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPFiatOffer(t *testing.T) {
+func TestCommon_HTTPFiatOffer(t *testing.T) {
 	t.Parallel()
 
 	var (
@@ -389,7 +389,7 @@ func TestUtilities_HTTPFiatOffer(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
+func TestCommon_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	validDecimal, err := decimal.NewFromString("10101.11")
@@ -708,7 +708,7 @@ func TestUtilities_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestUtilities_HTTPFiatBalance(t *testing.T) {
+func TestCommon_HTTPFiatBalance(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -791,7 +791,7 @@ func TestUtilities_HTTPFiatBalance(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
+func TestCommon_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	t.Parallel()
 
 	encAED, err := testAuth.EncryptToString([]byte("AED"))
@@ -874,7 +874,7 @@ func TestUtilities_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPFiatBalancePaginated(t *testing.T) {
+func TestCommon_HTTPFiatBalancePaginated(t *testing.T) {
 	t.Parallel()
 
 	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
