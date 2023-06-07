@@ -182,7 +182,7 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 	if offer, _, httpMessage, payload, err =
 		utilities.HTTPFiatOffer(r.auth, r.cache, r.logger, r.quotes, clientID, &input); err != nil {
 
-		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
+		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
 
 	return offer, nil
@@ -204,7 +204,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 
 	if receipt, _, httpMessage, payload, err = utilities.HTTPFiatTransfer(r.auth, r.cache, r.db, r.logger,
 		clientID, &models.HTTPTransferRequest{OfferID: offerID}); err != nil {
-		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
+		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
 
 	return receipt, nil
@@ -226,7 +226,7 @@ func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*
 
 	if accDetails, _, httpMessage, payload, err =
 		utilities.HTTPFiatBalance(r.db, r.logger, clientID, currencyCode); err != nil {
-		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
+		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
 
 	return accDetails, nil
@@ -270,13 +270,13 @@ func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionI
 		err            error
 	)
 
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
 	// Extract and validate the transactionID.
 	if txID, err = uuid.FromString(transactionID); err != nil {
 		return nil, fmt.Errorf("invalid transaction id %s", transactionID)
-	}
-
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
-		return nil, errors.New("authorization failure")
 	}
 
 	if journalEntries, err = r.db.FiatTxDetails(clientID, txID); err != nil {
@@ -340,7 +340,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 	if journalEntries, _, httpMessage, payload, err = utilities.HTTPFiatTransactionsPaginated(r.auth, r.db,
 		r.logger, clientID, input.Currency, &params, false); err != nil {
 
-		return nil, fmt.Errorf("%s: %s", httpMessage, payload)
+		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
 
 	return journalEntries, nil

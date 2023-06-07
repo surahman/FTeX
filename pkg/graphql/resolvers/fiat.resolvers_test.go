@@ -1360,22 +1360,22 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 		fiatTxDetailsTimes   int
 	}{
 		{
-			name:                 "invalid transaction ID",
-			path:                 "/transaction-details-fiat/invalid-transaction-id",
-			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], "invalid-tx-id"),
-			expectErr:            true,
-			journalEntries:       journalEntries,
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
-			fiatTxDetailsErr:     nil,
-			fiatTxDetailsTimes:   0,
-		}, {
 			name:                 "invalid JWT",
 			path:                 "/transaction-details-fiat/invalid-jwt",
 			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
 			expectErr:            true,
 			journalEntries:       journalEntries,
 			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+		}, {
+			name:                 "invalid transaction ID",
+			path:                 "/transaction-details-fiat/invalid-transaction-id",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], "invalid-tx-id"),
+			expectErr:            true,
+			journalEntries:       journalEntries,
+			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
 			fiatTxDetailsErr:     nil,
 			fiatTxDetailsTimes:   0,
