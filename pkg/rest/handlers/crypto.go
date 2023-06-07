@@ -33,13 +33,23 @@ import (
 //	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Router			/crypto/open [post]
+//
+//nolint:dupl
 func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			clientID uuid.UUID
-			err      error
-			request  models.HTTPOpenCurrencyAccountRequest
+			clientID    uuid.UUID
+			err         error
+			request     models.HTTPOpenCurrencyAccountRequest
+			httpStatus  int
+			httpMessage string
 		)
+
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+
+			return
+		}
 
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
@@ -54,23 +64,8 @@ func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		if err = db.CryptoCreateAccount(clientID, request.Currency); err != nil {
-			var createErr *postgres.Error
-			if !errors.As(err, &createErr) {
-				logger.Info("failed to unpack open Crypto account error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(createErr.Code, models.HTTPError{Message: createErr.Message})
+		if httpStatus, httpMessage, err = common.HTTPCryptoOpen(db, logger, clientID, request.Currency); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: request.Currency})
 
 			return
 		}

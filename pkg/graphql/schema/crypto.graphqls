@@ -1,0 +1,11 @@
+# CryptoOpenAccountResponse is the response returned
+type CryptoOpenAccountResponse {
+    clientID: String!
+    ticker: String!
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # openFiat is a request to open an account if it does not already exist.
+    openCrypto(ticker: String!): CryptoOpenAccountResponse!
+}

@@ -19,7 +19,7 @@ import (
 	"github.com/surahman/FTeX/pkg/redis"
 )
 
-func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
+func TestCommon_HTTPGetCachedOffer(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -136,7 +136,7 @@ func TestUtilities_HTTPGetCachedOffer(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPTransactionGeneratePageCursor(t *testing.T) {
+func TestCommon_HTTPTransactionGeneratePageCursor(t *testing.T) {
 	t.Parallel()
 
 	startStr := fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00")
@@ -188,7 +188,7 @@ func TestUtilities_HTTPTransactionGeneratePageCursor(t *testing.T) {
 	})
 }
 
-func TestUtilities_HTTPTransactionInfoPaginatedRequest(t *testing.T) {
+func TestCommon_HTTPTransactionInfoPaginatedRequest(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -302,7 +302,7 @@ func TestUtilities_HTTPTransactionInfoPaginatedRequest(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPTxParseQueryParams(t *testing.T) {
+func TestCommon_HTTPTxParseQueryParams(t *testing.T) {
 	t.Parallel()
 
 	// Timestamps for start and end of period.
@@ -419,7 +419,7 @@ func TestUtilities_HTTPTxParseQueryParams(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPValidateOfferRequest(t *testing.T) {
+func TestCommon_HTTPValidateOfferRequest(t *testing.T) {
 	t.Parallel()
 
 	amountValid, err := decimal.NewFromString("10101.11")
@@ -497,7 +497,7 @@ func TestUtilities_HTTPValidateOfferRequest(t *testing.T) {
 	}
 }
 
-func TestUtilities_HTTPTxDetails(t *testing.T) {
+func TestCommon_HTTPTxDetails(t *testing.T) {
 	t.Parallel()
 
 	validTxID, err := uuid.NewV4()

@@ -36,6 +36,15 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 		cryptoCreateAccTimes int
 	}{
 		{
+			name:                 "invalid jwt",
+			path:                 "/open/invalid-jwt",
+			expectedStatus:       http.StatusForbidden,
+			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
+			authValidateJWTErr:   errors.New("invalid jwt"),
+			authValidateTimes:    1,
+			cryptoCreateAccErr:   nil,
+			cryptoCreateAccTimes: 0,
+		}, {
 			name:                 "valid",
 			path:                 "/open/valid",
 			expectedStatus:       http.StatusCreated,
@@ -45,20 +54,11 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 1,
 		}, {
-			name:                 constants.GetValidationString(),
+			name:                 "validation",
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
 			request:              &models.HTTPOpenCurrencyAccountRequest{},
 			authValidateJWTErr:   nil,
-			authValidateTimes:    0,
-			cryptoCreateAccErr:   nil,
-			cryptoCreateAccTimes: 0,
-		}, {
-			name:                 "invalid jwt",
-			path:                 "/open/invalid-jwt",
-			expectedStatus:       http.StatusForbidden,
-			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
-			authValidateJWTErr:   errors.New("invalid jwt"),
 			authValidateTimes:    1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 0,

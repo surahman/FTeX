@@ -20,6 +20,27 @@ import (
 	"go.uber.org/zap"
 )
 
+// HTTPCryptoOpen opens a Crypto account.
+func HTTPCryptoOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, ticker string) (
+	int, string, error) {
+	var (
+		err error
+	)
+
+	if err = db.CryptoCreateAccount(clientID, ticker); err != nil {
+		var createErr *postgres.Error
+		if !errors.As(err, &createErr) {
+			logger.Info("failed to unpack open Crypto account error", zap.Error(err))
+
+			return http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		}
+
+		return createErr.Code, createErr.Message, fmt.Errorf("%w", err)
+	}
+
+	return 0, "", nil
+}
+
 // HTTPCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
 func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
 	clientID uuid.UUID, source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (

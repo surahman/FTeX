@@ -29,6 +29,8 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
         - [Transaction Details for a Specific Currency](#transaction-details-for-a-specific-currency)
             - [Initial Page](#initial-page)
             - [Subsequent Page](#subsequent-page)
+- [Crypto Account Mutations and Queries](#crypto-account-mutations-and-queries)
+    - [Open Account](#open-account)
 
 <br/>
 
@@ -702,6 +704,38 @@ transfer, two entries will be returned - one for the source and the other for th
       "links": {
         "pageCursor": ""
       }
+    }
+  }
+}
+```
+
+
+<br/>
+
+
+### Crypto Account Mutations and Queries
+
+#### Open Account
+
+_Request:_ All fields are required.
+
+```graphql
+mutation {
+    openCrypto(ticker: "ETH") {
+        clientID,
+        ticker
+    }
+}
+```
+
+_Response:_ Confirmation information containing the `Client ID` and `Ticker` of the newly opened account.
+
+```json
+{
+  "data": {
+    "openCrypto": {
+      "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
+      "ticker": "ETH"
     }
   }
 }

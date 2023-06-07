@@ -48,6 +48,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	CryptoOpenAccountResponse struct {
+		ClientID func(childComplexity int) int
+		Ticker   func(childComplexity int) int
+	}
+
 	FiatAccount struct {
 		Balance   func(childComplexity int) int
 		ClientID  func(childComplexity int) int
@@ -118,6 +123,7 @@ type ComplexityRoot struct {
 		ExchangeOfferFiat    func(childComplexity int, input models.HTTPExchangeOfferRequest) int
 		ExchangeTransferFiat func(childComplexity int, offerID string) int
 		LoginUser            func(childComplexity int, input models1.UserLoginCredentials) int
+		OpenCrypto           func(childComplexity int, ticker string) int
 		OpenFiat             func(childComplexity int, currency string) int
 		RefreshToken         func(childComplexity int) int
 		RegisterUser         func(childComplexity int, input *models1.UserAccount) int
@@ -154,6 +160,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "CryptoOpenAccountResponse.clientID":
+		if e.complexity.CryptoOpenAccountResponse.ClientID == nil {
+			break
+		}
+
+		return e.complexity.CryptoOpenAccountResponse.ClientID(childComplexity), true
+
+	case "CryptoOpenAccountResponse.ticker":
+		if e.complexity.CryptoOpenAccountResponse.Ticker == nil {
+			break
+		}
+
+		return e.complexity.CryptoOpenAccountResponse.Ticker(childComplexity), true
 
 	case "FiatAccount.balance":
 		if e.complexity.FiatAccount.Balance == nil {
@@ -453,6 +473,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.LoginUser(childComplexity, args["input"].(models1.UserLoginCredentials)), true
 
+	case "Mutation.openCrypto":
+		if e.complexity.Mutation.OpenCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_openCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpenCrypto(childComplexity, args["ticker"].(string)), true
+
 	case "Mutation.openFiat":
 		if e.complexity.Mutation.OpenFiat == nil {
 			break
@@ -653,6 +685,18 @@ type JWTAuthResponse {
     token: String!
     expires: Int64!
     threshold: Int64!
+}
+`, BuiltIn: false},
+	{Name: "../schema/crypto.graphqls", Input: `# CryptoOpenAccountResponse is the response returned
+type CryptoOpenAccountResponse {
+    clientID: String!
+    ticker: String!
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # openFiat is a request to open an account if it does not already exist.
+    openCrypto(ticker: String!): CryptoOpenAccountResponse!
 }
 `, BuiltIn: false},
 	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned

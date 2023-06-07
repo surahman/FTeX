@@ -2,6 +2,11 @@
 
 package models
 
+type CryptoOpenAccountResponse struct {
+	ClientID string `json:"clientID"`
+	Ticker   string `json:"ticker"`
+}
+
 type FiatOpenAccountResponse struct {
 	ClientID string `json:"clientID"`
 	Currency string `json:"currency"`
