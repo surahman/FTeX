@@ -6,13 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/common"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
-	"github.com/surahman/FTeX/pkg/utilities"
 	"github.com/surahman/FTeX/pkg/validator"
 )
 
@@ -60,7 +60,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 			return
 		}
 
-		if httpStatus, httpMessage, err = utilities.HTTPFiatOpen(db, logger, clientID, request.Currency); err != nil {
+		if httpStatus, httpMessage, err = common.HTTPFiatOpen(db, logger, clientID, request.Currency); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: request.Currency})
 
 			return
@@ -111,7 +111,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 		}
 
 		if transferReceipt, httpStatus, httpMessage, payload, err =
-			utilities.HTTPFiatDeposit(db, logger, clientID, &request); err != nil {
+			common.HTTPFiatDeposit(db, logger, clientID, &request); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
@@ -166,7 +166,7 @@ func ExchangeOfferFiat(
 		}
 
 		if offer, httpStatus, httpMessage, payload, err =
-			utilities.HTTPFiatOffer(auth, cache, logger, quotes, clientID, &request); err != nil {
+			common.HTTPFiatOffer(auth, cache, logger, quotes, clientID, &request); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
@@ -222,7 +222,7 @@ func ExchangeTransferFiat(
 		}
 
 		if receipt, httpStatus, httpMessage, payload, err =
-			utilities.HTTPFiatTransfer(auth, cache, db, logger, clientID, &request); err != nil {
+			common.HTTPFiatTransfer(auth, cache, db, logger, clientID, &request); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
@@ -270,7 +270,7 @@ func BalanceFiat(
 		}
 
 		if accDetails, httpStatus, httpMessage, payload, err =
-			utilities.HTTPFiatBalance(db, logger, clientID, ginCtx.Param("ticker")); err != nil {
+			common.HTTPFiatBalance(db, logger, clientID, ginCtx.Param("ticker")); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
@@ -315,7 +315,7 @@ func TxDetailsFiat(
 		}
 
 		// Extract and validate the transactionID.
-		journalEntries, status, errMsg, err := utilities.HTTPTxDetails(db, logger, clientID, transactionID)
+		journalEntries, status, errMsg, err := common.HTTPTxDetails(db, logger, clientID, transactionID)
 		if err != nil {
 			ginCtx.AbortWithStatusJSON(status, models.HTTPError{Message: errMsg})
 
@@ -367,7 +367,7 @@ func BalanceFiatPaginated(
 			return
 		}
 
-		if accDetails, httpStatus, httpMessage, err = utilities.HTTPFiatBalancePaginated(auth, db, logger,
+		if accDetails, httpStatus, httpMessage, err = common.HTTPFiatBalancePaginated(auth, db, logger,
 			clientID, ginCtx.Query("pageCursor"), ginCtx.Query("pageSize"), true); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
 
@@ -418,7 +418,7 @@ func TxDetailsFiatPaginated(
 			httpMessage    string
 			payload        any
 
-			params = utilities.HTTPPaginatedTxParams{
+			params = common.HTTPPaginatedTxParams{
 				PageSizeStr:   ginCtx.Query("pageSize"),
 				PageCursorStr: ginCtx.Query("pageCursor"),
 				TimezoneStr:   ginCtx.Query("timezone"),
@@ -433,7 +433,7 @@ func TxDetailsFiatPaginated(
 			return
 		}
 
-		if journalEntries, httpStatus, httpMessage, payload, err = utilities.HTTPFiatTransactionsPaginated(auth, db,
+		if journalEntries, httpStatus, httpMessage, payload, err = common.HTTPFiatTransactionsPaginated(auth, db,
 			logger, clientID, ginCtx.Param("currencyCode"), &params, true); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 

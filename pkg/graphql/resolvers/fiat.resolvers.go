@@ -12,10 +12,10 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/surahman/FTeX/pkg/common"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
-	"github.com/surahman/FTeX/pkg/utilities"
 	"go.uber.org/zap"
 )
 
@@ -136,7 +136,7 @@ func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*mode
 		return nil, errors.New("authorization failure")
 	}
 
-	if _, errMessage, err = utilities.HTTPFiatOpen(r.db, r.logger, clientID, currency); err != nil {
+	if _, errMessage, err = common.HTTPFiatOpen(r.db, r.logger, clientID, currency); err != nil {
 		return nil, errors.New(errMessage)
 	}
 
@@ -157,7 +157,7 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 	}
 
 	if transferReceipt, _, httpMessage, _, err =
-		utilities.HTTPFiatDeposit(r.db, r.logger, clientID, &input); err != nil {
+		common.HTTPFiatDeposit(r.db, r.logger, clientID, &input); err != nil {
 
 		return nil, errors.New(httpMessage)
 	}
@@ -180,7 +180,7 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 	}
 
 	if offer, _, httpMessage, payload, err =
-		utilities.HTTPFiatOffer(r.auth, r.cache, r.logger, r.quotes, clientID, &input); err != nil {
+		common.HTTPFiatOffer(r.auth, r.cache, r.logger, r.quotes, clientID, &input); err != nil {
 
 		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
@@ -202,7 +202,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 		return nil, errors.New("authorization failure")
 	}
 
-	if receipt, _, httpMessage, payload, err = utilities.HTTPFiatTransfer(r.auth, r.cache, r.db, r.logger,
+	if receipt, _, httpMessage, payload, err = common.HTTPFiatTransfer(r.auth, r.cache, r.db, r.logger,
 		clientID, &models.HTTPTransferRequest{OfferID: offerID}); err != nil {
 		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
@@ -225,7 +225,7 @@ func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*
 	}
 
 	if accDetails, _, httpMessage, payload, err =
-		utilities.HTTPFiatBalance(r.db, r.logger, clientID, currencyCode); err != nil {
+		common.HTTPFiatBalance(r.db, r.logger, clientID, currencyCode); err != nil {
 		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
 	}
 
@@ -253,7 +253,7 @@ func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, 
 		return nil, errors.New("authorization failure")
 	}
 
-	if accDetails, _, httpMessage, err = utilities.HTTPFiatBalancePaginated(r.auth, r.db, r.logger,
+	if accDetails, _, httpMessage, err = common.HTTPFiatBalancePaginated(r.auth, r.db, r.logger,
 		clientID, *pageCursor, strconv.Itoa(int(*pageSize)), false); err != nil {
 		return nil, errors.New(httpMessage)
 	}
@@ -303,7 +303,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 		journalEntries *models.HTTPFiatTransactionsPaginated
 		clientID       uuid.UUID
 		err            error
-		params         utilities.HTTPPaginatedTxParams
+		params         common.HTTPPaginatedTxParams
 		httpMessage    string
 		payload        any
 	)
@@ -337,7 +337,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 		return nil, errors.New("authorization failure")
 	}
 
-	if journalEntries, _, httpMessage, payload, err = utilities.HTTPFiatTransactionsPaginated(r.auth, r.db,
+	if journalEntries, _, httpMessage, payload, err = common.HTTPFiatTransactionsPaginated(r.auth, r.db,
 		r.logger, clientID, input.Currency, &params, false); err != nil {
 
 		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
