@@ -924,35 +924,3 @@ _Response:_ All Transaction-related details for a specific currency in a given t
   }
 }
 ```
-
-
-<br/>
-
-
-### Crypto Account Mutations and Queries
-
-#### Open Account
-
-_Request:_ All fields are required.
-
-```graphql
-mutation {
-    openCrypto(ticker: "ETH") {
-        clientID,
-        ticker
-    }
-}
-```
-
-_Response:_ Confirmation information containing the `Client ID` and `Ticker` of the newly opened account.
-
-```json
-{
-  "data": {
-    "openCrypto": {
-      "clientID": "70a0caf3-3fb2-4a96-b6e8-991252a88efe",
-      "ticker": "ETH"
-    }
-  }
-}
-```
