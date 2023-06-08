@@ -79,11 +79,6 @@ func (r *fiatDepositResponseResolver) Currency(ctx context.Context, obj *postgre
 	return string(obj.Currency), nil
 }
 
-// DebitAmount is the resolver for the DebitAmount field.
-func (r *fiatExchangeOfferResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error) {
-	return obj.DebitAmount.InexactFloat64(), nil
-}
-
 // SourceReceipt is the resolver for the sourceReceipt field.
 func (r *fiatExchangeTransferResponseResolver) SourceReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error) {
 	return obj.SrcTxReceipt, nil
@@ -370,11 +365,6 @@ func (r *Resolver) FiatDepositResponse() graphql_generated.FiatDepositResponseRe
 	return &fiatDepositResponseResolver{r}
 }
 
-// FiatExchangeOfferResponse returns graphql_generated.FiatExchangeOfferResponseResolver implementation.
-func (r *Resolver) FiatExchangeOfferResponse() graphql_generated.FiatExchangeOfferResponseResolver {
-	return &fiatExchangeOfferResponseResolver{r}
-}
-
 // FiatExchangeTransferResponse returns graphql_generated.FiatExchangeTransferResponseResolver implementation.
 func (r *Resolver) FiatExchangeTransferResponse() graphql_generated.FiatExchangeTransferResponseResolver {
 	return &fiatExchangeTransferResponseResolver{r}
@@ -402,7 +392,6 @@ func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOffe
 
 type fiatAccountResolver struct{ *Resolver }
 type fiatDepositResponseResolver struct{ *Resolver }
-type fiatExchangeOfferResponseResolver struct{ *Resolver }
 type fiatExchangeTransferResponseResolver struct{ *Resolver }
 type fiatJournalResolver struct{ *Resolver }
 type fiatTransactionsPaginatedResolver struct{ *Resolver }

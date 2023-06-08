@@ -96,7 +96,7 @@ models:
   FiatExchangeOfferRequest:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPExchangeOfferRequest
-  FiatExchangeOfferResponse:
+  OfferResponse:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPExchangeOfferResponse
   FiatExchangeTransferResponse:
@@ -117,3 +117,12 @@ models:
   FiatTransactionsPaginated:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPFiatTransactionsPaginated
+  CryptoOfferRequest:
+    model:
+      - github.com/surahman/FTeX/pkg/models.HTTPCryptoOfferRequest
+  CryptoJournal:
+    model:
+      - github.com/surahman/FTeX/pkg/postgres.CryptoJournal
+  CryptoTransferResponse:
+    model:
+      - github.com/surahman/FTeX/pkg/models.HTTPCryptoTransferResponse

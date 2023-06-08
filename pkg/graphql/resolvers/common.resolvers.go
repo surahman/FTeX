@@ -11,6 +11,11 @@ import (
 	"github.com/surahman/FTeX/pkg/models"
 )
 
+// DebitAmount is the resolver for the debitAmount field.
+func (r *offerResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error) {
+	return obj.DebitAmount.InexactFloat64(), nil
+}
+
 // ClientID is the resolver for the ClientID field.
 func (r *priceQuoteResolver) ClientID(ctx context.Context, obj *models.PriceQuote) (string, error) {
 	return obj.ClientID.String(), nil
@@ -26,7 +31,13 @@ func (r *priceQuoteResolver) Amount(ctx context.Context, obj *models.PriceQuote)
 	return obj.Amount.InexactFloat64(), nil
 }
 
+// OfferResponse returns graphql_generated.OfferResponseResolver implementation.
+func (r *Resolver) OfferResponse() graphql_generated.OfferResponseResolver {
+	return &offerResponseResolver{r}
+}
+
 // PriceQuote returns graphql_generated.PriceQuoteResolver implementation.
 func (r *Resolver) PriceQuote() graphql_generated.PriceQuoteResolver { return &priceQuoteResolver{r} }
 
+type offerResponseResolver struct{ *Resolver }
 type priceQuoteResolver struct{ *Resolver }

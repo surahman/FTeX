@@ -34,9 +34,6 @@ type FiatDepositResponseResolver interface {
 	LastTx(ctx context.Context, obj *postgres.FiatAccountTransferResult) (string, error)
 	Currency(ctx context.Context, obj *postgres.FiatAccountTransferResult) (string, error)
 }
-type FiatExchangeOfferResponseResolver interface {
-	DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error)
-}
 type FiatExchangeTransferResponseResolver interface {
 	SourceReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error)
 	DestinationReceipt(ctx context.Context, obj *models.HTTPFiatTransferResponse) (*postgres.FiatAccountTransferResult, error)
@@ -707,194 +704,6 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_currency(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _FiatExchangeOfferResponse_priceQuote(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatExchangeOfferResponse_priceQuote(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PriceQuote, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.PriceQuote)
-	fc.Result = res
-	return ec.marshalNPriceQuote2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐPriceQuote(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_priceQuote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatExchangeOfferResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "clientID":
-				return ec.fieldContext_PriceQuote_clientID(ctx, field)
-			case "sourceAcc":
-				return ec.fieldContext_PriceQuote_sourceAcc(ctx, field)
-			case "destinationAcc":
-				return ec.fieldContext_PriceQuote_destinationAcc(ctx, field)
-			case "rate":
-				return ec.fieldContext_PriceQuote_rate(ctx, field)
-			case "amount":
-				return ec.fieldContext_PriceQuote_amount(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PriceQuote", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatExchangeOfferResponse_debitAmount(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatExchangeOfferResponse_debitAmount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatExchangeOfferResponse().DebitAmount(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_debitAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatExchangeOfferResponse",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatExchangeOfferResponse_offerID(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatExchangeOfferResponse_offerID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OfferID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_offerID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatExchangeOfferResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FiatExchangeOfferResponse_expires(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatExchangeOfferResponse_expires(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Expires, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FiatExchangeOfferResponse_expires(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FiatExchangeOfferResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _FiatExchangeTransferResponse_sourceReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FiatExchangeTransferResponse_sourceReceipt(ctx, field)
 	if err != nil {
@@ -1425,88 +1234,6 @@ func (ec *executionContext) fieldContext_FiatTransactionsPaginated_links(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _Links_nextPage(ctx context.Context, field graphql.CollectedField, obj *models.HTTPLinks) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Links_nextPage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.NextPage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Links_nextPage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Links",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Links_pageCursor(ctx context.Context, field graphql.CollectedField, obj *models.HTTPLinks) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Links_pageCursor(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Links_pageCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Links",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -1999,68 +1726,6 @@ func (ec *executionContext) _FiatDepositResponse(ctx context.Context, sel ast.Se
 	return out
 }
 
-var fiatExchangeOfferResponseImplementors = []string{"FiatExchangeOfferResponse"}
-
-func (ec *executionContext) _FiatExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPExchangeOfferResponse) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, fiatExchangeOfferResponseImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("FiatExchangeOfferResponse")
-		case "priceQuote":
-
-			out.Values[i] = ec._FiatExchangeOfferResponse_priceQuote(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "debitAmount":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._FiatExchangeOfferResponse_debitAmount(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
-		case "offerID":
-
-			out.Values[i] = ec._FiatExchangeOfferResponse_offerID(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "expires":
-
-			out.Values[i] = ec._FiatExchangeOfferResponse_expires(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var fiatExchangeTransferResponseImplementors = []string{"FiatExchangeTransferResponse"}
 
 func (ec *executionContext) _FiatExchangeTransferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPFiatTransferResponse) graphql.Marshaler {
@@ -2326,35 +1991,6 @@ func (ec *executionContext) _FiatTransactionsPaginated(ctx context.Context, sel 
 	return out
 }
 
-var linksImplementors = []string{"Links"}
-
-func (ec *executionContext) _Links(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPLinks) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, linksImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Links")
-		case "nextPage":
-
-			out.Values[i] = ec._Links_nextPage(ctx, field, obj)
-
-		case "pageCursor":
-
-			out.Values[i] = ec._Links_pageCursor(ctx, field, obj)
-
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
@@ -2455,20 +2091,6 @@ func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsu
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFiatExchangeOfferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPExchangeOfferResponse) graphql.Marshaler {
-	return ec._FiatExchangeOfferResponse(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPExchangeOfferResponse) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._FiatExchangeOfferResponse(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNFiatExchangeTransferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPFiatTransferResponse) graphql.Marshaler {
 	return ec._FiatExchangeTransferResponse(ctx, sel, &v)
 }
@@ -2564,8 +2186,11 @@ func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋ
 	return ec._FiatTransactionsPaginated(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx context.Context, sel ast.SelectionSet, v models.HTTPLinks) graphql.Marshaler {
-	return ec._Links(ctx, sel, &v)
+func (ec *executionContext) marshalOFiatJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx context.Context, sel ast.SelectionSet, v *postgres.FiatJournal) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._FiatJournal(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************

@@ -31,22 +31,22 @@ The REST API schema can be tested and reviewed through the Swagger UI that is ex
       - [Initial Page](#initial-page)
       - [Subsequent Page](#subsequent-page)
 - [Crypto Accounts Endpoints `/crypto`](#crypto-accounts-endpoints-crypto)
-  - [Open `/open`](#open-open)
+  - [Open `/open`](#open-open-1)
   - [Offer `/offer`](#offer-offer)
     - [Purchase](#purchase)
     - [Sell](#sell)
-  - [Exchange `/Exchange`](#exchange-exchange)
-    - [Purchase](#purchase)
-    - [Sell](#sell)
-  - [Info `/info`](#info-info)
-    - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balanceticker)
+  - [Exchange `/Exchange`](#exchange-exchange-1)
+    - [Purchase](#purchase-1)
+    - [Sell](#sell-1)
+  - [Info `/info`](#info-info-1)
+    - [Balance for a Specific Currency `/balance/{ticker}`](#balance-for-a-specific-currency-balanceticker-1)
     - [Balance for all Currencies for a Client `/crypto/info/balance?pageCursor=PaGeCuRs0R==&pageSize=3`](#balance-for-all-currencies-for-a-client-cryptoinfobalancepagecursorpagecurs0rpagesize3)
-    - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid)
-      - [Purchase](#purchase)
-      - [Sale](#sale)
+    - [Transaction Details for a Specific Transaction `/transaction/{transactionID}`](#transaction-details-for-a-specific-transaction-transactiontransactionid-1)
+      - [Purchase](#purchase-2)
+      - [Sell](#sell-2)
     - [Transaction Details for a Specific Currency `/transaction/all/{ticker}`](#transaction-details-for-a-specific-currency-transactionallticker)
-      - [Initial Page](#initial-page)
-      - [Subsequent Page](#subsequent-page)
+      - [Initial Page](#initial-page-1)
+      - [Subsequent Page](#subsequent-page-1)
 
 <br/>
 
@@ -650,7 +650,7 @@ _Request:_ All fields are required.
 }
 ```
 
-_Response:_ A valid purchase offer.
+_Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
 ```json
 {
   "message": "funds exchange transfer successful",
@@ -682,7 +682,7 @@ _Request:_ All fields are required.
 }
 ```
 
-_Response:_ A valid sale offer.
+_Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
 ```json
 {
   "message": "funds exchange transfer successful",
@@ -823,7 +823,7 @@ account and another for the Cryptocurrency account.
 }
 ```
 
-###### Sale
+###### Sell
 ```json
 {
   "message": "transaction details",

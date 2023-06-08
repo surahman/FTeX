@@ -5,14 +5,28 @@ package graphql_generated
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/surahman/FTeX/pkg/models"
+	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
 // region    ************************** generated!.gotpl **************************
+
+type CryptoJournalResolver interface {
+	Amount(ctx context.Context, obj *postgres.CryptoJournal) (float64, error)
+	TransactedAt(ctx context.Context, obj *postgres.CryptoJournal) (string, error)
+	ClientID(ctx context.Context, obj *postgres.CryptoJournal) (string, error)
+	TxID(ctx context.Context, obj *postgres.CryptoJournal) (string, error)
+}
+
+type CryptoOfferRequestResolver interface {
+	SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error
+}
 
 // endregion ************************** generated!.gotpl **************************
 
@@ -25,6 +39,226 @@ import (
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _CryptoJournal_ticker(ctx context.Context, field graphql.CollectedField, obj *postgres.CryptoJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoJournal_ticker(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ticker, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoJournal_ticker(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoJournal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoJournal_amount(ctx context.Context, field graphql.CollectedField, obj *postgres.CryptoJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoJournal_amount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CryptoJournal().Amount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoJournal_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoJournal_transactedAt(ctx context.Context, field graphql.CollectedField, obj *postgres.CryptoJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoJournal_transactedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CryptoJournal().TransactedAt(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoJournal_transactedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoJournal_clientID(ctx context.Context, field graphql.CollectedField, obj *postgres.CryptoJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoJournal_clientID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CryptoJournal().ClientID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNUUID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoJournal_clientID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoJournal_txID(ctx context.Context, field graphql.CollectedField, obj *postgres.CryptoJournal) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoJournal_txID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CryptoJournal().TxID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNUUID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoJournal_txID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoJournal",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _CryptoOpenAccountResponse_clientID(ctx context.Context, field graphql.CollectedField, obj *models.CryptoOpenAccountResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CryptoOpenAccountResponse_clientID(ctx, field)
@@ -114,9 +348,173 @@ func (ec *executionContext) fieldContext_CryptoOpenAccountResponse_ticker(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _CryptoTransferResponse_fiatTxReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoTransferResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoTransferResponse_fiatTxReceipt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FiatTxReceipt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*postgres.FiatJournal)
+	fc.Result = res
+	return ec.marshalOFiatJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoTransferResponse_fiatTxReceipt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoTransferResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_FiatJournal_currency(ctx, field)
+			case "amount":
+				return ec.fieldContext_FiatJournal_amount(ctx, field)
+			case "transactedAt":
+				return ec.fieldContext_FiatJournal_transactedAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_FiatJournal_clientID(ctx, field)
+			case "txID":
+				return ec.fieldContext_FiatJournal_txID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FiatJournal", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoTransferResponse_cryptoTxReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoTransferResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoTransferResponse_cryptoTxReceipt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CryptoTxReceipt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*postgres.CryptoJournal)
+	fc.Result = res
+	return ec.marshalOCryptoJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoJournal(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoTransferResponse_cryptoTxReceipt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoTransferResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ticker":
+				return ec.fieldContext_CryptoJournal_ticker(ctx, field)
+			case "amount":
+				return ec.fieldContext_CryptoJournal_amount(ctx, field)
+			case "transactedAt":
+				return ec.fieldContext_CryptoJournal_transactedAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_CryptoJournal_clientID(ctx, field)
+			case "txID":
+				return ec.fieldContext_CryptoJournal_txID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CryptoJournal", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
+
+func (ec *executionContext) unmarshalInputCryptoOfferRequest(ctx context.Context, obj interface{}) (models.HTTPCryptoOfferRequest, error) {
+	var it models.HTTPCryptoOfferRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"sourceCurrency", "destinationCurrency", "sourceAmount", "isPurchase"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "sourceCurrency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceCurrency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceCurrency = data
+		case "destinationCurrency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationCurrency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DestinationCurrency = data
+		case "sourceAmount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceAmount"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.CryptoOfferRequest().SourceAmount(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "isPurchase":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPurchase"))
+			data, err := ec.unmarshalNBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsPurchase = data
+		}
+	}
+
+	return it, nil
+}
 
 // endregion **************************** input.gotpl *****************************
 
@@ -125,6 +523,114 @@ func (ec *executionContext) fieldContext_CryptoOpenAccountResponse_ticker(ctx co
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var cryptoJournalImplementors = []string{"CryptoJournal"}
+
+func (ec *executionContext) _CryptoJournal(ctx context.Context, sel ast.SelectionSet, obj *postgres.CryptoJournal) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cryptoJournalImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CryptoJournal")
+		case "ticker":
+
+			out.Values[i] = ec._CryptoJournal_ticker(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "amount":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CryptoJournal_amount(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "transactedAt":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CryptoJournal_transactedAt(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "clientID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CryptoJournal_clientID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "txID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CryptoJournal_txID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var cryptoOpenAccountResponseImplementors = []string{"CryptoOpenAccountResponse"}
 
@@ -161,9 +667,43 @@ func (ec *executionContext) _CryptoOpenAccountResponse(ctx context.Context, sel 
 	return out
 }
 
+var cryptoTransferResponseImplementors = []string{"CryptoTransferResponse"}
+
+func (ec *executionContext) _CryptoTransferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPCryptoTransferResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cryptoTransferResponseImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CryptoTransferResponse")
+		case "fiatTxReceipt":
+
+			out.Values[i] = ec._CryptoTransferResponse_fiatTxReceipt(ctx, field, obj)
+
+		case "cryptoTxReceipt":
+
+			out.Values[i] = ec._CryptoTransferResponse_cryptoTxReceipt(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx context.Context, v interface{}) (models.HTTPCryptoOfferRequest, error) {
+	res, err := ec.unmarshalInputCryptoOfferRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
 
 func (ec *executionContext) marshalNCryptoOpenAccountResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, v models.CryptoOpenAccountResponse) graphql.Marshaler {
 	return ec._CryptoOpenAccountResponse(ctx, sel, &v)
@@ -177,6 +717,27 @@ func (ec *executionContext) marshalNCryptoOpenAccountResponse2ᚖgithubᚗcomᚋ
 		return graphql.Null
 	}
 	return ec._CryptoOpenAccountResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCryptoTransferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPCryptoTransferResponse) graphql.Marshaler {
+	return ec._CryptoTransferResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCryptoTransferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPCryptoTransferResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CryptoTransferResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCryptoJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoJournal(ctx context.Context, sel ast.SelectionSet, v *postgres.CryptoJournal) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CryptoJournal(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************
