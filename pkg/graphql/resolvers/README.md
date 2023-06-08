@@ -30,11 +30,13 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
             - [Initial Page](#initial-page)
             - [Subsequent Page](#subsequent-page)
 - [Crypto Account Mutations and Queries](#crypto-account-mutations-and-queries)
-    - [Open Account](#open-account)
-    - [Purchase and Sale](#purchase-and-sale)
-        - [Purchase Quote](#purchase-quote)
-        - [Sale Quote](#sale-quote)
-        - [Convert](#convert)
+    - [Open Account](#open-account-1)
+    - [Offer](#offer)
+        - [Purchase](#purchase)
+        - [Sell](#sell)
+    - [Exchange](#exchange-1)
+        - [Purchase](#purchase-1)
+        - [Sell](#sell-1)
 
 <br/>
 
@@ -745,7 +747,7 @@ _Response:_ Confirmation information containing the `Client ID` and `Ticker` of 
 }
 ```
 
-#### Purchase and Sale
+#### Offer
 
 To convert between a Cryptocurrency and a Fiat currencies, the user must maintain open accounts in both the source and
 destination currencies. The amount specified will be in the source currency and the amount to deposit into the
@@ -755,7 +757,7 @@ The workflow will involve getting a conversion rate quote, referred to as an `Of
 will only be valid for a two-minute time window. The expiration time will be returned to the user as a Unix timestamp.
 The user must issue a subsequent request using the encrypted `Offer ID` to complete the transaction.
 
-##### Purchase Quote
+##### Purchase
 
 _Request:_ All fields are required.
 ```graphql
@@ -800,7 +802,7 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 }
 ```
 
-##### Sale Quote
+##### Sell
 
 _Request:_ All fields are required.
 ```graphql
@@ -845,7 +847,12 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 }
 ```
 
-##### Convert
+#### Exchange
+
+Execute a Cryptocurrency purchase or sale using a valid exchange offer that must be obtained prior using the
+`crypto/offer` mutation.
+
+######  Purchase
 
 _Request:_ All fields are required.
 ```graphql
@@ -869,7 +876,7 @@ mutation {
 }
 ```
 
-_Response:_ A transaction receipt with the details of the source and destination accounts and transaction details.
+_Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
 ```json
 {
   "data": {
@@ -887,6 +894,54 @@ _Response:_ A transaction receipt with the details of the source and destination
         "transactedAt": "2023-06-08 17:44:27.766461 -0400 EDT",
         "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
         "txID": "4650fa28-1ad5-46fc-97a8-15c21ee8608e"
+      }
+    }
+  }
+}
+```
+
+######  Sell
+
+_Request:_ All fields are required.
+```graphql
+mutation {
+    exchangeCrypto(offerID: "LQq07LHQdqCbwuXuxkH-rW6-WMcBhi2RG9q9HSKOwh8TcxzG_DWg_iOW9m9xdZy8") {
+        fiatTxReceipt{
+            currency,
+            amount,
+            transactedAt,
+            clientID,
+            txID,
+        },
+        cryptoTxReceipt{
+            ticker,
+            amount,
+            transactedAt,
+            clientID,
+            txID,
+        },
+    }
+}
+```
+
+_Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
+```json
+{
+  "data": {
+    "exchangeCrypto": {
+      "fiatTxReceipt": {
+        "currency": "USD",
+        "amount": 864247.73,
+        "transactedAt": "2023-06-08 17:06:03.192364 -0400 EDT",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "b4df7d86-36b0-407b-8acf-21cccbc88386"
+      },
+      "cryptoTxReceipt": {
+        "ticker": "BTC",
+        "amount": -32.45,
+        "transactedAt": "2023-06-08 17:06:03.192364 -0400 EDT",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "b4df7d86-36b0-407b-8acf-21cccbc88386"
       }
     }
   }
