@@ -96,8 +96,7 @@ func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (
 		return nil, errors.New("authorization failure")
 	}
 
-	if receipt, _, statusMessage, err = common.HTTPExchangeCrypto(r.auth, r.cache, r.db, r.logger, clientID, offerID);
-		err != nil {
+	if receipt, _, statusMessage, err = common.HTTPExchangeCrypto(r.auth, r.cache, r.db, r.logger, clientID, offerID); err != nil {
 		return nil, errors.New(statusMessage)
 	}
 

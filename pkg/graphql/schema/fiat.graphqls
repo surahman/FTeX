@@ -14,8 +14,8 @@ type FiatDepositResponse {
     currency: String!
 }
 
-# FiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
-type FiatExchangeOfferResponse {
+# OfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type OfferResponse {
     priceQuote: PriceQuote!
     debitAmount: Float!
     offerID: String!
@@ -97,7 +97,7 @@ extend type Mutation {
     depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
 
     # exchangeOfferFiat is a request for an exchange quote. The exchange quote provided will expire after a fixed period.
-    exchangeOfferFiat(input: FiatExchangeOfferRequest!): FiatExchangeOfferResponse!
+    exchangeOfferFiat(input: FiatExchangeOfferRequest!): OfferResponse!
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!

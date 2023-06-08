@@ -33,7 +33,7 @@ extend type Mutation {
     openCrypto(ticker: String!): CryptoOpenAccountResponse!
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
-    offerCrypto(input: CryptoOfferRequest!): FiatExchangeOfferResponse!
+    offerCrypto(input: CryptoOfferRequest!): OfferResponse!
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
     exchangeCrypto(offerID: String!): CryptoTransferResponse!

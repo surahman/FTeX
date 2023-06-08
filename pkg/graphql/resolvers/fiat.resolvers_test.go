@@ -337,10 +337,10 @@ func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
 	})
 }
 
-func TestFiatResolver_FiatExchangeOfferResponseResolver(t *testing.T) {
+func TestFiatResolver_OfferResponseResolver(t *testing.T) {
 	t.Parallel()
 
-	resolver := fiatExchangeOfferResponseResolver{}
+	resolver := offerResponseResolver{}
 
 	debitAmount := decimal.NewFromFloat(123456.78)
 

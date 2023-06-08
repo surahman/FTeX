@@ -515,7 +515,7 @@ func (ec *executionContext) _Mutation_offerCrypto(ctx context.Context, field gra
 	}
 	res := resTmp.(*models1.HTTPExchangeOfferResponse)
 	fc.Result = res
-	return ec.marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx, field.Selections, res)
+	return ec.marshalNOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_offerCrypto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -527,15 +527,15 @@ func (ec *executionContext) fieldContext_Mutation_offerCrypto(ctx context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "priceQuote":
-				return ec.fieldContext_FiatExchangeOfferResponse_priceQuote(ctx, field)
+				return ec.fieldContext_OfferResponse_priceQuote(ctx, field)
 			case "debitAmount":
-				return ec.fieldContext_FiatExchangeOfferResponse_debitAmount(ctx, field)
+				return ec.fieldContext_OfferResponse_debitAmount(ctx, field)
 			case "offerID":
-				return ec.fieldContext_FiatExchangeOfferResponse_offerID(ctx, field)
+				return ec.fieldContext_OfferResponse_offerID(ctx, field)
 			case "expires":
-				return ec.fieldContext_FiatExchangeOfferResponse_expires(ctx, field)
+				return ec.fieldContext_OfferResponse_expires(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type FiatExchangeOfferResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OfferResponse", field.Name)
 		},
 	}
 	defer func() {
@@ -771,7 +771,7 @@ func (ec *executionContext) _Mutation_exchangeOfferFiat(ctx context.Context, fie
 	}
 	res := resTmp.(*models1.HTTPExchangeOfferResponse)
 	fc.Result = res
-	return ec.marshalNFiatExchangeOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx, field.Selections, res)
+	return ec.marshalNOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_exchangeOfferFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -783,15 +783,15 @@ func (ec *executionContext) fieldContext_Mutation_exchangeOfferFiat(ctx context.
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "priceQuote":
-				return ec.fieldContext_FiatExchangeOfferResponse_priceQuote(ctx, field)
+				return ec.fieldContext_OfferResponse_priceQuote(ctx, field)
 			case "debitAmount":
-				return ec.fieldContext_FiatExchangeOfferResponse_debitAmount(ctx, field)
+				return ec.fieldContext_OfferResponse_debitAmount(ctx, field)
 			case "offerID":
-				return ec.fieldContext_FiatExchangeOfferResponse_offerID(ctx, field)
+				return ec.fieldContext_OfferResponse_offerID(ctx, field)
 			case "expires":
-				return ec.fieldContext_FiatExchangeOfferResponse_expires(ctx, field)
+				return ec.fieldContext_OfferResponse_expires(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type FiatExchangeOfferResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type OfferResponse", field.Name)
 		},
 	}
 	defer func() {

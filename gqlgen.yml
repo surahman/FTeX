@@ -96,7 +96,7 @@ models:
   FiatExchangeOfferRequest:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPExchangeOfferRequest
-  FiatExchangeOfferResponse:
+  OfferResponse:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPExchangeOfferResponse
   FiatExchangeTransferResponse:

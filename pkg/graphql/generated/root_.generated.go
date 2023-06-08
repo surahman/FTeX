@@ -34,11 +34,11 @@ type ResolverRoot interface {
 	CryptoJournal() CryptoJournalResolver
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
-	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
 	FiatExchangeTransferResponse() FiatExchangeTransferResponseResolver
 	FiatJournal() FiatJournalResolver
 	FiatTransactionsPaginated() FiatTransactionsPaginatedResolver
 	Mutation() MutationResolver
+	OfferResponse() OfferResponseResolver
 	PriceQuote() PriceQuoteResolver
 	Query() QueryResolver
 	CryptoOfferRequest() CryptoOfferRequestResolver
@@ -91,13 +91,6 @@ type ComplexityRoot struct {
 		TxTimestamp func(childComplexity int) int
 	}
 
-	FiatExchangeOfferResponse struct {
-		DebitAmount func(childComplexity int) int
-		Expires     func(childComplexity int) int
-		OfferID     func(childComplexity int) int
-		PriceQuote  func(childComplexity int) int
-	}
-
 	FiatExchangeTransferResponse struct {
 		DestinationReceipt func(childComplexity int) int
 		SourceReceipt      func(childComplexity int) int
@@ -144,6 +137,13 @@ type ComplexityRoot struct {
 		OpenFiat             func(childComplexity int, currency string) int
 		RefreshToken         func(childComplexity int) int
 		RegisterUser         func(childComplexity int, input *models1.UserAccount) int
+	}
+
+	OfferResponse struct {
+		DebitAmount func(childComplexity int) int
+		Expires     func(childComplexity int) int
+		OfferID     func(childComplexity int) int
+		PriceQuote  func(childComplexity int) int
 	}
 
 	PriceQuote struct {
@@ -338,34 +338,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FiatDepositResponse.TxTimestamp(childComplexity), true
-
-	case "FiatExchangeOfferResponse.debitAmount":
-		if e.complexity.FiatExchangeOfferResponse.DebitAmount == nil {
-			break
-		}
-
-		return e.complexity.FiatExchangeOfferResponse.DebitAmount(childComplexity), true
-
-	case "FiatExchangeOfferResponse.expires":
-		if e.complexity.FiatExchangeOfferResponse.Expires == nil {
-			break
-		}
-
-		return e.complexity.FiatExchangeOfferResponse.Expires(childComplexity), true
-
-	case "FiatExchangeOfferResponse.offerID":
-		if e.complexity.FiatExchangeOfferResponse.OfferID == nil {
-			break
-		}
-
-		return e.complexity.FiatExchangeOfferResponse.OfferID(childComplexity), true
-
-	case "FiatExchangeOfferResponse.priceQuote":
-		if e.complexity.FiatExchangeOfferResponse.PriceQuote == nil {
-			break
-		}
-
-		return e.complexity.FiatExchangeOfferResponse.PriceQuote(childComplexity), true
 
 	case "FiatExchangeTransferResponse.destinationReceipt":
 		if e.complexity.FiatExchangeTransferResponse.DestinationReceipt == nil {
@@ -606,6 +578,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RegisterUser(childComplexity, args["input"].(*models1.UserAccount)), true
 
+	case "OfferResponse.debitAmount":
+		if e.complexity.OfferResponse.DebitAmount == nil {
+			break
+		}
+
+		return e.complexity.OfferResponse.DebitAmount(childComplexity), true
+
+	case "OfferResponse.expires":
+		if e.complexity.OfferResponse.Expires == nil {
+			break
+		}
+
+		return e.complexity.OfferResponse.Expires(childComplexity), true
+
+	case "OfferResponse.offerID":
+		if e.complexity.OfferResponse.OfferID == nil {
+			break
+		}
+
+		return e.complexity.OfferResponse.OfferID(childComplexity), true
+
+	case "OfferResponse.priceQuote":
+		if e.complexity.OfferResponse.PriceQuote == nil {
+			break
+		}
+
+		return e.complexity.OfferResponse.PriceQuote(childComplexity), true
+
 	case "PriceQuote.amount":
 		if e.complexity.PriceQuote.Amount == nil {
 			break
@@ -813,7 +813,7 @@ extend type Mutation {
     openCrypto(ticker: String!): CryptoOpenAccountResponse!
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
-    offerCrypto(input: CryptoOfferRequest!): FiatExchangeOfferResponse!
+    offerCrypto(input: CryptoOfferRequest!): OfferResponse!
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
     exchangeCrypto(offerID: String!): CryptoTransferResponse!
@@ -835,8 +835,8 @@ type FiatDepositResponse {
     currency: String!
 }
 
-# FiatExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
-type FiatExchangeOfferResponse {
+# OfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type OfferResponse {
     priceQuote: PriceQuote!
     debitAmount: Float!
     offerID: String!
@@ -918,7 +918,7 @@ extend type Mutation {
     depositFiat(input: FiatDepositRequest!): FiatDepositResponse!
 
     # exchangeOfferFiat is a request for an exchange quote. The exchange quote provided will expire after a fixed period.
-    exchangeOfferFiat(input: FiatExchangeOfferRequest!): FiatExchangeOfferResponse!
+    exchangeOfferFiat(input: FiatExchangeOfferRequest!): OfferResponse!
 
     # exchangeTransferFiat will execute and complete a valid Fiat currency exchange offer.
     exchangeTransferFiat(offerID: String!): FiatExchangeTransferResponse!
