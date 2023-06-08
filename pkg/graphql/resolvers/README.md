@@ -34,6 +34,7 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
     - [Purchase and Sale](#purchase-and-sale)
         - [Purchase Quote](#purchase-quote)
         - [Sale Quote](#sale-quote)
+        - [Convert](#convert)
 
 <br/>
 
@@ -839,6 +840,54 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
       "debitAmount": 1234.56,
       "offerID": "YzLpRLex_bWKuNhXBji2wd0VkIxNnn3eYvBwRp204wjJIO2lDXv3jz73lr3LsL--",
       "expires": 1686255663
+    }
+  }
+}
+```
+
+##### Convert
+
+_Request:_ All fields are required.
+```graphql
+mutation {
+    exchangeCrypto(offerID: "roqzjmgIxlHMHWdSmJcRVby7RPvLEIzuMJ3ajH3bIr0YRukzd8XIL-rcUYRsE10R") {
+        fiatTxReceipt{
+            currency,
+            amount,
+            transactedAt,
+            clientID,
+            txID,
+        },
+        cryptoTxReceipt{
+            ticker,
+            amount,
+            transactedAt,
+            clientID,
+            txID,
+        },
+    }
+}
+```
+
+_Response:_ A transaction receipt with the details of the source and destination accounts and transaction details.
+```json
+{
+  "data": {
+    "exchangeCrypto": {
+      "fiatTxReceipt": {
+        "currency": "USD",
+        "amount": -1234.56,
+        "transactedAt": "2023-06-08 17:44:27.766461 -0400 EDT",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "4650fa28-1ad5-46fc-97a8-15c21ee8608e"
+      },
+      "cryptoTxReceipt": {
+        "ticker": "BTC",
+        "amount": 0.04653972,
+        "transactedAt": "2023-06-08 17:44:27.766461 -0400 EDT",
+        "clientID": "a83a2506-f812-476b-8e14-9fa100126518",
+        "txID": "4650fa28-1ad5-46fc-97a8-15c21ee8608e"
+      }
     }
   }
 }
