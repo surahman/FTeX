@@ -778,6 +778,29 @@ type JWTAuthResponse {
     threshold: Int64!
 }
 `, BuiltIn: false},
+	{Name: "../schema/common.graphqls", Input: `# PriceQuote is the quote provided to the end-user requesting a transfer and will be stored in the Redis cache.
+type PriceQuote {
+    clientID: UUID!
+    sourceAcc: String!
+    destinationAcc: String!
+    rate: Float!
+    amount: Float!
+}
+
+# OfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type OfferResponse {
+    priceQuote: PriceQuote!
+    debitAmount: Float!
+    offerID: String!
+    expires: Int64!
+}
+
+# Links are links used in responses to retrieve pages of information.
+type Links {
+    nextPage:   String
+    pageCursor: String
+}
+`, BuiltIn: false},
 	{Name: "../schema/crypto.graphqls", Input: `# CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
 type CryptoOpenAccountResponse {
     clientID: String!
@@ -835,14 +858,6 @@ type FiatDepositResponse {
     currency: String!
 }
 
-# OfferResponse is an offer to convert a source to destination currency in the source currency amount.
-type OfferResponse {
-    priceQuote: PriceQuote!
-    debitAmount: Float!
-    offerID: String!
-    expires: Int64!
-}
-
 # FiatExchangeTransferResponse
 type FiatExchangeTransferResponse {
     sourceReceipt: FiatDepositResponse!
@@ -866,12 +881,6 @@ type FiatJournal {
     transactedAt:   String!
     clientID:       UUID!
     txID:           UUID!
-}
-
-# Links are links used in responses to retrieve pages of information.
-type Links {
-    nextPage:   String
-    pageCursor: String
 }
 
 # FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.
@@ -940,15 +949,6 @@ extend type Query {
 `, BuiltIn: false},
 	{Name: "../schema/healthcheck.graphqls", Input: `type Query {
     healthcheck: String!
-}
-`, BuiltIn: false},
-	{Name: "../schema/redis.graphqls", Input: `# PriceQuote is the quote provided to the end-user requesting a transfer and will be stored in the Redis cache.
-type PriceQuote {
-    clientID: UUID!
-    sourceAcc: String!
-    destinationAcc: String!
-    rate: Float!
-    amount: Float!
 }
 `, BuiltIn: false},
 	{Name: "../schema/scalars.graphqls", Input: `scalar Int32

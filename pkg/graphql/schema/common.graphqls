@@ -1,0 +1,22 @@
+# PriceQuote is the quote provided to the end-user requesting a transfer and will be stored in the Redis cache.
+type PriceQuote {
+    clientID: UUID!
+    sourceAcc: String!
+    destinationAcc: String!
+    rate: Float!
+    amount: Float!
+}
+
+# OfferResponse is an offer to convert a source to destination currency in the source currency amount.
+type OfferResponse {
+    priceQuote: PriceQuote!
+    debitAmount: Float!
+    offerID: String!
+    expires: Int64!
+}
+
+# Links are links used in responses to retrieve pages of information.
+type Links {
+    nextPage:   String
+    pageCursor: String
+}

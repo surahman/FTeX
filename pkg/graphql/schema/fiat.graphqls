@@ -14,14 +14,6 @@ type FiatDepositResponse {
     currency: String!
 }
 
-# OfferResponse is an offer to convert a source to destination currency in the source currency amount.
-type OfferResponse {
-    priceQuote: PriceQuote!
-    debitAmount: Float!
-    offerID: String!
-    expires: Int64!
-}
-
 # FiatExchangeTransferResponse
 type FiatExchangeTransferResponse {
     sourceReceipt: FiatDepositResponse!
@@ -45,12 +37,6 @@ type FiatJournal {
     transactedAt:   String!
     clientID:       UUID!
     txID:           UUID!
-}
-
-# Links are links used in responses to retrieve pages of information.
-type Links {
-    nextPage:   String
-    pageCursor: String
 }
 
 # FiatBalancesPaginated are all of the Fiat account balances retrieved via pagination.

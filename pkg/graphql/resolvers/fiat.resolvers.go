@@ -205,11 +205,6 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 	return receipt, nil
 }
 
-// DebitAmount is the resolver for the debitAmount field.
-func (r *offerResponseResolver) DebitAmount(ctx context.Context, obj *models.HTTPExchangeOfferResponse) (float64, error) {
-	return obj.DebitAmount.InexactFloat64(), nil
-}
-
 // BalanceFiat is the resolver for the balanceFiat field.
 func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) {
 	var (
@@ -385,11 +380,6 @@ func (r *Resolver) FiatTransactionsPaginated() graphql_generated.FiatTransaction
 	return &fiatTransactionsPaginatedResolver{r}
 }
 
-// OfferResponse returns graphql_generated.OfferResponseResolver implementation.
-func (r *Resolver) OfferResponse() graphql_generated.OfferResponseResolver {
-	return &offerResponseResolver{r}
-}
-
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
 func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver {
 	return &fiatDepositRequestResolver{r}
@@ -405,6 +395,5 @@ type fiatDepositResponseResolver struct{ *Resolver }
 type fiatExchangeTransferResponseResolver struct{ *Resolver }
 type fiatJournalResolver struct{ *Resolver }
 type fiatTransactionsPaginatedResolver struct{ *Resolver }
-type offerResponseResolver struct{ *Resolver }
 type fiatDepositRequestResolver struct{ *Resolver }
 type fiatExchangeOfferRequestResolver struct{ *Resolver }
