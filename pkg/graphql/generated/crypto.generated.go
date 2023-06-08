@@ -14,6 +14,10 @@ import (
 
 // region    ************************** generated!.gotpl **************************
 
+type CryptoOfferRequestResolver interface {
+	SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error
+}
+
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
@@ -118,6 +122,64 @@ func (ec *executionContext) fieldContext_CryptoOpenAccountResponse_ticker(ctx co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCryptoOfferRequest(ctx context.Context, obj interface{}) (models.HTTPCryptoOfferRequest, error) {
+	var it models.HTTPCryptoOfferRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"sourceCurrency", "destinationCurrency", "sourceAmount", "isPurchase"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "sourceCurrency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceCurrency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SourceCurrency = data
+		case "destinationCurrency":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destinationCurrency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DestinationCurrency = data
+		case "sourceAmount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceAmount"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.CryptoOfferRequest().SourceAmount(ctx, &it, data); err != nil {
+				return it, err
+			}
+		case "isPurchase":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isPurchase"))
+			data, err := ec.unmarshalNBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsPurchase = data
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -164,6 +226,11 @@ func (ec *executionContext) _CryptoOpenAccountResponse(ctx context.Context, sel 
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx context.Context, v interface{}) (models.HTTPCryptoOfferRequest, error) {
+	res, err := ec.unmarshalInputCryptoOfferRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
 
 func (ec *executionContext) marshalNCryptoOpenAccountResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, v models.CryptoOpenAccountResponse) graphql.Marshaler {
 	return ec._CryptoOpenAccountResponse(ctx, sel, &v)

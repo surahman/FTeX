@@ -9,7 +9,10 @@ import (
 	"errors"
 
 	"github.com/gofrs/uuid"
+	"github.com/shopspring/decimal"
 	"github.com/surahman/FTeX/pkg/common"
+	"github.com/surahman/FTeX/pkg/constants"
+	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 )
 
@@ -31,3 +34,44 @@ func (r *mutationResolver) OpenCrypto(ctx context.Context, ticker string) (*mode
 
 	return &models.CryptoOpenAccountResponse{ClientID: clientID.String(), Ticker: ticker}, nil
 }
+
+// OfferCrypto is the resolver for the offerCrypto field.
+func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCryptoOfferRequest) (*models.HTTPExchangeOfferResponse, error) {
+	var (
+		clientID      uuid.UUID
+		err           error
+		offer         models.HTTPExchangeOfferResponse
+		statusMessage string
+	)
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if offer, _, statusMessage, err = common.HTTPCryptoOffer(r.auth, r.cache, r.logger, r.quotes,
+		clientID, input.SourceCurrency, input.DestinationCurrency, input.SourceAmount, *input.IsPurchase); err != nil {
+		if statusMessage == constants.GetInvalidRequest() {
+			statusMessage = err.Error()
+		}
+
+		return nil, errors.New(statusMessage)
+	}
+
+	offer.ClientID = clientID
+
+	return &offer, nil
+}
+
+// SourceAmount is the resolver for the sourceAmount field.
+func (r *cryptoOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error {
+	obj.SourceAmount = decimal.NewFromFloat(data)
+
+	return nil
+}
+
+// CryptoOfferRequest returns graphql_generated.CryptoOfferRequestResolver implementation.
+func (r *Resolver) CryptoOfferRequest() graphql_generated.CryptoOfferRequestResolver {
+	return &cryptoOfferRequestResolver{r}
+}
+
+type cryptoOfferRequestResolver struct{ *Resolver }

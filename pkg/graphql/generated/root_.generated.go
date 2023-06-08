@@ -40,6 +40,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	PriceQuote() PriceQuoteResolver
 	Query() QueryResolver
+	CryptoOfferRequest() CryptoOfferRequestResolver
 	FiatDepositRequest() FiatDepositRequestResolver
 	FiatExchangeOfferRequest() FiatExchangeOfferRequestResolver
 }
@@ -123,6 +124,7 @@ type ComplexityRoot struct {
 		ExchangeOfferFiat    func(childComplexity int, input models.HTTPExchangeOfferRequest) int
 		ExchangeTransferFiat func(childComplexity int, offerID string) int
 		LoginUser            func(childComplexity int, input models1.UserLoginCredentials) int
+		OfferCrypto          func(childComplexity int, input models.HTTPCryptoOfferRequest) int
 		OpenCrypto           func(childComplexity int, ticker string) int
 		OpenFiat             func(childComplexity int, currency string) int
 		RefreshToken         func(childComplexity int) int
@@ -473,6 +475,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.LoginUser(childComplexity, args["input"].(models1.UserLoginCredentials)), true
 
+	case "Mutation.offerCrypto":
+		if e.complexity.Mutation.OfferCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_offerCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OfferCrypto(childComplexity, args["input"].(models.HTTPCryptoOfferRequest)), true
+
 	case "Mutation.openCrypto":
 		if e.complexity.Mutation.OpenCrypto == nil {
 			break
@@ -614,6 +628,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCryptoOfferRequest,
 		ec.unmarshalInputDeleteUserRequest,
 		ec.unmarshalInputFiatDepositRequest,
 		ec.unmarshalInputFiatExchangeOfferRequest,
@@ -687,16 +702,27 @@ type JWTAuthResponse {
     threshold: Int64!
 }
 `, BuiltIn: false},
-	{Name: "../schema/crypto.graphqls", Input: `# CryptoOpenAccountResponse is the response returned
+	{Name: "../schema/crypto.graphqls", Input: `# CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
 type CryptoOpenAccountResponse {
     clientID: String!
     ticker: String!
+}
+
+# CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
+input CryptoOfferRequest {
+    sourceCurrency:         String!
+    destinationCurrency:    String!
+    sourceAmount:           Float!
+    isPurchase:             Boolean!
 }
 
 # Requests that might alter the state of data in the database.
 extend type Mutation {
     # openFiat is a request to open an account if it does not already exist.
     openCrypto(ticker: String!): CryptoOpenAccountResponse!
+
+    # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
+    offerCrypto(input: CryptoOfferRequest!): FiatExchangeOfferResponse!
 }
 `, BuiltIn: false},
 	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned

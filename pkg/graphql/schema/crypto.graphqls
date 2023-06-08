@@ -1,11 +1,22 @@
-# CryptoOpenAccountResponse is the response returned
+# CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
 type CryptoOpenAccountResponse {
     clientID: String!
     ticker: String!
+}
+
+# CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
+input CryptoOfferRequest {
+    sourceCurrency:         String!
+    destinationCurrency:    String!
+    sourceAmount:           Float!
+    isPurchase:             Boolean!
 }
 
 # Requests that might alter the state of data in the database.
 extend type Mutation {
     # openFiat is a request to open an account if it does not already exist.
     openCrypto(ticker: String!): CryptoOpenAccountResponse!
+
+    # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
+    offerCrypto(input: CryptoOfferRequest!): FiatExchangeOfferResponse!
 }

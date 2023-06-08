@@ -117,3 +117,6 @@ models:
   FiatTransactionsPaginated:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPFiatTransactionsPaginated
+  CryptoOfferRequest:
+    model:
+      - github.com/surahman/FTeX/pkg/models.HTTPCryptoOfferRequest

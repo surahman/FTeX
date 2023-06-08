@@ -78,10 +78,16 @@ func getFiatQuery() map[string]string {
 }
 
 // getCryptoQuery is a map of test Crypto mutations and queries.
+//
+//nolint:lll
 func getCryptoQuery() map[string]string {
 	return map[string]string{
 		"openCrypto": `{
 		"query": "mutation { openCrypto(ticker: \"%s\") { clientID, ticker } }"
+		}`,
+
+		"offerCrypto": `{
+		"query": "mutation { offerCrypto(input: { sourceAmount: %f, sourceCurrency:\"%s\", destinationCurrency:\"%s\", isPurchase: %t, }) { priceQuote { clientID, sourceAcc, destinationAcc, rate, amount }, debitAmount, offerID, expires } }"
 		}`,
 	}
 }
