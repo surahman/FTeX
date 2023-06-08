@@ -89,5 +89,9 @@ func getCryptoQuery() map[string]string {
 		"offerCrypto": `{
 		"query": "mutation { offerCrypto(input: { sourceAmount: %f, sourceCurrency:\"%s\", destinationCurrency:\"%s\", isPurchase: %t, }) { priceQuote { clientID, sourceAcc, destinationAcc, rate, amount }, debitAmount, offerID, expires } }"
 		}`,
+
+		"exchangeCrypto": `{
+		"query": "mutation { exchangeCrypto(offerID: \"%s\") { fiatTxReceipt{ currency, amount, transactedAt, clientID, txID, }, cryptoTxReceipt{ ticker, amount, transactedAt, clientID, txID, }, } }"
+		}`,
 	}
 }

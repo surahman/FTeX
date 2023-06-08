@@ -4,6 +4,21 @@ type CryptoOpenAccountResponse {
     ticker: String!
 }
 
+# CryptoJournal are the Crypto transactional records for a specific transaction.
+type CryptoJournal {
+    ticker:         String!
+    amount:         Float!
+    transactedAt:   String!
+    clientID:       UUID!
+    txID:           UUID!
+}
+
+# CryptoTransferResponse is the response to a successful Cryptocurrency purchase/sale request.
+type CryptoTransferResponse {
+    fiatTxReceipt:      FiatJournal
+    cryptoTxReceipt:    CryptoJournal
+}
+
 # CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
 input CryptoOfferRequest {
     sourceCurrency:         String!
@@ -19,4 +34,7 @@ extend type Mutation {
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
     offerCrypto(input: CryptoOfferRequest!): FiatExchangeOfferResponse!
+
+    # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
+    exchangeCrypto(offerID: String!): CryptoTransferResponse!
 }

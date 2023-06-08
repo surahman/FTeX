@@ -120,3 +120,9 @@ models:
   CryptoOfferRequest:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPCryptoOfferRequest
+  CryptoJournal:
+    model:
+      - github.com/surahman/FTeX/pkg/postgres.CryptoJournal
+  CryptoTransferResponse:
+    model:
+      - github.com/surahman/FTeX/pkg/models.HTTPCryptoTransferResponse

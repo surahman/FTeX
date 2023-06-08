@@ -31,6 +31,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	CryptoJournal() CryptoJournalResolver
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
 	FiatExchangeOfferResponse() FiatExchangeOfferResponseResolver
@@ -49,9 +50,22 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	CryptoJournal struct {
+		Amount       func(childComplexity int) int
+		ClientID     func(childComplexity int) int
+		Ticker       func(childComplexity int) int
+		TransactedAt func(childComplexity int) int
+		TxID         func(childComplexity int) int
+	}
+
 	CryptoOpenAccountResponse struct {
 		ClientID func(childComplexity int) int
 		Ticker   func(childComplexity int) int
+	}
+
+	CryptoTransferResponse struct {
+		CryptoTxReceipt func(childComplexity int) int
+		FiatTxReceipt   func(childComplexity int) int
 	}
 
 	FiatAccount struct {
@@ -121,6 +135,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		DeleteUser           func(childComplexity int, input models.HTTPDeleteUserRequest) int
 		DepositFiat          func(childComplexity int, input models.HTTPDepositCurrencyRequest) int
+		ExchangeCrypto       func(childComplexity int, offerID string) int
 		ExchangeOfferFiat    func(childComplexity int, input models.HTTPExchangeOfferRequest) int
 		ExchangeTransferFiat func(childComplexity int, offerID string) int
 		LoginUser            func(childComplexity int, input models1.UserLoginCredentials) int
@@ -163,6 +178,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "CryptoJournal.amount":
+		if e.complexity.CryptoJournal.Amount == nil {
+			break
+		}
+
+		return e.complexity.CryptoJournal.Amount(childComplexity), true
+
+	case "CryptoJournal.clientID":
+		if e.complexity.CryptoJournal.ClientID == nil {
+			break
+		}
+
+		return e.complexity.CryptoJournal.ClientID(childComplexity), true
+
+	case "CryptoJournal.ticker":
+		if e.complexity.CryptoJournal.Ticker == nil {
+			break
+		}
+
+		return e.complexity.CryptoJournal.Ticker(childComplexity), true
+
+	case "CryptoJournal.transactedAt":
+		if e.complexity.CryptoJournal.TransactedAt == nil {
+			break
+		}
+
+		return e.complexity.CryptoJournal.TransactedAt(childComplexity), true
+
+	case "CryptoJournal.txID":
+		if e.complexity.CryptoJournal.TxID == nil {
+			break
+		}
+
+		return e.complexity.CryptoJournal.TxID(childComplexity), true
+
 	case "CryptoOpenAccountResponse.clientID":
 		if e.complexity.CryptoOpenAccountResponse.ClientID == nil {
 			break
@@ -176,6 +226,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CryptoOpenAccountResponse.Ticker(childComplexity), true
+
+	case "CryptoTransferResponse.cryptoTxReceipt":
+		if e.complexity.CryptoTransferResponse.CryptoTxReceipt == nil {
+			break
+		}
+
+		return e.complexity.CryptoTransferResponse.CryptoTxReceipt(childComplexity), true
+
+	case "CryptoTransferResponse.fiatTxReceipt":
+		if e.complexity.CryptoTransferResponse.FiatTxReceipt == nil {
+			break
+		}
+
+		return e.complexity.CryptoTransferResponse.FiatTxReceipt(childComplexity), true
 
 	case "FiatAccount.balance":
 		if e.complexity.FiatAccount.Balance == nil {
@@ -438,6 +502,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DepositFiat(childComplexity, args["input"].(models.HTTPDepositCurrencyRequest)), true
+
+	case "Mutation.exchangeCrypto":
+		if e.complexity.Mutation.ExchangeCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_exchangeCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExchangeCrypto(childComplexity, args["offerID"].(string)), true
 
 	case "Mutation.exchangeOfferFiat":
 		if e.complexity.Mutation.ExchangeOfferFiat == nil {
@@ -708,6 +784,21 @@ type CryptoOpenAccountResponse {
     ticker: String!
 }
 
+# CryptoJournal are the Crypto transactional records for a specific transaction.
+type CryptoJournal {
+    ticker:         String!
+    amount:         Float!
+    transactedAt:   String!
+    clientID:       UUID!
+    txID:           UUID!
+}
+
+# CryptoTransferResponse is the response to a successful Cryptocurrency purchase/sale request.
+type CryptoTransferResponse {
+    fiatTxReceipt:      FiatJournal
+    cryptoTxReceipt:    CryptoJournal
+}
+
 # CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
 input CryptoOfferRequest {
     sourceCurrency:         String!
@@ -723,6 +814,9 @@ extend type Mutation {
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
     offerCrypto(input: CryptoOfferRequest!): FiatExchangeOfferResponse!
+
+    # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
+    exchangeCrypto(offerID: String!): CryptoTransferResponse!
 }
 `, BuiltIn: false},
 	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned

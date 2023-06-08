@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/mocks"
@@ -124,10 +125,13 @@ func TestCryptoResolver_CryptoOfferRequestResolver(t *testing.T) {
 		sourceAmount = decimal.NewFromFloat(sourceFloat)
 	)
 
-	err := resolver.SourceAmount(context.TODO(), &input, sourceFloat)
-	require.NoError(t, err, "source amount should always return a nil error.")
+	t.Run("SourceAmount", func(t *testing.T) {
+		t.Parallel()
 
-	require.Equal(t, sourceAmount, input.SourceAmount, "source amounts mismatched.")
+		err := resolver.SourceAmount(context.TODO(), &input, sourceFloat)
+		require.NoError(t, err, "source amount should always return a nil error.")
+		require.Equal(t, sourceAmount, input.SourceAmount, "source amounts mismatched.")
+	})
 }
 
 func TestCryptoResolver_OfferCrypto(t *testing.T) {
@@ -329,6 +333,240 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 				mockRedis.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(test.redisErr).
 					Times(test.redisTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestCryptoResolver_CryptoJournalResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := cryptoJournalResolver{}
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "client id generation failed")
+
+	txID, err := uuid.NewV4()
+	require.NoError(t, err, "tx id generation failed")
+
+	obj := &postgres.CryptoJournal{
+		Ticker:       "BTC",
+		Amount:       decimal.NewFromFloat(78910.11),
+		TransactedAt: pgtype.Timestamptz{},
+		ClientID:     clientID,
+		TxID:         txID,
+	}
+
+	t.Run("Amount", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.Amount(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve amount.")
+		require.InDelta(t, obj.Amount.InexactFloat64(), result, 0.01, "amount mismatched.")
+	})
+
+	t.Run("TransactedAt", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.TransactedAt(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve transacted at.")
+		require.Equal(t, obj.TransactedAt.Time.String(), result, "transacted at mismatched.")
+	})
+
+	t.Run("ClientID", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.ClientID(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve client id")
+		require.Equal(t, obj.ClientID.String(), result, "client id mismatched.")
+	})
+
+	t.Run("TxID", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.TxID(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve tx id")
+		require.Equal(t, obj.TxID.String(), result, "client tx mismatched.")
+	})
+}
+
+func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
+	t.Parallel()
+
+	validClientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate a valid uuid.")
+
+	cryptoAmount := decimal.NewFromFloat(1234.56)
+	fiatAmount := decimal.NewFromFloat(78910.11)
+
+	validSale := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "BTC",
+			DestinationAcc: "USD",
+			Rate:           decimal.Decimal{},
+			Amount:         fiatAmount,
+		},
+		DebitAmount:      cryptoAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: false,
+		IsCryptoSale:     true,
+	}
+
+	validPurchase := models.HTTPExchangeOfferResponse{
+		PriceQuote: models.PriceQuote{
+			ClientID:       validClientID,
+			SourceAcc:      "USD",
+			DestinationAcc: "BTC",
+			Rate:           decimal.Decimal{},
+			Amount:         cryptoAmount,
+		},
+		DebitAmount:      fiatAmount,
+		OfferID:          "OFFER-ID",
+		Expires:          0,
+		IsCryptoPurchase: true,
+		IsCryptoSale:     false,
+	}
+
+	testCases := []struct {
+		name               string
+		path               string
+		query              string
+		expectErr          bool
+		authValidateJWTErr error
+		authValidateTimes  int
+		authEncryptTimes   int
+		authEncryptErr     error
+		redisGetData       models.HTTPExchangeOfferResponse
+		redisGetTimes      int
+		redisDelTimes      int
+		purchaseTimes      int
+		sellTimes          int
+	}{
+		{
+			name:               "invalid jwt",
+			path:               "/exchange-crypto/invalid-jwt",
+			query:              fmt.Sprintf(testCryptoQuery["exchangeCrypto"], "OFFER-ID"),
+			expectErr:          true,
+			authValidateTimes:  1,
+			authValidateJWTErr: errors.New("invalid jwt"),
+			authEncryptTimes:   0,
+			authEncryptErr:     nil,
+			redisGetData:       validPurchase,
+			redisGetTimes:      0,
+			redisDelTimes:      0,
+			purchaseTimes:      0,
+			sellTimes:          0,
+		}, {
+			name:               "transaction failure",
+			path:               "/exchange-crypto/transaction-failure",
+			query:              fmt.Sprintf(testCryptoQuery["exchangeCrypto"], "OFFER-ID"),
+			expectErr:          true,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   1,
+			authEncryptErr:     errors.New("transaction failure"),
+			redisGetData:       validPurchase,
+			redisGetTimes:      0,
+			redisDelTimes:      0,
+			purchaseTimes:      0,
+			sellTimes:          0,
+		}, {
+			name:               "valid - purchase",
+			path:               "/exchange-crypto/valid-purchase",
+			query:              fmt.Sprintf(testCryptoQuery["exchangeCrypto"], "OFFER-ID"),
+			expectErr:          false,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   1,
+			authEncryptErr:     nil,
+			redisGetData:       validPurchase,
+			redisGetTimes:      1,
+			redisDelTimes:      1,
+			purchaseTimes:      1,
+			sellTimes:          0,
+		}, {
+			name:               "valid - sale",
+			path:               "/exchange-crypto/valid-sale",
+			query:              fmt.Sprintf(testCryptoQuery["exchangeCrypto"], "OFFER-ID"),
+			expectErr:          false,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			authEncryptTimes:   1,
+			authEncryptErr:     nil,
+			redisGetData:       validSale,
+			redisGetTimes:      1,
+			redisDelTimes:      1,
+			purchaseTimes:      0,
+			sellTimes:          1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(validClientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte("OFFER-ID"), test.authEncryptErr).
+					Times(test.authEncryptTimes),
+
+				mockRedis.EXPECT().Get(gomock.Any(), gomock.Any()).
+					Return(nil).
+					SetArg(1, test.redisGetData).
+					Times(test.redisGetTimes),
+
+				mockRedis.EXPECT().Del(gomock.Any()).
+					Return(nil).
+					Times(test.redisDelTimes),
+
+				mockPostgres.EXPECT().CryptoPurchase(
+					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
+					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, nil).
+					Times(test.purchaseTimes),
+
+				mockPostgres.EXPECT().CryptoSell(
+					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
+					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, nil).
+					Times(test.sellTimes),
 			)
 
 			// Endpoint setup for test.

@@ -2568,4 +2568,11 @@ func (ec *executionContext) marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkg�
 	return ec._Links(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalOFiatJournal2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournal(ctx context.Context, sel ast.SelectionSet, v *postgres.FiatJournal) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._FiatJournal(ctx, sel, v)
+}
+
 // endregion ***************************** type.gotpl *****************************
