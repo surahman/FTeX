@@ -947,3 +947,37 @@ _Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
   }
 }
 ```
+
+#### Info
+
+##### Balance for a Specific Currency
+
+_Request:_ A valid Cryptocurrency ticker must be provided as a query parameter.
+```graphql
+query {
+    balanceCrypto(ticker:"BTC") {
+        ticker,
+        balance,
+        lastTx,
+        lastTxTs,
+        createdAt,
+        clientID,
+    }
+}
+```
+
+_Response:_ Account balance related details associated with the currency.
+```json
+{
+  "data": {
+    "balanceCrypto": {
+      "ticker": "BTC",
+      "balance": 46.69881177,
+      "lastTx": 46.69881177,
+      "lastTxTs": "2023-06-09 16:51:55.520098 -0400 EDT",
+      "createdAt": "2023-06-09 16:51:03.466403 -0400 EDT",
+      "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b"
+    }
+  }
+}
+```
