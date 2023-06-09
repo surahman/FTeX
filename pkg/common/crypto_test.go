@@ -78,6 +78,88 @@ func TestCommon_HTTPCryptoOpen(t *testing.T) {
 	}
 }
 
+func TestCommon_HTTPCryptoBalance(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name             string
+		tickerStr        string
+		expectErrMsg     string
+		expectErrCode    int
+		balanceAccErr    error
+		balanceAccTimes  int
+		expectErr        require.ErrorAssertionFunc
+		expectNilBalance require.ValueAssertionFunc
+		expectNilPayload require.ValueAssertionFunc
+	}{
+		{
+			name:             "invalid ticker",
+			tickerStr:        "INVALID",
+			balanceAccErr:    errors.New(constants.GetInvalidCurrencyString()),
+			balanceAccTimes:  0,
+			expectErrCode:    http.StatusBadRequest,
+			expectErrMsg:     "invalid",
+			expectErr:        require.Error,
+			expectNilBalance: require.Nil,
+			expectNilPayload: require.NotNil,
+		}, {
+			name:             "unknown db failure",
+			tickerStr:        "BTC",
+			balanceAccErr:    errors.New("unknown error"),
+			balanceAccTimes:  1,
+			expectErrCode:    http.StatusInternalServerError,
+			expectErrMsg:     retryMessage,
+			expectErr:        require.Error,
+			expectNilBalance: require.Nil,
+			expectNilPayload: require.Nil,
+		}, {
+			name:             "known db failure",
+			tickerStr:        "BTC",
+			balanceAccErr:    postgres.ErrNotFound,
+			balanceAccTimes:  1,
+			expectErrCode:    http.StatusNotFound,
+			expectErrMsg:     "records not found",
+			expectErr:        require.Error,
+			expectNilBalance: require.Nil,
+			expectNilPayload: require.Nil,
+		}, {
+			name:             "BTC",
+			tickerStr:        "BTC",
+			balanceAccErr:    nil,
+			balanceAccTimes:  1,
+			expectErrCode:    0,
+			expectErrMsg:     "",
+			expectErr:        require.NoError,
+			expectNilBalance: require.NotNil,
+			expectNilPayload: require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockDB := mocks.NewMockPostgres(mockCtrl)
+
+			mockDB.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
+				Return(postgres.CryptoAccount{}, test.balanceAccErr).
+				Times(test.balanceAccTimes)
+
+			balance, actualErrCode, actualErrMsg, payload, err :=
+				HTTPCryptoBalance(mockDB, zapLogger, uuid.UUID{}, test.tickerStr)
+			test.expectErr(t, err, "error expectation failed.")
+			require.Equal(t, test.expectErrCode, actualErrCode, "error codes mismatched.")
+			require.Contains(t, actualErrMsg, test.expectErrMsg, "expected error message mismatched.")
+			test.expectNilBalance(t, balance, "nil balance item expectation failed.")
+			test.expectNilPayload(t, payload, "nil payload item expectation failed.")
+		})
+	}
+}
+
 func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 	t.Parallel()
 
