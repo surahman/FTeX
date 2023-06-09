@@ -695,7 +695,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyCrypto(t *testing.T) {
+func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/crypto/balance/currency/"
@@ -711,20 +711,20 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) {
 		cryptoBalanceTimes int
 	}{
 		{
-			name:               "invalid currency",
-			currency:           "INVALID",
-			expectedMsg:        constants.GetInvalidCurrencyString(),
-			expectedStatus:     http.StatusBadRequest,
-			authValidateJWTErr: nil,
-			authValidateTimes:  0,
-			cryptoBalanceErr:   nil,
-			cryptoBalanceTimes: 0,
-		}, {
 			name:               "invalid JWT",
 			currency:           "USDT",
 			expectedMsg:        "invalid JWT",
 			expectedStatus:     http.StatusForbidden,
 			authValidateJWTErr: errors.New("invalid JWT"),
+			authValidateTimes:  1,
+			cryptoBalanceErr:   nil,
+			cryptoBalanceTimes: 0,
+		}, {
+			name:               "invalid currency",
+			currency:           "INVALID",
+			expectedMsg:        constants.GetInvalidCurrencyString(),
+			expectedStatus:     http.StatusBadRequest,
+			authValidateJWTErr: nil,
 			authValidateTimes:  1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 0,
@@ -758,7 +758,7 @@ func TestHandler_BalanceCurrencyCrypto(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {

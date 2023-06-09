@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
@@ -567,6 +568,297 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 					gomock.Any(), postgres.CurrencyUSD, fiatAmount, "BTC", cryptoAmount).
 					Return(&postgres.FiatJournal{}, &postgres.CryptoJournal{}, nil).
 					Times(test.sellTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestCryptoResolver_CryptoAccountResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := cryptoAccountResolver{}
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "client id generation failed")
+
+	lastTxTS := time.Now().Add(-15 * time.Second)
+	lastTxTSPG := pgtype.Timestamptz{}
+	require.NoError(t, lastTxTSPG.Scan(lastTxTS), "failed to generate lastTxTs.")
+
+	createdAt := time.Now().Add(-15 * time.Minute)
+	createdAtPG := pgtype.Timestamptz{}
+	require.NoError(t, createdAtPG.Scan(createdAt), "failed to generate createdAt.")
+
+	obj := &postgres.CryptoAccount{
+		Ticker:    "BTC",
+		Balance:   decimal.NewFromFloat(46.39),
+		LastTx:    decimal.NewFromFloat(-789.33),
+		LastTxTs:  lastTxTSPG,
+		CreatedAt: createdAtPG,
+		ClientID:  clientID,
+	}
+
+	t.Run("Balance", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.Balance(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve balance.")
+		require.InDelta(t, obj.Balance.InexactFloat64(), result, 0.01, "balance mismatched.")
+	})
+
+	t.Run("LastTx", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.LastTx(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve last tx.")
+		require.InDelta(t, obj.LastTx.InexactFloat64(), result, 0.01, "last tx mismatched.")
+	})
+
+	t.Run("LastTxTs", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.LastTxTs(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve LastTxTs.")
+		require.Equal(t, obj.LastTxTs.Time.String(), result, "LastTxTs mismatched.")
+	})
+
+	t.Run("CreatedAt", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.CreatedAt(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve CreatedAt.")
+		require.Equal(t, obj.CreatedAt.Time.String(), result, "CreatedAt mismatched.")
+	})
+
+	t.Run("ClientID", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := resolver.ClientID(context.TODO(), obj)
+		require.NoError(t, err, "failed to resolve client id")
+		require.Equal(t, obj.ClientID.String(), result, "client id mismatched.")
+	})
+}
+
+func TestCryptoResolver_BalanceCrypto(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name               string
+		path               string
+		query              string
+		expectErr          bool
+		authValidateJWTErr error
+		authValidateTimes  int
+		balanceErr         error
+		balanceTimes       int
+	}{
+		{
+			name:               "invalid jwt",
+			path:               "/balance-crypto/invalid-jwt",
+			query:              fmt.Sprintf(testCryptoQuery["balanceCrypto"], "ETH"),
+			expectErr:          true,
+			authValidateTimes:  1,
+			authValidateJWTErr: errors.New("invalid jwt"),
+			balanceTimes:       0,
+			balanceErr:         nil,
+		}, {
+			name:               "invalid",
+			path:               "/balance-crypto/invalid",
+			query:              fmt.Sprintf(testCryptoQuery["balanceCrypto"], "INVALID"),
+			expectErr:          true,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			balanceTimes:       0,
+			balanceErr:         nil,
+		}, {
+			name:               "db failure",
+			path:               "/balance-crypto/db-failure",
+			query:              fmt.Sprintf(testCryptoQuery["balanceCrypto"], "ETH"),
+			expectErr:          false,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			balanceTimes:       1,
+			balanceErr:         postgres.ErrNotFound,
+		}, {
+			name:               "valid",
+			path:               "/balance-crypto/valid",
+			query:              fmt.Sprintf(testCryptoQuery["balanceCrypto"], "ETH"),
+			expectErr:          false,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			balanceTimes:       1,
+			balanceErr:         nil,
+		},
+	}
+
+	for _, testCase := range testCases { //nolint:dupl
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
+					Return(postgres.CryptoAccount{}, test.balanceErr).
+					Times(test.balanceTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
+	t.Parallel()
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate client id.")
+
+	txUUID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate transaction id.")
+
+	txID := txUUID.String()
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		authValidateJWTErr   error
+		authValidateTimes    int
+		fiatTxDetailsErr     error
+		fiatTxDetailsTimes   int
+		cryptoTxDetailsErr   error
+		cryptoTxDetailsTimes int
+	}{
+		{
+			name:                 "invalid jwt",
+			path:                 "/transaction-details-crypto/invalid-jwt",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            true,
+			authValidateTimes:    1,
+			authValidateJWTErr:   errors.New("invalid jwt"),
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+			cryptoTxDetailsErr:   nil,
+			cryptoTxDetailsTimes: 0,
+		}, {
+			name:                 "db failure fiat",
+			path:                 "/transaction-details-crypto/db-failure-fiat",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     postgres.ErrTransactCryptoDetails,
+			cryptoTxDetailsTimes: 0,
+			cryptoTxDetailsErr:   nil,
+		}, {
+			name:                 "db failure crypto",
+			path:                 "/transaction-details-crypto/db-failure-crypto",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     nil,
+			cryptoTxDetailsTimes: 1,
+			cryptoTxDetailsErr:   postgres.ErrTransactCryptoDetails,
+		}, {
+			name:                 "valid",
+			path:                 "/transaction-details-crypto/valid",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     nil,
+			cryptoTxDetailsTimes: 1,
+			cryptoTxDetailsErr:   nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(clientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
+					Return([]postgres.FiatJournal{{}}, test.fiatTxDetailsErr).
+					Times(test.fiatTxDetailsTimes),
+
+				mockPostgres.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
+					Return([]postgres.CryptoJournal{{}}, test.cryptoTxDetailsErr).
+					Times(test.cryptoTxDetailsTimes),
 			)
 
 			// Endpoint setup for test.

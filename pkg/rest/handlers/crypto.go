@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,6 @@ import (
 	"github.com/surahman/FTeX/pkg/quotes"
 	"github.com/surahman/FTeX/pkg/redis"
 	"github.com/surahman/FTeX/pkg/validator"
-	"go.uber.org/zap"
 )
 
 // OpenCrypto will handle an HTTP request to open a Cryptocurrency account.
@@ -220,26 +218,20 @@ func ExchangeCrypto(
 //	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/crypto/info/balance/{ticker} [get]
-func BalanceCrypto(
+func BalanceCrypto( //nolint:dupl
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
 	authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			accDetails postgres.CryptoAccount
-			clientID   uuid.UUID
-			ticker     = ginCtx.Param("ticker")
-			err        error
+			accDetails  *postgres.CryptoAccount
+			clientID    uuid.UUID
+			err         error
+			httpStatus  int
+			httpMessage string
+			payload     any
 		)
-
-		// Extract and validate the currency.
-		if len(ticker) < 1 || len(ticker) > 6 {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetInvalidCurrencyString(), Payload: ticker})
-
-			return
-		}
 
 		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
@@ -247,17 +239,9 @@ func BalanceCrypto(
 			return
 		}
 
-		if accDetails, err = db.CryptoBalance(clientID, ticker); err != nil {
-			var balanceErr *postgres.Error
-			if !errors.As(err, &balanceErr) {
-				logger.Info("failed to unpack Crypto account balance currency error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-					models.HTTPError{Message: "please retry your request later"})
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(balanceErr.Code, models.HTTPError{Message: balanceErr.Message})
+		if accDetails, httpStatus, httpMessage, payload, err =
+			common.HTTPCryptoBalance(db, logger, clientID, ginCtx.Param("ticker")); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage, Payload: payload})
 
 			return
 		}

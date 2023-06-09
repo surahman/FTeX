@@ -64,7 +64,7 @@ func getFiatQuery() map[string]string {
 		}`,
 
 		"transactionDetailsFiat": `{
-		"query": "query { transactionDetailsFiat ( transactionID: \"%s\") { currency, amount, transactedAt, clientID, txID } }"
+		"query": "query { transactionDetailsFiat( transactionID: \"%s\") }"
 		}`,
 
 		"transactionDetailsAllFiatInit": `{
@@ -92,6 +92,14 @@ func getCryptoQuery() map[string]string {
 
 		"exchangeCrypto": `{
 		"query": "mutation { exchangeCrypto(offerID: \"%s\") { fiatTxReceipt{ currency, amount, transactedAt, clientID, txID, }, cryptoTxReceipt{ ticker, amount, transactedAt, clientID, txID, }, } }"
+		}`,
+
+		"balanceCrypto": `{
+		"query": "query { balanceCrypto(ticker: \"%s\") { ticker, balance, lastTx, lastTxTs, createdAt, clientID } }"
+		}`,
+
+		"transactionDetailsCrypto": `{
+		"query": "query { transactionDetailsCrypto(transactionID: \"%s\") }"
 		}`,
 	}
 }

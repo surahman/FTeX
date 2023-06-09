@@ -37,6 +37,11 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
     - [Exchange](#exchange-1)
         - [Purchase](#purchase-1)
         - [Sell](#sell-1)
+  - [Info](#info)
+      - [Balance for a Specific Currency](#balance-for-a-specific-currency-1)
+      - [Transaction Details for a Specific Transaction](#transaction-details-for-a-specific-transaction-1)
+          - [Purchase](#purchase-2)
+          - [Sell](#sell-2)
 
 <br/>
 
@@ -944,6 +949,100 @@ _Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
         "txID": "b4df7d86-36b0-407b-8acf-21cccbc88386"
       }
     }
+  }
+}
+```
+
+#### Info
+
+##### Balance for a Specific Currency
+
+_Request:_ A valid Cryptocurrency ticker must be provided as a query parameter.
+```graphql
+query {
+    balanceCrypto(ticker:"BTC") {
+        ticker,
+        balance,
+        lastTx,
+        lastTxTs,
+        createdAt,
+        clientID,
+    }
+}
+```
+
+_Response:_ Account balance related details associated with the currency.
+```json
+{
+  "data": {
+    "balanceCrypto": {
+      "ticker": "BTC",
+      "balance": 46.69881177,
+      "lastTx": 46.69881177,
+      "lastTxTs": "2023-06-09 16:51:55.520098 -0400 EDT",
+      "createdAt": "2023-06-09 16:51:03.466403 -0400 EDT",
+      "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b"
+    }
+  }
+}
+```
+
+##### Transaction Details for a Specific Transaction
+
+_Request:_ A valid `Transaction ID` must be provided as a query parameter.
+```graphql
+query {
+  transactionDetailsCrypto(transactionID: "05cef33f-2082-48c4-ad08-e0f8dc5d4444")
+}
+```
+
+_Response:_ Transaction-related details for a specific transaction. There will be one entry for the Fiat currency
+account and another for the Cryptocurrency account.
+
+###### Purchase
+```json
+{
+  "data": {
+    "transactionDetailsCrypto": [
+      {
+        "currency": "USD",
+        "amount": "-0.32",
+        "transactedAt": "2023-06-09T17:25:01.62373-04:00",
+        "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+        "txID": "05cef33f-2082-48c4-ad08-e0f8dc5d4444"
+      },
+      {
+        "ticker": "BTC",
+        "amount": "0.0000121",
+        "transactedAt": "2023-06-09T17:25:01.62373-04:00",
+        "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+        "txID": "05cef33f-2082-48c4-ad08-e0f8dc5d4444"
+      }
+    ]
+  }
+}
+```
+
+###### Sell
+```json
+{
+  "data": {
+    "transactionDetailsCrypto": [
+      {
+        "currency": "USD",
+        "amount": "9410.35",
+        "transactedAt": "2023-06-09T17:34:27.727458-04:00",
+        "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+        "txID": "0cadcb76-8d26-4a1a-bf03-d3392c80d57b"
+      },
+      {
+        "ticker": "BTC",
+        "amount": "-0.356",
+        "transactedAt": "2023-06-09T17:34:27.727458-04:00",
+        "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+        "txID": "0cadcb76-8d26-4a1a-bf03-d3392c80d57b"
+      }
+    ]
   }
 }
 ```

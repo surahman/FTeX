@@ -31,6 +31,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	CryptoAccount() CryptoAccountResolver
 	CryptoJournal() CryptoJournalResolver
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
@@ -50,6 +51,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	CryptoAccount struct {
+		Balance   func(childComplexity int) int
+		ClientID  func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		LastTx    func(childComplexity int) int
+		LastTxTs  func(childComplexity int) int
+		Ticker    func(childComplexity int) int
+	}
+
 	CryptoJournal struct {
 		Amount       func(childComplexity int) int
 		ClientID     func(childComplexity int) int
@@ -156,9 +166,11 @@ type ComplexityRoot struct {
 
 	Query struct {
 		BalanceAllFiat            func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceCrypto             func(childComplexity int, ticker string) int
 		BalanceFiat               func(childComplexity int, currencyCode string) int
 		Healthcheck               func(childComplexity int) int
 		TransactionDetailsAllFiat func(childComplexity int, input models.FiatPaginatedTxDetailsRequest) int
+		TransactionDetailsCrypto  func(childComplexity int, transactionID string) int
 		TransactionDetailsFiat    func(childComplexity int, transactionID string) int
 	}
 }
@@ -177,6 +189,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "CryptoAccount.balance":
+		if e.complexity.CryptoAccount.Balance == nil {
+			break
+		}
+
+		return e.complexity.CryptoAccount.Balance(childComplexity), true
+
+	case "CryptoAccount.clientID":
+		if e.complexity.CryptoAccount.ClientID == nil {
+			break
+		}
+
+		return e.complexity.CryptoAccount.ClientID(childComplexity), true
+
+	case "CryptoAccount.createdAt":
+		if e.complexity.CryptoAccount.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.CryptoAccount.CreatedAt(childComplexity), true
+
+	case "CryptoAccount.lastTx":
+		if e.complexity.CryptoAccount.LastTx == nil {
+			break
+		}
+
+		return e.complexity.CryptoAccount.LastTx(childComplexity), true
+
+	case "CryptoAccount.lastTxTs":
+		if e.complexity.CryptoAccount.LastTxTs == nil {
+			break
+		}
+
+		return e.complexity.CryptoAccount.LastTxTs(childComplexity), true
+
+	case "CryptoAccount.ticker":
+		if e.complexity.CryptoAccount.Ticker == nil {
+			break
+		}
+
+		return e.complexity.CryptoAccount.Ticker(childComplexity), true
 
 	case "CryptoJournal.amount":
 		if e.complexity.CryptoJournal.Amount == nil {
@@ -653,6 +707,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.BalanceAllFiat(childComplexity, args["pageCursor"].(*string), args["pageSize"].(*int32)), true
 
+	case "Query.balanceCrypto":
+		if e.complexity.Query.BalanceCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Query_balanceCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BalanceCrypto(childComplexity, args["ticker"].(string)), true
+
 	case "Query.balanceFiat":
 		if e.complexity.Query.BalanceFiat == nil {
 			break
@@ -683,6 +749,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TransactionDetailsAllFiat(childComplexity, args["input"].(models.FiatPaginatedTxDetailsRequest)), true
+
+	case "Query.transactionDetailsCrypto":
+		if e.complexity.Query.TransactionDetailsCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Query_transactionDetailsCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TransactionDetailsCrypto(childComplexity, args["transactionID"].(string)), true
 
 	case "Query.transactionDetailsFiat":
 		if e.complexity.Query.TransactionDetailsFiat == nil {
@@ -801,7 +879,17 @@ type Links {
     pageCursor: String
 }
 `, BuiltIn: false},
-	{Name: "../schema/crypto.graphqls", Input: `# CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
+	{Name: "../schema/crypto.graphqls", Input: `# Crypto Account are the Crypto account details associated with a specific Client ID.
+type CryptoAccount {
+    ticker:   String!
+    balance:    Float!
+    lastTx:     Float!
+    lastTxTs:   String!
+    createdAt:  String!
+    clientID:   UUID!
+}
+
+# CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
 type CryptoOpenAccountResponse {
     clientID: String!
     ticker: String!
@@ -840,6 +928,15 @@ extend type Mutation {
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
     exchangeCrypto(offerID: String!): CryptoTransferResponse!
+}
+
+
+extend type Query {
+    # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
+    balanceCrypto(ticker: String!): CryptoAccount!
+
+    # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsCrypto(transactionID: String!): [Any!]!
 }
 `, BuiltIn: false},
 	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned
@@ -941,7 +1038,7 @@ extend type Query {
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
 
     # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
-    transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+    transactionDetailsFiat(transactionID: String!): [Any!]!
 
     # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest!): FiatTransactionsPaginated!
@@ -951,7 +1048,8 @@ extend type Query {
     healthcheck: String!
 }
 `, BuiltIn: false},
-	{Name: "../schema/scalars.graphqls", Input: `scalar Int32
+	{Name: "../schema/scalars.graphqls", Input: `scalar Any
+scalar Int32
 scalar Int64
 scalar UUID
 `, BuiltIn: false},

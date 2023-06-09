@@ -1,3 +1,13 @@
+# Crypto Account are the Crypto account details associated with a specific Client ID.
+type CryptoAccount {
+    ticker:   String!
+    balance:    Float!
+    lastTx:     Float!
+    lastTxTs:   String!
+    createdAt:  String!
+    clientID:   UUID!
+}
+
 # CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
 type CryptoOpenAccountResponse {
     clientID: String!
@@ -37,4 +47,13 @@ extend type Mutation {
 
     # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
     exchangeCrypto(offerID: String!): CryptoTransferResponse!
+}
+
+
+extend type Query {
+    # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
+    balanceCrypto(ticker: String!): CryptoAccount!
+
+    # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsCrypto(transactionID: String!): [Any!]!
 }

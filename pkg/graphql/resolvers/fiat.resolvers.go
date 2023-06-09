@@ -16,7 +16,6 @@ import (
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
-	"go.uber.org/zap"
 )
 
 // Currency is the resolver for the currency field.
@@ -257,36 +256,20 @@ func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, 
 }
 
 // TransactionDetailsFiat is the resolver for the transactionDetailsFiat field.
-func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error) {
+func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]interface{}, error) {
 	var (
-		journalEntries []postgres.FiatJournal
+		journalEntries []any
 		clientID       uuid.UUID
-		txID           uuid.UUID
 		err            error
+		httpMessage    string
 	)
 
 	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
-	// Extract and validate the transactionID.
-	if txID, err = uuid.FromString(transactionID); err != nil {
-		return nil, fmt.Errorf("invalid transaction id %s", transactionID)
-	}
-
-	if journalEntries, err = r.db.FiatTxDetails(clientID, txID); err != nil {
-		var balanceErr *postgres.Error
-		if !errors.As(err, &balanceErr) {
-			r.logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
-
-			return nil, errors.New("please retry your request later")
-		}
-
-		return nil, errors.New(balanceErr.Message)
-	}
-
-	if len(journalEntries) == 0 {
-		return nil, errors.New("transaction id not found")
+	if journalEntries, _, httpMessage, err = common.HTTPTxDetails(r.db, r.logger, clientID, transactionID); err != nil {
+		return nil, errors.New(httpMessage)
 	}
 
 	return journalEntries, nil

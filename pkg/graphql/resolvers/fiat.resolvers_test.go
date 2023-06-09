@@ -1017,7 +1017,7 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -1340,85 +1340,73 @@ func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	})
 }
 
-func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
+func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
-	txID, err := uuid.NewV4()
-	require.NoError(t, err, "failed to generate new UUID.")
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate client id.")
 
-	journalEntries := []postgres.FiatJournal{{}}
+	txUUID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate transaction id.")
+
+	txID := txUUID.String()
 
 	testCases := []struct {
 		name                 string
 		path                 string
 		query                string
 		expectErr            bool
-		journalEntries       []postgres.FiatJournal
 		authValidateJWTErr   error
-		authValidateJWTTimes int
+		authValidateTimes    int
 		fiatTxDetailsErr     error
 		fiatTxDetailsTimes   int
+		cryptoTxDetailsErr   error
+		cryptoTxDetailsTimes int
 	}{
 		{
-			name:                 "invalid JWT",
+			name:                 "invalid jwt",
 			path:                 "/transaction-details-fiat/invalid-jwt",
 			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
 			expectErr:            true,
-			journalEntries:       journalEntries,
-			authValidateJWTErr:   errors.New("invalid JWT"),
-			authValidateJWTTimes: 1,
+			authValidateTimes:    1,
+			authValidateJWTErr:   errors.New("invalid jwt"),
 			fiatTxDetailsErr:     nil,
 			fiatTxDetailsTimes:   0,
+			cryptoTxDetailsErr:   nil,
+			cryptoTxDetailsTimes: 0,
 		}, {
-			name:                 "invalid transaction ID",
-			path:                 "/transaction-details-fiat/invalid-transaction-id",
-			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], "invalid-tx-id"),
-			expectErr:            true,
-			journalEntries:       journalEntries,
+			name:                 "db failure fiat",
+			path:                 "/transaction-details-fiat/db-failure-fiat",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     postgres.ErrTransactCryptoDetails,
+			cryptoTxDetailsTimes: 0,
+			cryptoTxDetailsErr:   nil,
+		}, {
+			name:                 "db failure crypto",
+			path:                 "/transaction-details-fiat/db-failure-crypto",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     nil,
-			fiatTxDetailsTimes:   0,
-		}, {
-			name:                 "unknown db error",
-			path:                 "/transaction-details-fiat/unknown-db-error",
-			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
-			expectErr:            true,
-			journalEntries:       journalEntries,
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			fiatTxDetailsErr:     errors.New("unknown error"),
-			fiatTxDetailsTimes:   1,
-		}, {
-			name:                 "known db error",
-			path:                 "/transaction-details-fiat/known-db-error",
-			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
-			expectErr:            true,
-			journalEntries:       journalEntries,
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			fiatTxDetailsErr:     postgres.ErrNotFound,
-			fiatTxDetailsTimes:   1,
-		}, {
-			name:                 "transaction id not found",
-			path:                 "/transaction-details-fiat/transaction-id-not-found",
-			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
-			expectErr:            true,
-			journalEntries:       nil,
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			fiatTxDetailsErr:     nil,
-			fiatTxDetailsTimes:   1,
+			cryptoTxDetailsTimes: 1,
+			cryptoTxDetailsErr:   postgres.ErrTransactCryptoDetails,
 		}, {
 			name:                 "valid",
 			path:                 "/transaction-details-fiat/valid",
 			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
 			expectErr:            false,
-			journalEntries:       journalEntries,
+			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			fiatTxDetailsErr:     nil,
 			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     nil,
+			cryptoTxDetailsTimes: 1,
+			cryptoTxDetailsErr:   nil,
 		},
 	}
 
@@ -1433,17 +1421,21 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) {
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
-			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
-			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
 
 			gomock.InOrder(
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateJWTTimes),
+					Return(clientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
 
 				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
-					Return(test.journalEntries, test.fiatTxDetailsErr).
+					Return([]postgres.FiatJournal{{}}, test.fiatTxDetailsErr).
 					Times(test.fiatTxDetailsTimes),
+
+				mockPostgres.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
+					Return([]postgres.CryptoJournal{{}}, test.cryptoTxDetailsErr).
+					Times(test.cryptoTxDetailsTimes),
 			)
 
 			// Endpoint setup for test.

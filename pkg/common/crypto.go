@@ -41,6 +41,34 @@ func HTTPCryptoOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.U
 	return 0, "", nil
 }
 
+// HTTPCryptoBalance retrieves a balance for a specific Crypto account.
+func HTTPCryptoBalance(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, ticker string) (
+	*postgres.CryptoAccount, int, string, any, error) {
+	var (
+		accDetails postgres.CryptoAccount
+		err        error
+	)
+
+	// Extract and validate the currency.
+	if len(ticker) < 1 || len(ticker) > 6 {
+		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker,
+			errors.New(constants.GetInvalidCurrencyString())
+	}
+
+	if accDetails, err = db.CryptoBalance(clientID, ticker); err != nil {
+		var balanceErr *postgres.Error
+		if !errors.As(err, &balanceErr) {
+			logger.Info("failed to unpack Crypto account balance currency error", zap.Error(err))
+
+			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		}
+
+		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
+	}
+
+	return &accDetails, 0, "", nil, nil
+}
+
 // HTTPCryptoOffer will request the conversion rate, prepare the price quote, and store it in the Redis cache.
 func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quotes quotes.Quotes,
 	clientID uuid.UUID, source, destination string, sourceAmount decimal.Decimal, isPurchase bool) (

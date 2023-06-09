@@ -902,7 +902,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_BalanceFiat(t *testing.T) {
+func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/fiat/balance/currency/"
@@ -965,7 +965,7 @@ func TestHandler_BalanceFiat(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
