@@ -151,6 +151,26 @@ func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*post
 	return accDetails, nil
 }
 
+// TransactionDetailsCrypto is the resolver for the transactionDetailsCrypto field.
+func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactionID string) ([]interface{}, error) {
+	var (
+		journalEntries []any
+		clientID       uuid.UUID
+		err            error
+		httpMessage    string
+	)
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if journalEntries, _, httpMessage, err = common.HTTPTxDetails(r.db, r.logger, clientID, transactionID); err != nil {
+		return nil, errors.New(httpMessage)
+	}
+
+	return journalEntries, nil
+}
+
 // SourceAmount is the resolver for the sourceAmount field.
 func (r *cryptoOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error {
 	obj.SourceAmount = decimal.NewFromFloat(data)

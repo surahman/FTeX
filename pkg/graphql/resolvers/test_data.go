@@ -97,5 +97,9 @@ func getCryptoQuery() map[string]string {
 		"balanceCrypto": `{
 		"query": "query { balanceCrypto(ticker: \"%s\") { ticker, balance, lastTx, lastTxTs, createdAt, clientID } }"
 		}`,
+
+		"transactionDetailsCrypto": `{
+		"query": "query { transactionDetailsCrypto(transactionID: \"%s\") }"
+		}`,
 	}
 }

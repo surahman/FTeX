@@ -795,7 +795,7 @@ field.
 
 ##### Transaction Details for a Specific Transaction `/transaction/{transactionID}`
 
-_Request:_ A valid `Transaction ID` must be provided as a path parameter.
+_Request:_ A valid `Transaction ID` must be provided as a query parameter.
 
 _Response:_ Transaction-related details for a specific transaction. There will be one entry for the Fiat currency
 account and another for the Cryptocurrency account.

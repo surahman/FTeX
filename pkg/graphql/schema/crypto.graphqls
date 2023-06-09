@@ -53,4 +53,7 @@ extend type Mutation {
 extend type Query {
     # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
     balanceCrypto(ticker: String!): CryptoAccount!
+
+    # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsCrypto(transactionID: String!): [Any!]!
 }

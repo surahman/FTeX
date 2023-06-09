@@ -763,3 +763,126 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 		})
 	}
 }
+func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) {
+	t.Parallel()
+
+	clientID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate client id.")
+
+	txUUID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate transaction id.")
+
+	txID := txUUID.String()
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		authValidateJWTErr   error
+		authValidateTimes    int
+		fiatTxDetailsErr     error
+		fiatTxDetailsTimes   int
+		cryptoTxDetailsErr   error
+		cryptoTxDetailsTimes int
+	}{
+		{
+			name:                 "invalid jwt",
+			path:                 "/transaction-details-crypto/invalid-jwt",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            true,
+			authValidateTimes:    1,
+			authValidateJWTErr:   errors.New("invalid jwt"),
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+			cryptoTxDetailsErr:   nil,
+			cryptoTxDetailsTimes: 0,
+		}, {
+			name:                 "db failure fiat",
+			path:                 "/transaction-details-crypto/db-failure-fiat",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     postgres.ErrTransactCryptoDetails,
+			cryptoTxDetailsTimes: 0,
+			cryptoTxDetailsErr:   nil,
+		}, {
+			name:                 "db failure crypto",
+			path:                 "/transaction-details-crypto/db-failure-crypto",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     nil,
+			cryptoTxDetailsTimes: 1,
+			cryptoTxDetailsErr:   postgres.ErrTransactCryptoDetails,
+		}, {
+			name:                 "valid",
+			path:                 "/transaction-details-crypto/valid",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            false,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			fiatTxDetailsTimes:   1,
+			fiatTxDetailsErr:     nil,
+			cryptoTxDetailsTimes: 1,
+			cryptoTxDetailsErr:   nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // Not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(clientID, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
+					Return([]postgres.FiatJournal{{}}, test.fiatTxDetailsErr).
+					Times(test.fiatTxDetailsTimes),
+
+				mockPostgres.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
+					Return([]postgres.CryptoJournal{{}}, test.cryptoTxDetailsErr).
+					Times(test.cryptoTxDetailsTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}

@@ -170,6 +170,7 @@ type ComplexityRoot struct {
 		BalanceFiat               func(childComplexity int, currencyCode string) int
 		Healthcheck               func(childComplexity int) int
 		TransactionDetailsAllFiat func(childComplexity int, input models.FiatPaginatedTxDetailsRequest) int
+		TransactionDetailsCrypto  func(childComplexity int, transactionID string) int
 		TransactionDetailsFiat    func(childComplexity int, transactionID string) int
 	}
 }
@@ -749,6 +750,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TransactionDetailsAllFiat(childComplexity, args["input"].(models.FiatPaginatedTxDetailsRequest)), true
 
+	case "Query.transactionDetailsCrypto":
+		if e.complexity.Query.TransactionDetailsCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Query_transactionDetailsCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TransactionDetailsCrypto(childComplexity, args["transactionID"].(string)), true
+
 	case "Query.transactionDetailsFiat":
 		if e.complexity.Query.TransactionDetailsFiat == nil {
 			break
@@ -921,7 +934,11 @@ extend type Mutation {
 extend type Query {
     # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
     balanceCrypto(ticker: String!): CryptoAccount!
-}`, BuiltIn: false},
+
+    # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsCrypto(transactionID: String!): [Any!]!
+}
+`, BuiltIn: false},
 	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned
 type FiatOpenAccountResponse {
     clientID: String!
