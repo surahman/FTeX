@@ -126,3 +126,6 @@ models:
   CryptoTransferResponse:
     model:
       - github.com/surahman/FTeX/pkg/models.HTTPCryptoTransferResponse
+  CryptoAccount:
+    model:
+      - github.com/surahman/FTeX/pkg/postgres.CryptoAccount

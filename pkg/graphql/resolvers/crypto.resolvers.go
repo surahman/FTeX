@@ -7,6 +7,7 @@ package graphql
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
@@ -16,6 +17,31 @@ import (
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 )
+
+// Balance is the resolver for the balance field.
+func (r *cryptoAccountResolver) Balance(ctx context.Context, obj *postgres.CryptoAccount) (float64, error) {
+	return obj.Balance.InexactFloat64(), nil
+}
+
+// LastTx is the resolver for the lastTx field.
+func (r *cryptoAccountResolver) LastTx(ctx context.Context, obj *postgres.CryptoAccount) (float64, error) {
+	return obj.LastTx.InexactFloat64(), nil
+}
+
+// LastTxTs is the resolver for the lastTxTs field.
+func (r *cryptoAccountResolver) LastTxTs(ctx context.Context, obj *postgres.CryptoAccount) (string, error) {
+	return obj.LastTxTs.Time.String(), nil
+}
+
+// CreatedAt is the resolver for the createdAt field.
+func (r *cryptoAccountResolver) CreatedAt(ctx context.Context, obj *postgres.CryptoAccount) (string, error) {
+	return obj.CreatedAt.Time.String(), nil
+}
+
+// ClientID is the resolver for the clientID field.
+func (r *cryptoAccountResolver) ClientID(ctx context.Context, obj *postgres.CryptoAccount) (string, error) {
+	return obj.ClientID.String(), nil
+}
 
 // Amount is the resolver for the amount field.
 func (r *cryptoJournalResolver) Amount(ctx context.Context, obj *postgres.CryptoJournal) (float64, error) {
@@ -103,11 +129,38 @@ func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (
 	return &receipt, nil
 }
 
+// BalanceCrypto is the resolver for the balanceCrypto field.
+func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*postgres.CryptoAccount, error) {
+	var (
+		accDetails  *postgres.CryptoAccount
+		clientID    uuid.UUID
+		err         error
+		httpMessage string
+		payload     any
+	)
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if accDetails, _, httpMessage, payload, err =
+		common.HTTPCryptoBalance(r.db, r.logger, clientID, ticker); err != nil {
+		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
+	}
+
+	return accDetails, nil
+}
+
 // SourceAmount is the resolver for the sourceAmount field.
 func (r *cryptoOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error {
 	obj.SourceAmount = decimal.NewFromFloat(data)
 
 	return nil
+}
+
+// CryptoAccount returns graphql_generated.CryptoAccountResolver implementation.
+func (r *Resolver) CryptoAccount() graphql_generated.CryptoAccountResolver {
+	return &cryptoAccountResolver{r}
 }
 
 // CryptoJournal returns graphql_generated.CryptoJournalResolver implementation.
@@ -120,5 +173,6 @@ func (r *Resolver) CryptoOfferRequest() graphql_generated.CryptoOfferRequestReso
 	return &cryptoOfferRequestResolver{r}
 }
 
+type cryptoAccountResolver struct{ *Resolver }
 type cryptoJournalResolver struct{ *Resolver }
 type cryptoOfferRequestResolver struct{ *Resolver }

@@ -695,7 +695,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyCrypto(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/crypto/balance/currency/"
