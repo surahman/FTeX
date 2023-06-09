@@ -106,6 +106,12 @@ func OfferCrypto(
 			statusMessage string
 		)
 
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
 
@@ -115,12 +121,6 @@ func OfferCrypto(
 		if err = validator.ValidateStruct(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
-
-			return
-		}
-
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
@@ -174,6 +174,12 @@ func ExchangeCrypto(
 			request  models.HTTPTransferRequest
 		)
 
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
 		if err = ginCtx.ShouldBindJSON(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, models.HTTPError{Message: err.Error()})
 
@@ -183,12 +189,6 @@ func ExchangeCrypto(
 		if err = validator.ValidateStruct(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
-
-			return
-		}
-
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
