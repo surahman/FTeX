@@ -1027,22 +1027,22 @@ account and another for the Cryptocurrency account.
 ```json
 {
   "data": {
-    "exchangeCrypto": {
-      "fiatTxReceipt": {
+    "transactionDetailsCrypto": [
+      {
         "currency": "USD",
-        "amount": 9410.35,
-        "transactedAt": "2023-06-09 17:34:27.727458 -0400 EDT",
+        "amount": "9410.35",
+        "transactedAt": "2023-06-09T17:34:27.727458-04:00",
         "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
         "txID": "0cadcb76-8d26-4a1a-bf03-d3392c80d57b"
       },
-      "cryptoTxReceipt": {
+      {
         "ticker": "BTC",
-        "amount": -0.356,
-        "transactedAt": "2023-06-09 17:34:27.727458 -0400 EDT",
+        "amount": "-0.356",
+        "transactedAt": "2023-06-09T17:34:27.727458-04:00",
         "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
         "txID": "0cadcb76-8d26-4a1a-bf03-d3392c80d57b"
       }
-    }
+    ]
   }
 }
 ```
