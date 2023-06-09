@@ -24,7 +24,7 @@ type QueryResolver interface {
 	TransactionDetailsCrypto(ctx context.Context, transactionID string) ([]interface{}, error)
 	BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error)
 	BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error)
-	TransactionDetailsFiat(ctx context.Context, transactionID string) ([]postgres.FiatJournal, error)
+	TransactionDetailsFiat(ctx context.Context, transactionID string) ([]interface{}, error)
 	TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.HTTPFiatTransactionsPaginated, error)
 }
 
@@ -478,9 +478,9 @@ func (ec *executionContext) _Query_transactionDetailsFiat(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]postgres.FiatJournal)
+	res := resTmp.([]interface{})
 	fc.Result = res
-	return ec.marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx, field.Selections, res)
+	return ec.marshalNAny2ᚕinterfaceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_transactionDetailsFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -490,19 +490,7 @@ func (ec *executionContext) fieldContext_Query_transactionDetailsFiat(ctx contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "currency":
-				return ec.fieldContext_FiatJournal_currency(ctx, field)
-			case "amount":
-				return ec.fieldContext_FiatJournal_amount(ctx, field)
-			case "transactedAt":
-				return ec.fieldContext_FiatJournal_transactedAt(ctx, field)
-			case "clientID":
-				return ec.fieldContext_FiatJournal_clientID(ctx, field)
-			case "txID":
-				return ec.fieldContext_FiatJournal_txID(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FiatJournal", field.Name)
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	defer func() {

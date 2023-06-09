@@ -97,7 +97,7 @@ extend type Query {
     balanceAllFiat(pageCursor: String, pageSize: Int32): FiatBalancesPaginated!
 
     # transactionDetailsFiat is a request to retrieve the details for a specific transaction.
-    transactionDetailsFiat(transactionID: String!): [FiatJournal!]!
+    transactionDetailsFiat(transactionID: String!): [Any!]!
 
     # transactionDetailsAllFiat is a request to retrieve the details for a specific transaction.
     transactionDetailsAllFiat(input: FiatPaginatedTxDetailsRequest!): FiatTransactionsPaginated!

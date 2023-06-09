@@ -64,7 +64,7 @@ func getFiatQuery() map[string]string {
 		}`,
 
 		"transactionDetailsFiat": `{
-		"query": "query { transactionDetailsFiat ( transactionID: \"%s\") { currency, amount, transactedAt, clientID, txID } }"
+		"query": "query { transactionDetailsFiat( transactionID: \"%s\") }"
 		}`,
 
 		"transactionDetailsAllFiatInit": `{

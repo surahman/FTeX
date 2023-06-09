@@ -763,7 +763,7 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 		})
 	}
 }
-func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) {
+func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	clientID, err := uuid.NewV4()
