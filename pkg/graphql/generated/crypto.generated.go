@@ -31,6 +31,9 @@ type CryptoJournalResolver interface {
 	ClientID(ctx context.Context, obj *postgres.CryptoJournal) (string, error)
 	TxID(ctx context.Context, obj *postgres.CryptoJournal) (string, error)
 }
+type CryptoTransactionsPaginatedResolver interface {
+	Transactions(ctx context.Context, obj *models.HTTPCryptoTransactionsPaginated) ([]postgres.CryptoJournal, error)
+}
 
 type CryptoOfferRequestResolver interface {
 	SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error
@@ -728,6 +731,112 @@ func (ec *executionContext) fieldContext_CryptoOpenAccountResponse_ticker(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _CryptoTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoTransactionsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoTransactionsPaginated_transactions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.CryptoTransactionsPaginated().Transactions(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]postgres.CryptoJournal)
+	fc.Result = res
+	return ec.marshalNCryptoJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoJournalᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoTransactionsPaginated",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ticker":
+				return ec.fieldContext_CryptoJournal_ticker(ctx, field)
+			case "amount":
+				return ec.fieldContext_CryptoJournal_amount(ctx, field)
+			case "transactedAt":
+				return ec.fieldContext_CryptoJournal_transactedAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_CryptoJournal_clientID(ctx, field)
+			case "txID":
+				return ec.fieldContext_CryptoJournal_txID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CryptoJournal", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoTransactionsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoTransactionsPaginated_links(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Links, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.HTTPLinks)
+	fc.Result = res
+	return ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoTransactionsPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "nextPage":
+				return ec.fieldContext_Links_nextPage(ctx, field)
+			case "pageCursor":
+				return ec.fieldContext_Links_pageCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Links", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CryptoTransferResponse_fiatTxReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoTransferResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CryptoTransferResponse_fiatTxReceipt(ctx, field)
 	if err != nil {
@@ -890,6 +999,80 @@ func (ec *executionContext) unmarshalInputCryptoOfferRequest(ctx context.Context
 				return it, err
 			}
 			it.IsPurchase = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCryptoPaginatedTxDetailsRequest(ctx context.Context, obj interface{}) (models.CryptoPaginatedTxDetailsRequest, error) {
+	var it models.CryptoPaginatedTxDetailsRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"ticker", "pageSize", "pageCursor", "timezone", "month", "year"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "ticker":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ticker"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Ticker = data
+		case "pageSize":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PageSize = data
+		case "pageCursor":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pageCursor"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PageCursor = data
+		case "timezone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
+		case "month":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("month"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Month = data
+		case "year":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Year = data
 		}
 	}
 
@@ -1210,6 +1393,54 @@ func (ec *executionContext) _CryptoOpenAccountResponse(ctx context.Context, sel 
 	return out
 }
 
+var cryptoTransactionsPaginatedImplementors = []string{"CryptoTransactionsPaginated"}
+
+func (ec *executionContext) _CryptoTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPCryptoTransactionsPaginated) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cryptoTransactionsPaginatedImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CryptoTransactionsPaginated")
+		case "transactions":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._CryptoTransactionsPaginated_transactions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "links":
+
+			out.Values[i] = ec._CryptoTransactionsPaginated_links(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var cryptoTransferResponseImplementors = []string{"CryptoTransferResponse"}
 
 func (ec *executionContext) _CryptoTransferResponse(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPCryptoTransferResponse) graphql.Marshaler {
@@ -1315,6 +1546,54 @@ func (ec *executionContext) marshalNCryptoBalancesPaginated2ᚖgithubᚗcomᚋsu
 	return ec._CryptoBalancesPaginated(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCryptoJournal2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoJournal(ctx context.Context, sel ast.SelectionSet, v postgres.CryptoJournal) graphql.Marshaler {
+	return ec._CryptoJournal(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCryptoJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoJournalᚄ(ctx context.Context, sel ast.SelectionSet, v []postgres.CryptoJournal) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCryptoJournal2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoJournal(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx context.Context, v interface{}) (models.HTTPCryptoOfferRequest, error) {
 	res, err := ec.unmarshalInputCryptoOfferRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -1332,6 +1611,25 @@ func (ec *executionContext) marshalNCryptoOpenAccountResponse2ᚖgithubᚗcomᚋ
 		return graphql.Null
 	}
 	return ec._CryptoOpenAccountResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCryptoPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (models.CryptoPaginatedTxDetailsRequest, error) {
+	res, err := ec.unmarshalInputCryptoPaginatedTxDetailsRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCryptoTransactionsPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v models.HTTPCryptoTransactionsPaginated) graphql.Marshaler {
+	return ec._CryptoTransactionsPaginated(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCryptoTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.HTTPCryptoTransactionsPaginated) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CryptoTransactionsPaginated(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCryptoTransferResponse2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransferResponse(ctx context.Context, sel ast.SelectionSet, v models.HTTPCryptoTransferResponse) graphql.Marshaler {

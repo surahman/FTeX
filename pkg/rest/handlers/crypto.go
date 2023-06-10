@@ -404,7 +404,7 @@ func TxDetailsCryptoPaginated(
 		}
 
 		if journalEntries, httpStatus, httpMessage, err =
-			common.HTTPCryptoTXPaginated(auth, db, logger, &params, clientID, ticker); err != nil {
+			common.HTTPCryptoTransactionsPaginated(auth, db, logger, &params, clientID, ticker, false); err != nil {
 			ginCtx.AbortWithStatusJSON(httpStatus, models.HTTPError{Message: httpMessage})
 
 			return

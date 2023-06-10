@@ -311,9 +311,10 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 	return cryptoDetails, 0, "", nil
 }
 
-// HTTPCryptoTXPaginated will retrieve a page of Cryptocurrency transactions based on a time range.
-func HTTPCryptoTXPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, params *HTTPPaginatedTxParams,
-	clientID uuid.UUID, ticker string) (models.HTTPCryptoTransactionsPaginated, int, string, error) {
+// HTTPCryptoTransactionsPaginated will retrieve a page of Cryptocurrency transactions based on a time range.
+func HTTPCryptoTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+	params *HTTPPaginatedTxParams, clientID uuid.UUID, ticker string, isREST bool) (
+	models.HTTPCryptoTransactionsPaginated, int, string, error) {
 	var (
 		err          error
 		httpCode     int
@@ -353,13 +354,22 @@ func HTTPCryptoTXPaginated(auth auth.Auth, db postgres.Postgres, logger *logger.
 	}
 
 	// Generate naked next page link. The params will have had the nextPage link generated in the prior methods called.
-	transactions.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+	if isREST {
+		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+	}
 
 	// Check if there are further pages of data. If not, set the next link to be empty.
 	if len(transactions.TransactionDetails) > int(params.PageSize) {
 		transactions.TransactionDetails = transactions.TransactionDetails[:int(params.PageSize)]
 	} else {
-		transactions.Links.NextPage = ""
+		params.NextPage = ""
+	}
+
+	// Setup next page or cursor link depending on REST or GraphQL request type.
+	if isREST {
+		transactions.Links.NextPage = params.NextPage
+	} else {
+		transactions.Links.PageCursor = params.NextPage
 	}
 
 	return transactions, 0, "", nil

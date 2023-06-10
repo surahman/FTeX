@@ -586,6 +586,7 @@ one for the source and the other for the destination accounts.
   }
 }
 ```
+
 ##### Transaction Details for a Specific Currency
 
 _Request:_ A valid `Currency Code` must be provided as a parameter. The parameters accepted are listed below.
@@ -1168,6 +1169,130 @@ account and another for the Cryptocurrency account.
         "txID": "0cadcb76-8d26-4a1a-bf03-d3392c80d57b"
       }
     ]
+  }
+}
+```
+
+##### Transaction Details for a Specific Currency
+
+_Request:_ A valid cryptocurrency `ticker` must be provided as a parameter. The parameters accepted are listed below.
+If a `pageCursor` is supplied, all other parameters except for the `pageSize` are ignored.
+
+Optional:
+* `pageCursor`: Defaults to 10.
+
+Initial Page (required):
+* `month`: Month for which the transactions are being requested.
+* `year`: Year for which the transactions are being requested.
+* `timezone`: Timezone for which the transactions are being requested.
+
+```graphql
+query {
+    transactionDetailsAllCrypto(input:{
+        ticker: "BTC"
+        pageSize: "3"
+        timezone: "-04:00"
+        month: "6"
+        year: "2023"
+    }) {
+        transactions {
+            ticker
+            amount
+            transactedAt
+            clientID
+            txID
+        }
+        links {
+            pageCursor
+        }
+    }
+}
+```
+
+Subsequent Pages (required)
+* `pageCursor`: Hashed page cursor for the next page of data.
+
+```graphql
+query {
+    transactionDetailsAllCrypto(input:{
+        ticker: "BTC"
+        pageSize: "3"
+        pageCursor: "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
+    }) {
+        transactions {
+            ticker
+            amount
+            transactedAt
+            clientID
+            txID
+        }
+        links {
+            pageCursor
+        }
+    }
+}
+```
+
+_Response:_ All Transaction-related details for a specific currency in a given timezone and date are returned. In the
+event of an external deposit, there will be a single entry reporting the deposited amount. When querying for an internal
+transfer, two entries will be returned - one for the source and the other for the destination accounts.
+
+###### Initial Page
+
+```json
+{
+  "data": {
+    "transactionDetailsAllCrypto": {
+      "transactions": [
+        {
+          "ticker": "BTC",
+          "amount": -2.12,
+          "transactedAt": "2023-06-10 17:04:47.955017 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+          "txID": "22d872d4-3cae-4cda-888d-f5554aebd969"
+        },
+        {
+          "ticker": "BTC",
+          "amount": -0.356,
+          "transactedAt": "2023-06-09 16:34:27.727458 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+          "txID": "0cadcb76-8d26-4a1a-bf03-d3392c80d57b"
+        },
+        {
+          "ticker": "BTC",
+          "amount": 0.0000121,
+          "transactedAt": "2023-06-09 16:25:01.62373 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+          "txID": "05cef33f-2082-48c4-ad08-e0f8dc5d4444"
+        }
+      ],
+      "links": {
+        "pageCursor": "j7Aa4RPFj6WmLRC5WSwy_kb7_NCiOkR6uE68LKF9QpleS3uTzQnv48RgPikwar-uCZ5BGEkahWDZRyIPMD7hqRrWv7f9nFJetsxTwu9oCNFp"
+      }
+    }
+  }
+}
+```
+
+###### Subsequent Page
+
+```json
+{
+  "data": {
+    "transactionDetailsAllCrypto": {
+      "transactions": [
+        {
+          "ticker": "BTC",
+          "amount": 46.69881177,
+          "transactedAt": "2023-06-09 16:51:55.520098 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b",
+          "txID": "84cb55e0-d049-4d89-8d0c-9a48bae6461b"
+        }
+      ],
+      "links": {
+        "pageCursor": ""
+      }
+    }
   }
 }
 ```

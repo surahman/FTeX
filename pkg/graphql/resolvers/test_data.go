@@ -109,5 +109,13 @@ func getCryptoQuery() map[string]string {
 		"transactionDetailsCrypto": `{
 		"query": "query { transactionDetailsCrypto(transactionID: \"%s\") }"
 		}`,
+
+		"transactionDetailsAllCryptoInit": `{
+		"query": "query { transactionDetailsAllCrypto(input: { ticker: \"%s\", pageSize:\"%d\", timezone:\"%s\", month: \"%d\", year:\"%d\" }) { transactions { ticker, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
+
+		"transactionDetailsAllCryptoSubsequent": `{
+		"query": "query { transactionDetailsAllCrypto(input: { ticker: \"%s\", pageSize:\"%d\", pageCursor:\"%s\" }) { transactions { ticker, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
 	}
 }

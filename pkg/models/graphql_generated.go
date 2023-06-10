@@ -7,6 +7,15 @@ type CryptoOpenAccountResponse struct {
 	Ticker   string `json:"ticker"`
 }
 
+type CryptoPaginatedTxDetailsRequest struct {
+	Ticker     string  `json:"ticker"`
+	PageSize   *string `json:"pageSize,omitempty"`
+	PageCursor *string `json:"pageCursor,omitempty"`
+	Timezone   *string `json:"timezone,omitempty"`
+	Month      *string `json:"month,omitempty"`
+	Year       *string `json:"year,omitempty"`
+}
+
 type FiatOpenAccountResponse struct {
 	ClientID string `json:"clientID"`
 	Currency string `json:"currency"`

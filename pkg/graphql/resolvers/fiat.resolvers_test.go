@@ -1612,7 +1612,7 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
