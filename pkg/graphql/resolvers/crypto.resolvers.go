@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
@@ -149,6 +150,35 @@ func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*post
 	}
 
 	return accDetails, nil
+}
+
+// BalanceAllCrypto is the resolver for the balanceAllCrypto field.
+func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPCryptoDetailsPaginated, error) {
+	var (
+		accDetails  models.HTTPCryptoDetailsPaginated
+		clientID    uuid.UUID
+		err         error
+		httpMessage string
+	)
+
+	if pageSize == nil {
+		pageSize = new(int32)
+	}
+
+	if pageCursor == nil {
+		pageCursor = new(string)
+	}
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if accDetails, _, httpMessage, err = common.HTTPCryptoBalancePaginated(r.auth, r.db, r.logger,
+		clientID, *pageCursor, strconv.Itoa(int(*pageSize)), false); err != nil {
+		return nil, errors.New(httpMessage)
+	}
+
+	return &accDetails, nil
 }
 
 // TransactionDetailsCrypto is the resolver for the transactionDetailsCrypto field.

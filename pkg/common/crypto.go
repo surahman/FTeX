@@ -260,12 +260,13 @@ func cryptoBalancePaginatedRequest(auth auth.Auth, tickerStr, limitStr string) (
 
 // HTTPCryptoBalancePaginated retrieves a page of data from the Cryptocurrency account balances and prepares a link to
 // the next page of data.
-func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
-	clientID uuid.UUID, pageCursor, pageSizeStr string) (models.HTTPCryptoDetailsPaginated, int, string, error) {
+func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID,
+	pageCursor, pageSizeStr string, isREST bool) (models.HTTPCryptoDetailsPaginated, int, string, error) {
 	var (
 		ticker        string
 		err           error
 		pageSize      int32
+		nextPage      string
 		cryptoDetails models.HTTPCryptoDetailsPaginated
 	)
 
@@ -289,7 +290,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 	lastRecordIdx := int(pageSize)
 	if len(cryptoDetails.AccountBalances) == lastRecordIdx+1 {
 		// Generate next page link.
-		if cryptoDetails.Links.NextPage, err =
+		if nextPage, err =
 			auth.EncryptToString([]byte(cryptoDetails.AccountBalances[pageSize].Ticker)); err != nil {
 			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
 
@@ -299,9 +300,12 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 		// Remove last element.
 		cryptoDetails.AccountBalances = cryptoDetails.AccountBalances[:pageSize]
 
-		// Generate naked next page link.
-		cryptoDetails.Links.NextPage =
-			fmt.Sprintf(constants.GetNextPageRESTFormatString(), cryptoDetails.Links.NextPage, pageSize)
+		// Generate naked next page link for REST.
+		if isREST {
+			cryptoDetails.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
+		} else {
+			cryptoDetails.Links.PageCursor = nextPage
+		}
 	}
 
 	return cryptoDetails, 0, "", nil

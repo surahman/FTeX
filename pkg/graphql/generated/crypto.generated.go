@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -306,6 +307,114 @@ func (ec *executionContext) fieldContext_CryptoAccount_clientID(ctx context.Cont
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoBalancesPaginated_accountBalances(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoDetailsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoBalancesPaginated_accountBalances(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AccountBalances, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]postgres.CryptoAccount)
+	fc.Result = res
+	return ec.marshalNCryptoAccount2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoAccountᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoBalancesPaginated_accountBalances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoBalancesPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "ticker":
+				return ec.fieldContext_CryptoAccount_ticker(ctx, field)
+			case "balance":
+				return ec.fieldContext_CryptoAccount_balance(ctx, field)
+			case "lastTx":
+				return ec.fieldContext_CryptoAccount_lastTx(ctx, field)
+			case "lastTxTs":
+				return ec.fieldContext_CryptoAccount_lastTxTs(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CryptoAccount_createdAt(ctx, field)
+			case "clientID":
+				return ec.fieldContext_CryptoAccount_clientID(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CryptoAccount", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CryptoBalancesPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.HTTPCryptoDetailsPaginated) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CryptoBalancesPaginated_links(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Links, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.HTTPLinks)
+	fc.Result = res
+	return ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CryptoBalancesPaginated_links(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CryptoBalancesPaginated",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "nextPage":
+				return ec.fieldContext_Links_nextPage(ctx, field)
+			case "pageCursor":
+				return ec.fieldContext_Links_pageCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Links", field.Name)
 		},
 	}
 	return fc, nil
@@ -923,6 +1032,41 @@ func (ec *executionContext) _CryptoAccount(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var cryptoBalancesPaginatedImplementors = []string{"CryptoBalancesPaginated"}
+
+func (ec *executionContext) _CryptoBalancesPaginated(ctx context.Context, sel ast.SelectionSet, obj *models.HTTPCryptoDetailsPaginated) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cryptoBalancesPaginatedImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CryptoBalancesPaginated")
+		case "accountBalances":
+
+			out.Values[i] = ec._CryptoBalancesPaginated_accountBalances(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "links":
+
+			out.Values[i] = ec._CryptoBalancesPaginated_links(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var cryptoJournalImplementors = []string{"CryptoJournal"}
 
 func (ec *executionContext) _CryptoJournal(ctx context.Context, sel ast.SelectionSet, obj *postgres.CryptoJournal) graphql.Marshaler {
@@ -1103,6 +1247,50 @@ func (ec *executionContext) marshalNCryptoAccount2githubᚗcomᚋsurahmanᚋFTeX
 	return ec._CryptoAccount(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNCryptoAccount2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []postgres.CryptoAccount) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCryptoAccount2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoAccount(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNCryptoAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoAccount(ctx context.Context, sel ast.SelectionSet, v *postgres.CryptoAccount) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -1111,6 +1299,20 @@ func (ec *executionContext) marshalNCryptoAccount2ᚖgithubᚗcomᚋsurahmanᚋF
 		return graphql.Null
 	}
 	return ec._CryptoAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCryptoBalancesPaginated2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoDetailsPaginated(ctx context.Context, sel ast.SelectionSet, v models.HTTPCryptoDetailsPaginated) graphql.Marshaler {
+	return ec._CryptoBalancesPaginated(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCryptoBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoDetailsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.HTTPCryptoDetailsPaginated) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CryptoBalancesPaginated(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx context.Context, v interface{}) (models.HTTPCryptoOfferRequest, error) {

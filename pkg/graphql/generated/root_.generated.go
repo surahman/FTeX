@@ -60,6 +60,11 @@ type ComplexityRoot struct {
 		Ticker    func(childComplexity int) int
 	}
 
+	CryptoBalancesPaginated struct {
+		AccountBalances func(childComplexity int) int
+		Links           func(childComplexity int) int
+	}
+
 	CryptoJournal struct {
 		Amount       func(childComplexity int) int
 		ClientID     func(childComplexity int) int
@@ -165,6 +170,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		BalanceAllCrypto          func(childComplexity int, pageCursor *string, pageSize *int32) int
 		BalanceAllFiat            func(childComplexity int, pageCursor *string, pageSize *int32) int
 		BalanceCrypto             func(childComplexity int, ticker string) int
 		BalanceFiat               func(childComplexity int, currencyCode string) int
@@ -231,6 +237,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CryptoAccount.Ticker(childComplexity), true
+
+	case "CryptoBalancesPaginated.accountBalances":
+		if e.complexity.CryptoBalancesPaginated.AccountBalances == nil {
+			break
+		}
+
+		return e.complexity.CryptoBalancesPaginated.AccountBalances(childComplexity), true
+
+	case "CryptoBalancesPaginated.links":
+		if e.complexity.CryptoBalancesPaginated.Links == nil {
+			break
+		}
+
+		return e.complexity.CryptoBalancesPaginated.Links(childComplexity), true
 
 	case "CryptoJournal.amount":
 		if e.complexity.CryptoJournal.Amount == nil {
@@ -695,6 +715,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PriceQuote.SourceAcc(childComplexity), true
 
+	case "Query.balanceAllCrypto":
+		if e.complexity.Query.BalanceAllCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Query_balanceAllCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BalanceAllCrypto(childComplexity, args["pageCursor"].(*string), args["pageSize"].(*int32)), true
+
 	case "Query.balanceAllFiat":
 		if e.complexity.Query.BalanceAllFiat == nil {
 			break
@@ -910,6 +942,12 @@ type CryptoTransferResponse {
     cryptoTxReceipt:    CryptoJournal
 }
 
+# CryptoBalancesPaginated are all of the Crypto account balances retrieved via pagination.
+type CryptoBalancesPaginated {
+    accountBalances:    [CryptoAccount!]!
+    links:              Links!
+}
+
 # CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
 input CryptoOfferRequest {
     sourceCurrency:         String!
@@ -934,6 +972,9 @@ extend type Mutation {
 extend type Query {
     # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
     balanceCrypto(ticker: String!): CryptoAccount!
+
+    # balanceAllCrypto is a request to retrieve the balance for a specific Crypto currency.
+    balanceAllCrypto(pageCursor: String, pageSize: Int32): CryptoBalancesPaginated!
 
     # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
     transactionDetailsCrypto(transactionID: String!): [Any!]!

@@ -39,6 +39,7 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
         - [Sell](#sell-1)
   - [Info](#info)
       - [Balance for a Specific Currency](#balance-for-a-specific-currency-1)
+      - [Balance for all Currencies for a Client](#balance-for-all-currencies-for-a-client-1)
       - [Transaction Details for a Specific Transaction](#transaction-details-for-a-specific-transaction-1)
           - [Purchase](#purchase-2)
           - [Sell](#sell-2)
@@ -93,7 +94,7 @@ the container.
 
 ```graphql
 query {
-  healthcheck
+    healthcheck
 }
 ```
 
@@ -133,19 +134,19 @@ _Request:_ All fields are required.
 
 ```graphql
 mutation {
-  registerUser(input: {
-    firstname: "first name"
-    lastname: "last name"
-    email: "email@address.com",
-    userLoginCredentials: {
-      username: "someusername",
-      password: "somepassword"
+    registerUser(input: {
+        firstname: "first name"
+        lastname: "last name"
+        email: "email@address.com",
+        userLoginCredentials: {
+            username: "someusername",
+            password: "somepassword"
+        }
+    }) {
+        token,
+        expires,
+        threshold
     }
-  }) {
-  token,
-  expires,
-  threshold
-  }
 }
 ```
 
@@ -158,14 +159,14 @@ _Request:_ All fields are required.
 
 ```graphql
 mutation {
-  loginUser(input: {
-    username: "someusername",
-    password: "somepassword"
-  }) {
-    token,
-    expires,
-    threshold
-  }
+    loginUser(input: {
+        username: "someusername",
+        password: "somepassword"
+    }) {
+        token,
+        expires,
+        threshold
+    }
 }
 ```
 
@@ -178,11 +179,11 @@ _Request:_ A valid JWT must be provided in the request header and will be valida
 
 ```graphql
 mutation {
-  refreshToken {
-    token
-    expires
-    threshold
-  }
+    refreshToken {
+        token
+        expires
+        threshold
+    }
 }
 ```
 
@@ -197,11 +198,11 @@ account **USERNAME HERE**`
 
 ```graphql
 mutation {
-  deleteUser(input: {
-    username: "someusername"
-    password: "somepassword"
-    confirmation: "I understand the consequences, delete my user account <USERNAME HERE>"
-  })
+    deleteUser(input: {
+        username: "someusername"
+        password: "somepassword"
+        confirmation: "I understand the consequences, delete my user account <USERNAME HERE>"
+    })
 }
 ```
 
@@ -290,6 +291,7 @@ must issue a subsequent request using the encrypted `Offer ID` to complete the t
 ##### Quote
 
 _Request:_ All fields are required.
+
 ```graphql
 mutation {
     exchangeOfferFiat(input: {
@@ -334,9 +336,10 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 ##### Convert
 
 _Request:_ All fields are required.
+
 ```graphql
 mutation {
-	exchangeTransferFiat(offerID: "-ptOjSHs3cw3eTw_1NuInn4w8OvI8hzFzChol7NRpKIHMDL234B_E1Fcq5Z6Zl4K") {
+    exchangeTransferFiat(offerID: "-ptOjSHs3cw3eTw_1NuInn4w8OvI8hzFzChol7NRpKIHMDL234B_E1Fcq5Z6Zl4K") {
     sourceReceipt {
     	txId,
     	clientId,
@@ -388,16 +391,17 @@ _Response:_ A transaction receipt with the details of the source and destination
 ##### Balance for a Specific Currency
 
 _Request:_ A valid currency code must be provided as a parameter.
+
 ```graphql
 query {
-	balanceFiat(currencyCode: "USD") {
-    currency,
-    balance,
-    lastTx,
-    lastTxTs,
-    createdAt,
-    clientID
-  }
+    balanceFiat(currencyCode: "USD") {
+        currency,
+        balance,
+        lastTx,
+        lastTxTs,
+        createdAt,
+        clientID
+    }
 }
 ```
 
@@ -423,43 +427,44 @@ _Request:_ The initial request can only contain an optional `page size`, which i
 subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
 
 Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
+
 ```graphql
 query {
-  balanceAllFiat(pageSize: 3) {
-    accountBalances{
-      currency
-      balance
-      lastTx
-      lastTxTs
-      createdAt
-      clientID
+    balanceAllFiat(pageSize: 3) {
+        accountBalances{
+            currency
+            balance
+            lastTx
+            lastTxTs
+            createdAt
+            clientID
+        }
+        links{
+            pageCursor
+        }
     }
-    links{
-      pageCursor
-    }
-  }
 }
 ```
 
 Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
+
 ```graphql
 query {
-  balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize: 3) {
-    accountBalances{
-      currency
-      balance
-      lastTx
-      lastTxTs
-      createdAt
-      clientID
+    balanceAllFiat(pageCursor: "G4dGbYhcNY8ByNNpdgYJq-jK1eRXHD7lBp56-IeiAQ==", pageSize: 3) {
+        accountBalances{
+            currency
+            balance
+            lastTx
+            lastTxTs
+            createdAt
+            clientID
+        }
+        links{
+            pageCursor
+        }
     }
-    links{
-      pageCursor
-    }
-  }
 }
 ```
-
 
 _Response:_ The number of account balances for the Client will be limited to the `Page Size` specified and is `10` by
 default. A `Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the
@@ -524,19 +529,14 @@ default. A `Page Cursor` link will be supplied if there are subsequent pages of 
   }
 }
 ```
+
 ##### Transaction Details for a Specific Transaction
 
 _Request:_ A valid `Transaction ID` must be provided as a parameter.
 
 ```graphql
 query {
-  transactionDetailsFiat(transactionID: "7d2fe42b-df1e-449f-875e-e9908ff24263") {
-    currency
-    amount
-    transactedAt
-    clientID
-    txID
-  }
+    transactionDetailsFiat(transactionID: "7d2fe42b-df1e-449f-875e-e9908ff24263")
 }
 ```
 
@@ -545,6 +545,7 @@ a single entry reporting the deposited amount. When querying for an internal tra
 one for the source and the other for the destination accounts.
 
 ###### External Transfer (deposit)
+
 ```json
 {
   "data": {
@@ -562,6 +563,7 @@ one for the source and the other for the destination accounts.
 ```
 
 ###### Internal Transfer (currency conversion/exchange)
+
 ```json
 {
   "data": {
@@ -599,24 +601,24 @@ Initial Page (required):
 
 ```graphql
 query {
-  transactionDetailsAllFiat(input:{
-    currency: "USD"
-  	pageSize: "3"
-    timezone: "-04:00"
-    month: "5"
-    year: "2023"
-  }) {
-    transactions {
-      currency
-      amount
-      transactedAt
-      clientID
-      txID
+    transactionDetailsAllFiat(input:{
+        currency: "USD"
+        pageSize: "3"
+        timezone: "-04:00"
+        month: "5"
+        year: "2023"
+    }) {
+        transactions {
+            currency
+            amount
+            transactedAt
+            clientID
+            txID
+        }
+        links {
+            pageCursor
+        }
     }
-    links {
-      pageCursor
-    }
-  }
 }
 ```
 
@@ -625,22 +627,22 @@ Subsequent Pages (required)
 
 ```graphql
 query {
-  transactionDetailsAllFiat(input:{
-    currency: "USD"
-  	pageSize: "3"
-    pageCursor: "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
-  }) {
-    transactions {
-      currency
-      amount
-      transactedAt
-      clientID
-      txID
+    transactionDetailsAllFiat(input:{
+        currency: "USD"
+        pageSize: "3"
+        pageCursor: "-GQBZ1LNxWCXItw7mek5Gumc4IwzUfH7yHN0aDJMecTULYvpDAHcjdkZUaGO_gGweET2_9H78mx5_81F2JsKwXwQot9UoFlU8IlHlTWlQArP"
+    }) {
+        transactions {
+            currency
+            amount
+            transactedAt
+            clientID
+            txID
+        }
+        links {
+            pageCursor
+        }
     }
-    links {
-      pageCursor
-    }
-  }
 }
 ```
 
@@ -649,6 +651,7 @@ event of an external deposit, there will be a single entry reporting the deposit
 transfer, two entries will be returned - one for the source and the other for the destination accounts.
 
 ###### Initial Page
+
 ```json
 {
   "data": {
@@ -685,6 +688,7 @@ transfer, two entries will be returned - one for the source and the other for th
 ```
 
 ###### Subsequent Page
+
 ```json
 {
   "data": {
@@ -765,6 +769,7 @@ The user must issue a subsequent request using the encrypted `Offer ID` to compl
 ##### Purchase
 
 _Request:_ All fields are required.
+
 ```graphql
 mutation {
     offerCrypto(input: {
@@ -788,6 +793,7 @@ mutation {
 ```
 
 _Response:_ A rate quote with an encrypted `Offer ID`.
+
 ```json
 {
   "data": {
@@ -810,6 +816,7 @@ _Response:_ A rate quote with an encrypted `Offer ID`.
 ##### Sell
 
 _Request:_ All fields are required.
+
 ```graphql
 mutation {
     offerCrypto(input: {
@@ -833,6 +840,7 @@ mutation {
 ```
 
 _Response:_ A rate quote with an encrypted `Offer ID`.
+
 ```json
 {
   "data": {
@@ -860,6 +868,7 @@ Execute a Cryptocurrency purchase or sale using a valid exchange offer that must
 ######  Purchase
 
 _Request:_ All fields are required.
+
 ```graphql
 mutation {
     exchangeCrypto(offerID: "roqzjmgIxlHMHWdSmJcRVby7RPvLEIzuMJ3ajH3bIr0YRukzd8XIL-rcUYRsE10R") {
@@ -882,6 +891,7 @@ mutation {
 ```
 
 _Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
+
 ```json
 {
   "data": {
@@ -908,6 +918,7 @@ _Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
 ######  Sell
 
 _Request:_ All fields are required.
+
 ```graphql
 mutation {
     exchangeCrypto(offerID: "LQq07LHQdqCbwuXuxkH-rW6-WMcBhi2RG9q9HSKOwh8TcxzG_DWg_iOW9m9xdZy8") {
@@ -930,6 +941,7 @@ mutation {
 ```
 
 _Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
+
 ```json
 {
   "data": {
@@ -958,6 +970,7 @@ _Response:_ A receipt with the Fiat and Cryptocurrency transaction information.
 ##### Balance for a Specific Currency
 
 _Request:_ A valid Cryptocurrency ticker must be provided as a query parameter.
+
 ```graphql
 query {
     balanceCrypto(ticker:"BTC") {
@@ -972,6 +985,7 @@ query {
 ```
 
 _Response:_ Account balance related details associated with the currency.
+
 ```json
 {
   "data": {
@@ -987,9 +1001,119 @@ _Response:_ Account balance related details associated with the currency.
 }
 ```
 
+##### Balance for all Currencies for a Client
+
+_Request:_ The initial request can only contain an optional `page size`, which if not provided will default to 10. The
+subsequent responses will contain encrypted page cursors that must be specified to retrieve the following page of data.
+
+Initial request: The `pageCursor` will not be provided and the `pageSize` is optional and will default to 10.
+
+```graphql
+query {
+    balanceAllCrypto(pageSize:3) {
+        accountBalances{
+            ticker
+            balance
+            lastTx
+            lastTxTs
+            createdAt
+            clientID
+        }
+        links{
+            pageCursor
+        }
+    }
+}
+```
+
+Subsequent requests: The `pageCursor` must be provided but the `pageSize` is optional.
+
+```graphql
+query {
+    balanceAllCrypto(pageCursor:"h-_7rSoD-IQrbdvYYf35hvXMaUJCbqdzLpq3Nl9N9xY=" pageSize:3) {
+        accountBalances{
+            ticker
+            balance
+            lastTx
+            lastTxTs
+            createdAt
+            clientID
+        }
+        links{
+            pageCursor
+        }
+    }
+}
+```
+
+_Response:_ The number of account balances for the Client will be limited to the `Page Size` specified and is `10` by
+default. A `Page Cursor` link will be supplied if there are subsequent pages of data to be retrieved in the
+`links.pageCursor` JSON field.
+
+```json
+{
+  "data": {
+    "balanceAllCrypto": {
+      "accountBalances": [
+        {
+          "ticker": "BTC",
+          "balance": 46.34282387,
+          "lastTx": -0.356,
+          "lastTxTs": "2023-06-09 17:34:27.727458 -0400 EDT",
+          "createdAt": "2023-06-09 16:51:03.466403 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b"
+        },
+        {
+          "ticker": "ETH",
+          "balance": 55.34777231,
+          "lastTx": 55.34777231,
+          "lastTxTs": "2023-06-10 16:04:55.296635 -0400 EDT",
+          "createdAt": "2023-06-09 16:50:57.79957 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b"
+        },
+        {
+          "ticker": "USDC",
+          "balance": 6858.73307085,
+          "lastTx": 6858.73307085,
+          "lastTxTs": "2023-06-10 16:03:11.572976 -0400 EDT",
+          "createdAt": "2023-06-10 16:31:30.761357 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b"
+        }
+      ],
+      "links": {
+        "pageCursor": "h-_7rSoD-IQrbdvYYf35hvXMaUJCbqdzLpq3Nl9N9xY="
+      }
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "balanceAllCrypto": {
+      "accountBalances": [
+        {
+          "ticker": "USDT",
+          "balance": 3454.64683023,
+          "lastTx": 3454.64683023,
+          "lastTxTs": "2023-06-10 16:03:56.273477 -0400 EDT",
+          "createdAt": "2023-06-10 13:31:24.450086 -0400 EDT",
+          "clientID": "6bc1d17e-68c6-4b82-80fd-542c4d3aba9b"
+        }
+      ],
+      "links": {
+        "pageCursor": ""
+      }
+    }
+  }
+}
+```
+
 ##### Transaction Details for a Specific Transaction
 
 _Request:_ A valid `Transaction ID` must be provided as a query parameter.
+
 ```graphql
 query {
   transactionDetailsCrypto(transactionID: "05cef33f-2082-48c4-ad08-e0f8dc5d4444")
@@ -1024,6 +1148,7 @@ account and another for the Cryptocurrency account.
 ```
 
 ###### Sell
+
 ```json
 {
   "data": {

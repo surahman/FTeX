@@ -29,6 +29,12 @@ type CryptoTransferResponse {
     cryptoTxReceipt:    CryptoJournal
 }
 
+# CryptoBalancesPaginated are all of the Crypto account balances retrieved via pagination.
+type CryptoBalancesPaginated {
+    accountBalances:    [CryptoAccount!]!
+    links:              Links!
+}
+
 # CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
 input CryptoOfferRequest {
     sourceCurrency:         String!
@@ -53,6 +59,9 @@ extend type Mutation {
 extend type Query {
     # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
     balanceCrypto(ticker: String!): CryptoAccount!
+
+    # balanceAllCrypto is a request to retrieve the balance for a specific Crypto currency.
+    balanceAllCrypto(pageCursor: String, pageSize: Int32): CryptoBalancesPaginated!
 
     # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
     transactionDetailsCrypto(transactionID: String!): [Any!]!
