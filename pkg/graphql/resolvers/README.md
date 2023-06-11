@@ -43,6 +43,10 @@ The GraphQL API schema can be tested and reviewed through the GraphQL Playground
       - [Transaction Details for a Specific Transaction](#transaction-details-for-a-specific-transaction-1)
           - [Purchase](#purchase-2)
           - [Sell](#sell-2)
+    - [Transaction Details for a Specific Currency](#transaction-details-for-a-specific-currency-1)
+        - [Initial Page](#initial-page-1)
+        - [Subsequent Page](#subsequent-page-1)
+
 
 <br/>
 
