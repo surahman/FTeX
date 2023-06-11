@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
@@ -61,6 +62,11 @@ func (r *cryptoJournalResolver) ClientID(ctx context.Context, obj *postgres.Cryp
 // TxID is the resolver for the txID field.
 func (r *cryptoJournalResolver) TxID(ctx context.Context, obj *postgres.CryptoJournal) (string, error) {
 	return obj.TxID.String(), nil
+}
+
+// Transactions is the resolver for the transactions field.
+func (r *cryptoTransactionsPaginatedResolver) Transactions(ctx context.Context, obj *models.HTTPCryptoTransactionsPaginated) ([]postgres.CryptoJournal, error) {
+	return obj.TransactionDetails, nil
 }
 
 // OpenCrypto is the resolver for the openCrypto field.
@@ -151,6 +157,35 @@ func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*post
 	return accDetails, nil
 }
 
+// BalanceAllCrypto is the resolver for the balanceAllCrypto field.
+func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPCryptoDetailsPaginated, error) {
+	var (
+		accDetails  models.HTTPCryptoDetailsPaginated
+		clientID    uuid.UUID
+		err         error
+		httpMessage string
+	)
+
+	if pageSize == nil {
+		pageSize = new(int32)
+	}
+
+	if pageCursor == nil {
+		pageCursor = new(string)
+	}
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if accDetails, _, httpMessage, err = common.HTTPCryptoBalancePaginated(r.auth, r.db, r.logger,
+		clientID, *pageCursor, strconv.Itoa(int(*pageSize)), false); err != nil {
+		return nil, errors.New(httpMessage)
+	}
+
+	return &accDetails, nil
+}
+
 // TransactionDetailsCrypto is the resolver for the transactionDetailsCrypto field.
 func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactionID string) ([]interface{}, error) {
 	var (
@@ -171,6 +206,55 @@ func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactio
 	return journalEntries, nil
 }
 
+// TransactionDetailsAllCrypto is the resolver for the transactionDetailsAllCrypto field.
+func (r *queryResolver) TransactionDetailsAllCrypto(ctx context.Context, input models.CryptoPaginatedTxDetailsRequest) (*models.HTTPCryptoTransactionsPaginated, error) {
+	var (
+		journalEntries models.HTTPCryptoTransactionsPaginated
+		clientID       uuid.UUID
+		err            error
+		params         common.HTTPPaginatedTxParams
+		httpMessage    string
+		payload        any
+	)
+
+	if input.PageSize == nil {
+		input.PageSize = new(string)
+	}
+	params.PageSizeStr = *input.PageSize
+
+	if input.PageCursor == nil {
+		input.PageCursor = new(string)
+	}
+	params.PageCursorStr = *input.PageCursor
+
+	if input.Timezone == nil {
+		input.Timezone = new(string)
+	}
+	params.TimezoneStr = *input.Timezone
+
+	if input.Month == nil {
+		input.Month = new(string)
+	}
+	params.MonthStr = *input.Month
+
+	if input.Year == nil {
+		input.Year = new(string)
+	}
+	params.YearStr = *input.Year
+
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+		return nil, errors.New("authorization failure")
+	}
+
+	if journalEntries, _, httpMessage, err = common.HTTPCryptoTransactionsPaginated(r.auth, r.db,
+		r.logger, &params, clientID, input.Ticker, false); err != nil {
+
+		return nil, fmt.Errorf("%s: %v", httpMessage, payload)
+	}
+
+	return &journalEntries, nil
+}
+
 // SourceAmount is the resolver for the sourceAmount field.
 func (r *cryptoOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error {
 	obj.SourceAmount = decimal.NewFromFloat(data)
@@ -188,6 +272,11 @@ func (r *Resolver) CryptoJournal() graphql_generated.CryptoJournalResolver {
 	return &cryptoJournalResolver{r}
 }
 
+// CryptoTransactionsPaginated returns graphql_generated.CryptoTransactionsPaginatedResolver implementation.
+func (r *Resolver) CryptoTransactionsPaginated() graphql_generated.CryptoTransactionsPaginatedResolver {
+	return &cryptoTransactionsPaginatedResolver{r}
+}
+
 // CryptoOfferRequest returns graphql_generated.CryptoOfferRequestResolver implementation.
 func (r *Resolver) CryptoOfferRequest() graphql_generated.CryptoOfferRequestResolver {
 	return &cryptoOfferRequestResolver{r}
@@ -195,4 +284,5 @@ func (r *Resolver) CryptoOfferRequest() graphql_generated.CryptoOfferRequestReso
 
 type cryptoAccountResolver struct{ *Resolver }
 type cryptoJournalResolver struct{ *Resolver }
+type cryptoTransactionsPaginatedResolver struct{ *Resolver }
 type cryptoOfferRequestResolver struct{ *Resolver }

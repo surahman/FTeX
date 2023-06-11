@@ -178,6 +178,7 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 		ticker                 string
 		expectedMsg            string
 		expectedStatus         int
+		isREST                 bool
 		journalEntries         []postgres.CryptoJournal
 		params                 *HTTPPaginatedTxParams
 		authDecryptCursorErr   error
@@ -188,12 +189,14 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 		fiatTxPaginatedTimes   int
 		expectErr              require.ErrorAssertionFunc
 		expectNextPage         require.BoolAssertionFunc
+		expectPageCursor       require.BoolAssertionFunc
 	}{
 		{
 			name:                   "no cursor or params",
 			path:                   "no-cursor-or-params/",
 			ticker:                 "ETH",
 			expectedMsg:            "missing required parameters",
+			isREST:                 true,
 			params:                 &HTTPPaginatedTxParams{PageCursorStr: ""},
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
@@ -205,11 +208,13 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			fiatTxPaginatedTimes:   0,
 			expectErr:              require.Error,
 			expectNextPage:         require.False,
+			expectPageCursor:       require.False,
 		}, {
 			name:                   "db failure",
 			path:                   "db-failure/",
 			ticker:                 "ETH",
 			expectedMsg:            "records not found",
+			isREST:                 true,
 			params:                 paramsPageCursor,
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusNotFound,
@@ -221,11 +226,13 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			fiatTxPaginatedTimes:   1,
 			expectErr:              require.Error,
 			expectNextPage:         require.False,
+			expectPageCursor:       require.False,
 		}, {
 			name:                   "unknown db failure",
 			path:                   "unknown-db-failure/",
 			ticker:                 "ETH",
 			expectedMsg:            "retry",
+			isREST:                 true,
 			params:                 paramsPageCursor,
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusInternalServerError,
@@ -237,11 +244,13 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			fiatTxPaginatedTimes:   1,
 			expectErr:              require.Error,
 			expectNextPage:         require.False,
+			expectPageCursor:       require.False,
 		}, {
 			name:                   "no transactions",
 			path:                   "no-transactions/",
 			ticker:                 "ETH",
 			expectedMsg:            "no transactions",
+			isREST:                 true,
 			params:                 paramsPageCursor,
 			journalEntries:         []postgres.CryptoJournal{},
 			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
@@ -253,11 +262,13 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			fiatTxPaginatedTimes:   1,
 			expectErr:              require.Error,
 			expectNextPage:         require.False,
+			expectPageCursor:       require.False,
 		}, {
 			name:                   "valid with cursor",
 			path:                   "valid-with-cursor/",
 			ticker:                 "ETH",
 			expectedMsg:            "",
+			isREST:                 true,
 			params:                 paramsPageCursor,
 			journalEntries:         journalEntries,
 			expectedStatus:         0,
@@ -269,11 +280,13 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			fiatTxPaginatedTimes:   1,
 			expectErr:              require.NoError,
 			expectNextPage:         require.False,
+			expectPageCursor:       require.False,
 		}, {
 			name:        "valid with query",
 			path:        "valid-with-query/",
 			ticker:      "ETH",
 			expectedMsg: "",
+			isREST:      true,
 			params: &HTTPPaginatedTxParams{
 				PageSizeStr: "3",
 				TimezoneStr: "-04:00",
@@ -290,6 +303,30 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			fiatTxPaginatedTimes:   1,
 			expectErr:              require.NoError,
 			expectNextPage:         require.True,
+			expectPageCursor:       require.False,
+		}, {
+			name:        "valid with query graphql",
+			path:        "valid-with-query-graphql/",
+			ticker:      "ETH",
+			expectedMsg: "",
+			isREST:      false,
+			params: &HTTPPaginatedTxParams{
+				PageSizeStr: "3",
+				TimezoneStr: "-04:00",
+				MonthStr:    "6",
+				YearStr:     "2023",
+			},
+			journalEntries:         journalEntries,
+			expectedStatus:         0,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   1,
+			expectErr:              require.NoError,
+			expectNextPage:         require.False,
+			expectPageCursor:       require.True,
 		},
 	}
 
@@ -321,7 +358,7 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			)
 
 			actual, httpStatus, httpMessage, err :=
-				HTTPCryptoTXPaginated(mockAuth, mockDB, zapLogger, test.params, uuid.UUID{}, test.ticker)
+				HTTPCryptoTransactionsPaginated(mockAuth, mockDB, zapLogger, test.params, uuid.UUID{}, test.ticker, test.isREST)
 			test.expectErr(t, err, "error expectation failed.")
 			require.Equal(t, test.expectedStatus, httpStatus, "http status codes mismatched.")
 			require.Contains(t, httpMessage, test.expectedMsg, "http message mismatched.")
@@ -331,6 +368,7 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			}
 
 			test.expectNextPage(t, len(actual.Links.NextPage) > 0, "next page link expectation failed.")
+			test.expectPageCursor(t, len(actual.Links.PageCursor) > 0, "next page cursor expectation failed.")
 		})
 	}
 }
@@ -992,6 +1030,7 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 		pageSize           string
 		expectNextPageSize string
 		expectErrMsg       string
+		isREST             bool
 		httpStatus         int
 		expectedRecordsLen int
 		expectedPageSize   int32
@@ -1004,12 +1043,14 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 		encryptStingTimes  int
 		expectErr          require.ErrorAssertionFunc
 		expectNextPage     require.BoolAssertionFunc
+		expectPageCursor   require.BoolAssertionFunc
 	}{
 		{
 			name:               "cursor bad page failure",
 			pageSize:           "bad-page-size",
 			expectNextPageSize: "pageSize=3",
 			expectErrMsg:       "page size",
+			isREST:             true,
 			httpStatus:         http.StatusBadRequest,
 			expectedRecordsLen: 0,
 			expectedPageSize:   3,
@@ -1022,11 +1063,13 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  0,
 			expectErr:          require.Error,
 			expectNextPage:     require.True,
+			expectPageCursor:   require.True,
 		}, {
 			name:               "cursor decryption failure",
 			pageSize:           "3",
 			expectNextPageSize: "pageSize=3",
 			expectErrMsg:       "invalid page cursor",
+			isREST:             true,
 			httpStatus:         http.StatusBadRequest,
 			expectedRecordsLen: 0,
 			expectedPageSize:   3,
@@ -1039,11 +1082,13 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  0,
 			expectErr:          require.Error,
 			expectNextPage:     require.True,
+			expectPageCursor:   require.True,
 		}, {
 			name:               "db failure - known error",
 			pageSize:           "3",
 			expectNextPageSize: "pageSize=3",
 			expectErrMsg:       "not found",
+			isREST:             true,
 			httpStatus:         http.StatusNotFound,
 			expectedRecordsLen: 0,
 			expectedPageSize:   3,
@@ -1056,11 +1101,13 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  0,
 			expectErr:          require.Error,
 			expectNextPage:     require.True,
+			expectPageCursor:   require.True,
 		}, {
 			name:               "db failure - unknown error",
 			pageSize:           "3",
 			expectNextPageSize: "pageSize=3",
 			expectErrMsg:       retryMessage,
+			isREST:             true,
 			httpStatus:         http.StatusInternalServerError,
 			expectedRecordsLen: 0,
 			expectedPageSize:   3,
@@ -1073,11 +1120,13 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  0,
 			expectErr:          require.Error,
 			expectNextPage:     require.True,
+			expectPageCursor:   require.True,
 		}, {
 			name:               "valid - default page size",
 			pageSize:           "0",
 			expectNextPageSize: "",
 			expectErrMsg:       "",
+			isREST:             true,
 			httpStatus:         0,
 			expectedRecordsLen: 4,
 			expectedPageSize:   10,
@@ -1090,11 +1139,13 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  0,
 			expectErr:          require.NoError,
 			expectNextPage:     require.False,
+			expectPageCursor:   require.False,
 		}, {
 			name:               "valid - no next page",
 			pageSize:           "4",
 			expectNextPageSize: "",
 			expectErrMsg:       "",
+			isREST:             true,
 			httpStatus:         0,
 			expectedRecordsLen: 3,
 			expectedPageSize:   4,
@@ -1107,10 +1158,31 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  0,
 			expectErr:          require.NoError,
 			expectNextPage:     require.False,
+			expectPageCursor:   require.False,
+		}, {
+			name:               "valid - has next page - graphql",
+			pageSize:           "3",
+			expectNextPageSize: "",
+			isREST:             false,
+			expectErrMsg:       "",
+			httpStatus:         0,
+			expectedRecordsLen: 3,
+			expectedPageSize:   3,
+			decryptStringErr:   nil,
+			decryptStringTimes: 1,
+			balanceData:        fourRecords,
+			balanceErr:         nil,
+			balanceTimes:       1,
+			encryptStringErr:   nil,
+			encryptStingTimes:  1,
+			expectErr:          require.NoError,
+			expectNextPage:     require.False,
+			expectPageCursor:   require.True,
 		}, {
 			name:               "valid - has next page",
 			pageSize:           "3",
 			expectNextPageSize: "pageSize=3",
+			isREST:             true,
 			expectErrMsg:       "",
 			httpStatus:         0,
 			expectedRecordsLen: 3,
@@ -1124,6 +1196,7 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			encryptStingTimes:  1,
 			expectErr:          require.NoError,
 			expectNextPage:     require.True,
+			expectPageCursor:   require.False,
 		},
 	}
 
@@ -1153,7 +1226,7 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			)
 
 			actualDetails, status, errMsg, err := HTTPCryptoBalancePaginated(mockAuth, mockPostgres, zapLogger,
-				uuid.UUID{}, pageCursor, test.pageSize)
+				uuid.UUID{}, pageCursor, test.pageSize, test.isREST)
 			test.expectErr(t, err, "error expectation failed.")
 
 			require.Equal(t, test.httpStatus, status, "http status code mismatched.")
@@ -1163,9 +1236,9 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, 0, len(actualDetails.Links.PageCursor), "page cursor set.")
 			require.Contains(t, actualDetails.Links.NextPage, test.expectNextPageSize, "expected page size mismatch.")
 			test.expectNextPage(t, len(actualDetails.Links.NextPage) > 0, "next page link not set.")
+			test.expectPageCursor(t, len(actualDetails.Links.PageCursor) > 0, "page cursor set.")
 			require.Equal(t, test.expectedRecordsLen, len(actualDetails.AccountBalances),
 				"number of returned records mismatched")
 		})

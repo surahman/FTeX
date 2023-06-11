@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
@@ -763,6 +764,214 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 		})
 	}
 }
+
+func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
+	t.Parallel()
+
+	accDetails := []postgres.CryptoAccount{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                 string
+		path                 string
+		query                string
+		expectErr            bool
+		accDetails           []postgres.CryptoAccount
+		authValidateJWTErr   error
+		authValidateJWTTimes int
+		authDecryptStrErr    error
+		authDecryptStrTimes  int
+		cryptoBalanceErr     error
+		cryptoBalanceTimes   int
+		authEncryptStrErr    error
+		authEncryptStrTimes  int
+	}{
+		{
+			name:                 "invalid JWT",
+			path:                 "/balance-all-crypto/invalid-jwt",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   errors.New("invalid JWT"),
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "decrypt cursor failure",
+			path:                 "/balance-all-crypto/decrypt-cursor-failure",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    errors.New("decrypt failure"),
+			authDecryptStrTimes:  1,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "known db error",
+			path:                 "/balance-all-crypto/known-db-error",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			cryptoBalanceErr:     postgres.ErrNotFound,
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "unknown db error",
+			path:                 "/balance-all-crypto/unknown-db-error",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			cryptoBalanceErr:     errors.New("unknown db error"),
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "encrypt cursor failure",
+			path:                 "/balance-all-crypto/encrypt-cursor-failure",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    errors.New("encrypt string error"),
+			authEncryptStrTimes:  1,
+		}, {
+			name:                 "valid without query and 10 records",
+			path:                 "/balance-all-crypto/valid-no-query-10-records",
+			query:                testCryptoQuery["balanceAllCryptoNoParams"],
+			expectErr:            false,
+			accDetails:           []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "valid without query and 11 records",
+			path:                 "/balance-all-crypto/valid-no-query-11-records",
+			query:                testCryptoQuery["balanceAllCryptoNoParams"],
+			expectErr:            false,
+			accDetails:           []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  1,
+		}, {
+			name:                 "valid without query",
+			path:                 "/balance-all-crypto/valid-no-query",
+			query:                testCryptoQuery["balanceAllCryptoNoParams"],
+			expectErr:            false,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "valid",
+			path:                 "/balance-all-crypto/valid",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            false,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  1,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   1,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte{}, test.authDecryptStrErr).
+					Times(test.authDecryptStrTimes),
+
+				mockPostgres.EXPECT().CryptoBalancesPaginated(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.accDetails, test.cryptoBalanceErr).
+					Times(test.cryptoBalanceTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-page-cursor", test.authEncryptStrErr).
+					Times(test.authEncryptStrTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
 func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
@@ -859,6 +1068,210 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 				mockPostgres.EXPECT().CryptoTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.CryptoJournal{{}}, test.cryptoTxDetailsErr).
 					Times(test.cryptoTxDetailsTimes),
+			)
+
+			// Endpoint setup for test.
+			router := gin.Default()
+			router.Use(GinContextToContextMiddleware())
+			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
+
+			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+				bytes.NewBufferString(test.query))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "some valid auth token goes here")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			// Verify responses
+			require.Equal(t, http.StatusOK, recorder.Code, "expected status codes do not match")
+
+			response := map[string]any{}
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response), "failed to unmarshal response body")
+
+			// Error is expected check to ensure one is set.
+			if test.expectErr {
+				verifyErrorReturned(t, response)
+			}
+		})
+	}
+}
+
+func TestFiatResolver_CryptoTransactionsPaginatedResolver(t *testing.T) {
+	t.Parallel()
+
+	resolver := cryptoTransactionsPaginatedResolver{}
+
+	transactions := &models.HTTPCryptoTransactionsPaginated{}
+
+	actual, err := resolver.Transactions(context.TODO(), transactions)
+	require.NoError(t, err, "error should always be nil.")
+	require.Equal(t, transactions.TransactionDetails, actual, "actual and returned addresses do not match.")
+}
+
+func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
+	t.Parallel()
+
+	decryptedCursor := fmt.Sprintf("%s,%s,%d",
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		10)
+
+	journalEntries := []postgres.CryptoJournal{{}, {}, {}, {}}
+
+	testCases := []struct {
+		name                   string
+		path                   string
+		query                  string
+		expectErr              bool
+		journalEntries         []postgres.CryptoJournal
+		authValidateJWTErr     error
+		authValidateJWTTimes   int
+		authDecryptCursorErr   error
+		authDecryptCursorTimes int
+		authEncryptCursorErr   error
+		authEncryptCursorTimes int
+		cryptoTxPaginatedErr   error
+		cryptoTxPaginatedTimes int
+	}{
+		{
+			name: "auth failure",
+			path: "/transaction-details-all-crypto/auth-failure",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     errors.New("auth failure"),
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 0,
+		}, {
+			name: "no cursor or params",
+			path: "/transaction-details-all-crypto/no-cursor-or-params",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"", 3, ""),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 0,
+		}, {
+			name: "db failure",
+			path: "/transaction-details-all-crypto/db-failure",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"BTC", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   postgres.ErrNotFound,
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name: "unknown db failure",
+			path: "/transaction-details-all-crypto/unknown-db-failure",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"BTC", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   errors.New("db failure"),
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name: "no transactions",
+			path: "/transaction-details-all-crypto/no-transactions",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"BTC", 3, "page-cusror"),
+			expectErr:              false,
+			journalEntries:         []postgres.CryptoJournal{},
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name: "valid with cursor",
+			path: "/transaction-details-all-crypto/valid-with-cursor",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"BTC", 3, "page-cusror"),
+			expectErr:              false,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 1,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 1,
+		}, {
+			name: "valid with query",
+			path: "/transaction-details-all-crypto/valid-with-query",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoInit"],
+				"BTC", 3, "-04:00", 6, 2023),
+			expectErr:              false,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 1,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 1,
+		},
+	}
+
+	for _, testCase := range testCases { //nolint:dupl
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
+			mockQuotes := quotes.NewMockQuotes(mockCtrl) // not called.
+
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
+
+				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
+					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
+					Times(test.authDecryptCursorTimes),
+
+				mockAuth.EXPECT().EncryptToString(gomock.Any()).
+					Return("encrypted-cursor", test.authEncryptCursorErr).
+					Times(test.authEncryptCursorTimes),
+
+				mockPostgres.EXPECT().CryptoTransactionsPaginated(gomock.Any(), gomock.Any(), gomock.Any(),
+					gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(test.journalEntries, test.cryptoTxPaginatedErr).
+					Times(test.cryptoTxPaginatedTimes),
 			)
 
 			// Endpoint setup for test.

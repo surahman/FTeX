@@ -33,6 +33,7 @@ type Config struct {
 type ResolverRoot interface {
 	CryptoAccount() CryptoAccountResolver
 	CryptoJournal() CryptoJournalResolver
+	CryptoTransactionsPaginated() CryptoTransactionsPaginatedResolver
 	FiatAccount() FiatAccountResolver
 	FiatDepositResponse() FiatDepositResponseResolver
 	FiatExchangeTransferResponse() FiatExchangeTransferResponseResolver
@@ -60,6 +61,11 @@ type ComplexityRoot struct {
 		Ticker    func(childComplexity int) int
 	}
 
+	CryptoBalancesPaginated struct {
+		AccountBalances func(childComplexity int) int
+		Links           func(childComplexity int) int
+	}
+
 	CryptoJournal struct {
 		Amount       func(childComplexity int) int
 		ClientID     func(childComplexity int) int
@@ -71,6 +77,11 @@ type ComplexityRoot struct {
 	CryptoOpenAccountResponse struct {
 		ClientID func(childComplexity int) int
 		Ticker   func(childComplexity int) int
+	}
+
+	CryptoTransactionsPaginated struct {
+		Links        func(childComplexity int) int
+		Transactions func(childComplexity int) int
 	}
 
 	CryptoTransferResponse struct {
@@ -165,13 +176,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		BalanceAllFiat            func(childComplexity int, pageCursor *string, pageSize *int32) int
-		BalanceCrypto             func(childComplexity int, ticker string) int
-		BalanceFiat               func(childComplexity int, currencyCode string) int
-		Healthcheck               func(childComplexity int) int
-		TransactionDetailsAllFiat func(childComplexity int, input models.FiatPaginatedTxDetailsRequest) int
-		TransactionDetailsCrypto  func(childComplexity int, transactionID string) int
-		TransactionDetailsFiat    func(childComplexity int, transactionID string) int
+		BalanceAllCrypto            func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceAllFiat              func(childComplexity int, pageCursor *string, pageSize *int32) int
+		BalanceCrypto               func(childComplexity int, ticker string) int
+		BalanceFiat                 func(childComplexity int, currencyCode string) int
+		Healthcheck                 func(childComplexity int) int
+		TransactionDetailsAllCrypto func(childComplexity int, input models.CryptoPaginatedTxDetailsRequest) int
+		TransactionDetailsAllFiat   func(childComplexity int, input models.FiatPaginatedTxDetailsRequest) int
+		TransactionDetailsCrypto    func(childComplexity int, transactionID string) int
+		TransactionDetailsFiat      func(childComplexity int, transactionID string) int
 	}
 }
 
@@ -232,6 +245,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CryptoAccount.Ticker(childComplexity), true
 
+	case "CryptoBalancesPaginated.accountBalances":
+		if e.complexity.CryptoBalancesPaginated.AccountBalances == nil {
+			break
+		}
+
+		return e.complexity.CryptoBalancesPaginated.AccountBalances(childComplexity), true
+
+	case "CryptoBalancesPaginated.links":
+		if e.complexity.CryptoBalancesPaginated.Links == nil {
+			break
+		}
+
+		return e.complexity.CryptoBalancesPaginated.Links(childComplexity), true
+
 	case "CryptoJournal.amount":
 		if e.complexity.CryptoJournal.Amount == nil {
 			break
@@ -280,6 +307,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CryptoOpenAccountResponse.Ticker(childComplexity), true
+
+	case "CryptoTransactionsPaginated.links":
+		if e.complexity.CryptoTransactionsPaginated.Links == nil {
+			break
+		}
+
+		return e.complexity.CryptoTransactionsPaginated.Links(childComplexity), true
+
+	case "CryptoTransactionsPaginated.transactions":
+		if e.complexity.CryptoTransactionsPaginated.Transactions == nil {
+			break
+		}
+
+		return e.complexity.CryptoTransactionsPaginated.Transactions(childComplexity), true
 
 	case "CryptoTransferResponse.cryptoTxReceipt":
 		if e.complexity.CryptoTransferResponse.CryptoTxReceipt == nil {
@@ -695,6 +736,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PriceQuote.SourceAcc(childComplexity), true
 
+	case "Query.balanceAllCrypto":
+		if e.complexity.Query.BalanceAllCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Query_balanceAllCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.BalanceAllCrypto(childComplexity, args["pageCursor"].(*string), args["pageSize"].(*int32)), true
+
 	case "Query.balanceAllFiat":
 		if e.complexity.Query.BalanceAllFiat == nil {
 			break
@@ -737,6 +790,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Healthcheck(childComplexity), true
+
+	case "Query.transactionDetailsAllCrypto":
+		if e.complexity.Query.TransactionDetailsAllCrypto == nil {
+			break
+		}
+
+		args, err := ec.field_Query_transactionDetailsAllCrypto_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TransactionDetailsAllCrypto(childComplexity, args["input"].(models.CryptoPaginatedTxDetailsRequest)), true
 
 	case "Query.transactionDetailsAllFiat":
 		if e.complexity.Query.TransactionDetailsAllFiat == nil {
@@ -783,6 +848,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCryptoOfferRequest,
+		ec.unmarshalInputCryptoPaginatedTxDetailsRequest,
 		ec.unmarshalInputDeleteUserRequest,
 		ec.unmarshalInputFiatDepositRequest,
 		ec.unmarshalInputFiatExchangeOfferRequest,
@@ -910,12 +976,34 @@ type CryptoTransferResponse {
     cryptoTxReceipt:    CryptoJournal
 }
 
+# CryptoBalancesPaginated are all of the Crypto account balances retrieved via pagination.
+type CryptoBalancesPaginated {
+    accountBalances:    [CryptoAccount!]!
+    links:              Links!
+}
+
+# CryptoBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type CryptoTransactionsPaginated {
+    transactions:   [CryptoJournal!]!
+    links:          Links!
+}
+
 # CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
 input CryptoOfferRequest {
     sourceCurrency:         String!
     destinationCurrency:    String!
     sourceAmount:           Float!
     isPurchase:             Boolean!
+}
+
+# CryptoPaginatedTxDetailsRequest request input parameters for all transaction records for a specific currency.
+input CryptoPaginatedTxDetailsRequest{
+    ticker:     String!
+    pageSize:   String
+    pageCursor: String
+    timezone:   String
+    month:      String
+    year:       String
 }
 
 # Requests that might alter the state of data in the database.
@@ -935,8 +1023,14 @@ extend type Query {
     # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
     balanceCrypto(ticker: String!): CryptoAccount!
 
+    # balanceAllCrypto is a request to retrieve the balance for a specific Crypto currency.
+    balanceAllCrypto(pageCursor: String, pageSize: Int32): CryptoBalancesPaginated!
+
     # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
     transactionDetailsCrypto(transactionID: String!): [Any!]!
+
+    # transactionDetailsAllCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsAllCrypto(input: CryptoPaginatedTxDetailsRequest!): CryptoTransactionsPaginated!
 }
 `, BuiltIn: false},
 	{Name: "../schema/fiat.graphqls", Input: `# FiatOpenAccountResponse is the response returned

@@ -98,8 +98,24 @@ func getCryptoQuery() map[string]string {
 		"query": "query { balanceCrypto(ticker: \"%s\") { ticker, balance, lastTx, lastTxTs, createdAt, clientID } }"
 		}`,
 
+		"balanceAllCrypto": `{
+		"query": "query { balanceAllCrypto( pageCursor: \"%s\", pageSize: %d ) { accountBalances { ticker, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		}`,
+
+		"balanceAllCryptoNoParams": `{
+		"query": "query { balanceAllCrypto { accountBalances { ticker, balance, lastTx, lastTxTs, createdAt, clientID }, links { pageCursor } } }"
+		}`,
+
 		"transactionDetailsCrypto": `{
 		"query": "query { transactionDetailsCrypto(transactionID: \"%s\") }"
+		}`,
+
+		"transactionDetailsAllCryptoInit": `{
+		"query": "query { transactionDetailsAllCrypto(input: { ticker: \"%s\", pageSize:\"%d\", timezone:\"%s\", month: \"%d\", year:\"%d\" }) { transactions { ticker, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
+		}`,
+
+		"transactionDetailsAllCryptoSubsequent": `{
+		"query": "query { transactionDetailsAllCrypto(input: { ticker: \"%s\", pageSize:\"%d\", pageCursor:\"%s\" }) { transactions { ticker, amount, transactedAt, clientID, txID }, links { pageCursor } } }"
 		}`,
 	}
 }
