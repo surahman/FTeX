@@ -6,7 +6,7 @@
 
 
 ## Build
-FROM golang:1.18-alpine AS build
+FROM golang:1.20-alpine AS build
 
 RUN apk update && apk --no-cache --update add make
 
@@ -31,7 +31,7 @@ COPY --from=build /build/configs /etc/FTeX.conf/
 # Please set these ports according to the configurations in the YAML files in /configs directory.
 # 1) HTTP REST
 # 2) HTTP GraphQL
-EXPOSE 44243 44255
+EXPOSE 33723 47130
 
 # Run Gin Web Framework in production mode.
 ENV GIN_MODE=release

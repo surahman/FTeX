@@ -5,9 +5,15 @@
 
 # FTeX
 
-This is a demonstration project in `Golang` that provides an API for basic banking of Cryptocurrencies. There is an integration with a cyrpto exchange to get live cryptocurrency prices.
+###### This project's name aims to poke lighthearted fun at Blockchain and Cryptocurrency enthusiasts. I neither support nor endorse the use of Blockchain technologies as a store of wealth.
 
-This project will be using an RDBMS (PostreSQL) because of the need for ACID transactions, rollbacks, and row-level locking across tables.
+###### **_Blockchains are an impressive and interesting technology that encompasses some potentially useful applications._**
+
+This is a demonstration project in `Golang` that provides an API for basic banking of Cryptocurrencies. There are
+integrations with quote services to obtain realtime Fiat and Cryptocurrency prices.
+
+This project will be leverage an RDBMS (PostreSQL) because of the need for ACID transactions, rollbacks, and row-level
+locking across tables. It uses a Redis cache as a session store.
 
 <br/>
 
@@ -38,6 +44,9 @@ across availability zones.
 
 Price quotes for Crypto and Fiat currencies are obtained through external third-party providers. The API endpoints used
 in this project can be accessed with free accounts. Details can be found in the [`quotes`](pkg/quotes) package.
+
+:placard: When launching the Docker container for local testing the API Keys can be set via environment variable on the
+CLI. Please see the Docker container section below on how to set these.
 
 <br/>
 
@@ -114,10 +123,38 @@ from inside the `Dockerfile` and must match the config `.yaml` files. To expose 
 [`-P`](https://docs.docker.com/engine/reference/commandline/run/#publish-or-expose-port--p---expose)
 Docker flag.
 
-When testing using `docker compose` on a local machine you may use the `ifconfig` to obtain your Host IP:
+When testing using `docker compose` or running the Docker container built using the `Dockerfile` on a local machine, you
+may use the `ifconfig` command in the `net-tools` package to obtain your Host IP:
 
 ```bash
 ifconfig | grep 'inet 192'
+```
+
+To build the Docker container using the `Dockerfile` run the following command from the project `root`:
+
+```shell
+docker buildx build --file=docker/Dockerfile -t=ftex .
+```
+
+You may then supply the configurations for the database host addresses as well as the API keys for the quotes using
+environment variables.
+
+#### Setting Environment Variables
+
+Environment variables can be set using the Kubernetes deployment configurations as well as when launching the container
+using the Docker CLI.
+
+To supply the environment variables using the Docker CLI, please use the `-e` flag. Below is an example of how to supply
+the API Keys for the Fiat and Cryptocurrency quotes. Please see the Docker `run`
+[documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
+
+```shell
+docker run -d \
+-e POSTGRES_CONNECTION.HOST=192.168.0.211 \
+-e REDIS_CONNECTION.ADDR=192.168.0.211:7379 \
+-e QUOTES_FIATCURRENCY.APIKEY='some-api-key' \
+-e QUOTES_CRYPTOCURRENCY.APIKEY='some-api-key' \
+ftex
 ```
 
 <br/>
@@ -179,9 +216,8 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redi
 - Password : `ZoF1bncLLyYT1agKfWQY`
 
 - Port : `7379`
-- Database Fiat: `0`
-- Database Crypto: `1`
-
+- Database: `0`
+-
 <br/>
 
 [Crypto icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/crypto)
