@@ -136,8 +136,8 @@ To build the Docker container using the `Dockerfile` run the following command f
 docker buildx build --file=docker/Dockerfile -t=ftex .
 ```
 
-You may then supply the configurations for the database host addresses as well as the API keys for the quotes using
-environment variables.
+You may then supply the configurations for the database host addresses, the API keys for the quotes services, and to
+publish ports using environment variables.
 
 #### Setting Environment Variables
 
@@ -150,6 +150,8 @@ the API Keys for the Fiat and Cryptocurrency quotes. Please see the Docker `run`
 
 ```shell
 docker run -d \
+-p 33723:33723 \
+-p 47130:47130 \
 -e POSTGRES_CONNECTION.HOST=192.168.0.211 \
 -e REDIS_CONNECTION.ADDR=192.168.0.211:7379 \
 -e QUOTES_FIATCURRENCY.APIKEY='some-api-key' \
