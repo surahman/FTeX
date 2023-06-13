@@ -1,4 +1,4 @@
-BINARY_NAME=FTex
+BINARY_NAME=FTeX
 MAIN_FILE = cmd/main.go
 COVERAGE_NAME = coverage
 
