@@ -32,7 +32,7 @@ func HTTPCryptoOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.U
 		if !errors.As(err, &createErr) {
 			logger.Info("failed to unpack open Crypto account error", zap.Error(err))
 
-			return http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return createErr.Code, createErr.Message, fmt.Errorf("%w", err)
@@ -60,7 +60,7 @@ func HTTPCryptoBalance(db postgres.Postgres, logger *logger.Logger, clientID uui
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Crypto account balance currency error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
@@ -97,7 +97,7 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 		source, destination, sourceAmount, isPurchase, nil); err != nil {
 		logger.Warn("failed to retrieve quote for Cryptocurrency purchase/sale offer", zap.Error(err))
 
-		return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		return offer, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 	}
 
 	// Check to make sure there is a valid Cryptocurrency amount.
@@ -120,7 +120,7 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 		msg := "failed to encrypt offer ID for Cryptocurrency purchase/sale offer"
 		logger.Warn(msg, zap.Error(err))
 
-		return offer, http.StatusInternalServerError, retryMessage, errors.New(msg)
+		return offer, http.StatusInternalServerError, constants.RetryMessageString(), errors.New(msg)
 	}
 
 	// Store the offer in Redis.
@@ -128,7 +128,7 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 		msg := "failed to store Cryptocurrency purchase/sale offer in cache"
 		logger.Warn(msg, zap.Error(err))
 
-		return offer, http.StatusInternalServerError, retryMessage, errors.New(msg)
+		return offer, http.StatusInternalServerError, constants.RetryMessageString(), errors.New(msg)
 	}
 
 	return offer, 0, "", nil
@@ -156,7 +156,7 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 		if rawOfferID, err = auth.DecryptFromString(offerID); err != nil {
 			logger.Warn("failed to decrypt Offer ID for Crypto transfer request", zap.Error(err))
 
-			return receipt, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return receipt, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		offerID = string(rawOfferID)
@@ -187,7 +187,7 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 		logger.Warn(msg,
 			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
 
-		return receipt, http.StatusInternalServerError, retryMessage, errors.New(msg)
+		return receipt, http.StatusInternalServerError, constants.RetryMessageString(), errors.New(msg)
 	}
 
 	// Configure transaction parameters. Default action should be to purchase a Cryptocurrency using Fiat.
@@ -280,7 +280,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
 
-			return cryptoDetails, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return cryptoDetails, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return cryptoDetails, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
@@ -294,7 +294,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 			auth.EncryptToString([]byte(cryptoDetails.AccountBalances[pageSize].Ticker)); err != nil {
 			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
 
-			return cryptoDetails, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return cryptoDetails, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		// Remove last element.
@@ -341,7 +341,7 @@ func HTTPCryptoTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logge
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack transactions request error", zap.Error(err))
 
-			return transactions, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return transactions, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return transactions, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)

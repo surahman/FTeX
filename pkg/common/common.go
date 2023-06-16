@@ -20,8 +20,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const retryMessage = "please retry your request later"
-
 // HTTPGetCachedOffer will retrieve and then evict an offer from the Redis cache.
 func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string) (
 	models.HTTPExchangeOfferResponse, int, string, error) {
@@ -36,12 +34,12 @@ func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string
 
 		// If we have a valid Redis package error AND the error is that the key is not found.
 		if errors.As(err, &redisErr) && redisErr.Is(redis.ErrCacheMiss) {
-			return offer, http.StatusRequestTimeout, "Fiat exchange rate offer has expired", fmt.Errorf("%w", err)
+			return offer, http.StatusRequestTimeout, "Currency exchange rate offer has expired", fmt.Errorf("%w", err)
 		}
 
-		logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+		logger.Warn("unknown error occurred whilst retrieving currency offer from Redis", zap.Error(err))
 
-		return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+		return offer, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 	}
 
 	// Remove the offer from Redis.
@@ -50,9 +48,9 @@ func HTTPGetCachedOffer(cache redis.Redis, logger *logger.Logger, offerID string
 
 		// Not a Redis custom error OR not a cache miss for the key (has already expired and could not be deleted).
 		if !errors.As(err, &redisErr) || !redisErr.Is(redis.ErrCacheMiss) {
-			logger.Warn("unknown error occurred whilst retrieving Fiat Offer from Redis", zap.Error(err))
+			logger.Warn("unknown error occurred whilst retrieving currency offer from Redis", zap.Error(err))
 
-			return offer, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return offer, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 	}
 
@@ -236,17 +234,17 @@ func HTTPTxParseQueryParams(auth auth.Auth, logger *logger.Logger, params *HTTPP
 		// Prepare next page cursor. Adjust offset to move along to next record set.
 		if params.NextPage, err = HTTPTransactionGeneratePageCursor(
 			auth, periodStartStr, periodEndStr, params.Offset+params.PageSize); err != nil {
-			logger.Info("failed to encrypt Fiat paginated transactions next page cursor", zap.Error(err))
+			logger.Info("failed to encrypt currency paginated transactions next page cursor", zap.Error(err))
 
-			return http.StatusInternalServerError, fmt.Errorf(retryMessage)
+			return http.StatusInternalServerError, fmt.Errorf(constants.RetryMessageString())
 		}
 	} else {
 		if params.PeriodStart, params.PeriodEnd, params.NextPage, err =
 			HTTPTransactionInfoPaginatedRequest(auth,
 				params.MonthStr, params.YearStr, params.TimezoneStr, params.PageSize); err != nil {
-			logger.Info("failed to prepare time periods for paginated Fiat transaction details", zap.Error(err))
+			logger.Info("failed to prepare time periods for paginated currency transaction details", zap.Error(err))
 
-			return http.StatusInternalServerError, fmt.Errorf(retryMessage)
+			return http.StatusInternalServerError, fmt.Errorf(constants.RetryMessageString())
 		}
 	}
 
@@ -294,9 +292,9 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 	if fiatEntries, err = db.FiatTxDetails(clientID, transactionID); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
-			logger.Info("failed to unpack Crypto account balance transactionID error", zap.Error(err))
+			logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
@@ -305,9 +303,9 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 	if cryptoEntries, err = db.CryptoTxDetails(clientID, transactionID); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
-			logger.Info("failed to unpack Fiat account balance transactionID error", zap.Error(err))
+			logger.Info("failed to unpack Crypto account balance transactionID error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)

@@ -44,7 +44,7 @@ func TestCommon_HTTPFiatOpen(t *testing.T) {
 			openAccErr:    errors.New("unknown error"),
 			openAccTimes:  1,
 			expectErrCode: http.StatusInternalServerError,
-			expectErrMsg:  retryMessage,
+			expectErrMsg:  constants.RetryMessageString(),
 			expectErr:     require.Error,
 		}, {
 			name:          "known db failure",
@@ -158,7 +158,7 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 			depositErr:       errors.New("unknown error"),
 			depositTimes:     1,
 			expectErrCode:    http.StatusInternalServerError,
-			expectErrMsg:     retryMessage,
+			expectErrMsg:     constants.RetryMessageString(),
 			expectErr:        require.Error,
 			expectNilReceipt: require.Nil,
 			expectNilPayload: require.Nil,
@@ -265,7 +265,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 		}, {
 			name:             "crypto conversion - purchase",
 			expectErrMsg:     "quote failure",
-			httpMessage:      retryMessage,
+			httpMessage:      constants.RetryMessageString(),
 			httpStatus:       http.StatusInternalServerError,
 			request:          &validRequest,
 			quotesAmount:     quotesAmount,
@@ -295,7 +295,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 		}, {
 			name:             "encryption failure",
 			expectErrMsg:     "encryption failure",
-			httpMessage:      retryMessage,
+			httpMessage:      constants.RetryMessageString(),
 			httpStatus:       http.StatusInternalServerError,
 			request:          &validRequest,
 			quotesAmount:     quotesAmount,
@@ -310,7 +310,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 		}, {
 			name:             "cache failure",
 			expectErrMsg:     "cache failure",
-			httpMessage:      retryMessage,
+			httpMessage:      constants.RetryMessageString(),
 			httpStatus:       http.StatusInternalServerError,
 			request:          &validRequest,
 			quotesAmount:     quotesAmount,

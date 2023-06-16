@@ -177,6 +177,11 @@ func TestGetInvalidRequest(t *testing.T) {
 func TestGetValidationString(t *testing.T) {
 	require.Equal(t, validationSting, GetValidationString(), "Incorrect validation string.")
 }
+
 func TestGetInvalidCurrencyString(t *testing.T) {
 	require.Equal(t, invalidCurrencyString, GetInvalidCurrencyString(), "Incorrect invalid currency string.")
+}
+
+func TestRetryMessageString(t *testing.T) {
+	require.Equal(t, retryMessageString, RetryMessageString(), "Incorrect retry message string.")
 }

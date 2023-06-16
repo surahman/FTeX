@@ -40,7 +40,7 @@ func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUI
 		if !errors.As(err, &createErr) {
 			logger.Info("failed to unpack open Fiat account error", zap.Error(err))
 
-			return http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return createErr.Code, createErr.Message, fmt.Errorf("%w", err)
@@ -81,7 +81,7 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 		if !errors.As(err, &createErr) {
 			logger.Info("failed to unpack deposit Fiat account error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, createErr.Code, createErr.Message, nil, fmt.Errorf("%w", err)
@@ -114,7 +114,7 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 		request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, nil); err != nil {
 		logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	// Check to make sure there is a valid Cryptocurrency amount.
@@ -134,14 +134,14 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
 		logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	// Store the offer in Redis.
 	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
 		logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	return &offer, 0, "", nil, nil
@@ -168,7 +168,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 		if rawOfferID, err = auth.DecryptFromString(request.OfferID); err != nil {
 			logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		offerID = string(rawOfferID)
@@ -191,7 +191,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 		logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
 			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	// Verify the offer is for a Fiat exchange.
@@ -250,7 +250,7 @@ func HTTPFiatBalance(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
@@ -317,7 +317,7 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
@@ -330,7 +330,7 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 		if nextPage, err = auth.EncryptToString([]byte(accDetails.AccountBalances[pageSize].Currency)); err != nil {
 			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		// Remove last element.
@@ -382,7 +382,7 @@ func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger 
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)

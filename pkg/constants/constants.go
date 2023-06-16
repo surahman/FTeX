@@ -42,6 +42,7 @@ const (
 	invalidRequest                = "invalid request"
 	validationSting               = "validation"
 	invalidCurrencyString         = "invalid currency"
+	retryMessageString            = "please retry your request later"
 )
 
 // GetEtcDir returns the configuration directory in Etc.
@@ -202,4 +203,9 @@ func GetValidationString() string {
 // GetInvalidCurrencyString is the error message for an invalid currency.
 func GetInvalidCurrencyString() string {
 	return invalidCurrencyString
+}
+
+// RetryMessageString is the error message requesting a retry.
+func RetryMessageString() string {
+	return retryMessageString
 }
