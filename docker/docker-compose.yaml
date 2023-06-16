@@ -24,7 +24,7 @@ services:
   redis:
     container_name: redis
     image: bitnami/redis:latest
-#    restart: always
+    restart: always
     ports:
       - '7379:6379'
     environment:
