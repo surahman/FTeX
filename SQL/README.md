@@ -97,18 +97,21 @@ associated with IEEE Floating point representation:
 * Golang [`decimal.Decimal`](https://pkg.go.dev/github.com/shopspring/decimal) data type will be used.
 * [Half-to-Even/Bankers’ Rounding](https://en.wikipedia.org/wiki/Rounding#Rounding_half_to_even).
 * Fiat assets will be stored with two decimal places.
-* Crypto assets will be stored with TBD decimal places.
+* Crypto assets will be stored with 8 decimal places.
 
-The PostgresSQL `Money` and `Decimal` types are synonyms for `Numeric`. Numbers associated with assets will be captured as
-close to their origin as possible and converted to `decimal.Decimal` with Half-to-Even rounding to the required decimal places.
+The PostgresSQL `Money` and `Decimal` types are synonyms for `Numeric`. Numbers associated with assets will be captured
+as close to their origin as possible and converted to `decimal.Decimal` with Half-to-Even rounding to the required
+decimal places.
 
-There is unfortunately no builtin method for Half-to-Even rounding as of PostgresSQL 14. As such, a User Defined Function
-(UDF) will be deployed. Arithmetic rounding can lead to errors that can snowball to significant numbers over many calculations.
-Please see [this article](https://www.eetimes.com/an-introduction-to-different-rounding-algorithms/) on rounding methods in the EETimes.
-This UDF will be used on all functions that store financial values on the database side as a secondary safeguard. This is
-necessary and will mean having to incur a calculation overhead.
+There is unfortunately no builtin method for Half-to-Even rounding as of PostgresSQL 14. As such, a User Defined
+Function (UDF) will be deployed. Arithmetic rounding can lead to errors that can snowball to significant numbers over
+many calculations. Please see [this article](https://www.eetimes.com/an-introduction-to-different-rounding-algorithms/)
+on rounding methods in the EETimes. This UDF will be used on all queries and transactions that store or update financial
+values on the database side as a secondary safeguard. This is necessary and will mean having to incur a calculation
+overhead.
 
-The UDF does not access or modify data from any tables and thus meets the requirements for the following Postgres function characteristics:
+The UDF does not access or modify data from any tables and thus meets the requirements for the following Postgres
+function characteristics:
 
 * Immutable
 * Strict
@@ -193,38 +196,43 @@ minimum value is set due to cryptocurrency precision restrictions and requiremen
 * Must have a Fiat currency account with enough funds to purchase.
 * Purchase value in the Fiat currency will be supplied as a parameter.
 * Purchase quantity will be calculated based upon purchase value supplied.
-* Minimum purchase quantity of the Cryptocurrency must be greater than `0`.
-* Minimum purchase quantity of `1 Satoshi` or `0.00000001` units.
+* Minimum purchase quantity of `1 Satoshi` or `0.00000001` units.*
+* Sale quantity must have a minimum Fiat currency value greater than `0.01`.
 
 **_Sale:_**
 * Must have a Fiat currency account to deposit sale proceeds into.
 * Sale quantity of the Cryptocurrency will be supplied as a parameter.
-* Minimum quantity must be `1 Satoshi` or `0.00000001` units.
+* Minimum sale quantity must be `1 Satoshi` or `0.00000001` units.
 * Sale quantity must have a minimum Fiat currency value greater than `0`.
 
 <br/>
 
 ## Tablespaces
 
-Cluster-wide tablespaces will need to be created for each of the tables in the production environment.
-These directories will need to be created by the database administrator with the correct privileges
-for the Postgres accounts that require access.
+Cluster-wide `tablespaces` will need to be created for each of the tables in the production environment. These directories
+will need to be created by the database administrator with the correct privileges for the Postgres accounts that require
+access.
 
-| Table Name | Tablespace Name | Location                 |
-|------------|-----------------|--------------------------|
-| users      | users_data      | `/table_data/ftex_users` |
+| Table Name      | Tablespace Name      | Location                          |
+|-----------------|----------------------|-----------------------------------|
+| users           | users_data           | `/table_data/ftex_users`          |
+| fiat accounts   | fiat_accounts_data   | `/table_data/ftex_fiat_account`   |
+| fiat journal    | fiat_journal_data    | `/table_data/ftex_fiat_journal`   |
+| crypto accounts | crypto_accounts_data | `/table_data/ftex_crypto_account` |
+| crypto journal  | crypto_journal_data  | `/table_data/ftex_crypto_journal` |
 
-Due to directory permission issues, the Postgres Docker containers will not utilize tablespaces. These issues can
+
+Due to directory permission issues, the Postgres Docker containers will not utilize `tablespaces`. These issues can
 be mitigated by mounting a volume that can be `chown`ed by the Postgres account. When using a directory on the host,
 this can mean configuring permissions to allow any account to `read` and `write` to the directory.
 
-The [tablespaces](schema/tablespaces.sql) can be configured once the data directories have been created and the requisite
-permissions have been set.
+The [tablespaces](schema/tablespaces.sql) can be configured once the data directories have been created and the
+requisite permissions have been set.
 
-Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed
-within transaction blocks. The migration scripts will expect the tablespaces to be created beforehand.
-The migration scripts can be found [here](schema/migration_tablespace.sql) for tablespaces, and
-[here](schema/migration.sql) for without tablespaces.
+Liquibase runs all migration change sets within transaction blocks. Tablespace creation cannot be completed within
+transaction blocks. The migration scripts will expect the `tablespaces` to be created beforehand. The migration scripts
+can be found [here](schema/migration_tablespace.sql) for `tablespaces`, and [here](schema/migration.sql) for without
+`tablespaces`.
 
 <br/>
 
@@ -232,7 +240,7 @@ The migration scripts can be found [here](schema/migration_tablespace.sql) for t
 
 | Name (Struct) | Data Type (Struct) | Column Name | Column Type | Description                                                                                                                                               |
 |---------------|--------------------|-------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ClientID      | pgtype.UUID        | client_id   | UUID        | The client id ia a unique identifier generated by UUID algorithm. It is the primary key and is automatically generated by the database when not provided. |
+| ClientID      | uuid.UUID          | client_id   | UUID        | The client id ia a unique identifier generated by UUID algorithm. It is the primary key and is automatically generated by the database when not provided. |
 | Username      | string             | username    | varchar(32) | The username unique identifier.                                                                                                                           |
 | Password      | string             | password    | varchar(32) | User's hashed password.                                                                                                                                   |
 | FirstName     | string             | first_name  | varchar(64) | User's first name.                                                                                                                                        |
@@ -240,10 +248,10 @@ The migration scripts can be found [here](schema/migration_tablespace.sql) for t
 | Email         | string             | email       | varchar(64) | Email address.                                                                                                                                            |
 | IsDeleted     | bool               | is_deleted  | boolean     | A soft delete indicator that prevents username reassignment.                                                                                              |
 
-The `client_id` has been selected as the primary key. The `client_id` will be the unique identifier that
-will attach the user's account to the other tables through a foreign key reference. The login operation will
-be required to look up the user credentials to retrieve the `client_id`. A B-Tree index will be automatically constructed on
-the `username` due to the unique constraint. This will facilitate username deduplication as well as efficient record lookup.
+The `client_id` has been selected as the primary key. The `client_id` will be the unique identifier that will attach the
+user's account to the other tables through a foreign key reference. The login operation will be required to look up the
+user credentials to retrieve the `client_id`. A B-Tree index will be automatically constructed on the `username` due to
+the unique constraint. This will facilitate username deduplication as well as efficient record lookup.
 
 <br/>
 
@@ -251,15 +259,16 @@ the `username` due to the unique constraint. This will facilitate username dedup
 
 | Name (Struct) | Data Type (Struct) | Column Name | Column Type   | Description                                                           |
 |---------------|--------------------|-------------|---------------|-----------------------------------------------------------------------|
-| ClientID      | pgtype.UUID        | client_id   | UUID          | Unique identifier for the account holder. References the Users table. |
+| ClientID      | uuid.UUID          | client_id   | UUID          | Unique identifier for the account holder. References the Users table. |
 | Currency      | Currency           | currency    | Currency      | A user defined enum type for the three character currency ISO code.   |
-| Balance       | pgtype.Numeric     | balance     | Numeric(18,2) | Current balance of the account correct to two decimal places.         |
-| LastTx        | pgtype.Numeric     | last_tx     | Numeric(18,2) | Last transaction amount correct to two decimal places.                |
+| Balance       | decimal.Decimal    | balance     | Numeric(18,2) | Current balance of the account correct to two decimal places.         |
+| LastTx        | decimal.Decimal    | last_tx     | Numeric(18,2) | Last transaction amount correct to two decimal places.                |
 | LastTxTs      | pgtype.Timestamptz | last_tx_ts  | TIMESTAMPTZ   | Last transactions UTC timestamp.                                      |
 | CreatedAt     | pgtype.Timestamptz | created_at  | TIMESTAMPTZ   | UTC timestamp at which the account was created.                       |
 
-A compound primary key has been created on the `ClientID` and `Currency`. Each user may only have one account in each currency.
-A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts belonging to a single user.
+A compound primary key has been created on the `ClientID` and `Currency`. Each user may only have one account in each
+currency. A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts belonging
+to a single user.
 
 The query to retrieve all Fiat account balances for a specific client leverages the index on the Fiat Accounts table.
 There are a finite number of supported Fiat currencies; the aggregate number of accounts that can be retrieved is
@@ -275,14 +284,14 @@ created in the currency range prior to the page cursor will not affect data cont
 
 | Name (Struct) | Data Type (Struct) | Column Name   | Column Type   | Description                                                                                                                                            |
 |---------------|--------------------|---------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| TxID          | pgtype.UUID        | tx_id         | UUID          | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.  |
-| ClientID      | pgtype.UUID        | client_id     | UUID          | Unique identifier for the account relating to the transaction. References the Accounts table.                                                          |
+| TxID          | uuid.UUID          | tx_id         | UUID          | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.  |
+| ClientID      | uuid.UUID          | client_id     | UUID          | Unique identifier for the account relating to the transaction. References the Accounts table.                                                          |
 | Currency      | Currency           | currency      | Currency      | A user defined enum type for the three character currency ISO code.                                                                                    |
-| Amount        | pgtype.Numeric     | amount        | Numeric(18,2) | Amount for the transaction correct to two decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
+| Amount        | decimal.Decimal    | amount        | Numeric(18,2) | Amount for the transaction correct to two decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
 | TransactedAt  | pgtype.Timestamptz | transacted_at | Numeric(18,2) | Last transactions UTC timestamp.                                                                                                                       |
 
-A compound primary key has been configured on the `tx_id`, `client_id`, and `currency` which will enforce uniqueness. Two
-additional indices have been created on the `transacted_at` and `tx_id` to support efficient record retrieval.
+A compound primary key has been configured on the `tx_id`, `client_id`, and `currency` which will enforce uniqueness.
+Two additional indices have been created on the `transacted_at` and `tx_id` to support efficient record retrieval.
 
 The query for Fiat Transaction retrieval will use the `Currency`, `Year`, `Month`, and `Timezone`. The data returned by
 the query will be for all transactions for the specified currency during the year and month in the specific timezone.
@@ -299,15 +308,16 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 | Name (Struct) | Data Type (Struct) | Column Name | Column Type   | Description                                                                                                                           |
 |---------------|--------------------|-------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| ClientID      | pgtype.UUID        | client_id   | UUID          | Unique identifier for the account holder. References the Users table.                                                                 |
+| ClientID      | uuid.UUID          | client_id   | UUID          | Unique identifier for the account holder. References the Users table.                                                                 |
 | Ticker        | string             | ticker      | VARCHAR(6)    | The ticker symbol for the cryptocurrency. Each cryptocurrency has a unique ticker symbol.                                             |
-| Balance       | pgtype.Numeric     | balance     | Numeric(24,8) | Current balance of the account correct to eight decimal places. This precision is chosen because 1 Satoshi (Sat) is `BTC 0.00000001`. |
-| LastTx        | pgtype.Numeric     | last_tx     | Numeric(24,8) | Last transaction amount correct to eight decimal places.                                                                              |
+| Balance       | decimal.Decimal    | balance     | Numeric(24,8) | Current balance of the account correct to eight decimal places. This precision is chosen because 1 Satoshi (Sat) is `BTC 0.00000001`. |
+| LastTx        | decimal.Decimal    | last_tx     | Numeric(24,8) | Last transaction amount correct to eight decimal places.                                                                              |
 | LastTxTs      | pgtype.Timestamptz | last_tx_ts  | TIMESTAMPTZ   | Last transactions UTC timestamp.                                                                                                      |
 | CreatedAt     | pgtype.Timestamptz | created_at  | TIMESTAMPTZ   | UTC timestamp at which the account was created.                                                                                       |
 
-A compound primary key has been created on the `ClientID` and `Ticker`. Each user may only have one account in each cryptocurrency and the ticker is unique for each cryptocurrency.
-A B-Tree index has also been created on the `ClientID` to facilitate efficient querying for accounts belonging to a single user.
+A compound primary key has been created on the `ClientID` and `Ticker`. Each user may only have one account in each
+cryptocurrency and the ticker is unique for each cryptocurrency. A B-Tree index has also been created on the `ClientID`
+to facilitate efficient querying for accounts belonging to a single user.
 
 The query to retrieve all Crypto account balances for a specific client leverages the index on the Crypto Accounts table.
 Each is expected to have only a few different Cryptocurrencies. The top 50 Cryptocurrencies by market capitalization can
@@ -326,10 +336,10 @@ range prior to the page cursor will not affect data contained in the pages that 
 
 | Name (Struct) | Data Type (Struct) | Column Name   | Column Type   | Description                                                                                                                                              |
 |---------------|--------------------|---------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| TxID          | pgtype.UUID        | tx_id         | UUID          | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.    |
-| ClientID      | pgtype.UUID        | client_id     | UUID          | Unique identifier for the account relating to the transaction. References the Accounts table.                                                            |
+| TxID          | uuid.UUID          | tx_id         | UUID          | Identifier (primary key) for the transaction. Each key will shared between two entries in the table, once for a deposit and another for a withdrawal.    |
+| ClientID      | uuid.UUID          | client_id     | UUID          | Unique identifier for the account relating to the transaction. References the Accounts table.                                                            |
 | Ticker        | string             | ticker        | VARCHAR(6)    | The ticker symbol for the cryptocurrency. Each cryptocurrency has a unique ticker symbol.                                                                |
-| Amount        | pgtype.Numeric     | amount        | Numeric(24,8) | Amount for the transaction correct to eight decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
+| Amount        | decimal.Decimal    | amount        | Numeric(24,8) | Amount for the transaction correct to eight decimal places. A positive value will indicate a deposit whilst a negative value will indicate a withdrawal. |
 | TransactedAt  | pgtype.Timestamptz | transacted_at | Numeric(24,8) | Last transactions UTC timestamp.                                                                                                                         |
 
 A compound primary key has been configured on the `tx_id`, `client_id`, and `ticker` which will enforce uniqueness. Two
@@ -348,13 +358,13 @@ query it indicates an end to the data set. The anticipated number of transaction
 
 ## Special Purpose Accounts
 
-| Username          | Purpose                                                                            |
-|-------------------|------------------------------------------------------------------------------------|
-| fiat-currencies   | Inbound deposits to the fiat accounts will be associated with this user account.   |
-| crypto-currencies | Inbound deposits to the crypto accounts will be associated with this user account. |
+| Username          | Purpose                                                                                    |
+|-------------------|--------------------------------------------------------------------------------------------|
+| fiat-currencies   | FTeX internal Fiat account will be associated with Fiat currency in/outflow operations.    |
+| crypto-currencies | FTeX internal Crypto account will be associated with Cryptocurrency in/outflow operations. |
 
-Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password generated
-at creation and will be marked as deleted so disable login capabilities.
+Special purpose accounts will be created for the purpose of journal entries. These accounts will have random password
+generated at creation and will be marked as deleted so disable login capabilities.
 
 <br/>
 
