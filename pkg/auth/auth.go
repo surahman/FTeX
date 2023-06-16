@@ -113,7 +113,7 @@ type jwtClaim struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateJWT creates a payload consisting of the JWT with the Client ID and  expiration time.
+// GenerateJWT creates a payload consisting of the JWT with the Client ID and expiration time.
 func (a *authImpl) GenerateJWT(clientID uuid.UUID) (*models.JWTAuthResponse, error) {
 	claims := &jwtClaim{
 		ClientID: clientID,
@@ -183,9 +183,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (uuid.UUID, int64, error) {
 
 // RefreshJWT will extend a valid JWTs lease by generating a fresh valid JWT.
 func (a *authImpl) RefreshJWT(token string) (authResponse *models.JWTAuthResponse, err error) {
-	var (
-		clientID uuid.UUID
-	)
+	var clientID uuid.UUID
 
 	if clientID, _, err = a.ValidateJWT(token); err != nil {
 		return
