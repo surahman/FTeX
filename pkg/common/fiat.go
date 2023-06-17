@@ -117,9 +117,9 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
-	// Check to make sure there is a valid Cryptocurrency amount.
+	// Check to make sure there is a valid Fiat amount.
 	if !offer.Amount.GreaterThan(decimal.NewFromFloat(0)) {
-		msg := "cryptocurrency purchase/sale amount is too small"
+		msg := "fiat currency purchase/sale amount is too small"
 
 		return nil, http.StatusBadRequest, msg, nil, errors.New(msg)
 	}
@@ -324,8 +324,7 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 	}
 
 	// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
-	lastRecordIdx := int(pageSize)
-	if len(accDetails.AccountBalances) == lastRecordIdx+1 {
+	if len(accDetails.AccountBalances) > int(pageSize) {
 		// Generate next page link.
 		if nextPage, err = auth.EncryptToString([]byte(accDetails.AccountBalances[pageSize].Currency)); err != nil {
 			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
