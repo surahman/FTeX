@@ -23,9 +23,7 @@ import (
 // HTTPCryptoOpen opens a Crypto account.
 func HTTPCryptoOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, ticker string) (
 	int, string, error) {
-	var (
-		err error
-	)
+	var err error
 
 	if err = db.CryptoCreateAccount(clientID, ticker); err != nil {
 		var createErr *postgres.Error
@@ -49,7 +47,7 @@ func HTTPCryptoBalance(db postgres.Postgres, logger *logger.Logger, clientID uui
 		err        error
 	)
 
-	// Extract and validate the currency.
+	// Validate the ticker.
 	if len(ticker) < 1 || len(ticker) > 6 {
 		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker,
 			errors.New(constants.GetInvalidCurrencyString())
@@ -278,7 +276,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 	if cryptoDetails.AccountBalances, err = db.CryptoBalancesPaginated(clientID, ticker, pageSize+1); err != nil {
 		var balanceErr *postgres.Error
 		if !errors.As(err, &balanceErr) {
-			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
+			logger.Info("failed to unpack Crypto account balance error", zap.Error(err))
 
 			return cryptoDetails, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
@@ -287,12 +285,11 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 	}
 
 	// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
-	lastRecordIdx := int(pageSize)
-	if len(cryptoDetails.AccountBalances) == lastRecordIdx+1 {
+	if len(cryptoDetails.AccountBalances) > int(pageSize) {
 		// Generate next page link.
 		if nextPage, err =
 			auth.EncryptToString([]byte(cryptoDetails.AccountBalances[pageSize].Ticker)); err != nil {
-			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
+			logger.Error("failed to encrypt Cryptocurrency ticker for use as cursor", zap.Error(err))
 
 			return cryptoDetails, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
