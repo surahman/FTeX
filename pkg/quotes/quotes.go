@@ -123,10 +123,9 @@ func (q *quotesImpl) fiatQuote(source, destination string, sourceAmount decimal.
 
 	// Failed to query endpoint for price.
 	if err != nil {
-		msg := "failed to get Fiat currency price quote"
-		q.logger.Warn(msg, zap.Error(err))
+		q.logger.Warn("failed to get Fiat currency price quote", zap.Error(err))
 
-		return result, NewError("please try again later").SetStatus(http.StatusServiceUnavailable)
+		return result, NewError(constants.RetryMessageString()).SetStatus(http.StatusServiceUnavailable)
 	}
 
 	// Check for a successful rate retrieval.
@@ -161,8 +160,8 @@ func (q *quotesImpl) FiatConversion(
 		return decimal.Decimal{}, decimal.Decimal{}, fmt.Errorf("%w", err)
 	}
 
-	// For precision related concerns the amount to be posted will be recalculated here. We only rely on the quote
-	// provider for rate quote's precision and not the amount converted precision.
+	// For precision-related concerns, the amount to be posted will be recalculated here.
+	// We only rely on the quote provider for rate quote's precision and not the amount converted precision.
 	convertedAmount := rawQuote.Info.Rate.
 		Mul(amount).
 		RoundBank(constants.DecimalPlacesFiat())
@@ -196,7 +195,7 @@ func (q *quotesImpl) cryptoQuote(source, destination string) (models.CryptoQuote
 		// Log and other API related errors and return an internal server error to user.
 		q.logger.Error("API error", zap.String("Response", resp.String()))
 
-		return result, NewError("please try again later").SetStatus(http.StatusInternalServerError)
+		return result, NewError(constants.RetryMessageString()).SetStatus(http.StatusInternalServerError)
 	}
 
 	return result, nil
@@ -232,8 +231,8 @@ func (q *quotesImpl) CryptoConversion(
 		return decimal.Decimal{}, decimal.Decimal{}, fmt.Errorf("%w", err)
 	}
 
-	// For precision related concerns the amount to be posted will be recalculated here. We only rely on the quote
-	// provider for rate quote's precision and not the amount converted precision.
+	// For precision-related concerns, the amount to be posted will be recalculated here.
+	// We only rely on the quote provider for rate quote's precision and not the amount converted precision.
 	convertedAmount := rawQuote.Rate.
 		Mul(sourceAmount).
 		RoundBank(precision)

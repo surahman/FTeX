@@ -103,7 +103,7 @@ func setup() error {
 		return fmt.Errorf("failed to load test configs %w", err)
 	}
 
-	// If running on a GitHub Actions runner use the secret stored in the GitHub Actions Secrets.
+	// If running on a GitHub Actions runner, use the secret stored in the GitHub Actions Secrets.
 	if _, ok := os.LookupEnv(constants.GithubCIKey()); ok {
 		zapLogger.Info("Integration Test running on Github CI runner.")
 		zapLogger.Warn("*** Please ensure that the Quotes configurations are upto date in GHA Secrets ***")
