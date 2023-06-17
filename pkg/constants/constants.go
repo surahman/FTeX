@@ -1,6 +1,8 @@
 package constants
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	// Configuration file directories.
@@ -43,6 +45,11 @@ const (
 	validationSting               = "validation"
 	invalidCurrencyString         = "invalid currency"
 	retryMessageString            = "please retry your request later"
+)
+
+var (
+	twoSecondDuration   = 2 * time.Second
+	threeSecondDuration = 3 * time.Second
 )
 
 // EtcDir returns the configuration directory in Etc.
@@ -208,4 +215,14 @@ func InvalidCurrencyString() string {
 // RetryMessageString is the error message requesting a retry.
 func RetryMessageString() string {
 	return retryMessageString
+}
+
+// TwoSeconds is a two-second time duration.
+func TwoSeconds() time.Duration {
+	return twoSecondDuration
+}
+
+// ThreeSeconds is a three-second time duration.
+func ThreeSeconds() time.Duration {
+	return threeSecondDuration
 }

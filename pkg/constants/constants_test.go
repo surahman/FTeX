@@ -185,3 +185,10 @@ func TestInvalidCurrencyString(t *testing.T) {
 func TestRetryMessageString(t *testing.T) {
 	require.Equal(t, retryMessageString, RetryMessageString(), "Incorrect retry message string.")
 }
+
+func TestTwoSeconds(t *testing.T) {
+	require.Equal(t, twoSecondDuration, TwoSeconds(), "Incorrect two second duration.")
+}
+func TestThreeSeconds(t *testing.T) {
+	require.Equal(t, threeSecondDuration, ThreeSeconds(), "Incorrect three second duration.")
+}
