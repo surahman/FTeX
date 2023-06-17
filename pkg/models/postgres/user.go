@@ -4,7 +4,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// User represents a users account and is a row in user table.
+// User represents a user's account and is a row in the user table.
 type User struct {
 	*UserAccount
 	ClientID  uuid.UUID `json:"clientId,omitempty"`

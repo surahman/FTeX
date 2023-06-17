@@ -6,8 +6,8 @@ import (
 	"github.com/surahman/FTeX/pkg/postgres"
 )
 
-// JWTAuthResponse is the response to a successful login and token refresh. The expires field is used on by the client to
-// know when to refresh the token.
+// JWTAuthResponse is the response to a successful login and token refresh.
+// The client uses the expires field on to know when to refresh the token.
 //
 //nolint:lll
 type JWTAuthResponse struct {
