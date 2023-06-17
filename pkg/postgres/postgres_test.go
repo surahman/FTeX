@@ -13,8 +13,8 @@ func TestNewPostgres(t *testing.T) {
 	t.Parallel()
 
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.PostgresFileName(),
 		[]byte(postgresConfigTestData["test_suite"]), 0644), "Failed to write in memory file")
 
 	testCases := []struct {
@@ -74,7 +74,7 @@ func TestNewPostgresImpl(t *testing.T) {
 	}{
 		{
 			name:      "File found",
-			fileName:  constants.GetPostgresFileName(),
+			fileName:  constants.PostgresFileName(),
 			input:     postgresConfigTestData["test_suite"],
 			expectErr: require.NoError,
 			expectNil: require.NotNil,
@@ -90,8 +90,8 @@ func TestNewPostgresImpl(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testCase.fileName,
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+testCase.fileName,
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			c, err := newPostgresImpl(&fs, zapLogger)
@@ -113,8 +113,8 @@ func TestPostgres_verifySession(t *testing.T) {
 
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.PostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Not open session.
@@ -142,8 +142,8 @@ func TestPostgres_Open(t *testing.T) {
 
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.PostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
@@ -166,8 +166,8 @@ func TestPostgres_Close(t *testing.T) {
 
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.PostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.
@@ -186,8 +186,8 @@ func TestPostgres_Healthcheck(t *testing.T) {
 
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.PostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644), "Failed to write in memory file")
 
 	// Open and close session.

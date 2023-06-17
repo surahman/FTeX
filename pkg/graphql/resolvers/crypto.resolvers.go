@@ -103,7 +103,7 @@ func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCry
 
 	if offer, _, statusMessage, err = common.HTTPCryptoOffer(r.auth, r.cache, r.logger, r.quotes,
 		clientID, input.SourceCurrency, input.DestinationCurrency, input.SourceAmount, *input.IsPurchase); err != nil {
-		if statusMessage == constants.GetInvalidRequest() {
+		if statusMessage == constants.InvalidRequestString() {
 			statusMessage = err.Error()
 		}
 

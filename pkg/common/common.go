@@ -102,7 +102,7 @@ func HTTPTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, time
 	}
 
 	// Prepare Postgres timestamps.
-	periodStartStr = fmt.Sprintf(constants.GetMonthFormatString(), startYear, startMonth, timezoneStr)
+	periodStartStr = fmt.Sprintf(constants.MonthFormatString(), startYear, startMonth, timezoneStr)
 	if startTime, err = time.Parse(time.RFC3339, periodStartStr); err != nil {
 		return periodStart, periodEnd, pageCursor, fmt.Errorf("start date parse failure %w", err)
 	}
@@ -111,7 +111,7 @@ func HTTPTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, time
 		return periodStart, periodEnd, pageCursor, fmt.Errorf("invalid start date %w", err)
 	}
 
-	periodEndStr = fmt.Sprintf(constants.GetMonthFormatString(), endYear, endMonth, timezoneStr)
+	periodEndStr = fmt.Sprintf(constants.MonthFormatString(), endYear, endMonth, timezoneStr)
 	if endTime, err = time.Parse(time.RFC3339, periodEndStr); err != nil {
 		return periodStart, periodEnd, pageCursor, fmt.Errorf("end date parse failure %w", err)
 	}

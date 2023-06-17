@@ -95,7 +95,7 @@ func TestCommon_HTTPCryptoBalance(t *testing.T) {
 		{
 			name:             "invalid ticker",
 			tickerStr:        "INVALID",
-			balanceAccErr:    errors.New(constants.GetInvalidCurrencyString()),
+			balanceAccErr:    errors.New(constants.InvalidCurrencyString()),
 			balanceAccTimes:  0,
 			expectErrCode:    http.StatusBadRequest,
 			expectErrMsg:     "invalid",
@@ -165,8 +165,8 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 
 	var (
 		decryptedCursor = fmt.Sprintf("%s,%s,%d",
-			fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
-			fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+			fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
+			fmt.Sprintf(constants.MonthFormatString(), 2023, 7, "-04:00"),
 			10)
 		journalEntries   = []postgres.CryptoJournal{{}, {}, {}, {}}
 		paramsPageCursor = &HTTPPaginatedTxParams{PageCursorStr: "?pageCursor=page-cursor"}
@@ -403,7 +403,7 @@ func TestCommon_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 			source:           "INVALID",
 			destination:      "BTC",
 			expectErrMsg:     "INVALID",
-			httpMessage:      constants.GetInvalidRequest(),
+			httpMessage:      constants.InvalidRequestString(),
 			httpStatus:       http.StatusBadRequest,
 			isPurchase:       true,
 			quotesAmount:     decimal.NewFromFloat(1.23),
@@ -499,7 +499,7 @@ func TestCommon_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 			source:           "BTC",
 			destination:      "INVALID",
 			expectErrMsg:     "INVALID",
-			httpMessage:      constants.GetInvalidRequest(),
+			httpMessage:      constants.InvalidRequestString(),
 			httpStatus:       http.StatusBadRequest,
 			isPurchase:       false,
 			quotesAmount:     decimal.NewFromFloat(1.23),

@@ -15,8 +15,8 @@ func TestNewAuth(t *testing.T) {
 	t.Parallel()
 
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetAuthFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.AuthFileName(),
 		[]byte(authConfigTestData["valid"]), 0644), "Failed to write in memory file")
 
 	testCases := []struct {
@@ -75,7 +75,7 @@ func TestNewAuthImpl(t *testing.T) {
 	}{
 		{
 			name:      "File found",
-			fileName:  constants.GetAuthFileName(),
+			fileName:  constants.AuthFileName(),
 			input:     authConfigTestData["valid"],
 			expectErr: require.NoError,
 			expectNil: require.NotNil,
@@ -92,8 +92,8 @@ func TestNewAuthImpl(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testCase.fileName,
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+testCase.fileName,
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			auth, err := NewAuth(&fs, zapLogger)

@@ -22,8 +22,8 @@ func TestNewRESTServer(t *testing.T) {
 	mockQuotes := quotes.NewMockQuotes(mockCtrl)
 
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetHTTPRESTFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.HTTPRESTFileName(),
 		[]byte(restConfigTestData["valid"]), 0644), "Failed to write in memory file")
 
 	server, err := NewServer(&fs, mockAuth, mockPostgres, mockRedis, mockQuotes, zapLogger, &sync.WaitGroup{})

@@ -70,7 +70,7 @@ func setup() error {
 
 	// If running on a GitHub Actions runner use the default credentials for Postgres.
 	configFileKey = "test_suite"
-	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
+	if _, ok := os.LookupEnv(constants.GithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
 
 		zapLogger.Info("Integration Test running on Github CI runner.")
@@ -78,11 +78,11 @@ func setup() error {
 
 	// Setup mock filesystem for configs.
 	fs := afero.NewMemMapFs()
-	if err = fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
+	if err = fs.MkdirAll(constants.EtcDir(), 0644); err != nil {
 		return fmt.Errorf("afero memory mapped file system setup failed: %w", err)
 	}
 
-	if err = afero.WriteFile(fs, constants.GetEtcDir()+constants.GetPostgresFileName(),
+	if err = afero.WriteFile(fs, constants.EtcDir()+constants.PostgresFileName(),
 		[]byte(postgresConfigTestData[configFileKey]), 0644); err != nil {
 		return fmt.Errorf("afero memory mapped file system write failed: %w", err)
 	}

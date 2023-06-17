@@ -175,7 +175,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:               "empty request",
-			expectedMsg:        constants.GetValidationString(),
+			expectedMsg:        constants.ValidationString(),
 			path:               "/purchase-offer-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPCryptoOfferRequest{},
@@ -214,7 +214,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:           "no purchase or sale flag",
-			expectedMsg:    constants.GetValidationString(),
+			expectedMsg:    constants.ValidationString(),
 			path:           "/purchase-offer-crypto/invalid-fiat-currency",
 			expectedStatus: http.StatusBadRequest,
 			request: &models.HTTPCryptoOfferRequest{
@@ -472,7 +472,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == constants.GetInvalidRequest() {
+			if errorMessage == constants.InvalidRequestString() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)
@@ -557,7 +557,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			expectErr:          require.Error,
 		}, {
 			name:               "empty request",
-			expectedMsg:        constants.GetValidationString(),
+			expectedMsg:        constants.ValidationString(),
 			path:               "/exchange-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPTransferRequest{},
@@ -684,7 +684,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == constants.GetInvalidRequest() {
+			if errorMessage == constants.InvalidRequestString() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)
@@ -722,7 +722,7 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 		}, {
 			name:               "invalid currency",
 			currency:           "INVALID",
-			expectedMsg:        constants.GetInvalidCurrencyString(),
+			expectedMsg:        constants.InvalidCurrencyString(),
 			expectedStatus:     http.StatusBadRequest,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
@@ -1125,8 +1125,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 	const basePath = "/crypto/transaction/details-journal/paginated/"
 
 	decryptedCursor := fmt.Sprintf("%s,%s,%d",
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 7, "-04:00"),
 		10)
 
 	journalEntries := []postgres.CryptoJournal{{}, {}, {}, {}}

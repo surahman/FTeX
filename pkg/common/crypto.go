@@ -49,8 +49,8 @@ func HTTPCryptoBalance(db postgres.Postgres, logger *logger.Logger, clientID uui
 
 	// Validate the ticker.
 	if len(ticker) < 1 || len(ticker) > 6 {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker,
-			errors.New(constants.GetInvalidCurrencyString())
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), ticker,
+			errors.New(constants.InvalidCurrencyString())
 	}
 
 	if accDetails, err = db.CryptoBalance(clientID, ticker); err != nil {
@@ -75,19 +75,19 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 		err          error
 		offer        models.HTTPExchangeOfferResponse
 		offerID      = xid.New().String()
-		precision    = constants.GetDecimalPlacesFiat()
+		precision    = constants.DecimalPlacesFiat()
 		fiatCurrency = source
 	)
 
 	// Configure precision and fiat tickers for Crypto sale.
 	if !isPurchase {
-		precision = constants.GetDecimalPlacesCrypto()
+		precision = constants.DecimalPlacesCrypto()
 		fiatCurrency = destination
 	}
 
 	// Validate the Fiat currency and source amount.
 	if _, err = HTTPValidateOfferRequest(sourceAmount, precision, fiatCurrency); err != nil {
-		return offer, http.StatusBadRequest, constants.GetInvalidRequest(), fmt.Errorf("%w", err)
+		return offer, http.StatusBadRequest, constants.InvalidRequestString(), fmt.Errorf("%w", err)
 	}
 
 	// Compile exchange rate offer.
@@ -109,7 +109,7 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 	offer.SourceAcc = source
 	offer.DestinationAcc = destination
 	offer.DebitAmount = sourceAmount
-	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+	offer.Expires = time.Now().Add(constants.FiatOfferTTL()).Unix()
 	offer.IsCryptoPurchase = isPurchase
 	offer.IsCryptoSale = !isPurchase
 
@@ -122,7 +122,7 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 	}
 
 	// Store the offer in Redis.
-	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+	if err = cache.Set(offerID, &offer, constants.FiatOfferTTL()); err != nil {
 		msg := "failed to store Cryptocurrency purchase/sale offer in cache"
 		logger.Warn(msg, zap.Error(err))
 
@@ -143,7 +143,7 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 		fiatTicker   string
 		cryptoAmount decimal.Decimal
 		fiatAmount   decimal.Decimal
-		precision    = constants.GetDecimalPlacesCrypto()
+		precision    = constants.DecimalPlacesCrypto()
 		transferFunc = db.CryptoPurchase
 		fiatCurrency []postgres.Currency
 	)
@@ -199,7 +199,7 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 		cryptoAmount = offer.DebitAmount
 		fiatTicker = offer.DestinationAcc
 		fiatAmount = offer.Amount
-		precision = constants.GetDecimalPlacesCrypto()
+		precision = constants.DecimalPlacesCrypto()
 		transferFunc = db.CryptoSell
 	}
 
@@ -299,7 +299,7 @@ func HTTPCryptoBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *lo
 
 		// Generate naked next page link for REST.
 		if isREST {
-			cryptoDetails.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
+			cryptoDetails.Links.NextPage = fmt.Sprintf(constants.NextPageRESTFormatString(), nextPage, pageSize)
 		} else {
 			cryptoDetails.Links.PageCursor = nextPage
 		}
@@ -352,7 +352,7 @@ func HTTPCryptoTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logge
 
 	// Generate naked next page link. The params will have had the nextPage link generated in the prior methods called.
 	if isREST {
-		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+		params.NextPage = fmt.Sprintf(constants.NextPageRESTFormatString(), params.NextPage, params.PageSize)
 	}
 
 	// Check if there are further pages of data. If not, set the next link to be empty.

@@ -13,8 +13,8 @@ import (
 )
 
 func TestRedisConfigs_Load(t *testing.T) {
-	envAuthKey := constants.GetRedisPrefix() + "_AUTHENTICATION."
-	envConnKey := constants.GetRedisPrefix() + "_CONNECTION."
+	envAuthKey := constants.RedisPrefix() + "_AUTHENTICATION."
+	envConnKey := constants.RedisPrefix() + "_CONNECTION."
 
 	testCases := []struct {
 		name         string
@@ -79,8 +79,8 @@ func TestRedisConfigs_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetRedisFileName(),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.RedisFileName(),
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.

@@ -16,8 +16,8 @@ import (
 )
 
 func TestRestConfigs_Load(t *testing.T) {
-	keyspaceServer := constants.GetHTTPRESTPrefix() + "_SERVER."
-	keyspaceAuth := constants.GetHTTPRESTPrefix() + "_AUTHORIZATION."
+	keyspaceServer := constants.HTTPRESTPrefix() + "_SERVER."
+	keyspaceAuth := constants.HTTPRESTPrefix() + "_AUTHORIZATION."
 
 	testCases := []struct {
 		name         string
@@ -82,8 +82,8 @@ func TestRestConfigs_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetHTTPRESTFileName(),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.HTTPRESTFileName(),
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.

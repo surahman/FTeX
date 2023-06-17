@@ -152,7 +152,7 @@ func (p *postgresImpl) Open() error {
 
 	var pgxConfig *pgxpool.Config
 
-	if pgxConfig, err = pgxpool.ParseConfig(fmt.Sprintf(constants.GetPostgresDSN(),
+	if pgxConfig, err = pgxpool.ParseConfig(fmt.Sprintf(constants.PostgresDSN(),
 		p.conf.Authentication.Username,
 		p.conf.Authentication.Password,
 		p.conf.Connection.Host,

@@ -46,8 +46,8 @@ func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetHTTPGraphQLFileName(),
-		constants.GetHTTPGraphQLPrefix(),
+		constants.HTTPGraphQLFileName(),
+		constants.HTTPGraphQLPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("rest config loading failed: %w", err)
 	}

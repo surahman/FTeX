@@ -32,7 +32,7 @@ func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUI
 
 	// Extract and validate the currency.
 	if err = pgCurrency.Scan(currency); err != nil || !pgCurrency.Valid() {
-		return http.StatusBadRequest, constants.GetInvalidCurrencyString(), fmt.Errorf("%w", err)
+		return http.StatusBadRequest, constants.InvalidCurrencyString(), fmt.Errorf("%w", err)
 	}
 
 	if err = db.FiatCreateAccount(clientID, pgCurrency); err != nil {
@@ -59,16 +59,16 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract and validate the currency.
 	if err = pgCurrency.Scan(request.Currency); err != nil || !pgCurrency.Valid() {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), request.Currency, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), request.Currency, fmt.Errorf("%w", err)
 	}
 
 	// Check for correct decimal places.
-	if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || request.Amount.IsNegative() {
+	if !request.Amount.Equal(request.Amount.Truncate(constants.DecimalPlacesFiat())) || request.Amount.IsNegative() {
 		return nil, http.StatusBadRequest, "invalid amount", request.Amount, fmt.Errorf("%w", err)
 	}
 
@@ -100,13 +100,13 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract and validate the currency.
-	if _, err = HTTPValidateOfferRequest(request.SourceAmount, constants.GetDecimalPlacesFiat(),
+	if _, err = HTTPValidateOfferRequest(request.SourceAmount, constants.DecimalPlacesFiat(),
 		request.SourceCurrency, request.DestinationCurrency); err != nil {
-		return nil, http.StatusBadRequest, constants.GetInvalidRequest(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidRequestString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Compile exchange rate offer.
@@ -128,7 +128,7 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	offer.SourceAcc = request.SourceCurrency
 	offer.DestinationAcc = request.DestinationCurrency
 	offer.DebitAmount = request.SourceAmount
-	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+	offer.Expires = time.Now().Add(constants.FiatOfferTTL()).Unix()
 
 	// Encrypt offer ID before returning to client.
 	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
@@ -138,7 +138,7 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	}
 
 	// Store the offer in Redis.
-	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+	if err = cache.Set(offerID, &offer, constants.FiatOfferTTL()); err != nil {
 		logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
 
 		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
@@ -159,7 +159,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract Offer ID from request.
@@ -201,7 +201,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 
 	// Get currency codes.
 	if parsedCurrencies, err = HTTPValidateOfferRequest(
-		offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
+		offer.Amount, constants.DecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
 		logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
 			zap.Error(err))
 
@@ -242,7 +242,7 @@ func HTTPFiatBalance(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 
 	// Extract and validate the currency.
 	if err = currency.Scan(ticker); err != nil || !currency.Valid() {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
 	}
 
 	if accDetails, err = db.FiatBalance(clientID, currency); err != nil {
@@ -337,7 +337,7 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 
 		// Generate naked next page link for REST.
 		if isREST {
-			accDetails.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
+			accDetails.Links.NextPage = fmt.Sprintf(constants.NextPageRESTFormatString(), nextPage, pageSize)
 		} else {
 			accDetails.Links.PageCursor = nextPage
 		}
@@ -360,7 +360,7 @@ func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger 
 
 	// Extract and validate the currency.
 	if err = currency.Scan(ticker); err != nil || !currency.Valid() {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
 	}
 
 	// Check for required parameters.
@@ -393,7 +393,7 @@ func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger 
 
 	// Generate naked next page link for REST.
 	if isREST {
-		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+		params.NextPage = fmt.Sprintf(constants.NextPageRESTFormatString(), params.NextPage, params.PageSize)
 	}
 
 	// Check if there are further pages of data. If not, set the next link to be empty.

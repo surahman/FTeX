@@ -43,8 +43,8 @@ func (cfg *config) Load(fs afero.Fs) (err error) {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetQuotesFileName(),
-		constants.GetQuotesPrefix(),
+		constants.QuotesFileName(),
+		constants.QuotesPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("quotes config loading failed: %w", err)
 	}

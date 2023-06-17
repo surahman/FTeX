@@ -203,7 +203,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 
 	defer cancel()
 
-	ftexID, err := connection.queries.userGetClientId(ctx, constants.GetSpecialAccountFiat())
+	ftexID, err := connection.queries.userGetClientId(ctx, constants.SpecialAccountFiat())
 	require.NoError(t, err, "failed to retrieve FTeX internal ID.")
 
 	for _, testCase := range testCases {

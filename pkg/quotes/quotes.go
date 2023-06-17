@@ -165,7 +165,7 @@ func (q *quotesImpl) FiatConversion(
 	// provider for rate quote's precision and not the amount converted precision.
 	convertedAmount := rawQuote.Info.Rate.
 		Mul(amount).
-		RoundBank(constants.GetDecimalPlacesFiat())
+		RoundBank(constants.DecimalPlacesFiat())
 
 	return rawQuote.Info.Rate, convertedAmount, nil
 }
@@ -211,7 +211,7 @@ func (q *quotesImpl) CryptoConversion(
 	cryptoQuote func(source, destination string) (models.CryptoQuote, error)) (
 	decimal.Decimal, decimal.Decimal, error) {
 	var (
-		precision = constants.GetDecimalPlacesCrypto()
+		precision = constants.DecimalPlacesCrypto()
 		err       error
 		rawQuote  models.CryptoQuote
 	)
@@ -222,7 +222,7 @@ func (q *quotesImpl) CryptoConversion(
 	}
 
 	if !isPurchasingCrypto {
-		precision = constants.GetDecimalPlacesFiat()
+		precision = constants.DecimalPlacesFiat()
 	}
 
 	rawQuote, err = cryptoQuote(sourceCurrency, destinationCurrency)

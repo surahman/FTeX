@@ -57,7 +57,7 @@ func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 
 		if err = validator.ValidateStruct(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+				models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}
@@ -118,7 +118,7 @@ func OfferCrypto(
 
 		if err = validator.ValidateStruct(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+				models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}
@@ -127,7 +127,7 @@ func OfferCrypto(
 			clientID, request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, *request.IsPurchase)
 		if err != nil {
 			httpErr := &models.HTTPError{Message: statusMessage}
-			if statusMessage == constants.GetInvalidRequest() {
+			if statusMessage == constants.InvalidRequestString() {
 				httpErr.Payload = err.Error()
 			}
 
@@ -186,7 +186,7 @@ func ExchangeCrypto(
 
 		if err = validator.ValidateStruct(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+				models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}

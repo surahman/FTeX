@@ -44,8 +44,8 @@ func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetRedisFileName(),
-		constants.GetRedisPrefix(),
+		constants.RedisFileName(),
+		constants.RedisPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("redis config loading failed: %w", err)
 	}

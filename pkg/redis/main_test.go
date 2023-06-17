@@ -67,7 +67,7 @@ func setup() error {
 
 	// If running on a GitHub Actions runner use the default credentials for Postgres.
 	configFileKey = "test_suite"
-	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok == true {
+	if _, ok := os.LookupEnv(constants.GithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
 
 		zapLogger.Info("Integration Test running on Github CI runner.")
