@@ -9,7 +9,7 @@ import (
 	"github.com/surahman/FTeX/pkg/constants"
 )
 
-// config is the configuration container for the HTTP REST endpoint.
+// config is the configuration for the HTTP REST endpoint.
 //
 //nolint:lll
 type config struct {

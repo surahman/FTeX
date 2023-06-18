@@ -91,7 +91,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDele
 		return "", errors.New("invalid username or password")
 	}
 
-	// Check confirmation message.
+	// Check the confirmation message.
 	if fmt.Sprintf(constants.DeleteUserAccountConfirmation(), userAccount.Username) != input.Confirmation {
 		return "", errors.New("incorrect or incomplete deletion request confirmation")
 	}

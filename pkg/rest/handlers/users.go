@@ -192,7 +192,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 		}
 
 		// Do not refresh tokens that are outside the refresh threshold. Tokens could expire during the execution of
-		// this handler but expired ones would be rejected during token validation. Thus, it is not necessary to
+		// this handler, but expired ones would be rejected during token validation. Thus, it is not necessary to
 		// re-check expiration.
 		if expiresAt-time.Now().Unix() > auth.RefreshThreshold() {
 			ginCtx.AbortWithStatusJSON(http.StatusNotExtended,
@@ -277,7 +277,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		// Check confirmation message.
+		// Check the confirmation message.
 		if fmt.Sprintf(constants.DeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				&models.HTTPError{Message: "incorrect or incomplete deletion request confirmation"})
