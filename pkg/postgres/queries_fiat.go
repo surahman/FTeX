@@ -2,16 +2,16 @@ package postgres
 
 import (
 	"context"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/surahman/FTeX/pkg/constants"
 	"go.uber.org/zap"
 )
 
 // FiatCreateAccount is the interface through which external methods can create a Fiat account.
 func (p *postgresImpl) FiatCreateAccount(clientID uuid.UUID, currency Currency) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -25,10 +25,10 @@ func (p *postgresImpl) FiatCreateAccount(clientID uuid.UUID, currency Currency) 
 	return nil
 }
 
-// FiatBalance is the interface through which external methods can retrieve a Fiat account balance for a specific
+// FiatBalance is the interface through which external methods can retrieve a Fiat-account balance for a specific
 // currency.
 func (p *postgresImpl) FiatBalance(clientID uuid.UUID, currency Currency) (FiatAccount, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -43,7 +43,7 @@ func (p *postgresImpl) FiatBalance(clientID uuid.UUID, currency Currency) (FiatA
 // FiatTxDetails is the interface through which external methods can retrieve a Fiat transaction details for a specific
 // transaction.
 func (p *postgresImpl) FiatTxDetails(clientID uuid.UUID, transactionID uuid.UUID) ([]FiatJournal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -59,7 +59,7 @@ func (p *postgresImpl) FiatTxDetails(clientID uuid.UUID, transactionID uuid.UUID
 // specific client.
 func (p *postgresImpl) FiatBalancePaginated(clientID uuid.UUID, baseCurrency Currency, limit int32) (
 	[]FiatAccount, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -84,7 +84,7 @@ func (p *postgresImpl) FiatTransactionsPaginated(
 	offset int32,
 	startTime,
 	endTime pgtype.Timestamptz) ([]FiatJournal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 

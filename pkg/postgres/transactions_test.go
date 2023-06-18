@@ -130,13 +130,13 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test Fiat accounts.
+	// Insert an initial set of test Fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the Fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// End of test expected totals.
+	// End of test-expected totals.
 	expectedTotal := decimal.NewFromFloat(52145.79)
 
 	// Test grid.
@@ -245,7 +245,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 		}()
 	}
 
-	// Check end of test totals.
+	// Check the end of test totals.
 	wg.Wait()
 
 	t.Run("Checking end totals", func(t *testing.T) {
@@ -366,7 +366,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test Fiat accounts.
+	// Insert an initial set of test Fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the Fiat journal entries.
@@ -633,7 +633,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test Fiat accounts.
+	// Insert an initial set of test Fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the Fiat journal entries.
