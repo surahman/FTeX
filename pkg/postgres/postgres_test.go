@@ -9,7 +9,7 @@ import (
 	"github.com/surahman/FTeX/pkg/logger"
 )
 
-func TestNewPostgres(t *testing.T) {
+func TestPostgres_NewPostgres(t *testing.T) {
 	t.Parallel()
 
 	fs := afero.NewMemMapFs()
@@ -64,7 +64,7 @@ func TestNewPostgres(t *testing.T) {
 	}
 }
 
-func TestNewPostgresImpl(t *testing.T) {
+func TestPostgres_newPostgresImpl(t *testing.T) {
 	testCases := []struct {
 		name      string
 		fileName  string

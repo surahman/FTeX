@@ -82,7 +82,7 @@ type Postgres interface {
 	// CryptoCreateAccount is the interface through which external methods can create a Crypto account.
 	CryptoCreateAccount(uuid.UUID, string) error
 
-	// CryptoBalance is the interface through which external methods can retrieve a Fiat account balance for a specific
+	// CryptoBalance is the interface through which external methods can retrieve a Fiat-account balance for a specific
 	// cryptocurrency.
 	CryptoBalance(uuid.UUID, string) (CryptoAccount, error)
 
@@ -121,7 +121,7 @@ type postgresImpl struct {
 // NewPostgres will create a new Postgres configuration by loading it.
 func NewPostgres(fs *afero.Fs, logger *logger.Logger) (Postgres, error) {
 	if fs == nil || logger == nil {
-		return nil, errors.New("nil file system of logger supplied")
+		return nil, errors.New("nil file system or logger supplied")
 	}
 
 	return newPostgresImpl(fs, logger)

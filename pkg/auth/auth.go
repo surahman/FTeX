@@ -65,7 +65,7 @@ type authImpl struct {
 // NewAuth will create a new Authorization configuration by loading it.
 func NewAuth(fs *afero.Fs, logger *logger.Logger) (Auth, error) {
 	if fs == nil || logger == nil {
-		return nil, errors.New("nil file system of logger supplied")
+		return nil, errors.New("nil file system or logger supplied")
 	}
 
 	return newAuthImpl(fs, logger)
