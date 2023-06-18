@@ -22,9 +22,7 @@ func TestQueries_CryptoCreateAccount(t *testing.T) {
 	// Insert test users.
 	clientIDs := insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
-
-	// Insert initial set of test crypto accounts
+	// Insert an initial set of test crypto accounts
 	resetTestCryptoAccounts(t, clientIDs[0], clientIDs[2])
 
 	err := connection.CryptoCreateAccount(clientIDs[0], "USDC")
@@ -43,7 +41,7 @@ func TestQueries_CryptoBalanceCurrency(t *testing.T) {
 	// Insert test users.
 	clientIDs := insertTestUsers(t)
 
-	// Insert initial set of test Crypto accounts.
+	// Insert an initial set of test Crypto accounts.
 	resetTestCryptoAccounts(t, clientIDs[0], clientIDs[1])
 
 	testCases := []struct {
@@ -87,21 +85,20 @@ func TestQueries_CryptoPurchase(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
 	resetTestCryptoJournal(t)
 
 	// Configure test grid.
-	//nolint:dupl
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name               string
 		clientID           uuid.UUID
 		fiatCurrency       Currency
@@ -213,21 +210,20 @@ func TestQueries_CryptoSell(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
 	resetTestCryptoJournal(t)
 
 	// Configure test grid.
-	//nolint:dupl
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name              string
 		clientID          uuid.UUID
 		fiatCurrency      Currency
@@ -343,13 +339,13 @@ func TestCrypto_CryptoBalancePaginated(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
@@ -427,13 +423,13 @@ func TestCrypto_CryptoTransactionsPaginated(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
