@@ -16,7 +16,7 @@ func TestQueries_UserRegister(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	insertTestUsers(t)
 
 	testUser := models.UserAccount{
@@ -46,7 +46,7 @@ func TestQueries_UserCredentials(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	insertTestUsers(t)
 
 	const uname = "username1"
@@ -80,7 +80,7 @@ func TestQueries_UserGetInfo(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	insertTestUsers(t)
 
 	// Get valid account information.

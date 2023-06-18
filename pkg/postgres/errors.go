@@ -19,7 +19,7 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// Is will return whether the input err is an instance of expected error.
+// Is will return whether the input error is an instance of expected error.
 func (e *Error) Is(err error) bool {
 	var target *Error
 	if !errors.As(err, &target) {
@@ -54,7 +54,7 @@ var (
 	ErrNotFound              = errorNotFound()                 // ErrNotFound is returned as a generic not found error.
 	ErrUnhealthy             = errorUnhealthy()                // ErrUnhealthy is returned if the database cannot be pinged.
 	ErrTransactCrypto        = errorTransactionCrypto()        // ErrTransactCrypto is returned if a Crypto transaction fails.
-	ErrTransactCryptoDetails = errorTransactionCryptoDetails() // ErrTransactCryptoDetails is returned if a Crypto transaction succeeds but transaction retrieval fails.
+	ErrTransactCryptoDetails = errorTransactionCryptoDetails() // ErrTransactCryptoDetails is returned if a Crypto transaction succeeds, but transaction retrieval fails.
 )
 
 func errorRegisterUser() error {
