@@ -31,7 +31,6 @@ func TestConfigLoader(t *testing.T) {
 		expectErr require.ErrorAssertionFunc
 		expectLen int
 	}{
-		// ----- test cases start ----- //
 		{
 			name:      "empty - etc dir",
 			input:     postgresConfigTestData["empty"],
@@ -63,8 +62,8 @@ func TestConfigLoader(t *testing.T) {
 			expectErr: require.Error,
 			expectLen: 1,
 		},
-		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.

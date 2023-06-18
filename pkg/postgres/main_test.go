@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/spf13/afero"
@@ -23,7 +22,7 @@ var postgresConfigTestData = configTestData()
 // configFileKey is the name of the Postgres configuration file to use in the tests.
 var configFileKey string
 
-// connection pool to Cassandra cluster.
+// connection pool to Postgres cluster.
 var connection *postgresImpl
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.
@@ -68,7 +67,7 @@ func setup() error {
 
 	var err error
 
-	// If running on a GitHub Actions runner use the default credentials for Postgres.
+	// If running on a GitHub Actions runner, use the default credentials for Postgres.
 	configFileKey = "test_suite"
 	if _, ok := os.LookupEnv(constants.GithubCIKey()); ok == true {
 		configFileKey = "github-ci-runner"
@@ -93,7 +92,7 @@ func setup() error {
 	}
 
 	if err = connection.Open(); err != nil {
-		return fmt.Errorf("postgres connection opening failed: %w", err)
+		return fmt.Errorf("opening Postgres connection failed: %w", err)
 	}
 
 	return nil
@@ -110,13 +109,13 @@ func tearDown() (err error) {
 	return
 }
 
-// insertTestUsers will reset the users table and create some test user accounts.
+// insertTestUsers will reset the user's table and create some test user accounts.
 func insertTestUsers(t *testing.T) []uuid.UUID {
 	t.Helper()
 
-	// Reset the users table.
+	// Reset the user's table.
 	query := "DELETE FROM users WHERE first_name != 'Internal';"
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -147,7 +146,7 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 
 	// Reset the fiat accounts table.
 	query := "TRUNCATE TABLE fiat_accounts CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -156,7 +155,7 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 
 	require.NoError(t, err, "failed to wipe fiat accounts table before reinserting accounts.")
 
-	// Retrieve client ids from users table.
+	// Retrieve client ids from users' table.
 	clientID1, err := connection.Query.userGetClientId(ctx, "username1")
 	require.NoError(t, err, "failed to retrieve username1 client id.")
 	clientID2, err := connection.Query.userGetClientId(ctx, "username2")
@@ -183,24 +182,24 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 
 	// Reset the fiat journal table.
 	query := "TRUNCATE TABLE fiat_journal CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
 
 	defer cancel()
 
 	rows, err := connection.queries.db.Query(ctx, query)
 	rows.Close()
 
-	require.NoError(t, err, "failed to wipe fiat journal table before reinserting entries.")
+	require.NoError(t, err, "failed to wipe Fiat journal table before reinserting entries.")
 
 	// Get general ledger entry test cases.
 	testCases := getTestFiatJournal(clientID1, clientID2)
 
-	// Insert new fiat accounts.
+	// Insert new Fiat accounts.
 	for _, testCase := range testCases {
 		parameters := testCase
 
 		result, err := connection.Query.fiatExternalTransferJournalEntry(ctx, &parameters)
-		require.NoError(t, err, "failed to insert external fiat account entry.")
+		require.NoError(t, err, "failed to insert external Fiat account entry.")
 		require.False(t, result.TxID.IsNil(), "returned transaction id is invalid.")
 		require.True(t, result.TransactedAt.Valid, "returned transaction time is invalid.")
 	}
@@ -211,7 +210,7 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 	map[string]fiatInternalTransferJournalEntryParams, map[string]fiatInternalTransferJournalEntryRow) {
 	t.Helper()
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -238,9 +237,9 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 func resetTestCryptoAccounts(t *testing.T, clientID1, clientID2 uuid.UUID) {
 	t.Helper()
 
-	// Reset the fiat accounts table.
+	// Reset the crypto accounts table.
 	query := "TRUNCATE TABLE crypto_accounts CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -268,7 +267,7 @@ func resetTestCryptoJournal(t *testing.T) {
 
 	// Reset the fiat accounts table.
 	query := "TRUNCATE TABLE crypto_journal CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
 
 	defer cancel()
 

@@ -25,7 +25,7 @@ func TestCrypto_CryptoCreateAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
@@ -56,13 +56,13 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
@@ -84,8 +84,7 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 	txIDNoFunds, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate tx id for insufficient funds.")
 
-	//nolint:dupl
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name      string
 		params    *cryptoPurchaseParams
 		expectErr require.ErrorAssertionFunc
@@ -293,13 +292,13 @@ func TestCrypto_CryptoSell(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
@@ -321,8 +320,7 @@ func TestCrypto_CryptoSell(t *testing.T) {
 	txIDNoFunds, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate tx id for insufficient funds.")
 
-	//nolint:dupl
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name      string
 		params    *cryptoSellParams
 		expectErr require.ErrorAssertionFunc
@@ -533,13 +531,13 @@ func TestCrypto_CryptoGetAllAccounts(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
@@ -618,13 +616,13 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Insert the initial set of test fiat journal entries.
 	resetTestFiatJournal(t, clientID1, clientID2)
 
-	// Insert initial set of test crypto accounts.
+	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
 	// Reset Crypto Journal entries.
