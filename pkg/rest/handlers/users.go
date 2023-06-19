@@ -76,11 +76,12 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err            error
-			authToken      *models.JWTAuthResponse
-			loginRequest   modelsPostgres.UserLoginCredentials
-			clientID       uuid.UUID
-			hashedPassword string
+			err          error
+			authToken    *models.JWTAuthResponse
+			loginRequest modelsPostgres.UserLoginCredentials
+			httpMsg      string
+			httpStatus   int
+			payload      any
 		)
 
 		if err = ginCtx.ShouldBindJSON(&loginRequest); err != nil {
@@ -89,27 +90,8 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 			return
 		}
 
-		if err = validator.ValidateStruct(&loginRequest); err != nil {
-			ginCtx.JSON(http.StatusBadRequest, &models.HTTPError{Message: constants.ValidationString(), Payload: err})
-
-			return
-		}
-
-		if clientID, hashedPassword, err = db.UserCredentials(loginRequest.Username); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
-
-			return
-		}
-
-		if err = auth.CheckPassword(hashedPassword, loginRequest.Password); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
-
-			return
-		}
-
-		if authToken, err = auth.GenerateJWT(clientID); err != nil {
-			logger.Error("failure generating JWT during login", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+		if authToken, httpMsg, httpStatus, payload, err = common.HTTPLoginUser(auth, db, logger, &loginRequest); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, &models.HTTPError{Message: httpMsg, Payload: payload})
 
 			return
 		}

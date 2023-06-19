@@ -79,3 +79,34 @@ func HTTPRegisterUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logge
 
 	return authToken, "", 0, nil, nil
 }
+
+// HTTPLoginUser will complete a login request for a user.
+func HTTPLoginUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+	loginRequest *modelsPostgres.UserLoginCredentials) (*models.JWTAuthResponse, string, int, any, error) {
+	var (
+		err            error
+		authToken      *models.JWTAuthResponse
+		clientID       uuid.UUID
+		hashedPassword string
+	)
+
+	if err = validator.ValidateStruct(loginRequest); err != nil {
+		return nil, constants.ValidationString(), http.StatusBadRequest, fmt.Errorf("%w", err), fmt.Errorf("%w", err)
+	}
+
+	if clientID, hashedPassword, err = db.UserCredentials(loginRequest.Username); err != nil {
+		return nil, "invalid username or password", http.StatusForbidden, nil, fmt.Errorf("%w", err)
+	}
+
+	if err = auth.CheckPassword(hashedPassword, loginRequest.Password); err != nil {
+		return nil, "invalid username or password", http.StatusForbidden, nil, fmt.Errorf("%w", err)
+	}
+
+	if authToken, err = auth.GenerateJWT(clientID); err != nil {
+		logger.Error("failure generating JWT during login", zap.Error(err))
+
+		return nil, err.Error(), http.StatusInternalServerError, nil, fmt.Errorf("%w", err)
+	}
+
+	return authToken, "", 0, nil, nil
+}

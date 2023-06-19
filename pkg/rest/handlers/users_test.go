@@ -151,7 +151,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 	}
 }
 
-func TestHandlers_UserCredentials(t *testing.T) {
+func TestHandlers_UserLogin(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -266,7 +266,8 @@ func TestHandlers_UserCredentials(t *testing.T) {
 		})
 	}
 }
-func TestLoginRefresh(t *testing.T) {
+
+func TestHandlers_LoginRefresh(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
