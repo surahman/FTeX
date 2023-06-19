@@ -32,6 +32,15 @@ the use case and workloads here.
 
 <br/>
 
+:warning: **_Credentials in Configuration Files_** :warning:
+
+Credentials have been stored in plaintext within the demonstration files. This poses a security risk and is a technique
+employed to make testing and deployment of this demonstration application easier. In a production environment, the
+credentials would be stored in a secure credential store and mounted as environment variables or files in the container.
+Yet another option would be to encrypt the configuration files as Mozilla Secret OPerationS (SOPS).
+
+<br/>
+
 :warning: **_Protocols_** :warning:
 
 This demonstration environment will launch both the `HTTP REST` as well as the `GraphQL` over `HTTP` endpoints. This is
@@ -39,6 +48,13 @@ unsuitable for a production environment.
 
 Ideally, each of these protocol endpoints would be exposed in its own clusters with auto-scaling, load balancing, and
 across availability zones.
+
+<br/>
+
+:warning: **_GraphQL Complexity Limits_** :warning:
+
+Limitations on GraphQL Query and Mutation complexity have not been employed to make testing of this demonstration
+application easier.
 
 <br/>
 
