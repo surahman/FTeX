@@ -3,7 +3,6 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
@@ -116,49 +115,22 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			err           error
-			freshToken    *models.JWTAuthResponse
-			clientID      uuid.UUID
-			accountInfo   modelsPostgres.User
-			expiresAt     int64
-			originalToken = ginCtx.GetHeader(authHeaderKey)
+			err        error
+			clientID   uuid.UUID
+			expiresAt  int64
+			freshToken *models.JWTAuthResponse
+			httpMsg    string
+			httpStatus int
 		)
 
-		if clientID, expiresAt, err = auth.ValidateJWT(originalToken); err != nil {
+		if clientID, expiresAt, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
-		if accountInfo, err = db.UserGetInfo(clientID); err != nil {
-			logger.Warn("failed to read user record for a valid JWT",
-				zap.String("username", accountInfo.Username), zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		if accountInfo.IsDeleted {
-			logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("clientID", accountInfo.Username))
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid token"})
-
-			return
-		}
-
-		// Do not refresh tokens that are outside the refresh threshold. Tokens could expire during the execution of
-		// this handler, but expired ones would be rejected during token validation. Thus, it is not necessary to
-		// re-check expiration.
-		if expiresAt-time.Now().Unix() > auth.RefreshThreshold() {
-			ginCtx.AbortWithStatusJSON(http.StatusNotExtended,
-				&models.HTTPError{Message: fmt.Sprintf("JWT is still valid for more than %d seconds", auth.RefreshThreshold())})
-
-			return
-		}
-
-		if freshToken, err = auth.GenerateJWT(clientID); err != nil {
-			logger.Error("failure generating JWT during token refresh", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+		if freshToken, httpMsg, httpStatus, err = common.HTTPRefreshLogin(auth, db, logger, clientID, expiresAt); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, &models.HTTPError{Message: httpMsg})
 
 			return
 		}
@@ -254,7 +226,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		// Mark account as deleted.
+		// Mark the account as deleted.
 		if err = db.UserDelete(clientID); err != nil {
 			logger.Warn("failed to mark a user record as deleted", zap.String("username", userAccount.Username), zap.Error(err))
 			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,

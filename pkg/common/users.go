@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
@@ -109,4 +110,43 @@ func HTTPLoginUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
 	}
 
 	return authToken, "", 0, nil, nil
+}
+
+// HTTPRefreshLogin validates a JWT token and issues a fresh token.
+func HTTPRefreshLogin(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+	clientID uuid.UUID, expiresAt int64) (*models.JWTAuthResponse, string, int, error) {
+	var (
+		err         error
+		freshToken  *models.JWTAuthResponse
+		accountInfo modelsPostgres.User
+	)
+
+	if accountInfo, err = db.UserGetInfo(clientID); err != nil {
+		logger.Warn("failed to read user record for a valid JWT",
+			zap.String("username", accountInfo.Username), zap.Error(err))
+
+		return nil, constants.RetryMessageString(), http.StatusInternalServerError, fmt.Errorf("%w", err)
+	}
+
+	if accountInfo.IsDeleted {
+		logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("clientID", accountInfo.Username))
+
+		return nil, "invalid token", http.StatusForbidden, fmt.Errorf("%w", err)
+	}
+
+	// Do not refresh tokens that are outside the refresh threshold. Tokens could expire during the execution of
+	// this handler, but expired ones would be rejected during token validation. Thus, it is not necessary to
+	// re-check expiration.
+	if expiresAt-time.Now().Unix() > auth.RefreshThreshold() {
+		return nil, fmt.Sprintf("JWT is still valid for more than %d seconds", auth.RefreshThreshold()),
+			http.StatusNotExtended, fmt.Errorf("%w", err)
+	}
+
+	if freshToken, err = auth.GenerateJWT(clientID); err != nil {
+		logger.Error("failure generating JWT during token refresh", zap.Error(err))
+
+		return nil, err.Error(), http.StatusInternalServerError, fmt.Errorf("%w", err)
+	}
+
+	return freshToken, "", 0, nil
 }

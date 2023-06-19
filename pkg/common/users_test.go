@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
@@ -154,7 +155,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 	}
 }
 
-func TestHandlers_UserLogin(t *testing.T) {
+func TestCommon_HTTPUserLogin(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -274,6 +275,137 @@ func TestHandlers_UserLogin(t *testing.T) {
 			token, httpMsg, httpCode, payload, err := HTTPLoginUser(mockAuth, mockPostgres, zapLogger, test.user)
 			test.expectErr(t, err, "error expectation failed.")
 			test.expectPayload(t, payload, "payload expectation failed.")
+			test.expectToken(t, token, "token expectation failed.")
+			require.Equal(t, test.expectedStatus, httpCode, "http codes mismatched.")
+			require.Contains(t, httpMsg, test.expectedMsg, "http message mismatched.")
+		})
+	}
+}
+
+func TestCommon_HTTPLoginRefresh(t *testing.T) {
+	t.Parallel()
+
+	notExpiringTime := time.Now().Add(2 * time.Minute).Unix()
+	validTime := time.Now().Add(-30 * time.Second).Unix()
+
+	testCases := []struct {
+		name             string
+		expectedMsg      string
+		expectedStatus   int
+		expiresAt        int64
+		userGetInfoAcc   modelsPostgres.User
+		userGetInfoErr   error
+		userGetInfoTimes int
+		authRefreshTimes int
+		authGenJWTErr    error
+		authGenJWTTimes  int
+		expectErr        require.ErrorAssertionFunc
+		expectToken      require.ValueAssertionFunc
+	}{
+		{
+			name:             "valid token",
+			expectedMsg:      "",
+			expectedStatus:   0,
+			expiresAt:        validTime,
+			userGetInfoAcc:   modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:   nil,
+			userGetInfoTimes: 1,
+			authRefreshTimes: 1,
+			authGenJWTErr:    nil,
+			authGenJWTTimes:  1,
+			expectErr:        require.NoError,
+			expectToken:      require.NotNil,
+		}, {
+			name:             "valid token not expiring",
+			expectedMsg:      "still valid",
+			expectedStatus:   http.StatusNotExtended,
+			expiresAt:        notExpiringTime,
+			userGetInfoAcc:   modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:   nil,
+			userGetInfoTimes: 1,
+			authRefreshTimes: 2, // Called once in error message.
+			authGenJWTErr:    nil,
+			authGenJWTTimes:  0,
+			expectErr:        require.Error,
+			expectToken:      require.Nil,
+		}, {
+			name:           "db failure",
+			expectedMsg:    constants.RetryMessageString(),
+			expectedStatus: http.StatusInternalServerError,
+			userGetInfoAcc: modelsPostgres.User{
+				UserAccount: &modelsPostgres.UserAccount{
+					UserLoginCredentials: modelsPostgres.UserLoginCredentials{Username: "some username"},
+				},
+			},
+			userGetInfoErr:   errors.New("db failure"),
+			userGetInfoTimes: 1,
+			authRefreshTimes: 0,
+			authGenJWTErr:    nil,
+			authGenJWTTimes:  0,
+			expectErr:        require.Error,
+			expectToken:      require.Nil,
+		}, {
+			name:           "deleted user",
+			expectedMsg:    "invalid token",
+			expectedStatus: http.StatusForbidden,
+			expiresAt:      validTime,
+			userGetInfoAcc: modelsPostgres.User{
+				UserAccount: &modelsPostgres.UserAccount{
+					UserLoginCredentials: modelsPostgres.UserLoginCredentials{Username: "some username"},
+				},
+				IsDeleted: true,
+			},
+			userGetInfoErr:   nil,
+			userGetInfoTimes: 1,
+			authRefreshTimes: 0,
+			authGenJWTErr:    nil,
+			authGenJWTTimes:  0,
+			expectErr:        require.Error,
+			expectToken:      require.Nil,
+		}, {
+			name:             "token generation failure",
+			expectedMsg:      "failed to generate token",
+			expectedStatus:   http.StatusInternalServerError,
+			expiresAt:        validTime,
+			userGetInfoAcc:   modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:   nil,
+			userGetInfoTimes: 1,
+			authRefreshTimes: 1,
+			authGenJWTErr:    errors.New("failed to generate token"),
+			authGenJWTTimes:  1,
+			expectErr:        require.Error,
+			expectToken:      require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
+					Return(test.userGetInfoAcc, test.userGetInfoErr).
+					Times(test.userGetInfoTimes),
+
+				mockAuth.EXPECT().RefreshThreshold().
+					Return(int64(60)).
+					Times(test.authRefreshTimes),
+
+				mockAuth.EXPECT().GenerateJWT(gomock.Any()).
+					Return(&models.JWTAuthResponse{}, test.authGenJWTErr).
+					Times(test.authGenJWTTimes),
+			)
+
+			token, httpMsg, httpCode, err := HTTPRefreshLogin(mockAuth, mockPostgres, zapLogger, uuid.UUID{}, test.expiresAt)
+			test.expectErr(t, err, "error expectation failed.")
 			test.expectToken(t, token, "token expectation failed.")
 			require.Equal(t, test.expectedStatus, httpCode, "http codes mismatched.")
 			require.Contains(t, httpMsg, test.expectedMsg, "http message mismatched.")
