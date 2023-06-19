@@ -19,8 +19,6 @@ import (
 )
 
 func TestCommon_HTTPFiatOpen(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		name          string
 		currencyStr   string
@@ -68,8 +66,6 @@ func TestCommon_HTTPFiatOpen(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -88,8 +84,6 @@ func TestCommon_HTTPFiatOpen(t *testing.T) {
 }
 
 func TestCommon_HTTPFiatDeposit(t *testing.T) {
-	t.Parallel()
-
 	validRequest := models.HTTPDepositCurrencyRequest{
 		Amount:   decimal.NewFromFloat(49866.13),
 		Currency: "USD",
@@ -188,8 +182,6 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -210,8 +202,6 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 }
 
 func TestCommon_HTTPFiatOffer(t *testing.T) {
-	t.Parallel()
-
 	var (
 		sourceAmount = decimal.NewFromFloat(23123.12)
 		quotesAmount = decimal.NewFromFloat(23100.44)
@@ -343,8 +333,6 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -390,8 +378,6 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 }
 
 func TestCommon_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
-	t.Parallel()
-
 	validDecimal, err := decimal.NewFromString("10101.11")
 	require.NoError(t, err, "failed to parse valid decimal.")
 
@@ -669,8 +655,6 @@ func TestCommon_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -709,8 +693,6 @@ func TestCommon_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 }
 
 func TestCommon_HTTPFiatBalance(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		name                string
 		ticker              string
@@ -769,8 +751,6 @@ func TestCommon_HTTPFiatBalance(t *testing.T) {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -792,8 +772,6 @@ func TestCommon_HTTPFiatBalance(t *testing.T) {
 }
 
 func TestCommon_HTTPFiatBalancePaginatedRequest(t *testing.T) {
-	t.Parallel()
-
 	encAED, err := testAuth.EncryptToString([]byte("AED"))
 	require.NoError(t, err, "failed to encrypt AED currency.")
 
@@ -864,8 +842,6 @@ func TestCommon_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			actualCurr, actualLimit, err := HTTPFiatBalancePaginatedRequest(testAuth, test.currencyStr, test.limitStr)
 			require.NoError(t, err, "error returned from query unpacking")
 			require.Equal(t, test.expectCurrency, actualCurr, "currencies mismatched.")
@@ -875,8 +851,6 @@ func TestCommon_HTTPFiatBalancePaginatedRequest(t *testing.T) {
 }
 
 func TestCommon_HTTPFiatBalancePaginated(t *testing.T) {
-	t.Parallel()
-
 	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
 
 	testCases := []struct {
@@ -1022,8 +996,6 @@ func TestCommon_HTTPFiatBalancePaginated(t *testing.T) {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -1055,8 +1027,6 @@ func TestCommon_HTTPFiatBalancePaginated(t *testing.T) {
 }
 
 func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
-	t.Parallel()
-
 	decryptedCursor := fmt.Sprintf("%s,%s,%d",
 		fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
 		fmt.Sprintf(constants.MonthFormatString(), 2023, 7, "-04:00"),
@@ -1207,8 +1177,6 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()

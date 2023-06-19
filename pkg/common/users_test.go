@@ -24,7 +24,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 		name            string
 		expectedMsg     string
 		expectedStatus  int
-		user            *modelsPostgres.UserAccount
+		user            modelsPostgres.UserAccount
 		authHashPass    string
 		authHashErr     error
 		authHashTimes   int
@@ -41,7 +41,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 			name:            "empty user",
 			expectedMsg:     "validation",
 			expectedStatus:  http.StatusBadRequest,
-			user:            &modelsPostgres.UserAccount{},
+			user:            modelsPostgres.UserAccount{},
 			authHashPass:    "",
 			authHashErr:     nil,
 			authHashTimes:   0,
@@ -57,7 +57,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 			name:            "valid user",
 			expectedMsg:     "",
 			expectedStatus:  0,
-			user:            testUserData["username1"],
+			user:            *testUserData["username1"],
 			authHashPass:    "hashed password",
 			authHashErr:     nil,
 			authHashTimes:   1,
@@ -73,7 +73,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 			name:            "password hash failure",
 			expectedMsg:     "retry",
 			expectedStatus:  http.StatusInternalServerError,
-			user:            testUserData["username1"],
+			user:            *testUserData["username1"],
 			authHashPass:    "",
 			authHashErr:     errors.New("password hash failure"),
 			authHashTimes:   1,
@@ -89,7 +89,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 			name:            "database failure",
 			expectedMsg:     "",
 			expectedStatus:  http.StatusConflict,
-			user:            testUserData["username1"],
+			user:            *testUserData["username1"],
 			authHashPass:    "hashed password",
 			authHashErr:     nil,
 			authHashTimes:   1,
@@ -105,7 +105,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 			name:            "auth token failure",
 			expectedMsg:     "auth token failure",
 			expectedStatus:  http.StatusInternalServerError,
-			user:            testUserData["username1"],
+			user:            *testUserData["username1"],
 			authHashPass:    "hashed password",
 			authHashErr:     nil,
 			authHashTimes:   1,
@@ -146,7 +146,7 @@ func TestCommon_HTTPUserRegister(t *testing.T) {
 					Times(test.authGenJWTTimes),
 			)
 
-			response, httpMsg, httpCode, payload, err := HTTPRegisterUser(mockAuth, mockPostgres, zapLogger, test.user)
+			response, httpMsg, httpCode, payload, err := HTTPRegisterUser(mockAuth, mockPostgres, zapLogger, &test.user)
 			test.expectErr(t, err, "error expectation failed.")
 			test.expectPayload(t, payload, "payload expectation failed.")
 			test.expectResponse(t, response, "response expectation failed.")
