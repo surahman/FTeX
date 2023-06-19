@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/surahman/FTeX/pkg/common"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -13,7 +14,7 @@ import (
 var zapLogger *logger.Logger
 
 // testUserData is the test user account data.
-var testUserData = getTestUsers()
+var testUserData = common.HTTPGenerateTestUsers()
 
 func TestMain(m *testing.M) {
 	var err error

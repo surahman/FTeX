@@ -107,7 +107,7 @@ _Healthy Response:_
 ```json
 {
   "data": {
-    "healthcheck": "OK"
+    "healthcheck": "healthy"
   }
 }
 ```

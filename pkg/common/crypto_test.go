@@ -18,8 +18,6 @@ import (
 )
 
 func TestCommon_HTTPCryptoOpen(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		name          string
 		tickerStr     string
@@ -59,8 +57,6 @@ func TestCommon_HTTPCryptoOpen(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -79,8 +75,6 @@ func TestCommon_HTTPCryptoOpen(t *testing.T) {
 }
 
 func TestCommon_HTTPCryptoBalance(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		name             string
 		tickerStr        string
@@ -138,8 +132,6 @@ func TestCommon_HTTPCryptoBalance(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -161,8 +153,6 @@ func TestCommon_HTTPCryptoBalance(t *testing.T) {
 }
 
 func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
-	t.Parallel()
-
 	var (
 		decryptedCursor = fmt.Sprintf("%s,%s,%d",
 			fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
@@ -334,8 +324,6 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -373,9 +361,7 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 	}
 }
 
-func TestCommon_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
-	t.Parallel()
-
+func TestCommon_HTTPCryptoOffer(t *testing.T) {
 	var (
 		sourceAmount = decimal.NewFromFloat(23123.12)
 		quotesRate   = decimal.NewFromFloat(23100)
@@ -596,8 +582,6 @@ func TestCommon_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -642,8 +626,6 @@ func TestCommon_HTTPCryptoOffer(t *testing.T) { //nolint: maintidx
 }
 
 func TestCommon_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
-	t.Parallel()
-
 	validClientID, err := uuid.NewV4()
 	require.NoError(t, err, "failed to generate a valid uuid.")
 
@@ -890,8 +872,6 @@ func TestCommon_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
@@ -935,8 +915,6 @@ func TestCommon_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 }
 
 func TestCommon_CryptoBalancePaginatedRequest(t *testing.T) {
-	t.Parallel()
-
 	encBTC, err := testAuth.EncryptToString([]byte("BTC"))
 	require.NoError(t, err, "failed to encrypt BTC currency.")
 
@@ -1007,8 +985,6 @@ func TestCommon_CryptoBalancePaginatedRequest(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			actualTicker, actualLimit, err := cryptoBalancePaginatedRequest(testAuth, test.encryptedTicker, test.limitStr)
 			require.NoError(t, err, "error returned from query unpacking")
 			require.Equal(t, test.expectTicker, actualTicker, "tickers mismatched.")
@@ -1018,8 +994,6 @@ func TestCommon_CryptoBalancePaginatedRequest(t *testing.T) {
 }
 
 func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
-	t.Parallel()
-
 	var (
 		pageCursor  = "some-page-cursor"
 		fourRecords = []postgres.CryptoAccount{{}, {}, {}, {}}
@@ -1203,8 +1177,6 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()

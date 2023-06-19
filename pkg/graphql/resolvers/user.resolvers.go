@@ -8,49 +8,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/surahman/FTeX/pkg/constants"
+	"github.com/surahman/FTeX/pkg/common"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
-	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/validator"
-	"go.uber.org/zap"
 )
 
 // RegisterUser is the resolver for the registerUser field.
 func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgres.UserAccount) (*models.JWTAuthResponse, error) {
 	var (
 		authToken *models.JWTAuthResponse
-		clientID  uuid.UUID
 		err       error
+		httpMsg   string
+		payload   any
 	)
 
-	if err = validator.ValidateStruct(input); err != nil {
-		return authToken, fmt.Errorf("validation %w", err)
-	}
-
-	if input.Password, err = r.auth.HashPassword(input.Password); err != nil {
-		r.logger.Error("failure hashing password", zap.Error(err))
-
-		return authToken, fmt.Errorf("validation %w", err)
-	}
-
-	if clientID, err = r.db.UserRegister(input); err != nil {
-		var registerErr *postgres.Error
-		if !errors.As(err, &registerErr) {
-			r.logger.Warn("failed to extract create user account error", zap.Error(err))
-		}
-
-		return nil, errors.New("account creation failed, please try again later")
-	}
-
-	if authToken, err = r.auth.GenerateJWT(clientID); err != nil {
-		r.logger.Error("failure generating JWT during account creation", zap.Error(err))
-
-		return nil, errors.New("account creation failed, please try again later")
+	if authToken, httpMsg, _, payload, err = common.HTTPRegisterUser(r.auth, r.db, r.logger, input); err != nil {
+		return nil, fmt.Errorf("%s: %v", httpMsg, payload)
 	}
 
 	return authToken, nil
@@ -59,14 +36,11 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgr
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDeleteUserRequest) (string, error) {
 	var (
-		clientID    uuid.UUID
-		err         error
-		userAccount modelsPostgres.User
+		clientID uuid.UUID
+		err      error
+		httpMsg  string
+		payload  any
 	)
-
-	if err = validator.ValidateStruct(&input); err != nil {
-		return "", fmt.Errorf("validation %w", err)
-	}
 
 	// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
 	// credentials.
@@ -74,42 +48,8 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDele
 		return "", errors.New("authorization failure")
 	}
 
-	// Get user account information to validate against.
-	if userAccount, err = r.db.UserGetInfo(clientID); err != nil {
-		r.logger.Warn("failed to read user record during an account deletion request",
-			zap.String("clientID", clientID.String()), zap.Error(err))
-
-		return "", errors.New("please retry your request later")
-	}
-
-	// Check Username and password.
-	if userAccount.Username != input.Username {
-		return "", errors.New("invalid deletion request")
-	}
-
-	if err = r.auth.CheckPassword(userAccount.Password, input.Password); err != nil {
-		return "", errors.New("invalid username or password")
-	}
-
-	// Check the confirmation message.
-	if fmt.Sprintf(constants.DeleteUserAccountConfirmation(), userAccount.Username) != input.Confirmation {
-		return "", errors.New("incorrect or incomplete deletion request confirmation")
-	}
-
-	// Check to make sure the account is not already deleted.
-	if userAccount.IsDeleted {
-		r.logger.Warn("attempt to delete an already deleted user account",
-			zap.String("username", userAccount.Username))
-
-		return "", errors.New("user account is already deleted")
-	}
-
-	// Mark account as deleted.
-	if err = r.db.UserDelete(clientID); err != nil {
-		r.logger.Warn("failed to mark a user record as deleted",
-			zap.String("username", userAccount.Username), zap.Error(err))
-
-		return "", errors.New("please retry your request later")
+	if httpMsg, _, payload, err = common.HTTPDeleteUser(r.auth, r.db, r.logger, clientID, &input); err != nil {
+		return "", fmt.Errorf("%s: %v", httpMsg, payload)
 	}
 
 	return "account successfully deleted", nil
@@ -118,28 +58,18 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDele
 // LoginUser is the resolver for the loginUser field.
 func (r *mutationResolver) LoginUser(ctx context.Context, input modelsPostgres.UserLoginCredentials) (*models.JWTAuthResponse, error) {
 	var (
-		err            error
-		authToken      *models.JWTAuthResponse
-		clientID       uuid.UUID
-		hashedPassword string
+		err       error
+		authToken *models.JWTAuthResponse
+		httpMsg   string
+		payload   any
 	)
 
 	if err = validator.ValidateStruct(&input); err != nil {
 		return nil, fmt.Errorf("validation %w", err)
 	}
 
-	if clientID, hashedPassword, err = r.db.UserCredentials(input.Username); err != nil {
-		return nil, errors.New("invalid username or password")
-	}
-
-	if err = r.auth.CheckPassword(hashedPassword, input.Password); err != nil {
-		return nil, errors.New("invalid username or password")
-	}
-
-	if authToken, err = r.auth.GenerateJWT(clientID); err != nil {
-		r.logger.Error("failure generating JWT during login", zap.Error(err))
-
-		return nil, errors.New("please retry your request later")
+	if authToken, httpMsg, _, payload, err = common.HTTPLoginUser(r.auth, r.db, r.logger, &input); err != nil {
+		return nil, fmt.Errorf("%s: %v", httpMsg, payload)
 	}
 
 	return authToken, nil
@@ -148,11 +78,11 @@ func (r *mutationResolver) LoginUser(ctx context.Context, input modelsPostgres.U
 // RefreshToken is the resolver for the refreshToken field.
 func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthResponse, error) {
 	var (
-		err         error
-		freshToken  *models.JWTAuthResponse
-		clientID    uuid.UUID
-		accountInfo modelsPostgres.User
-		expiresAt   int64
+		err        error
+		freshToken *models.JWTAuthResponse
+		clientID   uuid.UUID
+		expiresAt  int64
+		httpMsg    string
 	)
 
 	// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
@@ -161,30 +91,9 @@ func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthRes
 		return freshToken, errors.New("authorization failure")
 	}
 
-	if accountInfo, err = r.db.UserGetInfo(clientID); err != nil {
-		r.logger.Warn("failed to read user record for a valid JWT",
-			zap.String("username", accountInfo.Username), zap.Error(err))
+	if freshToken, httpMsg, _, err = common.HTTPRefreshLogin(r.auth, r.db, r.logger, clientID, expiresAt); err != nil {
 
-		return nil, errors.New("please retry your request later")
-	}
-
-	if accountInfo.IsDeleted {
-		r.logger.Warn("attempt to refresh a JWT for a deleted user", zap.String("clientID", accountInfo.Username))
-
-		return nil, errors.New("invalid token")
-	}
-
-	// Do not refresh tokens that are outside the refresh threshold. Tokens could expire during the execution of
-	// this handler but expired ones would be rejected during token validation. Thus, it is not necessary to
-	// re-check expiration.
-	if expiresAt-time.Now().Unix() > r.auth.RefreshThreshold() {
-		return nil, fmt.Errorf("JWT is still valid for more than %d seconds", r.auth.RefreshThreshold())
-	}
-
-	if freshToken, err = r.auth.GenerateJWT(clientID); err != nil {
-		r.logger.Error("failure generating JWT during token refresh", zap.Error(err))
-
-		return nil, errors.New("please retry your request later")
+		return nil, errors.New(httpMsg)
 	}
 
 	return freshToken, nil

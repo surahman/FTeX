@@ -10,6 +10,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// testUserData is the test user account data.
+var testUserData = HTTPGenerateTestUsers()
+
 // testAuth is the Authorization object.
 var testAuth auth.Auth
 

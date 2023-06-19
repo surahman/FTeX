@@ -151,7 +151,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 	}
 }
 
-func TestHandlers_UserCredentials(t *testing.T) {
+func TestHandlers_UserLogin(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -266,7 +266,8 @@ func TestHandlers_UserCredentials(t *testing.T) {
 		})
 	}
 }
-func TestLoginRefresh(t *testing.T) {
+
+func TestHandlers_LoginRefresh(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -437,7 +438,7 @@ func TestLoginRefresh(t *testing.T) {
 	}
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestHandlers_DeleteUser(t *testing.T) {
 	t.Parallel()
 
 	userAccount := &modelsPostgres.UserAccount{
@@ -480,7 +481,7 @@ func TestDeleteUser(t *testing.T) {
 			expectedStatus:       http.StatusBadRequest,
 			deleteRequest:        &models.HTTPDeleteUserRequest{},
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			userGetInfoAcc:       modelsPostgres.User{},
 			userGetInfoErr:       nil,
 			userGetInfoTimes:     0,
