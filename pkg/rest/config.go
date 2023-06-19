@@ -9,7 +9,7 @@ import (
 	"github.com/surahman/FTeX/pkg/constants"
 )
 
-// config is the configuration container for the HTTP REST endpoint.
+// config is the configuration for the HTTP REST endpoint.
 //
 //nolint:lll
 type config struct {
@@ -45,8 +45,8 @@ func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetHTTPRESTFileName(),
-		constants.GetHTTPRESTPrefix(),
+		constants.HTTPRESTFileName(),
+		constants.HTTPRESTPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("rest config loading failed: %w", err)
 	}

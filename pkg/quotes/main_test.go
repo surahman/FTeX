@@ -85,13 +85,13 @@ func setup() error {
 
 	// Configure in memory file system to load configs.
 	fs := afero.NewMemMapFs()
-	if err := fs.MkdirAll(constants.GetEtcDir(), 0644); err != nil {
+	if err := fs.MkdirAll(constants.EtcDir(), 0644); err != nil {
 		return fmt.Errorf("failed to create in memory directory %w", err)
 	}
 
 	if err := afero.WriteFile(
 		fs,
-		constants.GetEtcDir()+constants.GetQuotesFileName(),
+		constants.EtcDir()+constants.QuotesFileName(),
 		[]byte(quotesConfigTestData["valid"]),
 		0644); err != nil {
 		return fmt.Errorf("failed to write in memory file %w", err)
@@ -103,13 +103,13 @@ func setup() error {
 		return fmt.Errorf("failed to load test configs %w", err)
 	}
 
-	// If running on a GitHub Actions runner use the secret stored in the GitHub Actions Secrets.
-	if _, ok := os.LookupEnv(constants.GetGithubCIKey()); ok {
+	// If running on a GitHub Actions runner, use the secret stored in the GitHub Actions Secrets.
+	if _, ok := os.LookupEnv(constants.GithubCIKey()); ok {
 		zapLogger.Info("Integration Test running on Github CI runner.")
 		zapLogger.Warn("*** Please ensure that the Quotes configurations are upto date in GHA Secrets ***")
 
 		// Remove Fiat currency API Key from environment variables.
-		if err := os.Unsetenv(constants.GetQuotesPrefix() + "_FIATCURRENCY.APIKEY"); err != nil {
+		if err := os.Unsetenv(constants.QuotesPrefix() + "_FIATCURRENCY.APIKEY"); err != nil {
 			msg := "failed to load  Fiat currency API Key from GitHub Actions Secrets"
 			zapLogger.Error(msg)
 
@@ -117,7 +117,7 @@ func setup() error {
 		}
 
 		// Remove Cryptocurrency API Key from environment variables.
-		if err := os.Unsetenv(constants.GetQuotesPrefix() + "_CRYPTOCURRENCY.APIKEY"); err != nil {
+		if err := os.Unsetenv(constants.QuotesPrefix() + "_CRYPTOCURRENCY.APIKEY"); err != nil {
 			msg := "failed to load Cryptocurrency API Key from GitHub Actions Secrets"
 			zapLogger.Error(msg)
 

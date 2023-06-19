@@ -56,8 +56,8 @@ func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetLoggerFileName(),
-		constants.GetLoggerPrefix(),
+		constants.LoggerFileName(),
+		constants.LoggerPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("zap logger config loading failed: %w", err)
 	}

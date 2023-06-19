@@ -2,17 +2,17 @@ package postgres
 
 import (
 	"context"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
+	"github.com/surahman/FTeX/pkg/constants"
 	"go.uber.org/zap"
 )
 
 // CryptoCreateAccount is the interface through which external methods can create a Crypto account.
 func (p *postgresImpl) CryptoCreateAccount(clientID uuid.UUID, ticker string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -26,10 +26,10 @@ func (p *postgresImpl) CryptoCreateAccount(clientID uuid.UUID, ticker string) er
 	return nil
 }
 
-// CryptoBalance is the interface through which external methods can retrieve a Crypto account balance for a
-// specific cryptocurrency.
+// CryptoBalance is the interface through which external methods can retrieve a Crypto-account balance for a specific
+// cryptocurrency.
 func (p *postgresImpl) CryptoBalance(clientID uuid.UUID, ticker string) (CryptoAccount, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -41,11 +41,10 @@ func (p *postgresImpl) CryptoBalance(clientID uuid.UUID, ticker string) (CryptoA
 	return balance, nil
 }
 
-// CryptoTxDetails is the interface through which external methods can retrieve a Crypto transaction details for
-// a specific transaction.
+// CryptoTxDetails is the interface through which external methods can retrieve a Crypto transaction details for a
+// specific transaction.
 func (p *postgresImpl) CryptoTxDetails(clientID uuid.UUID, transactionID uuid.UUID) ([]CryptoJournal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
-
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 	defer cancel()
 
 	journal, err := p.Query.cryptoGetJournalTransaction(ctx, &cryptoGetJournalTransactionParams{clientID, transactionID})
@@ -65,8 +64,7 @@ func (p *postgresImpl) CryptoPurchase(
 	fiatDebitAmount decimal.Decimal,
 	cryptoTicker string,
 	cryptoCreditAmount decimal.Decimal) (*FiatJournal, *CryptoJournal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
-
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 	defer cancel()
 
 	txID, err := uuid.NewV4()
@@ -120,7 +118,7 @@ func (p *postgresImpl) CryptoSell(
 	fiatCreditAmount decimal.Decimal,
 	cryptoTicker string,
 	cryptoDebitAmount decimal.Decimal) (*FiatJournal, *CryptoJournal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -166,11 +164,11 @@ func (p *postgresImpl) CryptoSell(
 	return &fiatJournal[0], &cryptoJournal[0], nil
 }
 
-// CryptoBalancesPaginated is the interface through which external methods can retrieve all Crypto account balances
-// for a specific client.
+// CryptoBalancesPaginated is the interface through which external methods can retrieve all Crypto account balances for
+// a specific client.
 func (p *postgresImpl) CryptoBalancesPaginated(clientID uuid.UUID, ticker string, limit int32) (
 	[]CryptoAccount, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -195,7 +193,7 @@ func (p *postgresImpl) CryptoTransactionsPaginated(
 	offset int32,
 	startTime,
 	endTime pgtype.Timestamptz) ([]CryptoJournal, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 

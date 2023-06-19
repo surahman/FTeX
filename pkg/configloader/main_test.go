@@ -1,6 +1,6 @@
 package configloader
 
-// graphqlConfigTestData is a map of HTTP GraphQL configuration test data.
+// testConfigTestData is a map of configuration loader test data.
 var testConfigTestData = configTestData()
 
 // testFilename name of test config file.

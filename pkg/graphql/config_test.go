@@ -16,8 +16,8 @@ import (
 )
 
 func TestGraphQLConfigs_Load(t *testing.T) {
-	keyspaceServer := constants.GetHTTPGraphQLPrefix() + "_SERVER."
-	keyspaceAuth := constants.GetHTTPGraphQLPrefix() + "_AUTHORIZATION."
+	keyspaceServer := constants.HTTPGraphQLPrefix() + "_SERVER."
+	keyspaceAuth := constants.HTTPGraphQLPrefix() + "_AUTHORIZATION."
 
 	testCases := []struct {
 		name         string
@@ -87,8 +87,8 @@ func TestGraphQLConfigs_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetHTTPGraphQLFileName(),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.HTTPGraphQLFileName(),
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.

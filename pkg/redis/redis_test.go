@@ -24,7 +24,7 @@ func TestNewRedisImpl(t *testing.T) {
 	}{
 		{
 			name:      "File found",
-			fileName:  constants.GetRedisFileName(),
+			fileName:  constants.RedisFileName(),
 			input:     redisConfigTestData[configFileKey],
 			expectErr: require.NoError,
 			expectNil: require.NotNil,
@@ -42,8 +42,8 @@ func TestNewRedisImpl(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "failed to create in memory directory.")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+test.fileName, []byte(test.input), 0644),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "failed to create in memory directory.")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+test.fileName, []byte(test.input), 0644),
 				"failed to write in memory file.")
 
 			c, err := newRedisImpl(&fs, zapLogger)
@@ -57,8 +57,8 @@ func TestNewRedis(t *testing.T) {
 	t.Parallel()
 
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "failed to create in memory directory.")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetRedisFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "failed to create in memory directory.")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.RedisFileName(),
 		[]byte(redisConfigTestData[configFileKey]), 0644), "failed to write in memory file.")
 
 	testCases := []struct {

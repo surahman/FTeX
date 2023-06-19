@@ -20,7 +20,7 @@ func TestQueries_FiatCreateAccount(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, _ := resetTestFiatAccounts(t)
 
 	err := connection.FiatCreateAccount(clientID1, "EUR")
@@ -39,7 +39,7 @@ func TestQueries_FiatBalanceCurrency(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, _ := resetTestFiatAccounts(t)
 
 	testCases := []struct {
@@ -83,7 +83,7 @@ func TestQueries_FiatBalanceCurrencyPaginated(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, _ := resetTestFiatAccounts(t)
 
 	testCases := []struct {
@@ -158,7 +158,7 @@ func TestFiat_FiatTransactionsCurrencyPaginated(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test

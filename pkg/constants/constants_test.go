@@ -7,102 +7,102 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetEtcDir(t *testing.T) {
-	require.Equal(t, configEtcDir, GetEtcDir(), "Incorrect etc directory")
+func TestEtcDir(t *testing.T) {
+	require.Equal(t, configEtcDir, EtcDir(), "Incorrect etc directory")
 }
 
-func TestGetHomeDir(t *testing.T) {
-	require.Equal(t, configHomeDir, GetHomeDir(), "Incorrect home directory")
+func TestHomeDir(t *testing.T) {
+	require.Equal(t, configHomeDir, HomeDir(), "Incorrect home directory")
 }
 
-func TestGetBaseDir(t *testing.T) {
-	require.Equal(t, configBaseDir, GetBaseDir(), "Incorrect base directory")
+func TestBaseDir(t *testing.T) {
+	require.Equal(t, configBaseDir, BaseDir(), "Incorrect base directory")
 }
 
-func TestGetGithubCIKey(t *testing.T) {
-	require.Equal(t, githubCIKey, GetGithubCIKey(), "Incorrect Github CI environment key")
+func TestGithubCIKey(t *testing.T) {
+	require.Equal(t, githubCIKey, GithubCIKey(), "Incorrect Github CI environment key")
 }
 
-func TestGetLoggerFileName(t *testing.T) {
-	require.Equal(t, loggerConfigFileName, GetLoggerFileName(), "Incorrect logger filename")
+func TestLoggerFileName(t *testing.T) {
+	require.Equal(t, loggerConfigFileName, LoggerFileName(), "Incorrect logger filename")
 }
 
-func TestGetLoggerPrefix(t *testing.T) {
-	require.Equal(t, loggerPrefix, GetLoggerPrefix(), "Incorrect Zap logger environment prefix")
+func TestLoggerPrefix(t *testing.T) {
+	require.Equal(t, loggerPrefix, LoggerPrefix(), "Incorrect Zap logger environment prefix")
 }
 
-func TestGetPostgresFileName(t *testing.T) {
-	require.Equal(t, postgresConfigFileName, GetPostgresFileName(), "Incorrect Postgres filename")
+func TestPostgresFileName(t *testing.T) {
+	require.Equal(t, postgresConfigFileName, PostgresFileName(), "Incorrect Postgres filename")
 }
 
 func TestGetPostgresPrefix(t *testing.T) {
-	require.Equal(t, postgresPrefix, GetPostgresPrefix(), "Incorrect Postgres environment prefix")
+	require.Equal(t, postgresPrefix, PostgresPrefix(), "Incorrect Postgres environment prefix")
 }
 
-func TestGetPostgresDSN(t *testing.T) {
-	require.Equal(t, postgresDSN, GetPostgresDSN(), "Incorrect Postgres DSN format string")
+func TestPostgresDSN(t *testing.T) {
+	require.Equal(t, postgresDSN, PostgresDSN(), "Incorrect Postgres DSN format string")
 }
 
-func TestGetTestDatabaseName(t *testing.T) {
-	require.Equal(t, testDatabaseName, GetTestDatabaseName(), "Incorrect test suite database name")
+func TestTestDatabaseName(t *testing.T) {
+	require.Equal(t, testDatabaseName, TestDatabaseName(), "Incorrect test suite database name")
 }
 
-func TestGetRedisFileName(t *testing.T) {
-	require.Equal(t, redisConfigFileName, GetRedisFileName(), "Incorrect Redis filename")
+func TestRedisFileName(t *testing.T) {
+	require.Equal(t, redisConfigFileName, RedisFileName(), "Incorrect Redis filename")
 }
 
-func TestGetRedisPrefix(t *testing.T) {
-	require.Equal(t, redisPrefix, GetRedisPrefix(), "Incorrect Redis prefix")
+func TestRedisPrefix(t *testing.T) {
+	require.Equal(t, redisPrefix, RedisPrefix(), "Incorrect Redis prefix")
 }
 
-func TestGetQuotesFileName(t *testing.T) {
-	require.Equal(t, quotesConfigFileName, GetQuotesFileName(), "Incorrect Quotes filename")
+func TestQuotesFileName(t *testing.T) {
+	require.Equal(t, quotesConfigFileName, QuotesFileName(), "Incorrect Quotes filename")
 }
 
-func TestGetQuotesPrefix(t *testing.T) {
-	require.Equal(t, quotesPrefix, GetQuotesPrefix(), "Incorrect Quotes prefix")
+func TestQuotesPrefix(t *testing.T) {
+	require.Equal(t, quotesPrefix, QuotesPrefix(), "Incorrect Quotes prefix")
 }
 
-func TestGetAuthFileName(t *testing.T) {
-	require.Equal(t, authConfigFileName, GetAuthFileName(), "Incorrect authentication filename")
+func TestAuthFileName(t *testing.T) {
+	require.Equal(t, authConfigFileName, AuthFileName(), "Incorrect authentication filename")
 }
 
-func TestGetAuthPrefix(t *testing.T) {
-	require.Equal(t, authPrefix, GetAuthPrefix(), "Incorrect authorization environment prefix")
+func TestAuthPrefix(t *testing.T) {
+	require.Equal(t, authPrefix, AuthPrefix(), "Incorrect authorization environment prefix")
 }
 
-func TestGetHTTPRESTFileName(t *testing.T) {
-	require.Equal(t, restConfigFileName, GetHTTPRESTFileName(), "Incorrect HTTP REST filename")
+func TestHTTPRESTFileName(t *testing.T) {
+	require.Equal(t, restConfigFileName, HTTPRESTFileName(), "Incorrect HTTP REST filename")
 }
 
-func TestGetHTTPRESTPrefix(t *testing.T) {
-	require.Equal(t, restPrefix, GetHTTPRESTPrefix(), "Incorrect HTTP REST environment prefix")
+func TestHTTPRESTPrefix(t *testing.T) {
+	require.Equal(t, restPrefix, HTTPRESTPrefix(), "Incorrect HTTP REST environment prefix")
 }
 
-func TestGetDeleteUserAccountConfirmation(t *testing.T) {
-	require.Equal(t, deleteUserAccountConfirmation, GetDeleteUserAccountConfirmation(),
+func TestDeleteUserAccountConfirmation(t *testing.T) {
+	require.Equal(t, deleteUserAccountConfirmation, DeleteUserAccountConfirmation(),
 		"Incorrect user account deletion confirmation message.")
 }
 
-func TestGetDecimalPlacesFiat(t *testing.T) {
-	require.Equal(t, fiatDecimalPlaces, GetDecimalPlacesFiat(), "Incorrect Fiat currency decimal places.")
+func TestDecimalPlacesFiat(t *testing.T) {
+	require.Equal(t, fiatDecimalPlaces, DecimalPlacesFiat(), "Incorrect Fiat currency decimal places.")
 }
-func TestGetDecimalPlacesCrypto(t *testing.T) {
-	require.Equal(t, cryptoDecimalPlaces, GetDecimalPlacesCrypto(), "Incorrect Cryptocurrency decimal places.")
-}
-
-func TestGetFiatOfferTTL(t *testing.T) {
-	require.Equal(t, fiatOfferTTL, GetFiatOfferTTL(), "Incorrect Fiat offer TTL.")
+func TestDecimalPlacesCrypto(t *testing.T) {
+	require.Equal(t, cryptoDecimalPlaces, DecimalPlacesCrypto(), "Incorrect Cryptocurrency decimal places.")
 }
 
-func TestGetCryptoOfferTTL(t *testing.T) {
-	require.Equal(t, cryptoOfferTTL, GetCryptoOfferTTL(), "Incorrect Crypto offer TTL.")
+func TestFiatOfferTTL(t *testing.T) {
+	require.Equal(t, fiatOfferTTL, FiatOfferTTL(), "Incorrect Fiat offer TTL.")
 }
 
-func TestGetMonthFormatString(t *testing.T) {
+func TestCryptoOfferTTL(t *testing.T) {
+	require.Equal(t, cryptoOfferTTL, CryptoOfferTTL(), "Incorrect Crypto offer TTL.")
+}
+
+func TestMonthFormatString(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, monthFormatString, GetMonthFormatString(), "Incorrect month format string.")
+	require.Equal(t, monthFormatString, MonthFormatString(), "Incorrect month format string.")
 
 	testCases := []struct {
 		name     string
@@ -143,40 +143,52 @@ func TestGetMonthFormatString(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			actual := fmt.Sprintf(GetMonthFormatString(), test.year, test.month, test.timezone)
+			actual := fmt.Sprintf(MonthFormatString(), test.year, test.month, test.timezone)
 			require.Equal(t, test.name, actual, "actual and expected time strings mismatch.")
 		})
 	}
 }
 
-func TestGetNextPageRESTFormatString(t *testing.T) {
-	require.Equal(t, nextPageRESTFormatString, GetNextPageRESTFormatString(),
+func TestNextPageRESTFormatString(t *testing.T) {
+	require.Equal(t, nextPageRESTFormatString, NextPageRESTFormatString(),
 		"next page format strings mismatched.")
 }
 
-func TestGetGraphqlConfigFileName(t *testing.T) {
-	require.Equal(t, graphqlConfigFileName, GetHTTPGraphQLFileName(), "Incorrect HTTP GraphQL filename.")
+func TestGraphqlConfigFileName(t *testing.T) {
+	require.Equal(t, graphqlConfigFileName, HTTPGraphQLFileName(), "Incorrect HTTP GraphQL filename.")
 }
 
-func TestGetHTTPGraphQLPrefix(t *testing.T) {
-	require.Equal(t, graphQLPrefix, GetHTTPGraphQLPrefix(), "Incorrect HTTP GraphQL environment prefix.")
+func TestHTTPGraphQLPrefix(t *testing.T) {
+	require.Equal(t, graphQLPrefix, HTTPGraphQLPrefix(), "Incorrect HTTP GraphQL environment prefix.")
 }
 
-func TestGetSpecialAccountFiat(t *testing.T) {
-	require.Equal(t, specialAccountFiat, GetSpecialAccountFiat(), "Incorrect Fiat currency account name.")
+func TestSpecialAccountFiat(t *testing.T) {
+	require.Equal(t, specialAccountFiat, SpecialAccountFiat(), "Incorrect Fiat currency account name.")
 }
 
-func TestGetSpecialAccountCrypto(t *testing.T) {
-	require.Equal(t, specialAccountCrypto, GetSpecialAccountCrypto(), "Incorrect Cryptocurrency account name.")
+func TestSpecialAccountCrypto(t *testing.T) {
+	require.Equal(t, specialAccountCrypto, SpecialAccountCrypto(), "Incorrect Cryptocurrency account name.")
 }
 
-func TestGetInvalidRequest(t *testing.T) {
-	require.Equal(t, invalidRequest, GetInvalidRequest(), "Incorrect invalid request string.")
+func TestInvalidRequest(t *testing.T) {
+	require.Equal(t, invalidRequestString, InvalidRequestString(), "Incorrect invalid request string.")
 }
 
-func TestGetValidationString(t *testing.T) {
-	require.Equal(t, validationSting, GetValidationString(), "Incorrect validation string.")
+func TestValidationString(t *testing.T) {
+	require.Equal(t, validationSting, ValidationString(), "Incorrect validation string.")
 }
-func TestGetInvalidCurrencyString(t *testing.T) {
-	require.Equal(t, invalidCurrencyString, GetInvalidCurrencyString(), "Incorrect invalid currency string.")
+
+func TestInvalidCurrencyString(t *testing.T) {
+	require.Equal(t, invalidCurrencyString, InvalidCurrencyString(), "Incorrect invalid currency string.")
+}
+
+func TestRetryMessageString(t *testing.T) {
+	require.Equal(t, retryMessageString, RetryMessageString(), "Incorrect retry message string.")
+}
+
+func TestTwoSeconds(t *testing.T) {
+	require.Equal(t, twoSecondDuration, TwoSeconds(), "Incorrect two second duration.")
+}
+func TestThreeSeconds(t *testing.T) {
+	require.Equal(t, threeSecondDuration, ThreeSeconds(), "Incorrect three second duration.")
 }

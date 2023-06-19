@@ -57,7 +57,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 
 		if err = validator.ValidateStruct(&request); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+				models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}
@@ -331,8 +331,8 @@ func TxDetailsFiat(
 // BalanceFiatPaginated will handle an HTTP request to retrieve a balance for all currency accounts held by a single
 // client.
 //
-// If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
-// available to for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
+// If a user requests N records, N+1 records will be requested. This is used to calculate if any further records are
+// available for retrieval. The page cursor will be the encrypted N+1'th record to retrieve in the subsequent call.
 //
 //	@Summary		Retrieve all the currency balances for a specific client.
 //	@Description	Retrieves all the currency balances for a specific client. The initial request will only contain (optionally) the page size. Subsequent requests will require a cursors to the next page that will be returned in a previous call to the endpoint. The user may choose to change the page size in any sequence of calls.
@@ -383,8 +383,8 @@ func BalanceFiatPaginated(
 // TxDetailsFiatPaginated will handle an HTTP request to retrieve all transaction details for a currency account held by
 // a single client for a given month.
 //
-// If a user request N records, N+1 records will be requested. This is used to calculate if any further records are
-// available to for retrieval. The page cursor will be the encrypted date range for the month as well as the offset.
+// If a user requests N records, N+1 records will be requested. This is used to calculate if any further records are
+// available for retrieval. The page cursor will be the encrypted date range for the month as well as the offset.
 //
 //	@Summary		Retrieve all the transactions for a currency account for a specific client during a specified month.
 //	@Description	Retrieves all the transaction details for currency a specific client during the specified month. The initial request will contain (optionally) the page size and, month, year, and timezone (option, defaults to UTC). Subsequent requests will require a cursors to the next page that will be returned in the previous call to the endpoint. The user may choose to change the page size in any sequence of calls.

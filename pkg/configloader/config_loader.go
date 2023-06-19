@@ -12,9 +12,9 @@ func Load[T any](fs afero.Fs, cfg *T, filename, prefix, format string) (err erro
 	viper.SetFs(fs)
 	viper.SetConfigName(filename)
 	viper.SetConfigType(format)
-	viper.AddConfigPath(constants.GetEtcDir())
-	viper.AddConfigPath(constants.GetHomeDir())
-	viper.AddConfigPath(constants.GetBaseDir())
+	viper.AddConfigPath(constants.EtcDir())
+	viper.AddConfigPath(constants.HomeDir())
+	viper.AddConfigPath(constants.BaseDir())
 
 	viper.SetEnvPrefix(prefix)
 	viper.AutomaticEnv()

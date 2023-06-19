@@ -5,15 +5,17 @@
 
 # FTeX
 
-###### This project's name aims to poke lighthearted fun at Blockchain and Cryptocurrency enthusiasts. I neither support nor endorse the use of Blockchain technologies as a store of wealth.
+> _This project's name aims to poke lighthearted fun at Blockchain and Cryptocurrency enthusiasts. I neither support nor endorse the use of Blockchain technologies as a store of wealth._
+>
+> **_Blockchains are an impressive and interesting technology that encompasses some potentially useful applications._**
 
-###### **_Blockchains are an impressive and interesting technology that encompasses some potentially useful applications._**
+<br/>
 
 This is a demonstration project in `Golang` that provides an API for basic banking of Cryptocurrencies. There are
 integrations with quote services to obtain realtime Fiat and Cryptocurrency prices.
 
 This project will be leverage an RDBMS (PostreSQL) because of the need for ACID transactions, rollbacks, and row-level
-locking across tables. It uses a Redis cache as a session store.
+locking across tables. A Redis cache is employed as a session store.
 
 <br/>
 
@@ -30,6 +32,15 @@ the use case and workloads here.
 
 <br/>
 
+:warning: **_Credentials in Configuration Files_** :warning:
+
+Credentials have been stored in plaintext within the demonstration files. This poses a security risk and is a technique
+employed to make testing and deployment of this demonstration application easier. In a production environment, the
+credentials would be stored in a secure credential store and mounted as environment variables or files in the container.
+Yet another option would be to encrypt the configuration files as Mozilla Secret OPerationS (SOPS).
+
+<br/>
+
 :warning: **_Protocols_** :warning:
 
 This demonstration environment will launch both the `HTTP REST` as well as the `GraphQL` over `HTTP` endpoints. This is
@@ -37,6 +48,13 @@ unsuitable for a production environment.
 
 Ideally, each of these protocol endpoints would be exposed in its own clusters with auto-scaling, load balancing, and
 across availability zones.
+
+<br/>
+
+:warning: **_GraphQL Complexity Limits_** :warning:
+
+Limitations on GraphQL Query and Mutation complexity have not been employed to make testing of this demonstration
+application easier.
 
 <br/>
 
@@ -68,7 +86,7 @@ Details on the HTTP endpoints can be found in their respective packages below.
 
 ### REST
 
-The HTTP endpoint details are located in the [`rest`](pkg/rest) package. The model used for REST API calls can
+The HTTP endpoint details are located in the [`REST`](pkg/rest) package. The model used for REST API calls can
 be found in the [`models`](pkg/models) package.
 
 To review the REST API request and response formats please see the readme in the [`REST handlers`](pkg/rest/handlers)
@@ -80,11 +98,11 @@ The Swagger UI can be accessed using the provided default configurations through
 
 ### GraphQL
 
-GraphQL has been exposed through an HTTP endpoint [`graphql`](pkg/graphql) package. The schema for the GraphQL queries
-and mutations can be found in [`models`](pkg/models) package.
+GraphQL has been exposed through an HTTP endpoint [`GraphQL`](pkg/graphql) package. The schema for the GraphQL queries
+and mutations can be found in GraphQL package's [`schema`](pkg/graphql/schema).
 
-To review the GraphQL API request and response formats please see the readme in the [`graphql_resolvers`](pkg/graph/resolvers)
-package. The GraphQL server does also provide a Playground to examine and test the API calls with details on request
+To review the GraphQL API request and response formats please see the readme in the [`resolvers`](pkg/graphql/resolvers)
+directory. The GraphQL server does also provide a Playground to examine and test the API calls with details on request
 formats.
 
 The Playground can be accessed using the provided default configurations through
@@ -145,8 +163,8 @@ Environment variables can be set using the Kubernetes deployment configurations 
 using the Docker CLI.
 
 To supply the environment variables using the Docker CLI, please use the `-e` flag. Below is an example of how to supply
-the API Keys for the Fiat and Cryptocurrency quotes. Please see the Docker `run`
-[documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
+the API Keys for the Fiat and Cryptocurrency quotes, database host information, and port mappings. Please see the Docker
+`run` [documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
 
 ```shell
 docker run -d \
@@ -219,7 +237,7 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redi
 
 - Port : `7379`
 - Database: `0`
--
+
 <br/>
 
 [Crypto icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/crypto)

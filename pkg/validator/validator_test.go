@@ -16,28 +16,23 @@ func TestErrorField_Error(t *testing.T) {
 		input    *FieldError
 		expected string
 	}{
-		// ----- test cases start ----- //
 		{
 			"Empty error",
 			&FieldError{},
 			fmt.Sprintf(errorStr, "", "", "%!s(<nil>)"),
-		},
-		{
+		}, {
 			"Field only error",
 			&FieldError{Field: "field"},
 			fmt.Sprintf(errorStr, "field", "", "%!s(<nil>)"),
-		},
-		{
+		}, {
 			"Field and Tag only error",
 			&FieldError{Field: "field", Tag: "tag"},
 			fmt.Sprintf(errorStr, "field", "tag", "%!s(<nil>)"),
-		},
-		{
+		}, {
 			"Field, Tag, and Value error",
 			&FieldError{Field: "field", Tag: "tag", Value: "value"},
 			fmt.Sprintf(errorStr, "field", "tag", "value"),
 		},
-		// ----- test cases end ----- //
 	}
 
 	for _, testCase := range testCases {
@@ -64,20 +59,17 @@ func TestErrorValidation_Error(t *testing.T) {
 		input    *ValidationError
 		expected string
 	}{
-		// ----- test cases start ----- //
 		{
 			"Empty error",
 			&ValidationError{Errors: []*FieldError{}},
 			genExpected(""),
-		},
-		{
+		}, {
 			"Single error",
 			&ValidationError{Errors: []*FieldError{
 				{Field: "field 1", Tag: "tag 1", Value: "value 1"},
 			}},
 			genExpected(fmt.Sprintf(errorStr, "field 1", "tag 1", "value 1")),
-		},
-		{
+		}, {
 			"Two errors",
 			&ValidationError{Errors: []*FieldError{
 				{Field: "field 1", Tag: "tag 1", Value: "value 1"},
@@ -86,8 +78,8 @@ func TestErrorValidation_Error(t *testing.T) {
 			genExpected(fmt.Sprintf(errorStr, "field 1", "tag 1", "value 1"),
 				fmt.Sprintf(errorStr, "field 2", "tag 2", "value 2")),
 		},
-		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			require.Equal(t, testCase.expected, testCase.input.Error())
@@ -108,45 +100,39 @@ func TestValidateStruct(t *testing.T) {
 		expectedLen int
 		expectErr   require.ErrorAssertionFunc
 	}{
-		// ----- test cases start ----- //
 		{
 			"No error",
 			&ValidationTestStruct{AlphaNum: "alphanum1", Integer: 5, Vector: []int{2, 3, 4}},
 			0,
 			require.NoError,
-		},
-		{
+		}, {
 			"All missing",
 			&ValidationTestStruct{},
 			3,
 			require.Error,
-		},
-		{
+		}, {
 			"Alphanum error",
 			&ValidationTestStruct{AlphaNum: "alpha # 1", Integer: 5, Vector: []int{2, 3, 4}},
 			1,
 			require.Error,
-		},
-		{
+		}, {
 			"Integer range error",
 			&ValidationTestStruct{AlphaNum: "alphanum1", Integer: 11, Vector: []int{2, 3, 4}},
 			1,
 			require.Error,
-		},
-		{
+		}, {
 			"Vector range error",
 			&ValidationTestStruct{AlphaNum: "alphanum1", Integer: 5, Vector: []int{2, 1, 4}},
 			1,
 			require.Error,
-		},
-		{
+		}, {
 			"Vector range error",
 			&ValidationTestStruct{AlphaNum: "alphanum1", Integer: 5, Vector: []int{2, 3, 4, 5}},
 			1,
 			require.Error,
 		},
-		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := ValidateStruct(testCase.input)

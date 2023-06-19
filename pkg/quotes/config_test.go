@@ -13,9 +13,9 @@ import (
 )
 
 func TestQuotesConfigs_Load(t *testing.T) {
-	envFiatKey := constants.GetQuotesPrefix() + "_FIATCURRENCY."
-	envCryptoKey := constants.GetQuotesPrefix() + "_CRYPTOCURRENCY."
-	envConnKey := constants.GetQuotesPrefix() + "_CONNECTION."
+	envFiatKey := constants.QuotesPrefix() + "_FIATCURRENCY."
+	envCryptoKey := constants.QuotesPrefix() + "_CRYPTOCURRENCY."
+	envConnKey := constants.QuotesPrefix() + "_CONNECTION."
 
 	testCases := []struct {
 		name         string
@@ -95,8 +95,8 @@ func TestQuotesConfigs_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetQuotesFileName(),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.QuotesFileName(),
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.

@@ -5,12 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -55,7 +55,7 @@ type FiatAccountTransferResult struct {
 // FiatExternalTransfer controls the transaction block that the external Fiat transfer transaction executes in.
 func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetails *FiatTransactionDetails) (
 	*FiatAccountTransferResult, error) {
-	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(parentCtx, constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -75,7 +75,7 @@ func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetai
 	// Set rollback in case of failure.
 	defer func() {
 		if errRollback := tx.Rollback(context.TODO()); errRollback != nil {
-			// If the connection is closed the transaction was committed. Ignore the error from rollback in this case.
+			// If the connection is closed, the transaction was committed. Ignore the error from rollback in this case.
 			if !errors.Is(errRollback, pgx.ErrTxClosed) {
 				p.logger.Error("failed to rollback external Fiat account transaction", zap.Error(errRollback))
 			}
@@ -107,12 +107,13 @@ func (p *postgresImpl) FiatExternalTransfer(parentCtx context.Context, xferDetai
   		Minimize the duration for which the transaction block will be active by performing as many operations as
    		possible outside the transaction.
 
-    [1] Convert the transaction amount to a pgtype and truncate to two decimal places. This is to adjust for the
-		floating point precision representational issues.
-    [2] Acquire a row lock on the destination account without holding a lock on the foreign key for the Client ID.
-        There will be no update for the external account balance so there is no need for a row lock on the account.
-    [3] Make the Journal entries for the external and internal accounts.
-    [4] Update the balance for the internal account.
+        The queries to update the balance will round Half-to-Even to account for floating point precision
+        representational issues.
+
+    [1] Acquire a row lock on the destination account without holding a lock on the foreign key for the Client ID.
+        There will be no update for the external account balance, so there is no need for a row lock on the account.
+    [2] Make the Journal entries for the external and internal accounts.
+    [3] Update the balance for the internal account.
 */
 func fiatExternalTransfer(
 	ctx context.Context,
@@ -223,7 +224,7 @@ func (p *postgresImpl) FiatInternalTransfer(
 	parentCtx context.Context,
 	src,
 	dst *FiatTransactionDetails) (*FiatAccountTransferResult, *FiatAccountTransferResult, error) {
-	ctx, cancel := context.WithTimeout(parentCtx, 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(parentCtx, constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -245,7 +246,7 @@ func (p *postgresImpl) FiatInternalTransfer(
 	// Set rollback in case of failure.
 	defer func() {
 		if errRollback := tx.Rollback(context.TODO()); errRollback != nil {
-			// If the connection is closed the transaction was committed. Ignore the error from rollback in this case.
+			// If the connection is closed, the transaction was committed. Ignore the error from rollback in this case.
 			if !errors.Is(errRollback, pgx.ErrTxClosed) {
 				p.logger.Error("failed to rollback internal Fiat account transaction", zap.Error(errRollback))
 			}
@@ -279,12 +280,13 @@ func (p *postgresImpl) FiatInternalTransfer(
   		Minimize the duration for which the transaction block will be active by performing as many operations as
    		possible outside the transaction.
 
-    [1] Convert the transaction amounts to a pgtype and truncate to two decimal places. This is to adjust for the
-		floating point precision representational issues.
-    [2] Acquire a row lock on the accounts without holding a lock on the foreign key for the Client ID.
+        The queries to update the balance will round Half-to-Even to account for floating point precision
+        representational issues.
+
+    [1] Acquire a row lock on the accounts without holding a lock on the foreign key for the Client ID.
         Their accounts will be compared against each other using a total order rule.
-    [3] Make the Journal entries for both of the accounts.
-    [4] Update the balance for the source and destination accounts.
+    [2] Make the Journal entries for both of the accounts.
+    [3] Update the balance for the source and destination accounts.
 */
 func fiatInternalTransfer(
 	ctx context.Context,

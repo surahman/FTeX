@@ -1,6 +1,8 @@
 package constants
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	// Configuration file directories.
@@ -39,167 +41,188 @@ const (
 	nextPageRESTFormatString      = "?pageCursor=%s&pageSize=%d"
 	specialAccountFiat            = "fiat-currencies"
 	specialAccountCrypto          = "crypto-currencies"
-	invalidRequest                = "invalid request"
+	invalidRequestString          = "invalid request"
 	validationSting               = "validation"
 	invalidCurrencyString         = "invalid currency"
+	retryMessageString            = "please retry your request later"
 )
 
-// GetEtcDir returns the configuration directory in Etc.
-func GetEtcDir() string {
+var (
+	twoSecondDuration   = 2 * time.Second
+	threeSecondDuration = 3 * time.Second
+)
+
+// EtcDir returns the configuration directory in Etc.
+func EtcDir() string {
 	return configEtcDir
 }
 
-// GetHomeDir returns the configuration directory in users home.
-func GetHomeDir() string {
+// HomeDir returns the configuration directory in users home.
+func HomeDir() string {
 	return configHomeDir
 }
 
-// GetBaseDir returns the configuration base directory in the root of the application.
-func GetBaseDir() string {
+// BaseDir returns the configuration base directory in the root of the application.
+func BaseDir() string {
 	return configBaseDir
 }
 
-// GetGithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
-func GetGithubCIKey() string {
+// GithubCIKey is the key for the environment variable expected to be present in the GH CI runner.
+func GithubCIKey() string {
 	return githubCIKey
 }
 
-// GetLoggerFileName returns the Zap logger configuration file name.
-func GetLoggerFileName() string {
+// LoggerFileName returns the Zap logger configuration file name.
+func LoggerFileName() string {
 	return loggerConfigFileName
 }
 
-// GetLoggerPrefix returns the environment variable prefix for the Zap logger.
-func GetLoggerPrefix() string {
+// LoggerPrefix returns the environment variable prefix for the Zap logger.
+func LoggerPrefix() string {
 	return loggerPrefix
 }
 
-// GetPostgresFileName returns the Postgres configuration file name.
-func GetPostgresFileName() string {
+// PostgresFileName returns the Postgres configuration file name.
+func PostgresFileName() string {
 	return postgresConfigFileName
 }
 
-// GetPostgresPrefix returns the environment variable prefix for Postgres.
-func GetPostgresPrefix() string {
+// PostgresPrefix returns the environment variable prefix for Postgres.
+func PostgresPrefix() string {
 	return postgresPrefix
 }
 
-// GetPostgresDSN returns the format string for the Postgres Data Source Name used to connect to the database.
-func GetPostgresDSN() string {
+// PostgresDSN returns the format string for the Postgres Data Source Name used to connect to the database.
+func PostgresDSN() string {
 	return postgresDSN
 }
 
-// GetTestDatabaseName returns the name of the database used in test suites.
-func GetTestDatabaseName() string {
+// TestDatabaseName returns the name of the database used in test suites.
+func TestDatabaseName() string {
 	return testDatabaseName
 }
 
-// GetRedisFileName returns the Redis server configuration file name.
-func GetRedisFileName() string {
+// RedisFileName returns the Redis server configuration file name.
+func RedisFileName() string {
 	return redisConfigFileName
 }
 
-// GetRedisPrefix returns the environment variable prefix for the Redis server.
-func GetRedisPrefix() string {
+// RedisPrefix returns the environment variable prefix for the Redis server.
+func RedisPrefix() string {
 	return redisPrefix
 }
 
-// GetQuotesFileName returns the quotes configuration file name.
-func GetQuotesFileName() string {
+// QuotesFileName returns the quotes configuration file name.
+func QuotesFileName() string {
 	return quotesConfigFileName
 }
 
-// GetQuotesPrefix returns the environment variable prefix for the quotes.
-func GetQuotesPrefix() string {
+// QuotesPrefix returns the environment variable prefix for the quotes.
+func QuotesPrefix() string {
 	return quotesPrefix
 }
 
-// GetAuthFileName returns the authentication configuration file name.
-func GetAuthFileName() string {
+// AuthFileName returns the authentication configuration file name.
+func AuthFileName() string {
 	return authConfigFileName
 }
 
-// GetAuthPrefix returns the environment variable prefix for authentication.
-func GetAuthPrefix() string {
+// AuthPrefix returns the environment variable prefix for authentication.
+func AuthPrefix() string {
 	return authPrefix
 }
 
-// GetHTTPRESTFileName returns the HTTP REST endpoint configuration file name.
-func GetHTTPRESTFileName() string {
+// HTTPRESTFileName returns the HTTP REST endpoint configuration file name.
+func HTTPRESTFileName() string {
 	return restConfigFileName
 }
 
-// GetHTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
-func GetHTTPRESTPrefix() string {
+// HTTPRESTPrefix returns the environment variable prefix for the HTTP REST endpoint.
+func HTTPRESTPrefix() string {
 	return restPrefix
 }
 
-// GetDeleteUserAccountConfirmation is the format string template confirmation message used to delete a user account.
-func GetDeleteUserAccountConfirmation() string {
+// DeleteUserAccountConfirmation is the format string template confirmation message used to delete a user account.
+func DeleteUserAccountConfirmation() string {
 	return deleteUserAccountConfirmation
 }
 
-// GetDecimalPlacesFiat the number of decimal places Fiat currency can have.
-func GetDecimalPlacesFiat() int32 {
+// DecimalPlacesFiat the number of decimal places Fiat currency can have.
+func DecimalPlacesFiat() int32 {
 	return fiatDecimalPlaces
 }
 
-// GetDecimalPlacesCrypto the number of decimal places Cryptocurrency can have.
-func GetDecimalPlacesCrypto() int32 {
+// DecimalPlacesCrypto the number of decimal places Cryptocurrency can have.
+func DecimalPlacesCrypto() int32 {
 	return cryptoDecimalPlaces
 }
 
-// GetFiatOfferTTL is the time duration that a Fiat conversion rate offer will be valid for.
-func GetFiatOfferTTL() time.Duration {
+// FiatOfferTTL is the time duration that a Fiat conversion rate offer will be valid for.
+func FiatOfferTTL() time.Duration {
 	return fiatOfferTTL
 }
 
-// GetCryptoOfferTTL is the time duration that a Crypto conversion rate offer will be valid for.
-func GetCryptoOfferTTL() time.Duration {
+// CryptoOfferTTL is the time duration that a Crypto conversion rate offer will be valid for.
+func CryptoOfferTTL() time.Duration {
 	return cryptoOfferTTL
 }
 
-// GetMonthFormatString is the base RFC3339 format string for a configurable month, year, and timezone.
-func GetMonthFormatString() string {
+// MonthFormatString is the base RFC3339 format string for a configurable month, year, and timezone.
+func MonthFormatString() string {
 	return monthFormatString
 }
 
-// GetNextPageRESTFormatString is the format for the naked next page link for REST requests responses.
-func GetNextPageRESTFormatString() string {
+// NextPageRESTFormatString is the format for the naked next page link for REST requests responses.
+func NextPageRESTFormatString() string {
 	return nextPageRESTFormatString
 }
 
-// GetHTTPGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
-func GetHTTPGraphQLFileName() string {
+// HTTPGraphQLFileName returns the HTTP GraphQL endpoint configuration file name.
+func HTTPGraphQLFileName() string {
 	return graphqlConfigFileName
 }
 
-// GetHTTPGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
-func GetHTTPGraphQLPrefix() string {
+// HTTPGraphQLPrefix returns the environment variable prefix for the HTTP GraphQL endpoint.
+func HTTPGraphQLPrefix() string {
 	return graphQLPrefix
 }
 
-// GetSpecialAccountFiat special purpose account for Fiat currency related operations in the database.
-func GetSpecialAccountFiat() string {
+// SpecialAccountFiat special purpose account for Fiat currency related operations in the database.
+func SpecialAccountFiat() string {
 	return specialAccountFiat
 }
 
-// GetSpecialAccountCrypto special purpose account for Cryptocurrency related operations in the database.
-func GetSpecialAccountCrypto() string {
+// SpecialAccountCrypto special purpose account for Cryptocurrency related operations in the database.
+func SpecialAccountCrypto() string {
 	return specialAccountCrypto
 }
 
-// GetInvalidRequest is the error string message for an invalid request.
-func GetInvalidRequest() string {
-	return invalidRequest
+// InvalidRequestString is the error string message for an invalid request.
+func InvalidRequestString() string {
+	return invalidRequestString
 }
 
-// GetValidationString is the error message for a struct validation failure.
-func GetValidationString() string {
+// ValidationString is the error message for a struct validation failure.
+func ValidationString() string {
 	return validationSting
 }
 
-// GetInvalidCurrencyString is the error message for an invalid currency.
-func GetInvalidCurrencyString() string {
+// InvalidCurrencyString is the error message for an invalid currency.
+func InvalidCurrencyString() string {
 	return invalidCurrencyString
+}
+
+// RetryMessageString is the error message requesting a retry.
+func RetryMessageString() string {
+	return retryMessageString
+}
+
+// TwoSeconds is a two-second time duration.
+func TwoSeconds() time.Duration {
+	return twoSecondDuration
+}
+
+// ThreeSeconds is a three-second time duration.
+func ThreeSeconds() time.Duration {
+	return threeSecondDuration
 }

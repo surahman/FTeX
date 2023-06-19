@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestError_New(t *testing.T) {
+func TestErrors_New(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -48,7 +48,7 @@ func TestError_New(t *testing.T) {
 	}
 }
 
-func TestError_Is(t *testing.T) {
+func TestErrors_Is(t *testing.T) {
 	t.Parallel()
 
 	baseError := NewError("base error")

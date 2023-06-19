@@ -42,8 +42,8 @@ func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetAuthFileName(),
-		constants.GetAuthPrefix(),
+		constants.AuthFileName(),
+		constants.AuthPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("authorization config loading failed: %w", err)
 	}

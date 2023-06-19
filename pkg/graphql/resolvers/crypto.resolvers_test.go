@@ -1112,8 +1112,8 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 	t.Parallel()
 
 	decryptedCursor := fmt.Sprintf("%s,%s,%d",
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 7, "-04:00"),
 		10)
 
 	journalEntries := []postgres.CryptoJournal{{}, {}, {}, {}}

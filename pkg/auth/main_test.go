@@ -59,7 +59,7 @@ func setup() error {
 	return nil
 }
 
-// tearDown will delete the test clusters keyspace.
+// tearDown will clean up any resources that need manual shutdown/deletion.
 func tearDown() error {
 	return nil
 }

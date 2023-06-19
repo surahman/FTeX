@@ -117,7 +117,7 @@ func (l *Logger) Panic(message string, fields ...zap.Field) {
 	l.zapLogger.Panic(message, fields...)
 }
 
-// mergeConfig will merge the configuration files by marshalling and unmarshalling.
+// mergeConfig will merge the configuration files by marshaling and unmarshalling.
 //
 //nolint:lll
 func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | *encoderConfig](dst DST, src SRC) (err error) {
@@ -134,7 +134,7 @@ func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | 
 	return
 }
 
-// setTestLogger is a utility method that set a logger base for testing.
+// setTestLogger is a utility method that sets a logger base for testing.
 func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 	l.zapLogger = testLogger
 }

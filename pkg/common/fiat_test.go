@@ -36,7 +36,7 @@ func TestCommon_HTTPFiatOpen(t *testing.T) {
 			openAccErr:    nil,
 			openAccTimes:  0,
 			expectErrCode: http.StatusBadRequest,
-			expectErrMsg:  constants.GetInvalidCurrencyString(),
+			expectErrMsg:  constants.InvalidCurrencyString(),
 			expectErr:     require.Error,
 		}, {
 			name:          "unknown db failure",
@@ -44,7 +44,7 @@ func TestCommon_HTTPFiatOpen(t *testing.T) {
 			openAccErr:    errors.New("unknown error"),
 			openAccTimes:  1,
 			expectErrCode: http.StatusInternalServerError,
-			expectErrMsg:  retryMessage,
+			expectErrMsg:  constants.RetryMessageString(),
 			expectErr:     require.Error,
 		}, {
 			name:          "known db failure",
@@ -112,7 +112,7 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 			depositErr:       nil,
 			depositTimes:     0,
 			expectErrCode:    http.StatusBadRequest,
-			expectErrMsg:     constants.GetValidationString(),
+			expectErrMsg:     constants.ValidationString(),
 			expectErr:        require.Error,
 			expectNilReceipt: require.Nil,
 			expectNilPayload: require.NotNil,
@@ -122,7 +122,7 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 			depositErr:       nil,
 			depositTimes:     0,
 			expectErrCode:    http.StatusBadRequest,
-			expectErrMsg:     constants.GetInvalidCurrencyString(),
+			expectErrMsg:     constants.InvalidCurrencyString(),
 			expectErr:        require.Error,
 			expectNilReceipt: require.Nil,
 			expectNilPayload: require.NotNil,
@@ -158,7 +158,7 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 			depositErr:       errors.New("unknown error"),
 			depositTimes:     1,
 			expectErrCode:    http.StatusInternalServerError,
-			expectErrMsg:     retryMessage,
+			expectErrMsg:     constants.RetryMessageString(),
 			expectErr:        require.Error,
 			expectNilReceipt: require.Nil,
 			expectNilPayload: require.Nil,
@@ -246,7 +246,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 			source:       "INVALID",
 			destination:  "CAD",
 			expectErrMsg: "INVALID",
-			httpMessage:  constants.GetInvalidRequest(),
+			httpMessage:  constants.InvalidRequestString(),
 			httpStatus:   http.StatusBadRequest,
 			request: &models.HTTPExchangeOfferRequest{
 				SourceCurrency:      "INVALID",
@@ -265,7 +265,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 		}, {
 			name:             "crypto conversion - purchase",
 			expectErrMsg:     "quote failure",
-			httpMessage:      retryMessage,
+			httpMessage:      constants.RetryMessageString(),
 			httpStatus:       http.StatusInternalServerError,
 			request:          &validRequest,
 			quotesAmount:     quotesAmount,
@@ -295,7 +295,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 		}, {
 			name:             "encryption failure",
 			expectErrMsg:     "encryption failure",
-			httpMessage:      retryMessage,
+			httpMessage:      constants.RetryMessageString(),
 			httpStatus:       http.StatusInternalServerError,
 			request:          &validRequest,
 			quotesAmount:     quotesAmount,
@@ -310,7 +310,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 		}, {
 			name:             "cache failure",
 			expectErrMsg:     "cache failure",
-			httpMessage:      retryMessage,
+			httpMessage:      constants.RetryMessageString(),
 			httpStatus:       http.StatusInternalServerError,
 			request:          &validRequest,
 			quotesAmount:     quotesAmount,
@@ -452,7 +452,7 @@ func TestCommon_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:              "empty request",
-			expectedMsg:       constants.GetValidationString(),
+			expectedMsg:       constants.ValidationString(),
 			expectedStatus:    http.StatusBadRequest,
 			request:           models.HTTPTransferRequest{},
 			authDecryptErr:    nil,
@@ -725,7 +725,7 @@ func TestCommon_HTTPFiatBalance(t *testing.T) {
 		{
 			name:                "invalid currency",
 			ticker:              "INVALID",
-			expectedMsg:         constants.GetInvalidCurrencyString(),
+			expectedMsg:         constants.InvalidCurrencyString(),
 			expectedStatus:      http.StatusBadRequest,
 			fiatBalanceErr:      nil,
 			fiatBalanceTimes:    0,
@@ -1058,8 +1058,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 	t.Parallel()
 
 	decryptedCursor := fmt.Sprintf("%s,%s,%d",
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 7, "-04:00"),
 		10)
 
 	journalEntries := []postgres.FiatJournal{{}, {}, {}, {}}
@@ -1087,7 +1087,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			name:                   "bad currency",
 			ticker:                 "INVALID",
 			params:                 paramsCursor,
-			expectedMsg:            constants.GetInvalidCurrencyString(),
+			expectedMsg:            constants.InvalidCurrencyString(),
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
 			authDecryptCursorErr:   nil,

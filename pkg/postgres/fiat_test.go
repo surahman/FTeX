@@ -53,7 +53,7 @@ func TestFiat_FiatRowLockAccount(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Get general ledger entry test cases.
@@ -138,7 +138,7 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, _ := resetTestFiatAccounts(t)
 
 	// Test data setup.
@@ -241,7 +241,7 @@ func TestFiat_FiatExternalTransferJournalEntry(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the External Fiat General Ledger.
@@ -257,7 +257,7 @@ func TestFiat_FiatInternalTransferJournalEntry(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the External Fiat Journal.
@@ -276,7 +276,7 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the external fiat journal entries.
@@ -330,7 +330,7 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
@@ -424,7 +424,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test
@@ -505,7 +505,7 @@ func TestFiat_FiatGetAllAccounts(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, _ := resetTestFiatAccounts(t)
 
 	// Testing grid.
@@ -581,7 +581,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 	// Insert test users.
 	insertTestUsers(t)
 
-	// Insert initial set of test fiat accounts.
+	// Insert an initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
 	// Reset the test

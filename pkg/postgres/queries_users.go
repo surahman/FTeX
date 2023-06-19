@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"context"
-	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/surahman/FTeX/pkg/constants"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
 	"go.uber.org/zap"
 )
@@ -19,7 +19,7 @@ func (p *postgresImpl) UserRegister(userDetails *modelsPostgres.UserAccount) (uu
 		Email:     userDetails.Email,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -35,7 +35,7 @@ func (p *postgresImpl) UserRegister(userDetails *modelsPostgres.UserAccount) (uu
 
 // UserCredentials is the interface through which external methods can retrieve user credentials.
 func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -51,7 +51,7 @@ func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, erro
 
 // UserGetInfo is the interface through which external methods can retrieve user account information.
 func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -80,7 +80,7 @@ func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, err
 
 // UserDelete is the interface through which external methods can soft-delete a user account.
 func (p *postgresImpl) UserDelete(clientID uuid.UUID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 

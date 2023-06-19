@@ -54,8 +54,8 @@ func (cfg *config) Load(fs afero.Fs) error {
 	if err := configloader.Load(
 		fs,
 		cfg,
-		constants.GetPostgresFileName(),
-		constants.GetPostgresPrefix(),
+		constants.PostgresFileName(),
+		constants.PostgresPrefix(),
 		"yaml"); err != nil {
 		return fmt.Errorf("postgres config loading failed: %w", err)
 	}

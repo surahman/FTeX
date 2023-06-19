@@ -12,6 +12,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/afero"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -160,7 +161,7 @@ func (r *redisImpl) Close() error {
 
 // Healthcheck will iterate through all the data shards and attempt to ping them to ensure they are all reachable.
 func (r *redisImpl) Healthcheck() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
 	defer cancel()
 
@@ -176,7 +177,7 @@ func (r *redisImpl) Healthcheck() error {
 
 // Set will place a key with a given value in the Redis cache server with a TTL, if specified in the configurations.
 func (r *redisImpl) Set(key string, value any, expiration time.Duration) error {
-	// Write value to byte array.
+	// Write value to a byte array.
 	buffer := bytes.Buffer{}
 	encoder := gob.NewEncoder(&buffer)
 

@@ -49,7 +49,7 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 
 		if err = validator.ValidateStruct(&user); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+				&models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}
@@ -117,7 +117,7 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 		}
 
 		if err = validator.ValidateStruct(&loginRequest); err != nil {
-			ginCtx.JSON(http.StatusBadRequest, &models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+			ginCtx.JSON(http.StatusBadRequest, &models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}
@@ -192,7 +192,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 		}
 
 		// Do not refresh tokens that are outside the refresh threshold. Tokens could expire during the execution of
-		// this handler but expired ones would be rejected during token validation. Thus, it is not necessary to
+		// this handler, but expired ones would be rejected during token validation. Thus, it is not necessary to
 		// re-check expiration.
 		if expiresAt-time.Now().Unix() > auth.RefreshThreshold() {
 			ginCtx.AbortWithStatusJSON(http.StatusNotExtended,
@@ -247,7 +247,7 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 
 		if err = validator.ValidateStruct(&deleteRequest); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: constants.GetValidationString(), Payload: err})
+				&models.HTTPError{Message: constants.ValidationString(), Payload: err})
 
 			return
 		}
@@ -277,8 +277,8 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			return
 		}
 
-		// Check confirmation message.
-		if fmt.Sprintf(constants.GetDeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
+		// Check the confirmation message.
+		if fmt.Sprintf(constants.DeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
 				&models.HTTPError{Message: "incorrect or incomplete deletion request confirmation"})
 

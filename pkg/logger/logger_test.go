@@ -88,7 +88,7 @@ func TestMergeConfig_Encoder(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	fullFilePath := constants.GetEtcDir() + constants.GetLoggerFileName()
+	fullFilePath := constants.EtcDir() + constants.LoggerFileName()
 
 	testCases := []struct {
 		name      string
@@ -119,7 +119,7 @@ func TestInit(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Init mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
 			require.NoError(t, afero.WriteFile(fs, fullFilePath, []byte(testCase.input), 0644), "Failed to write in memory file")
 
 			logger := NewLogger()
@@ -156,8 +156,8 @@ func TestTestLogger(t *testing.T) {
 func TestInit_MultiInitialization(t *testing.T) {
 	// Init mock filesystem.
 	fs := afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-	require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(),
+	require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+	require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.LoggerFileName(),
 		[]byte(loggerConfigTestData["valid_devel"]), 0644), "Failed to write in memory file")
 
 	logger := NewLogger()

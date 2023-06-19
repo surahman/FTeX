@@ -24,7 +24,6 @@ func TestConfigLoader(t *testing.T) {
 		expectErr require.ErrorAssertionFunc
 		expectLen int
 	}{
-		// ----- test cases start ----- //
 		{
 			name:      "empty - etc dir",
 			input:     testConfigTestData["empty"],
@@ -76,14 +75,14 @@ func TestConfigLoader(t *testing.T) {
 			expectErr: require.Error,
 			expectLen: 1,
 		},
-		// ----- test cases end ----- //
 	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+testFilename, []byte(testCase.input), 0644),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+testFilename, []byte(testCase.input), 0644),
 				"Failed to write in memory file")
 
 			// Load from mock filesystem.

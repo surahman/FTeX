@@ -14,7 +14,7 @@ type FiatDepositResponse {
     currency: String!
 }
 
-# FiatExchangeTransferResponse
+# FiatExchangeTransferResponse is the response to a Fiat exchange request.
 type FiatExchangeTransferResponse {
     sourceReceipt: FiatDepositResponse!
     destinationReceipt: FiatDepositResponse!

@@ -55,7 +55,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
-			name:               constants.GetValidationString(),
+			name:               constants.ValidationString(),
 			path:               "/open/validation",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPOpenCurrencyAccountRequest{},
@@ -93,8 +93,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 		},
 	}
 
-	//nolint:dupl
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -158,7 +157,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			extTransferTimes:   0,
 		}, {
 			name:               "empty request",
-			expectedMsg:        constants.GetValidationString(),
+			expectedMsg:        constants.ValidationString(),
 			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{},
@@ -321,7 +320,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			redisTimes:         0,
 		}, {
 			name:               "empty request",
-			expectedMsg:        constants.GetValidationString(),
+			expectedMsg:        constants.ValidationString(),
 			path:               "/exchange-offer-fiat/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPExchangeOfferRequest{},
@@ -531,7 +530,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == constants.GetInvalidRequest() {
+			if errorMessage == constants.InvalidRequestString() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)
@@ -623,7 +622,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		}, {
 			name:               "empty request",
 			path:               "/exchange-xfer-fiat/empty-request",
-			expectedMsg:        constants.GetValidationString(),
+			expectedMsg:        constants.ValidationString(),
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{},
 			authValidateJWTErr: nil,
@@ -891,7 +890,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			require.True(t, ok, "failed to extract response message.")
 
 			// Check for invalid currency codes and amount.
-			if errorMessage == constants.GetInvalidRequest() {
+			if errorMessage == constants.InvalidRequestString() {
 				payload, ok := resp["payload"].(string)
 				require.True(t, ok, "failed to extract payload from response.")
 				require.Contains(t, payload, test.expectedMsg)
@@ -929,7 +928,7 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 		}, {
 			name:               "invalid currency",
 			currency:           "INVALID",
-			expectedMsg:        constants.GetInvalidCurrencyString(),
+			expectedMsg:        constants.InvalidCurrencyString(),
 			expectedStatus:     http.StatusBadRequest,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
@@ -1376,8 +1375,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 	const basePath = "/fiat/transaction/details-journal/paginated/"
 
 	decryptedCursor := fmt.Sprintf("%s,%s,%d",
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 6, "-04:00"),
-		fmt.Sprintf(constants.GetMonthFormatString(), 2023, 7, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 6, "-04:00"),
+		fmt.Sprintf(constants.MonthFormatString(), 2023, 7, "-04:00"),
 		10)
 
 	journalEntries := []postgres.FiatJournal{{}, {}, {}, {}}
@@ -1420,7 +1419,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			path:                   "bad-currency/",
 			currency:               "INVALID",
 			querySegment:           "?pageCursor=page-cursor",
-			expectedMsg:            constants.GetInvalidCurrencyString(),
+			expectedMsg:            constants.InvalidCurrencyString(),
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
 			authValidateJWTErr:     nil,

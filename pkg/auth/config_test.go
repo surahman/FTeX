@@ -15,8 +15,8 @@ import (
 )
 
 func TestAuthConfigs_Load(t *testing.T) {
-	keyspaceJwt := constants.GetAuthPrefix() + "_JWT."
-	keyspaceGen := constants.GetAuthPrefix() + "_GENERAL."
+	keyspaceJwt := constants.AuthPrefix() + "_JWT."
+	keyspaceGen := constants.AuthPrefix() + "_GENERAL."
 
 	testCases := []struct {
 		name         string
@@ -91,8 +91,8 @@ func TestAuthConfigs_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetAuthFileName(),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.AuthFileName(),
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.

@@ -16,7 +16,7 @@ func TestCreateUser(t *testing.T) {
 		return
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	insertTestUsers(t)
 
 	// Username and account id collisions.
@@ -58,7 +58,7 @@ func TestPostgres_DeleteUser(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	clientIDs := insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
@@ -88,7 +88,7 @@ func TestGetClientIdUser(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
@@ -116,7 +116,7 @@ func TestGetCredentialsUser(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
@@ -146,7 +146,7 @@ func TestGetInfoUser(t *testing.T) {
 		t.Skip()
 	}
 
-	// Insert initial set of test users.
+	// Insert an initial set of test users.
 	clientIDs := insertTestUsers(t)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)

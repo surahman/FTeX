@@ -15,8 +15,8 @@ import (
 )
 
 func TestZapConfig_Load(t *testing.T) {
-	envCfgKey := fmt.Sprintf("%s_BUILTINCONFIG", constants.GetLoggerPrefix())
-	envEncKey := fmt.Sprintf("%s_BUILTINENCODERCONFIG", constants.GetLoggerPrefix())
+	envCfgKey := fmt.Sprintf("%s_BUILTINCONFIG", constants.LoggerPrefix())
+	envEncKey := fmt.Sprintf("%s_BUILTINENCODERCONFIG", constants.LoggerPrefix())
 
 	testCases := []struct {
 		name      string
@@ -75,8 +75,8 @@ func TestZapConfig_Load(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			// Configure mock filesystem.
 			fs := afero.NewMemMapFs()
-			require.NoError(t, fs.MkdirAll(constants.GetEtcDir(), 0644), "Failed to create in memory directory")
-			require.NoError(t, afero.WriteFile(fs, constants.GetEtcDir()+constants.GetLoggerFileName(),
+			require.NoError(t, fs.MkdirAll(constants.EtcDir(), 0644), "Failed to create in memory directory")
+			require.NoError(t, afero.WriteFile(fs, constants.EtcDir()+constants.LoggerFileName(),
 				[]byte(testCase.input), 0644), "Failed to write in memory file")
 
 			// Load from mock filesystem.

@@ -32,7 +32,7 @@ func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUI
 
 	// Extract and validate the currency.
 	if err = pgCurrency.Scan(currency); err != nil || !pgCurrency.Valid() {
-		return http.StatusBadRequest, constants.GetInvalidCurrencyString(), fmt.Errorf("%w", err)
+		return http.StatusBadRequest, constants.InvalidCurrencyString(), fmt.Errorf("%w", err)
 	}
 
 	if err = db.FiatCreateAccount(clientID, pgCurrency); err != nil {
@@ -40,7 +40,7 @@ func HTTPFiatOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUI
 		if !errors.As(err, &createErr) {
 			logger.Info("failed to unpack open Fiat account error", zap.Error(err))
 
-			return http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return createErr.Code, createErr.Message, fmt.Errorf("%w", err)
@@ -59,16 +59,16 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract and validate the currency.
 	if err = pgCurrency.Scan(request.Currency); err != nil || !pgCurrency.Valid() {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), request.Currency, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), request.Currency, fmt.Errorf("%w", err)
 	}
 
 	// Check for correct decimal places.
-	if !request.Amount.Equal(request.Amount.Truncate(constants.GetDecimalPlacesFiat())) || request.Amount.IsNegative() {
+	if !request.Amount.Equal(request.Amount.Truncate(constants.DecimalPlacesFiat())) || request.Amount.IsNegative() {
 		return nil, http.StatusBadRequest, "invalid amount", request.Amount, fmt.Errorf("%w", err)
 	}
 
@@ -81,7 +81,7 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 		if !errors.As(err, &createErr) {
 			logger.Info("failed to unpack deposit Fiat account error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, createErr.Code, createErr.Message, nil, fmt.Errorf("%w", err)
@@ -100,13 +100,13 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract and validate the currency.
-	if _, err = HTTPValidateOfferRequest(request.SourceAmount, constants.GetDecimalPlacesFiat(),
+	if _, err = HTTPValidateOfferRequest(request.SourceAmount, constants.DecimalPlacesFiat(),
 		request.SourceCurrency, request.DestinationCurrency); err != nil {
-		return nil, http.StatusBadRequest, constants.GetInvalidRequest(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidRequestString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Compile exchange rate offer.
@@ -114,12 +114,12 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 		request.SourceCurrency, request.DestinationCurrency, request.SourceAmount, nil); err != nil {
 		logger.Warn("failed to retrieve quote for Fiat currency conversion", zap.Error(err))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
-	// Check to make sure there is a valid Cryptocurrency amount.
+	// Check to make sure there is a valid Fiat amount.
 	if !offer.Amount.GreaterThan(decimal.NewFromFloat(0)) {
-		msg := "cryptocurrency purchase/sale amount is too small"
+		msg := "fiat currency purchase/sale amount is too small"
 
 		return nil, http.StatusBadRequest, msg, nil, errors.New(msg)
 	}
@@ -128,20 +128,20 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 	offer.SourceAcc = request.SourceCurrency
 	offer.DestinationAcc = request.DestinationCurrency
 	offer.DebitAmount = request.SourceAmount
-	offer.Expires = time.Now().Add(constants.GetFiatOfferTTL()).Unix()
+	offer.Expires = time.Now().Add(constants.FiatOfferTTL()).Unix()
 
 	// Encrypt offer ID before returning to client.
 	if offer.OfferID, err = auth.EncryptToString([]byte(offerID)); err != nil {
 		logger.Warn("failed to encrypt offer ID for Fiat conversion", zap.Error(err))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	// Store the offer in Redis.
-	if err = cache.Set(offerID, &offer, constants.GetFiatOfferTTL()); err != nil {
+	if err = cache.Set(offerID, &offer, constants.FiatOfferTTL()); err != nil {
 		logger.Warn("failed to store Fiat conversion offer in cache", zap.Error(err))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	return &offer, 0, "", nil, nil
@@ -159,7 +159,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 	)
 
 	if err = validator.ValidateStruct(request); err != nil {
-		return nil, http.StatusBadRequest, constants.GetValidationString(), err.Error(), fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
 
 	// Extract Offer ID from request.
@@ -168,7 +168,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 		if rawOfferID, err = auth.DecryptFromString(request.OfferID); err != nil {
 			logger.Warn("failed to decrypt Offer ID for Fiat transfer request", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		offerID = string(rawOfferID)
@@ -191,7 +191,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 		logger.Warn("clientID mismatch with Fiat Offer stored in Redis",
 			zap.Strings("Requester & Offer Client IDs", []string{clientID.String(), offer.ClientID.String()}))
 
-		return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+		return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 	}
 
 	// Verify the offer is for a Fiat exchange.
@@ -201,7 +201,7 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 
 	// Get currency codes.
 	if parsedCurrencies, err = HTTPValidateOfferRequest(
-		offer.Amount, constants.GetDecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
+		offer.Amount, constants.DecimalPlacesFiat(), offer.SourceAcc, offer.DestinationAcc); err != nil {
 		logger.Warn("failed to extract source and destination currencies from Fiat exchange offer",
 			zap.Error(err))
 
@@ -242,7 +242,7 @@ func HTTPFiatBalance(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 
 	// Extract and validate the currency.
 	if err = currency.Scan(ticker); err != nil || !currency.Valid() {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
 	}
 
 	if accDetails, err = db.FiatBalance(clientID, currency); err != nil {
@@ -250,7 +250,7 @@ func HTTPFiatBalance(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
@@ -317,20 +317,19 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat account balance currency error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, fmt.Errorf("%w", err)
 	}
 
 	// Generate the next page link by pulling the last item returned if the page size is N + 1 of the requested.
-	lastRecordIdx := int(pageSize)
-	if len(accDetails.AccountBalances) == lastRecordIdx+1 {
+	if len(accDetails.AccountBalances) > int(pageSize) {
 		// Generate next page link.
 		if nextPage, err = auth.EncryptToString([]byte(accDetails.AccountBalances[pageSize].Currency)); err != nil {
 			logger.Error("failed to encrypt Fiat currency for use as cursor", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), fmt.Errorf("%w", err)
 		}
 
 		// Remove last element.
@@ -338,7 +337,7 @@ func HTTPFiatBalancePaginated(auth auth.Auth, db postgres.Postgres, logger *logg
 
 		// Generate naked next page link for REST.
 		if isREST {
-			accDetails.Links.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), nextPage, pageSize)
+			accDetails.Links.NextPage = fmt.Sprintf(constants.NextPageRESTFormatString(), nextPage, pageSize)
 		} else {
 			accDetails.Links.PageCursor = nextPage
 		}
@@ -361,7 +360,7 @@ func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger 
 
 	// Extract and validate the currency.
 	if err = currency.Scan(ticker); err != nil || !currency.Valid() {
-		return nil, http.StatusBadRequest, constants.GetInvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
+		return nil, http.StatusBadRequest, constants.InvalidCurrencyString(), ticker, fmt.Errorf("%w", err)
 	}
 
 	// Check for required parameters.
@@ -382,7 +381,7 @@ func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger 
 		if !errors.As(err, &balanceErr) {
 			logger.Info("failed to unpack Fiat transactions request error", zap.Error(err))
 
-			return nil, http.StatusInternalServerError, retryMessage, nil, fmt.Errorf("%w", err)
+			return nil, http.StatusInternalServerError, constants.RetryMessageString(), nil, fmt.Errorf("%w", err)
 		}
 
 		return nil, balanceErr.Code, balanceErr.Message, nil, fmt.Errorf("%w", err)
@@ -394,7 +393,7 @@ func HTTPFiatTransactionsPaginated(auth auth.Auth, db postgres.Postgres, logger 
 
 	// Generate naked next page link for REST.
 	if isREST {
-		params.NextPage = fmt.Sprintf(constants.GetNextPageRESTFormatString(), params.NextPage, params.PageSize)
+		params.NextPage = fmt.Sprintf(constants.NextPageRESTFormatString(), params.NextPage, params.PageSize)
 	}
 
 	// Check if there are further pages of data. If not, set the next link to be empty.
