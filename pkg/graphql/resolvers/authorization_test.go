@@ -38,6 +38,7 @@ func TestGinContextFromContext(t *testing.T) {
 			ctx:       context.WithValue(context.TODO(), GinContextKey{}, &gin.Context{}),
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {
@@ -106,6 +107,7 @@ func TestAuthorizationCheck(t *testing.T) {
 			authValidateJWTTimes: 1,
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 		t.Run(test.name, func(t *testing.T) {

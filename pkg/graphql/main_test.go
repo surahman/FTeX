@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// restConfigTestData is a map of HTTP REST configuration test data.
+// graphQLConfigTestData is a map of the HTTP GraphQL configuration test data.
 var graphQLConfigTestData = configTestData()
 
 // zapLogger is the Zap logger used strictly for the test suite in this package.

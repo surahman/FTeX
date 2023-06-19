@@ -22,7 +22,7 @@ var testUserQuery = getUsersQuery()
 // testFiatQuery is the test Fiat related mutations and queries.
 var testFiatQuery = getFiatQuery()
 
-// testCryptoQuery is the test Crypto related mutations and queries.
+// testCryptoQuery is the test Crypto-related mutations and queries.
 var testCryptoQuery = getCryptoQuery()
 
 func TestMain(m *testing.M) {

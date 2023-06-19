@@ -61,6 +61,7 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 			redisHealthTimes:    1,
 		},
 	}
+
 	for _, testCase := range testCases {
 		test := testCase
 
