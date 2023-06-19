@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -203,7 +204,7 @@ func TestCommon_HTTPUserLogin(t *testing.T) {
 			expectToken:        require.NotNil,
 		}, {
 			name:               "database failure",
-			expectedMsg:        "invalid username or password",
+			expectedMsg:        "invalid credentials",
 			expectedStatus:     http.StatusForbidden,
 			user:               &testUserData["username1"].UserLoginCredentials,
 			userCredsErr:       errors.New("database failure"),
@@ -323,7 +324,7 @@ func TestCommon_HTTPLoginRefresh(t *testing.T) {
 			userGetInfoAcc:   modelsPostgres.User{IsDeleted: false},
 			userGetInfoErr:   nil,
 			userGetInfoTimes: 1,
-			authRefreshTimes: 2, // Called once in error message.
+			authRefreshTimes: 2, // Called once in an error message.
 			authGenJWTErr:    nil,
 			authGenJWTTimes:  0,
 			expectErr:        require.Error,
@@ -407,6 +408,235 @@ func TestCommon_HTTPLoginRefresh(t *testing.T) {
 			token, httpMsg, httpCode, err := HTTPRefreshLogin(mockAuth, mockPostgres, zapLogger, uuid.UUID{}, test.expiresAt)
 			test.expectErr(t, err, "error expectation failed.")
 			test.expectToken(t, token, "token expectation failed.")
+			require.Equal(t, test.expectedStatus, httpCode, "http codes mismatched.")
+			require.Contains(t, httpMsg, test.expectedMsg, "http message mismatched.")
+		})
+	}
+}
+
+func TestCommon_DeleteUser(t *testing.T) {
+	t.Parallel()
+
+	userAccount := &modelsPostgres.UserAccount{
+		UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+			Username: "username1",
+			Password: "user-password-1",
+		},
+	}
+
+	userValid := &modelsPostgres.User{
+		UserAccount: userAccount,
+		ClientID:    uuid.UUID{},
+		IsDeleted:   false,
+	}
+
+	userDeleted := &modelsPostgres.User{
+		UserAccount: userAccount,
+		ClientID:    uuid.UUID{},
+		IsDeleted:   true,
+	}
+
+	testCases := []struct {
+		name              string
+		expectedMsg       string
+		expectedStatus    int
+		deleteRequest     *models.HTTPDeleteUserRequest
+		userGetInfoAcc    modelsPostgres.User
+		userGetInfoErr    error
+		userGetInfoTimes  int
+		authCheckPwdErr   error
+		authCheckPwdTimes int
+		userDeleteErr     error
+		userDeleteTimes   int
+		expectErr         require.ErrorAssertionFunc
+		expectPayload     require.ValueAssertionFunc
+	}{
+		{
+			name:              "empty request",
+			expectedMsg:       constants.ValidationString(),
+			expectedStatus:    http.StatusBadRequest,
+			deleteRequest:     &models.HTTPDeleteUserRequest{},
+			userGetInfoAcc:    modelsPostgres.User{},
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  0,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 0,
+			userDeleteErr:     nil,
+			userDeleteTimes:   0,
+			expectErr:         require.Error,
+			expectPayload:     require.NotNil,
+		}, {
+			name:           "valid",
+			expectedMsg:    "",
+			expectedStatus: 0,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
+			},
+			userGetInfoAcc:    *userValid,
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 1,
+			userDeleteErr:     nil,
+			userDeleteTimes:   1,
+			expectErr:         require.NoError,
+			expectPayload:     require.Nil,
+		}, {
+			name:           "token and request username mismatch",
+			expectedMsg:    "invalid deletion request",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "different username",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
+			},
+			userGetInfoAcc:    *userValid,
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 0,
+			userDeleteErr:     nil,
+			userDeleteTimes:   0,
+			expectErr:         require.Error,
+			expectPayload:     require.Nil,
+		}, {
+			name:           "db read failure",
+			expectedMsg:    constants.RetryMessageString(),
+			expectedStatus: http.StatusInternalServerError,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
+			},
+			userGetInfoAcc:    modelsPostgres.User{},
+			userGetInfoErr:    errors.New("db read failure"),
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 0,
+			userDeleteErr:     nil,
+			userDeleteTimes:   0,
+			expectErr:         require.Error,
+			expectPayload:     require.Nil,
+		}, {
+			name:           "already deleted",
+			expectedMsg:    "already deleted",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
+			},
+			userGetInfoAcc:    *userDeleted,
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 0,
+			userDeleteErr:     nil,
+			userDeleteTimes:   0,
+			expectErr:         require.Error,
+			expectPayload:     require.Nil,
+		}, {
+			name:           "db delete failure",
+			expectedMsg:    constants.RetryMessageString(),
+			expectedStatus: http.StatusInternalServerError,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
+			},
+			userGetInfoAcc:    *userValid,
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 1,
+			userDeleteErr:     errors.New("db delete failure"),
+			userDeleteTimes:   1,
+			expectErr:         require.Error,
+			expectPayload:     require.Nil,
+		}, {
+			name:           "bad deletion confirmation",
+			expectedMsg:    "incorrect or incomplete",
+			expectedStatus: http.StatusBadRequest,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "incorrect and incomplete confirmation"),
+			},
+			userGetInfoAcc:    *userValid,
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   nil,
+			authCheckPwdTimes: 0,
+			userDeleteErr:     nil,
+			userDeleteTimes:   0,
+			expectErr:         require.Error,
+			expectPayload:     require.Nil,
+		}, {
+			name:           "invalid password",
+			expectedMsg:    "invalid user credentials",
+			expectedStatus: http.StatusForbidden,
+			deleteRequest: &models.HTTPDeleteUserRequest{
+				UserLoginCredentials: modelsPostgres.UserLoginCredentials{
+					Username: "username1",
+					Password: "password",
+				},
+				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
+			},
+			userGetInfoAcc:    *userValid,
+			userGetInfoErr:    nil,
+			userGetInfoTimes:  1,
+			authCheckPwdErr:   errors.New("password check failed"),
+			authCheckPwdTimes: 1,
+			userDeleteErr:     nil,
+			userDeleteTimes:   0,
+			expectErr:         require.Error,
+			expectPayload:     require.Nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Mock configurations.
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockPostgres := mocks.NewMockPostgres(mockCtrl)
+
+			gomock.InOrder(
+				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
+					Return(test.userGetInfoAcc, test.userGetInfoErr).
+					Times(test.userGetInfoTimes),
+
+				mockAuth.EXPECT().CheckPassword(gomock.Any(), gomock.Any()).
+					Return(test.authCheckPwdErr).
+					Times(test.authCheckPwdTimes),
+
+				mockPostgres.EXPECT().UserDelete(gomock.Any()).
+					Return(test.userDeleteErr).
+					Times(test.userDeleteTimes),
+			)
+
+			httpMsg, httpCode, payload, err := HTTPDeleteUser(mockAuth, mockPostgres, zapLogger, uuid.UUID{}, test.deleteRequest)
+			test.expectErr(t, err, "error expectation failed.")
+			test.expectPayload(t, payload, "payload expectation failed.")
 			require.Equal(t, test.expectedStatus, httpCode, "http codes mismatched.")
 			require.Contains(t, httpMsg, test.expectedMsg, "http message mismatched.")
 		})

@@ -96,7 +96,7 @@ func HTTPLoginUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
 	}
 
 	if clientID, hashedPassword, err = db.UserCredentials(loginRequest.Username); err != nil {
-		return nil, "invalid username or password", http.StatusForbidden, nil, fmt.Errorf("%w", err)
+		return nil, "invalid credentials", http.StatusForbidden, nil, fmt.Errorf("%w", err)
 	}
 
 	if err = auth.CheckPassword(hashedPassword, loginRequest.Password); err != nil {
@@ -149,4 +149,61 @@ func HTTPRefreshLogin(auth auth.Auth, db postgres.Postgres, logger *logger.Logge
 	}
 
 	return freshToken, "", 0, nil
+}
+
+// HTTPDeleteUser validates a JWT token and issues a fresh token.
+func HTTPDeleteUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID,
+	deleteRequest *models.HTTPDeleteUserRequest) (string, int, any, error) {
+	var (
+		err         error
+		userAccount modelsPostgres.User
+	)
+
+	if err = validator.ValidateStruct(deleteRequest); err != nil {
+		return constants.ValidationString(), http.StatusBadRequest, fmt.Errorf("%w", err), fmt.Errorf("%w", err)
+	}
+
+	// Get user account information to validate against.
+	if userAccount, err = db.UserGetInfo(clientID); err != nil {
+		logger.Warn("failed to read user record during an account deletion request",
+			zap.String("clientID", clientID.String()), zap.Error(err))
+
+		return constants.RetryMessageString(), http.StatusInternalServerError, nil, fmt.Errorf("%w", err)
+	}
+
+	// Validate if the user account is already deleted.
+	if userAccount.Username != deleteRequest.Username {
+		return "invalid deletion request", http.StatusForbidden, nil, fmt.Errorf("%w", err)
+	}
+
+	// Check the confirmation message.
+	if fmt.Sprintf(constants.DeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
+		msg := "incorrect or incomplete deletion request confirmation"
+
+		return msg, http.StatusBadRequest, nil, errors.New(msg)
+	}
+
+	// Check to make sure the account is not already deleted.
+	if userAccount.IsDeleted {
+		logger.Warn("attempt to delete an already deleted user account", zap.String("username", userAccount.Username))
+
+		msg := "user account is already deleted"
+
+		return msg, http.StatusForbidden, nil, errors.New(msg)
+	}
+
+	if err = auth.CheckPassword(userAccount.Password, deleteRequest.Password); err != nil {
+		msg := "invalid user credentials"
+
+		return msg, http.StatusForbidden, nil, errors.New(msg)
+	}
+
+	// Mark the account as deleted.
+	if err = db.UserDelete(clientID); err != nil {
+		logger.Warn("failed to mark a user record as deleted", zap.String("username", userAccount.Username), zap.Error(err))
+
+		return constants.RetryMessageString(), http.StatusInternalServerError, nil, errors.New(constants.RetryMessageString())
+	}
+
+	return "", 0, nil, nil
 }

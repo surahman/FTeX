@@ -1,20 +1,16 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/common"
-	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
 	"github.com/surahman/FTeX/pkg/postgres"
-	"github.com/surahman/FTeX/pkg/validator"
-	"go.uber.org/zap"
 )
 
 // RegisterUser will handle an HTTP request to create a user.
@@ -161,76 +157,28 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			clientID      uuid.UUID
 			deleteRequest models.HTTPDeleteUserRequest
 			err           error
-			userAccount   modelsPostgres.User
-			jwt           = ginCtx.GetHeader(authHeaderKey)
+			httpMsg       string
+			httpStatus    int
+			payload       any
 		)
 
-		// Get the delete request from the message body and validate it.
+		// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
+		// credentials.
+		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+
+			return
+		}
+
+		// Get the deletion request from the message body and validate it.
 		if err = ginCtx.ShouldBindJSON(&deleteRequest); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
 			return
 		}
 
-		if err = validator.ValidateStruct(&deleteRequest); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: constants.ValidationString(), Payload: err})
-
-			return
-		}
-
-		// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
-		// credentials.
-		if clientID, _, err = auth.ValidateJWT(jwt); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		// Get user account information to validate against.
-		if userAccount, err = db.UserGetInfo(clientID); err != nil {
-			logger.Warn("failed to read user record during an account deletion request",
-				zap.String("clientID", clientID.String()), zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
-
-			return
-		}
-
-		// Validate if the user account is already deleted.
-		if userAccount.Username != deleteRequest.Username {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid deletion request"})
-
-			return
-		}
-
-		// Check the confirmation message.
-		if fmt.Sprintf(constants.DeleteUserAccountConfirmation(), userAccount.Username) != deleteRequest.Confirmation {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: "incorrect or incomplete deletion request confirmation"})
-
-			return
-		}
-
-		// Check to make sure the account is not already deleted.
-		if userAccount.IsDeleted {
-			logger.Warn("attempt to delete an already deleted user account", zap.String("username", userAccount.Username))
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "user account is already deleted"})
-
-			return
-		}
-
-		if err = auth.CheckPassword(userAccount.Password, deleteRequest.Password); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "invalid username or password"})
-
-			return
-		}
-
-		// Mark the account as deleted.
-		if err = db.UserDelete(clientID); err != nil {
-			logger.Warn("failed to mark a user record as deleted", zap.String("username", userAccount.Username), zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError,
-				&models.HTTPError{Message: "please retry your request later"})
+		if httpMsg, httpStatus, payload, err = common.HTTPDeleteUser(auth, db, logger, clientID, &deleteRequest); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, &models.HTTPError{Message: httpMsg, Payload: payload})
 
 			return
 		}

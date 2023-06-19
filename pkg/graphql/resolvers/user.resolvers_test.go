@@ -202,7 +202,7 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			query:                fmt.Sprintf(testUserQuery["delete"], "", "", ""),
 			expectErr:            true,
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			readUserErr:          nil,
 			readUserData:         modelsPostgres.User{},
 			readUserTimes:        0,
@@ -292,7 +292,7 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			readUserData:         validUserAccount,
 			readUserTimes:        1,
 			authCheckPassErr:     nil,
-			authCheckPassTimes:   1,
+			authCheckPassTimes:   0,
 			deleteUserErr:        nil,
 			deleteUserTimes:      0,
 		}, {
@@ -306,7 +306,7 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			readUserData:         deletedUserAccount,
 			readUserTimes:        1,
 			authCheckPassErr:     nil,
-			authCheckPassTimes:   1,
+			authCheckPassTimes:   0,
 			deleteUserErr:        nil,
 			deleteUserTimes:      0,
 		}, {

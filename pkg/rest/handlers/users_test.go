@@ -438,7 +438,7 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 	}
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestHandlers_DeleteUser(t *testing.T) {
 	t.Parallel()
 
 	userAccount := &modelsPostgres.UserAccount{
@@ -481,7 +481,7 @@ func TestDeleteUser(t *testing.T) {
 			expectedStatus:       http.StatusBadRequest,
 			deleteRequest:        &models.HTTPDeleteUserRequest{},
 			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 0,
+			authValidateJWTTimes: 1,
 			userGetInfoAcc:       modelsPostgres.User{},
 			userGetInfoErr:       nil,
 			userGetInfoTimes:     0,
