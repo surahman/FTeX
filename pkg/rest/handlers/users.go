@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/common"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
@@ -35,10 +35,12 @@ import (
 func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
-			authToken *models.JWTAuthResponse
-			clientID  uuid.UUID
-			err       error
-			user      modelsPostgres.UserAccount
+			authToken  *models.JWTAuthResponse
+			err        error
+			user       modelsPostgres.UserAccount
+			httpMsg    string
+			httpStatus int
+			payload    any
 		)
 
 		if err = ginCtx.ShouldBindJSON(&user); err != nil {
@@ -47,37 +49,8 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 			return
 		}
 
-		if err = validator.ValidateStruct(&user); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusBadRequest,
-				&models.HTTPError{Message: constants.ValidationString(), Payload: err})
-
-			return
-		}
-
-		if user.Password, err = auth.HashPassword(user.Password); err != nil {
-			logger.Error("failure hashing password", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		if clientID, err = db.UserRegister(&user); err != nil {
-			var registerErr *postgres.Error
-			if !errors.As(err, &registerErr) {
-				logger.Warn("failed to extract create user account error", zap.Error(err))
-				ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, "account creation failed, please try again later")
-
-				return
-			}
-
-			ginCtx.AbortWithStatusJSON(registerErr.Code, &models.HTTPError{Message: err.Error()})
-
-			return
-		}
-
-		if authToken, err = auth.GenerateJWT(clientID); err != nil {
-			logger.Error("failure generating JWT during account creation", zap.Error(err))
-			ginCtx.AbortWithStatusJSON(http.StatusInternalServerError, &models.HTTPError{Message: err.Error()})
+		if authToken, httpMsg, httpStatus, payload, err = common.HTTPRegisterUser(auth, db, logger, &user); err != nil {
+			ginCtx.AbortWithStatusJSON(httpStatus, &models.HTTPError{Message: httpMsg, Payload: payload})
 
 			return
 		}

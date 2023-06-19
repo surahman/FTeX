@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/surahman/FTeX/pkg/common"
 	"github.com/surahman/FTeX/pkg/constants"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
 	"github.com/surahman/FTeX/pkg/models"
 	modelsPostgres "github.com/surahman/FTeX/pkg/models/postgres"
-	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/surahman/FTeX/pkg/validator"
 	"go.uber.org/zap"
 )
@@ -24,33 +24,13 @@ import (
 func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgres.UserAccount) (*models.JWTAuthResponse, error) {
 	var (
 		authToken *models.JWTAuthResponse
-		clientID  uuid.UUID
 		err       error
+		httpMsg   string
+		payload   any
 	)
 
-	if err = validator.ValidateStruct(input); err != nil {
-		return authToken, fmt.Errorf("validation %w", err)
-	}
-
-	if input.Password, err = r.auth.HashPassword(input.Password); err != nil {
-		r.logger.Error("failure hashing password", zap.Error(err))
-
-		return authToken, fmt.Errorf("validation %w", err)
-	}
-
-	if clientID, err = r.db.UserRegister(input); err != nil {
-		var registerErr *postgres.Error
-		if !errors.As(err, &registerErr) {
-			r.logger.Warn("failed to extract create user account error", zap.Error(err))
-		}
-
-		return nil, errors.New("account creation failed, please try again later")
-	}
-
-	if authToken, err = r.auth.GenerateJWT(clientID); err != nil {
-		r.logger.Error("failure generating JWT during account creation", zap.Error(err))
-
-		return nil, errors.New("account creation failed, please try again later")
+	if authToken, httpMsg, _, payload, err = common.HTTPRegisterUser(r.auth, r.db, r.logger, input); err != nil {
+		return nil, fmt.Errorf("%s: %s", httpMsg, payload)
 	}
 
 	return authToken, nil
