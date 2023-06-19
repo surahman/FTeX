@@ -111,7 +111,7 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 
 				responseMessage, ok := data.(map[string]any)["healthcheck"].(string)
 				require.True(t, ok, "response message not found.")
-				require.Equal(t, "OK", responseMessage, "healthcheck did not return OK status.")
+				require.Equal(t, test.expectedMsg, responseMessage, "healthcheck did not return OK status.")
 			}
 		})
 	}

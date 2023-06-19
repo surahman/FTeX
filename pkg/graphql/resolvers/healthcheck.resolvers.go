@@ -6,31 +6,16 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/surahman/FTeX/pkg/common"
 	graphql_generated "github.com/surahman/FTeX/pkg/graphql/generated"
-	"go.uber.org/zap"
 )
 
 // Healthcheck is the resolver for the healthcheck field.
 func (r *queryResolver) Healthcheck(ctx context.Context) (string, error) {
-	// Database health.
-	if err := r.db.Healthcheck(); err != nil {
-		msg := "healthcheck failed, Postgres could not be pinged"
-		r.logger.Warn(msg, zap.Error(err))
+	_, httpMsg, err := common.HTTPHealthcheck(r.db, r.cache, r.logger)
 
-		return msg, fmt.Errorf(msg+" %w", err)
-	}
-
-	// Cache health.
-	if err := r.cache.Healthcheck(); err != nil {
-		msg := "healthcheck failed, Redis could not be pinged"
-		r.logger.Warn(msg, zap.Error(err))
-
-		return msg, fmt.Errorf(msg+" %w", err)
-	}
-
-	return "OK", nil
+	return httpMsg, err
 }
 
 // Query returns graphql_generated.QueryResolver implementation.
