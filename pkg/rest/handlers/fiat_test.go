@@ -1158,22 +1158,22 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceFiatPaginated(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/fiat/balances/details/paginated/"
 
 	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
 
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name                string
 		path                string
 		querySegment        string
 		expectedMsg         string
 		expectedStatus      int
 		accDetails          []postgres.FiatAccount
-		authValidateJWTErr  error
-		authValidateTimes   int
+		authTokenInfoErr    error
+		authTokenInfoTimes  int
 		authDecryptStrErr   error
 		authDecryptStrTimes int
 		fiatBalanceErr      error
@@ -1185,11 +1185,11 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			name:                "invalid JWT",
 			path:                "invalid-jwt",
 			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
-			expectedMsg:         "invalid JWT",
+			expectedMsg:         "malformed authentication",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusForbidden,
-			authValidateJWTErr:  errors.New("invalid JWT"),
-			authValidateTimes:   1,
+			authTokenInfoErr:    errors.New("invalid JWT"),
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1203,8 +1203,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "invalid page cursor or page size",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusBadRequest,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   errors.New("decrypt failure"),
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      nil,
@@ -1218,8 +1218,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "not found",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusNotFound,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      postgres.ErrNotFound,
@@ -1233,8 +1233,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "retry",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      errors.New("unknown db error"),
@@ -1248,8 +1248,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "retry",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      nil,
@@ -1263,8 +1263,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1278,8 +1278,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1293,8 +1293,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1308,8 +1308,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      nil,
@@ -1332,9 +1332,9 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte{}, test.authDecryptStrErr).
@@ -1351,7 +1351,7 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path, BalanceFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path, BalanceFiatPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

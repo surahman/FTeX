@@ -107,16 +107,11 @@ func (s *Server) initialize() {
 	fiatGroup := api.Group("/fiat").Use(authMiddleware)
 	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db))
 	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db))
-	fiatGroup.POST("/exchange/offer",
-		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes))
-	fiatGroup.POST("/exchange/transfer",
-		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db))
-	fiatGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceFiat(s.logger, s.auth, s.db))
-	fiatGroup.GET("/info/balance/",
-		restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.GET("/info/transaction/:transactionID",
-		restHandlers.TxDetailsFiat(s.logger, s.auth, s.db))
+	fiatGroup.POST("/exchange/offer", restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes))
+	fiatGroup.POST("/exchange/transfer", restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db))
+	fiatGroup.GET("/info/balance/:ticker", restHandlers.BalanceFiat(s.logger, s.auth, s.db))
+	fiatGroup.GET("/info/balance/", restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db))
+	fiatGroup.GET("/info/transaction/:transactionID", restHandlers.TxDetailsFiat(s.logger, s.auth, s.db))
 	fiatGroup.GET("/info/transaction/all/:currencyCode",
 		restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 

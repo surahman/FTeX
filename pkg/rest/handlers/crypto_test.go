@@ -907,14 +907,14 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/crypto/balance/details/paginated"
 
 	accDetails := []postgres.CryptoAccount{{}, {}, {}, {}}
 
-	testCases := []struct {
+	testCases := []struct { //nolint:dupl
 		name                string
 		path                string
 		querySegment        string
