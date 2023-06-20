@@ -901,66 +901,66 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
+func TestHandler_BalanceFiat(t *testing.T) {
 	t.Parallel()
 
 	const basePath = "/fiat/balance/currency/"
 
-	testCases := []struct {
-		name               string
-		currency           string
-		expectedMsg        string
-		expectedStatus     int
-		authValidateJWTErr error
-		authValidateTimes  int
-		fiatBalanceErr     error
-		fiatBalanceTimes   int
+	testCases := []struct { //nolint:dupl
+		name             string
+		currency         string
+		expectedMsg      string
+		expectedStatus   int
+		authTokenInfoErr error
+		authTokenInfoExp int
+		fiatBalanceErr   error
+		fiatBalanceTimes int
 	}{
 		{
-			name:               "invalid JWT",
-			currency:           "EUR",
-			expectedMsg:        "invalid JWT",
-			expectedStatus:     http.StatusForbidden,
-			authValidateJWTErr: errors.New("invalid JWT"),
-			authValidateTimes:  1,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   0,
+			name:             "invalid JWT",
+			currency:         "EUR",
+			expectedMsg:      "malformed authentication",
+			expectedStatus:   http.StatusForbidden,
+			authTokenInfoErr: errors.New("invalid JWT"),
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   nil,
+			fiatBalanceTimes: 0,
 		}, {
-			name:               "invalid currency",
-			currency:           "INVALID",
-			expectedMsg:        constants.InvalidCurrencyString(),
-			expectedStatus:     http.StatusBadRequest,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   0,
+			name:             "invalid currency",
+			currency:         "INVALID",
+			expectedMsg:      constants.InvalidCurrencyString(),
+			expectedStatus:   http.StatusBadRequest,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   nil,
+			fiatBalanceTimes: 0,
 		}, {
-			name:               "unknown db error",
-			currency:           "AED",
-			expectedMsg:        "retry",
-			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     errors.New("unknown error"),
-			fiatBalanceTimes:   1,
+			name:             "unknown db error",
+			currency:         "AED",
+			expectedMsg:      "retry",
+			expectedStatus:   http.StatusInternalServerError,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   errors.New("unknown error"),
+			fiatBalanceTimes: 1,
 		}, {
-			name:               "known db error",
-			currency:           "CAD",
-			expectedMsg:        "records not found",
-			expectedStatus:     http.StatusNotFound,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     postgres.ErrNotFound,
-			fiatBalanceTimes:   1,
+			name:             "known db error",
+			currency:         "CAD",
+			expectedMsg:      "records not found",
+			expectedStatus:   http.StatusNotFound,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   postgres.ErrNotFound,
+			fiatBalanceTimes: 1,
 		}, {
-			name:               "valid",
-			currency:           "USD",
-			expectedMsg:        "account balance",
-			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   1,
+			name:             "valid",
+			currency:         "USD",
+			expectedMsg:      "account balance",
+			expectedStatus:   http.StatusOK,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   nil,
+			fiatBalanceTimes: 1,
 		},
 	}
 
@@ -977,9 +977,9 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoExp),
 
 				mockDB.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
@@ -988,7 +988,7 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceFiat(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

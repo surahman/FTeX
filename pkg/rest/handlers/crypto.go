@@ -216,7 +216,7 @@ func ExchangeCrypto(
 //	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/crypto/info/balance/{ticker} [get]
-func BalanceCrypto( //nolint:dupl
+func BalanceCrypto(
 	logger *logger.Logger,
 	auth auth.Auth,
 	db postgres.Postgres,
