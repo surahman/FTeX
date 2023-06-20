@@ -302,7 +302,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:           "invalid jwt",
-			expectedMsg:    "invalid jwt",
+			expectedMsg:    "malformed authentication",
 			path:           "/exchange-offer-fiat/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
 			request: &models.HTTPExchangeOfferRequest{
