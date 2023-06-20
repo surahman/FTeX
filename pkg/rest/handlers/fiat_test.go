@@ -291,8 +291,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 		path               string
 		expectedStatus     int
 		request            *models.HTTPExchangeOfferRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		quotesErr          error
 		quotesTimes        int
 		authEncryptErr     error
@@ -310,8 +310,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -324,8 +324,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			path:               "/exchange-offer-fiat/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPExchangeOfferRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -342,8 +342,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -360,8 +360,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "INVALID",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -378,8 +378,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidDecimal,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -396,8 +396,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidNegative,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -414,8 +414,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          errors.New(""),
 			quotesTimes:        1,
 			authEncryptErr:     nil,
@@ -432,8 +432,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        1,
 			authEncryptErr:     errors.New(""),
@@ -450,8 +450,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        1,
 			authEncryptErr:     nil,
@@ -468,8 +468,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        1,
 			authEncryptErr:     nil,
@@ -496,9 +496,9 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockQuotes.EXPECT().FiatConversion(gomock.Any(), gomock.Any(), gomock.Any(), nil).
 					Return(amountValid, amountValid, test.quotesErr).
@@ -515,7 +515,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
