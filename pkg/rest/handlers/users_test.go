@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
-	"github.com/rs/xid"
 	"github.com/stretchr/testify/require"
 	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/mocks"
@@ -271,83 +270,83 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name                 string
-		path                 string
-		expectedStatus       int
-		authValidateJWTErr   error
-		authValidateJWTExp   int64
-		authValidateJWTTimes int
-		userGetInfoAcc       modelsPostgres.User
-		userGetInfoErr       error
-		userGetInfoTimes     int
-		authRefreshThresh    int64
-		authRefreshTimes     int
-		authGenJWTErr        error
-		authGenJWTTimes      int
+		name               string
+		path               string
+		expectedStatus     int
+		authTokenInfoErr   error
+		authTokenInfoExp   int64
+		authTokenInfoTimes int
+		userGetInfoAcc     modelsPostgres.User
+		userGetInfoErr     error
+		userGetInfoTimes   int
+		authRefreshThresh  int64
+		authRefreshTimes   int
+		authGenJWTErr      error
+		authGenJWTTimes    int
 	}{
 		{
-			name:                 "empty token",
-			path:                 "/user-refresh/empty-token",
-			expectedStatus:       http.StatusForbidden,
-			authValidateJWTErr:   errors.New("invalid token"),
-			authValidateJWTExp:   time.Now().Unix(),
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     0,
-			authRefreshThresh:    60,
-			authRefreshTimes:     0,
-			authGenJWTErr:        nil,
-			authGenJWTTimes:      0,
+			name:               "empty token",
+			path:               "/user-refresh/empty-token",
+			expectedStatus:     http.StatusForbidden,
+			authTokenInfoErr:   errors.New("invalid token"),
+			authTokenInfoExp:   time.Now().Unix(),
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   0,
+			authRefreshThresh:  60,
+			authRefreshTimes:   0,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    0,
 		}, {
-			name:                 "valid token",
-			path:                 "/user-refresh/valid-token",
-			expectedStatus:       http.StatusOK,
-			authValidateJWTErr:   nil,
-			authValidateJWTExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{IsDeleted: false},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authRefreshThresh:    60,
-			authRefreshTimes:     1,
-			authGenJWTErr:        nil,
-			authGenJWTTimes:      1,
+			name:               "valid token",
+			path:               "/user-refresh/valid-token",
+			expectedStatus:     http.StatusOK,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authRefreshThresh:  60,
+			authRefreshTimes:   1,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    1,
 		}, {
-			name:                 "valid token not expiring",
-			path:                 "/user-refresh/valid-token-not-expiring",
-			expectedStatus:       http.StatusNotExtended,
-			authValidateJWTErr:   nil,
-			authValidateJWTExp:   time.Now().Add(time.Duration(90) * time.Second).Unix(),
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{IsDeleted: false},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authRefreshThresh:    60,
-			authRefreshTimes:     2, // Called once in error message.
-			authGenJWTErr:        nil,
-			authGenJWTTimes:      0,
+			name:               "valid token not expiring",
+			path:               "/user-refresh/valid-token-not-expiring",
+			expectedStatus:     http.StatusNotExtended,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   time.Now().Add(time.Duration(90) * time.Second).Unix(),
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authRefreshThresh:  60,
+			authRefreshTimes:   2, // Called once in an error message.
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    0,
 		}, {
-			name:                 "invalid token",
-			path:                 "/user-refresh/invalid-token",
-			expectedStatus:       http.StatusForbidden,
-			authValidateJWTErr:   errors.New("validate JWT failure"),
-			authValidateJWTExp:   time.Now().Unix(),
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{IsDeleted: false},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     0,
-			authRefreshThresh:    60,
-			authRefreshTimes:     0,
-			authGenJWTErr:        nil,
-			authGenJWTTimes:      0,
+			name:               "invalid token",
+			path:               "/user-refresh/invalid-token",
+			expectedStatus:     http.StatusForbidden,
+			authTokenInfoErr:   errors.New("validate JWT failure"),
+			authTokenInfoExp:   time.Now().Unix(),
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   0,
+			authRefreshThresh:  60,
+			authRefreshTimes:   0,
+			authGenJWTErr:      nil,
+			authGenJWTTimes:    0,
 		}, {
-			name:                 "db failure",
-			path:                 "/user-refresh/db-failure",
-			expectedStatus:       http.StatusInternalServerError,
-			authValidateJWTErr:   nil,
-			authValidateJWTExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
-			authValidateJWTTimes: 1,
+			name:               "db failure",
+			path:               "/user-refresh/db-failure",
+			expectedStatus:     http.StatusInternalServerError,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authTokenInfoTimes: 1,
 			userGetInfoAcc: modelsPostgres.User{
 				UserAccount: &modelsPostgres.UserAccount{
 					UserLoginCredentials: modelsPostgres.UserLoginCredentials{Username: "some username"},
@@ -360,12 +359,12 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 			authGenJWTErr:     nil,
 			authGenJWTTimes:   0,
 		}, {
-			name:                 "deleted user",
-			path:                 "/user-refresh/deleted-user",
-			expectedStatus:       http.StatusForbidden,
-			authValidateJWTErr:   nil,
-			authValidateJWTExp:   time.Now().Unix(),
-			authValidateJWTTimes: 1,
+			name:               "deleted user",
+			path:               "/user-refresh/deleted-user",
+			expectedStatus:     http.StatusForbidden,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   time.Now().Unix(),
+			authTokenInfoTimes: 1,
 			userGetInfoAcc: modelsPostgres.User{
 				UserAccount: &modelsPostgres.UserAccount{
 					UserLoginCredentials: modelsPostgres.UserLoginCredentials{Username: "some username"},
@@ -379,19 +378,19 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 			authGenJWTErr:     nil,
 			authGenJWTTimes:   0,
 		}, {
-			name:                 "token generation failure",
-			path:                 "/user-refresh/token-generation-failure",
-			expectedStatus:       http.StatusInternalServerError,
-			authValidateJWTErr:   nil,
-			authValidateJWTExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{IsDeleted: false},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authRefreshThresh:    60,
-			authRefreshTimes:     1,
-			authGenJWTErr:        errors.New("failed to generate token"),
-			authGenJWTTimes:      1,
+			name:               "token generation failure",
+			path:               "/user-refresh/token-generation-failure",
+			expectedStatus:     http.StatusInternalServerError,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   time.Now().Add(time.Duration(30) * time.Second).Unix(),
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{IsDeleted: false},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authRefreshThresh:  60,
+			authRefreshTimes:   1,
+			authGenJWTErr:      errors.New("failed to generate token"),
+			authGenJWTTimes:    1,
 		},
 	}
 
@@ -408,9 +407,9 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, test.authValidateJWTExp, test.authValidateJWTErr).
-					Times(test.authValidateJWTTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, test.authTokenInfoExp, test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
 					Return(test.userGetInfoAcc, test.userGetInfoErr).
@@ -427,7 +426,7 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, LoginRefresh(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, LoginRefresh(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -461,34 +460,34 @@ func TestHandlers_DeleteUser(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name                 string
-		path                 string
-		expectedStatus       int
-		deleteRequest        *models.HTTPDeleteUserRequest
-		authValidateJWTErr   error
-		authValidateJWTTimes int
-		userGetInfoAcc       modelsPostgres.User
-		userGetInfoErr       error
-		userGetInfoTimes     int
-		authCheckPwdErr      error
-		authCheckPwdTimes    int
-		userDeleteErr        error
-		userDeleteTimes      int
+		name               string
+		path               string
+		expectedStatus     int
+		deleteRequest      *models.HTTPDeleteUserRequest
+		authTokenInfoErr   error
+		authTokenInfoTimes int
+		userGetInfoAcc     modelsPostgres.User
+		userGetInfoErr     error
+		userGetInfoTimes   int
+		authCheckPwdErr    error
+		authCheckPwdTimes  int
+		userDeleteErr      error
+		userDeleteTimes    int
 	}{
 		{
-			name:                 "empty request",
-			path:                 "/user-delete/empty-request",
-			expectedStatus:       http.StatusBadRequest,
-			deleteRequest:        &models.HTTPDeleteUserRequest{},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     0,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    0,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			name:               "empty request",
+			path:               "/user-delete/empty-request",
+			expectedStatus:     http.StatusBadRequest,
+			deleteRequest:      &models.HTTPDeleteUserRequest{},
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   0,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  0,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		}, {
 			name:           "valid",
 			path:           "/user-delete/valid-request",
@@ -500,15 +499,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       *userValid,
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    1,
-			userDeleteErr:        nil,
-			userDeleteTimes:      1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     *userValid,
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  1,
+			userDeleteErr:      nil,
+			userDeleteTimes:    1,
 		}, {
 			name:           "invalid token",
 			path:           "/user-delete/invalid-token",
@@ -520,15 +519,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   errors.New("invalid JWT"),
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{},
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     0,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    0,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			authTokenInfoErr:   errors.New("invalid JWT"),
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{},
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   0,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  0,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		}, {
 			name:           "token and request username mismatch",
 			path:           "/user-delete/token-and-request-username-mismatch",
@@ -540,15 +539,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       *userValid,
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    0,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     *userValid,
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  0,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		}, {
 			name:           "db read failure",
 			path:           "/user-delete/db-read-failure",
@@ -560,15 +559,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       modelsPostgres.User{},
-			userGetInfoErr:       errors.New("db read failure"),
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    0,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     modelsPostgres.User{},
+			userGetInfoErr:     errors.New("db read failure"),
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  0,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		}, {
 			name:           "already deleted",
 			path:           "/user-delete/already-deleted",
@@ -580,15 +579,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       *userDeleted,
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    0,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     *userDeleted,
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  0,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		}, {
 			name:           "db delete failure",
 			path:           "/user-delete/db-delete-failure",
@@ -600,15 +599,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       *userValid,
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    1,
-			userDeleteErr:        errors.New("db delete failure"),
-			userDeleteTimes:      1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     *userValid,
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  1,
+			userDeleteErr:      errors.New("db delete failure"),
+			userDeleteTimes:    1,
 		}, {
 			name:           "bad deletion confirmation",
 			path:           "/user-delete/bad-deletion-confirmation",
@@ -620,15 +619,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "incorrect and incomplete confirmation"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       *userValid,
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      nil,
-			authCheckPwdTimes:    0,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     *userValid,
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    nil,
+			authCheckPwdTimes:  0,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		}, {
 			name:           "invalid password",
 			path:           "/user-delete/invalid-password",
@@ -640,15 +639,15 @@ func TestHandlers_DeleteUser(t *testing.T) {
 				},
 				Confirmation: fmt.Sprintf(constants.DeleteUserAccountConfirmation(), "username1"),
 			},
-			authValidateJWTErr:   nil,
-			authValidateJWTTimes: 1,
-			userGetInfoAcc:       *userValid,
-			userGetInfoErr:       nil,
-			userGetInfoTimes:     1,
-			authCheckPwdErr:      errors.New("password check failed"),
-			authCheckPwdTimes:    1,
-			userDeleteErr:        nil,
-			userDeleteTimes:      0,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
+			userGetInfoAcc:     *userValid,
+			userGetInfoErr:     nil,
+			userGetInfoTimes:   1,
+			authCheckPwdErr:    errors.New("password check failed"),
+			authCheckPwdTimes:  1,
+			userDeleteErr:      nil,
+			userDeleteTimes:    0,
 		},
 	}
 
@@ -667,12 +666,10 @@ func TestHandlers_DeleteUser(t *testing.T) {
 			requestJSON, err := json.Marshal(&test.deleteRequest)
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
-			authToken := xid.New().String()
-
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(authToken).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateJWTTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
 					Return(test.userGetInfoAcc, test.userGetInfoErr).
@@ -689,9 +686,8 @@ func TestHandlers_DeleteUser(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.DELETE(test.path, DeleteUser(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.DELETE(test.path, DeleteUser(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodDelete, test.path, bytes.NewBuffer(requestJSON))
-			req.Header.Set("Authorization", authToken)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 

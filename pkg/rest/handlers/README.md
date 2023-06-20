@@ -173,7 +173,7 @@ account **USERNAME HERE**`
 }
 ```
 
-_Response:_ A confirmation message will be returned as a success response.
+_Response:_ An `HTTP - no content` response and `HTTP 204` code will be returned.
 
 
 <br/>

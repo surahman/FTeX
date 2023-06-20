@@ -31,8 +31,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 		path               string
 		expectedStatus     int
 		request            *models.HTTPOpenCurrencyAccountRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoExp   int
 		fiatCreateAccErr   error
 		fiatCreateAccTimes int
 	}{
@@ -41,8 +41,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/valid",
 			expectedStatus:     http.StatusCreated,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 1,
 		}, {
@@ -50,8 +50,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
@@ -59,8 +59,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/validation",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPOpenCurrencyAccountRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
@@ -68,8 +68,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "UVW"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
@@ -77,8 +77,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/db-failure",
 			expectedStatus:     http.StatusConflict,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   postgres.ErrCreateFiat,
 			fiatCreateAccTimes: 1,
 		}, {
@@ -86,8 +86,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/db-failure-unknown",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   errors.New("unknown server error"),
 			fiatCreateAccTimes: 1,
 		},
@@ -109,9 +109,9 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoExp),
 
 				mockPostgres.EXPECT().FiatCreateAccount(gomock.Any(), gomock.Any()).
 					Return(test.fiatCreateAccErr).
@@ -120,7 +120,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, OpenFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, OpenFiat(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -140,19 +140,19 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		path               string
 		expectedStatus     int
 		request            *models.HTTPDepositCurrencyRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		extTransferErr     error
 		extTransferTimes   int
 	}{
 		{
 			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
+			expectedMsg:        "malformed authentication",
 			path:               "/fiat-deposit/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -161,8 +161,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -171,8 +171,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -181,8 +181,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/too-many-decimal-places",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -191,8 +191,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/negative",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -201,8 +201,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/unknown-xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     errors.New("unknown error"),
 			extTransferTimes:   1,
 		}, {
@@ -211,8 +211,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     postgres.ErrTransactFiat,
 			extTransferTimes:   1,
 		}, {
@@ -221,8 +221,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/valid",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   1,
 		},
@@ -244,9 +244,9 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockPostgres.EXPECT().FiatExternalTransfer(gomock.Any(), gomock.Any()).
 					Return(&postgres.FiatAccountTransferResult{}, test.extTransferErr).
@@ -255,7 +255,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -291,8 +291,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 		path               string
 		expectedStatus     int
 		request            *models.HTTPExchangeOfferRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		quotesErr          error
 		quotesTimes        int
 		authEncryptErr     error
@@ -302,7 +302,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:           "invalid jwt",
-			expectedMsg:    "invalid jwt",
+			expectedMsg:    "malformed authentication",
 			path:           "/exchange-offer-fiat/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
 			request: &models.HTTPExchangeOfferRequest{
@@ -310,8 +310,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -324,8 +324,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			path:               "/exchange-offer-fiat/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPExchangeOfferRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -342,8 +342,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -360,8 +360,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "INVALID",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -378,8 +378,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidDecimal,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -396,8 +396,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountInvalidNegative,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        0,
 			authEncryptErr:     nil,
@@ -414,8 +414,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          errors.New(""),
 			quotesTimes:        1,
 			authEncryptErr:     nil,
@@ -432,8 +432,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        1,
 			authEncryptErr:     errors.New(""),
@@ -450,8 +450,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        1,
 			authEncryptErr:     nil,
@@ -468,8 +468,8 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 				DestinationCurrency: "USD",
 				SourceAmount:        amountValid,
 			},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesTimes:        1,
 			authEncryptErr:     nil,
@@ -496,9 +496,9 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockQuotes.EXPECT().FiatConversion(gomock.Any(), gomock.Any(), gomock.Any(), nil).
 					Return(amountValid, amountValid, test.quotesErr).
@@ -515,7 +515,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -590,8 +590,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		expectedMsg        string
 		expectedStatus     int
 		request            models.HTTPTransferRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		authDecryptErr     error
 		authDecryptTimes   int
 		redisGetData       models.HTTPExchangeOfferResponse
@@ -605,11 +605,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		{
 			name:               "invalid JWT",
 			path:               "/exchange-xfer-fiat/invalid-jwt",
-			expectedMsg:        "bad auth",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: errors.New("bad auth"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("bad auth"),
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   0,
 			redisGetData:       validOffer,
@@ -625,8 +625,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        constants.ValidationString(),
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   0,
 			redisGetData:       validOffer,
@@ -642,8 +642,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     errors.New("decrypt offer id"),
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -659,8 +659,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -676,8 +676,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "expired",
 			expectedStatus:     http.StatusRequestTimeout,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -693,8 +693,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -710,8 +710,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "successful",
 			expectedStatus:     http.StatusOK,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -727,8 +727,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       invalidOfferClientID,
@@ -744,8 +744,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "invalid Fiat currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData: models.HTTPExchangeOfferResponse{
@@ -765,8 +765,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "invalid Fiat currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData: models.HTTPExchangeOfferResponse{
@@ -786,8 +786,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "invalid",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       invalidOfferSource,
@@ -803,8 +803,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "both currency accounts and enough funds",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -820,8 +820,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "successful",
 			expectedStatus:     http.StatusOK,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -851,9 +851,9 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(validClientID, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(validClientID, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return(validOfferID, test.authDecryptErr).
@@ -875,7 +875,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ExchangeTransferFiat(zapLogger, mockAuth, mockCache, mockDB, "Authorization"))
+			router.POST(test.path, ExchangeTransferFiat(zapLogger, mockAuth, mockCache, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(xferReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -907,60 +907,60 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 	const basePath = "/fiat/balance/currency/"
 
 	testCases := []struct {
-		name               string
-		currency           string
-		expectedMsg        string
-		expectedStatus     int
-		authValidateJWTErr error
-		authValidateTimes  int
-		fiatBalanceErr     error
-		fiatBalanceTimes   int
+		name             string
+		currency         string
+		expectedMsg      string
+		expectedStatus   int
+		authTokenInfoErr error
+		authTokenInfoExp int
+		fiatBalanceErr   error
+		fiatBalanceTimes int
 	}{
 		{
-			name:               "invalid JWT",
-			currency:           "EUR",
-			expectedMsg:        "invalid JWT",
-			expectedStatus:     http.StatusForbidden,
-			authValidateJWTErr: errors.New("invalid JWT"),
-			authValidateTimes:  1,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   0,
+			name:             "invalid JWT",
+			currency:         "EUR",
+			expectedMsg:      "malformed authentication",
+			expectedStatus:   http.StatusForbidden,
+			authTokenInfoErr: errors.New("invalid JWT"),
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   nil,
+			fiatBalanceTimes: 0,
 		}, {
-			name:               "invalid currency",
-			currency:           "INVALID",
-			expectedMsg:        constants.InvalidCurrencyString(),
-			expectedStatus:     http.StatusBadRequest,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   0,
+			name:             "invalid currency",
+			currency:         "INVALID",
+			expectedMsg:      constants.InvalidCurrencyString(),
+			expectedStatus:   http.StatusBadRequest,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   nil,
+			fiatBalanceTimes: 0,
 		}, {
-			name:               "unknown db error",
-			currency:           "AED",
-			expectedMsg:        "retry",
-			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     errors.New("unknown error"),
-			fiatBalanceTimes:   1,
+			name:             "unknown db error",
+			currency:         "AED",
+			expectedMsg:      "retry",
+			expectedStatus:   http.StatusInternalServerError,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   errors.New("unknown error"),
+			fiatBalanceTimes: 1,
 		}, {
-			name:               "known db error",
-			currency:           "CAD",
-			expectedMsg:        "records not found",
-			expectedStatus:     http.StatusNotFound,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     postgres.ErrNotFound,
-			fiatBalanceTimes:   1,
+			name:             "known db error",
+			currency:         "CAD",
+			expectedMsg:      "records not found",
+			expectedStatus:   http.StatusNotFound,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   postgres.ErrNotFound,
+			fiatBalanceTimes: 1,
 		}, {
-			name:               "valid",
-			currency:           "USD",
-			expectedMsg:        "account balance",
-			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
-			fiatBalanceErr:     nil,
-			fiatBalanceTimes:   1,
+			name:             "valid",
+			currency:         "USD",
+			expectedMsg:      "account balance",
+			expectedStatus:   http.StatusOK,
+			authTokenInfoErr: nil,
+			authTokenInfoExp: 1,
+			fiatBalanceErr:   nil,
+			fiatBalanceTimes: 1,
 		},
 	}
 
@@ -977,9 +977,9 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoExp),
 
 				mockDB.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
@@ -988,7 +988,7 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceFiat(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1024,8 +1024,8 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 		expectedStatus     int
 		fiatJournal        []postgres.FiatJournal
 		cryptoJournal      []postgres.CryptoJournal
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoExp   error
+		authTokenInfoTimes int
 		fiatTxErr          error
 		fiatTxTimes        int
 		cryptoTxErr        error
@@ -1038,8 +1038,8 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			expectedStatus:     http.StatusBadRequest,
 			fiatJournal:        fiatJournal,
 			cryptoJournal:      cryptoJournal,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoExp:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        0,
 			cryptoTxErr:        nil,
@@ -1047,12 +1047,12 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 		}, {
 			name:               "invalid JWT",
 			transactionID:      txID.String(),
-			expectedMsg:        "invalid JWT",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
 			fiatJournal:        fiatJournal,
 			cryptoJournal:      cryptoJournal,
-			authValidateJWTErr: errors.New("invalid JWT"),
-			authValidateTimes:  1,
+			authTokenInfoExp:   errors.New("invalid JWT"),
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        0,
 			cryptoTxErr:        nil,
@@ -1064,8 +1064,8 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			expectedStatus:     http.StatusInternalServerError,
 			fiatJournal:        fiatJournal,
 			cryptoJournal:      cryptoJournal,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoExp:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          errors.New("unknown error"),
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -1077,8 +1077,8 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			expectedStatus:     http.StatusNotFound,
 			fiatJournal:        fiatJournal,
 			cryptoJournal:      cryptoJournal,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoExp:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          postgres.ErrNotFound,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -1090,8 +1090,8 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			fiatJournal:        nil,
 			cryptoJournal:      nil,
 			expectedStatus:     http.StatusNotFound,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoExp:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -1103,8 +1103,8 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			fiatJournal:        fiatJournal,
 			cryptoJournal:      cryptoJournal,
 			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoExp:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -1125,9 +1125,9 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoExp).
+					Times(test.authTokenInfoTimes),
 
 				mockDB.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return(test.fiatJournal, test.fiatTxErr).
@@ -1140,7 +1140,7 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":transactionID", TxDetailsFiat(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":transactionID", TxDetailsFiat(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.transactionID, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1172,8 +1172,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 		expectedMsg         string
 		expectedStatus      int
 		accDetails          []postgres.FiatAccount
-		authValidateJWTErr  error
-		authValidateTimes   int
+		authTokenInfoErr    error
+		authTokenInfoTimes  int
 		authDecryptStrErr   error
 		authDecryptStrTimes int
 		fiatBalanceErr      error
@@ -1185,11 +1185,11 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			name:                "invalid JWT",
 			path:                "invalid-jwt",
 			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
-			expectedMsg:         "invalid JWT",
+			expectedMsg:         "malformed authentication",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusForbidden,
-			authValidateJWTErr:  errors.New("invalid JWT"),
-			authValidateTimes:   1,
+			authTokenInfoErr:    errors.New("invalid JWT"),
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1203,8 +1203,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "invalid page cursor or page size",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusBadRequest,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   errors.New("decrypt failure"),
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      nil,
@@ -1218,8 +1218,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "not found",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusNotFound,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      postgres.ErrNotFound,
@@ -1233,8 +1233,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "retry",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      errors.New("unknown db error"),
@@ -1248,8 +1248,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "retry",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      nil,
@@ -1263,8 +1263,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1278,8 +1278,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1293,8 +1293,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			fiatBalanceErr:      nil,
@@ -1308,8 +1308,8 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accDetails:          accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			fiatBalanceErr:      nil,
@@ -1332,9 +1332,9 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte{}, test.authDecryptStrErr).
@@ -1351,7 +1351,7 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path, BalanceFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path, BalanceFiatPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1389,8 +1389,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 		expectedMsg            string
 		expectedStatus         int
 		journalEntries         []postgres.FiatJournal
-		authValidateJWTErr     error
-		authValidateTimes      int
+		authTokenInfoErr       error
+		authTokenInfoTimes     int
 		authDecryptCursorErr   error
 		authDecryptCursorTimes int
 		authEncryptCursorErr   error
@@ -1403,11 +1403,11 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			path:                   "auth-failure/",
 			currency:               "USD",
 			querySegment:           "?pageCursor=page-cursor",
-			expectedMsg:            "auth failure",
+			expectedMsg:            "malformed authentication",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusForbidden,
-			authValidateJWTErr:     errors.New("auth failure"),
-			authValidateTimes:      1,
+			authTokenInfoErr:       errors.New("auth failure"),
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1422,8 +1422,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            constants.InvalidCurrencyString(),
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1438,8 +1438,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            "missing required parameters",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1454,8 +1454,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            "records not found",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusNotFound,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1470,8 +1470,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            "retry",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusInternalServerError,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1486,8 +1486,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            "no transactions",
 			journalEntries:         []postgres.FiatJournal{},
 			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1502,8 +1502,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            "account transactions",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusOK,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1518,8 +1518,8 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			expectedMsg:            "account transactions",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusOK,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1542,9 +1542,9 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
@@ -1562,8 +1562,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path+":currencyCode",
-				TxDetailsFiatPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path+":currencyCode", TxDetailsFiatPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
 				basePath+test.path+test.currency+test.querySegment, nil)
 			recorder := httptest.NewRecorder()

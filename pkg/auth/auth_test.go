@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -393,4 +394,94 @@ func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
 	plaintext, err := testAuth.DecryptFromString(ciphertext)
 	require.NoError(t, err, "encrypt from string failed")
 	require.Equal(t, toEncrypt, string(plaintext), "decrypted string does not match original")
+}
+
+func TestAuth_AuthFromGinCtx(t *testing.T) {
+	t.Parallel()
+
+	validUUID, err := uuid.NewV4()
+	require.NoError(t, err, "failed to generate valid clientID.")
+
+	validExpiration := int64(99)
+
+	valid := gin.Context{}
+	valid.Set(constants.ClientIDCtxKey(), validUUID)
+	valid.Set(constants.ExpiresAtCtxKey(), validExpiration)
+
+	noClientID := gin.Context{}
+	noClientID.Set(constants.ExpiresAtCtxKey(), validExpiration)
+
+	badClientID := gin.Context{}
+	badClientID.Set(constants.ClientIDCtxKey(), "random-string-here")
+	badClientID.Set(constants.ExpiresAtCtxKey(), validExpiration)
+
+	noExpiration := gin.Context{}
+	noExpiration.Set(constants.ClientIDCtxKey(), validUUID)
+
+	badExpiration := gin.Context{}
+	badExpiration.Set(constants.ClientIDCtxKey(), validUUID)
+	badExpiration.Set(constants.ExpiresAtCtxKey(), "random-string-here")
+
+	testCases := []struct {
+		name         string
+		expectErrMsg string
+		expectedUUID uuid.UUID
+		expectedTime int64
+		ctx          *gin.Context
+		expectErr    require.ErrorAssertionFunc
+	}{
+		{
+			name:         "bad expiration",
+			expectErrMsg: "locate expiration",
+			expectedUUID: validUUID,
+			expectedTime: 0,
+			ctx:          &badExpiration,
+			expectErr:    require.Error,
+		}, {
+			name:         "no expiration",
+			expectErrMsg: "locate expiration",
+			expectedUUID: validUUID,
+			expectedTime: 0,
+			ctx:          &noExpiration,
+			expectErr:    require.Error,
+		}, {
+			name:         "bad client id",
+			expectErrMsg: "parse clientID",
+			expectedUUID: uuid.UUID{},
+			expectedTime: 0,
+			ctx:          &badClientID,
+			expectErr:    require.Error,
+		}, {
+			name:         "no client id",
+			expectErrMsg: "locate clientID",
+			expectedUUID: uuid.UUID{},
+			expectedTime: 0,
+			ctx:          &noClientID,
+			expectErr:    require.Error,
+		}, {
+			name:         "valid",
+			expectErrMsg: "",
+			expectedUUID: validUUID,
+			expectedTime: validExpiration,
+			ctx:          &valid,
+			expectErr:    require.NoError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		test := testCase
+
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			clientID, expiresAt, err := testAuth.TokenInfoFromGinCtx(test.ctx)
+			test.expectErr(t, err, "error expectation failed.")
+			require.Equal(t, clientID, test.expectedUUID, "clientID mismatched.")
+			require.Equal(t, expiresAt, test.expectedTime, "expiration deadline mismatched.")
+
+			if err != nil {
+				require.Contains(t, err.Error(), test.expectErrMsg, "error message mismatch.")
+			}
+		})
+	}
 }

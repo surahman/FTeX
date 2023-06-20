@@ -192,3 +192,10 @@ func TestTwoSeconds(t *testing.T) {
 func TestThreeSeconds(t *testing.T) {
 	require.Equal(t, threeSecondDuration, ThreeSeconds(), "Incorrect three second duration.")
 }
+
+func TestClientIDCtxKey(t *testing.T) {
+	require.Equal(t, clientIDCtxKey, ClientIDCtxKey(), "Incorrect clientID context key.")
+}
+func TestExpiresAtCtxKey(t *testing.T) {
+	require.Equal(t, expiresAtCtxKey, ExpiresAtCtxKey(), "Incorrect expiration deadline context key.")
+}

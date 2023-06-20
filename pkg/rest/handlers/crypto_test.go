@@ -30,8 +30,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 		path                 string
 		expectedStatus       int
 		request              *models.HTTPOpenCurrencyAccountRequest
-		authValidateJWTErr   error
-		authValidateTimes    int
+		authTokenInfoErr     error
+		authTokenInfoTimes   int
 		cryptoCreateAccErr   error
 		cryptoCreateAccTimes int
 	}{
@@ -40,8 +40,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/invalid-jwt",
 			expectedStatus:       http.StatusForbidden,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
-			authValidateJWTErr:   errors.New("invalid jwt"),
-			authValidateTimes:    1,
+			authTokenInfoErr:     errors.New("invalid jwt"),
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 0,
 		}, {
@@ -49,8 +49,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/valid",
 			expectedStatus:       http.StatusCreated,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 1,
 		}, {
@@ -58,8 +58,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
 			request:              &models.HTTPOpenCurrencyAccountRequest{},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 0,
 		}, {
@@ -67,8 +67,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/db-failure",
 			expectedStatus:       http.StatusConflict,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "ETH"},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   postgres.ErrCreateFiat,
 			cryptoCreateAccTimes: 1,
 		}, {
@@ -76,8 +76,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/db-failure-unknown",
 			expectedStatus:       http.StatusInternalServerError,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "USDC"},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   errors.New("unknown server error"),
 			cryptoCreateAccTimes: 1,
 		},
@@ -99,9 +99,9 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockPostgres.EXPECT().CryptoCreateAccount(gomock.Any(), gomock.Any()).
 					Return(test.cryptoCreateAccErr).
@@ -110,7 +110,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, OpenCrypto(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, OpenCrypto(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
@@ -139,8 +139,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 		expectedStatus     int
 		request            *models.HTTPCryptoOfferRequest
 		isPurchase         bool
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		quotesErr          error
 		quotesAmount       decimal.Decimal
 		quotesTimes        int
@@ -151,7 +151,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:           "invalid jwt",
-			expectedMsg:    "invalid jwt",
+			expectedMsg:    "malformed authentication",
 			path:           "/purchase-offer-crypto/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
 			request: &models.HTTPCryptoOfferRequest{
@@ -163,8 +163,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -179,8 +179,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPCryptoOfferRequest{},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -202,8 +202,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -224,8 +224,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -247,8 +247,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -270,8 +270,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -293,8 +293,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          errors.New(""),
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -316,8 +316,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       decimal.NewFromFloat(0),
 			quotesTimes:        1,
@@ -339,8 +339,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -362,8 +362,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -385,8 +385,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -408,8 +408,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isSale,
 			},
 			isPurchase:         isSale,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -437,9 +437,9 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), test.isPurchase, nil).
 					Return(amountValid, test.quotesAmount, test.quotesErr).
@@ -456,7 +456,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, OfferCrypto(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			router.POST(test.path, OfferCrypto(zapLogger, mockAuth, mockCache, mockQuotes))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -527,8 +527,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 		path               string
 		expectedStatus     int
 		request            *models.HTTPTransferRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		authEncryptTimes   int
 		authEncryptErr     error
 		redisGetData       models.HTTPExchangeOfferResponse
@@ -540,12 +540,12 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 	}{
 		{
 			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
+			expectedMsg:        "malformed authentication",
 			path:               "/exchange-crypto/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
 			authEncryptTimes:   0,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -560,8 +560,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPTransferRequest{},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   0,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -576,8 +576,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/transaction-failure",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   1,
 			authEncryptErr:     errors.New("transaction failure"),
 			redisGetData:       validPurchase,
@@ -592,8 +592,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/valid-purchase",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   1,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -608,8 +608,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/valid-sale",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   1,
 			authEncryptErr:     nil,
 			redisGetData:       validSale,
@@ -638,9 +638,9 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(validClientID, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(validClientID, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte("OFFER-ID"), test.authEncryptErr).
@@ -668,7 +668,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ExchangeCrypto(zapLogger, mockAuth, mockCache, mockDB, "Authorization"))
+			router.POST(test.path, ExchangeCrypto(zapLogger, mockAuth, mockCache, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -704,18 +704,18 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 		currency           string
 		expectedMsg        string
 		expectedStatus     int
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		cryptoBalanceErr   error
 		cryptoBalanceTimes int
 	}{
 		{
 			name:               "invalid JWT",
 			currency:           "USDT",
-			expectedMsg:        "invalid JWT",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
-			authValidateJWTErr: errors.New("invalid JWT"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid JWT"),
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 0,
 		}, {
@@ -723,8 +723,8 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			currency:           "INVALID",
 			expectedMsg:        constants.InvalidCurrencyString(),
 			expectedStatus:     http.StatusBadRequest,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 0,
 		}, {
@@ -732,8 +732,8 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			currency:           "USDC",
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   errors.New("unknown error"),
 			cryptoBalanceTimes: 1,
 		}, {
@@ -741,8 +741,8 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			currency:           "BTC",
 			expectedMsg:        "records not found",
 			expectedStatus:     http.StatusNotFound,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   postgres.ErrNotFound,
 			cryptoBalanceTimes: 1,
 		}, {
@@ -750,8 +750,8 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			currency:           "BTC",
 			expectedMsg:        "account balance",
 			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 1,
 		},
@@ -770,9 +770,9 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockDB.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.CryptoAccount{}, test.cryptoBalanceErr).
@@ -781,7 +781,7 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceCrypto(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -811,8 +811,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 		name               string
 		expectedMsg        string
 		expectedStatus     int
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		fiatTxErr          error
 		fiatTxTimes        int
 		cryptoTxErr        error
@@ -820,10 +820,10 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 	}{
 		{
 			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        0,
 			cryptoTxErr:        nil,
@@ -832,8 +832,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			name:               "fiat db error",
 			expectedMsg:        "could not retrieve transaction details",
 			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          postgres.ErrTransactCryptoDetails,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -842,8 +842,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			name:               "crypto db error",
 			expectedMsg:        "could not retrieve transaction details",
 			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        1,
 			cryptoTxErr:        postgres.ErrTransactCryptoDetails,
@@ -852,8 +852,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			name:               "valid",
 			expectedMsg:        "transaction details",
 			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -874,9 +874,9 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockDB.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.FiatJournal{{}}, test.fiatTxErr).
@@ -889,7 +889,7 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":transactionID", TxDetailsCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":transactionID", TxDetailsCrypto(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+validTxID.String(), nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -921,8 +921,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 		expectedMsg         string
 		expectedStatus      int
 		accBalances         []postgres.CryptoAccount
-		authValidateJWTErr  error
-		authValidateTimes   int
+		authTokenInfoErr    error
+		authTokenInfoTimes  int
 		authDecryptStrErr   error
 		authDecryptStrTimes int
 		cryptoBalanceErr    error
@@ -934,11 +934,11 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			name:                "invalid JWT",
 			path:                "invalid-jwt",
 			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
-			expectedMsg:         "invalid JWT",
+			expectedMsg:         "malformed authentication",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusForbidden,
-			authValidateJWTErr:  errors.New("invalid JWT"),
-			authValidateTimes:   1,
+			authTokenInfoErr:    errors.New("invalid JWT"),
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -952,8 +952,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "invalid page cursor or page size",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusBadRequest,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   errors.New("decrypt failure"),
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    nil,
@@ -967,8 +967,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "not found",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusNotFound,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    postgres.ErrNotFound,
@@ -982,8 +982,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "retry",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    errors.New("unknown db error"),
@@ -997,8 +997,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "retry",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    nil,
@@ -1012,8 +1012,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accBalances:         []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -1027,8 +1027,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accBalances:         []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -1042,8 +1042,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -1057,8 +1057,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			expectedMsg:         "account balances",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    nil,
@@ -1081,9 +1081,9 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte{}, test.authDecryptStrErr).
@@ -1100,7 +1100,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path, BalanceCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path, BalanceCryptoPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1138,8 +1138,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 		expectedMsg            string
 		expectedStatus         int
 		journalEntries         []postgres.CryptoJournal
-		authValidateJWTErr     error
-		authValidateTimes      int
+		authTokenInfoErr       error
+		authTokenInfoTimes     int
 		authDecryptCursorErr   error
 		authDecryptCursorTimes int
 		authEncryptCursorErr   error
@@ -1152,11 +1152,11 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			path:                   "auth-failure/",
 			ticker:                 "ETH",
 			querySegment:           "?pageCursor=page-cursor",
-			expectedMsg:            "auth failure",
+			expectedMsg:            "malformed authentication",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusForbidden,
-			authValidateJWTErr:     errors.New("auth failure"),
-			authValidateTimes:      1,
+			authTokenInfoErr:       errors.New("auth failure"),
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1171,8 +1171,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "missing required parameters",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1187,8 +1187,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "records not found",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusNotFound,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1203,8 +1203,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "retry",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusInternalServerError,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1219,8 +1219,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "no transactions",
 			journalEntries:         []postgres.CryptoJournal{},
 			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1235,8 +1235,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "account transactions",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusOK,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1251,8 +1251,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "account transactions",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusOK,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1275,9 +1275,9 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
@@ -1296,7 +1296,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path+":ticker",
-				TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+				TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
 				basePath+test.path+test.ticker+test.querySegment, nil)
 			recorder := httptest.NewRecorder()

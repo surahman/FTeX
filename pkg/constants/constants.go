@@ -45,6 +45,8 @@ const (
 	validationSting               = "validation"
 	invalidCurrencyString         = "invalid currency"
 	retryMessageString            = "please retry your request later"
+	clientIDCtxKey                = "ftex-client-id-context-key"
+	expiresAtCtxKey               = "ftex-expires-at-context-key"
 )
 
 var (
@@ -225,4 +227,14 @@ func TwoSeconds() time.Duration {
 // ThreeSeconds is a three-second time duration.
 func ThreeSeconds() time.Duration {
 	return threeSecondDuration
+}
+
+// ClientIDCtxKey is the key used to store a clientID in a context.
+func ClientIDCtxKey() string {
+	return clientIDCtxKey
+}
+
+// ExpiresAtCtxKey is the key used to store an expiration deadline in a context.
+func ExpiresAtCtxKey() string {
+	return expiresAtCtxKey
 }

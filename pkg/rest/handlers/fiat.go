@@ -33,7 +33,7 @@ import (
 //	@Router			/fiat/open [post]
 //
 //nolint:dupl
-func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
+func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID    uuid.UUID
@@ -43,8 +43,8 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 			httpMessage string
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -88,7 +88,7 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authH
 //	@Failure		403		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError					"error message with any available details in payload"
 //	@Router			/fiat/deposit [post]
-func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
+func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID        uuid.UUID
@@ -100,8 +100,8 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 			transferReceipt *postgres.FiatAccountTransferResult
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -138,12 +138,7 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, au
 //	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Router			/fiat/exchange/offer [post]
-func ExchangeOfferFiat(
-	logger *logger.Logger,
-	auth auth.Auth,
-	cache redis.Redis,
-	quotes quotes.Quotes,
-	authHeaderKey string) gin.HandlerFunc {
+func ExchangeOfferFiat(logger *logger.Logger, auth auth.Auth, cache redis.Redis, quotes quotes.Quotes) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID    uuid.UUID
@@ -155,8 +150,8 @@ func ExchangeOfferFiat(
 			offer       *models.HTTPExchangeOfferResponse
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -198,8 +193,7 @@ func ExchangeTransferFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
 	cache redis.Redis,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+	db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			err         error
@@ -211,8 +205,8 @@ func ExchangeTransferFiat(
 			payload     any
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -250,11 +244,9 @@ func ExchangeTransferFiat(
 //	@Failure		404		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/balance/{ticker} [get]
-func BalanceFiat( //nolint:dupl
-	logger *logger.Logger,
-	auth auth.Auth,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+//
+//nolint:dupl
+func BalanceFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			accDetails  *postgres.FiatAccount
@@ -265,8 +257,8 @@ func BalanceFiat( //nolint:dupl
 			payload     any
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -298,11 +290,7 @@ func BalanceFiat( //nolint:dupl
 //	@Failure		404				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/transaction/{transactionID} [get]
-func TxDetailsFiat(
-	logger *logger.Logger,
-	auth auth.Auth,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+func TxDetailsFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID      uuid.UUID
@@ -310,8 +298,8 @@ func TxDetailsFiat(
 			err           error
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -349,11 +337,7 @@ func TxDetailsFiat(
 //	@Failure		404			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500			{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/balance [get]
-func BalanceFiatPaginated(
-	logger *logger.Logger,
-	auth auth.Auth,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+func BalanceFiatPaginated(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			accDetails  *models.HTTPFiatDetailsPaginated
@@ -363,8 +347,8 @@ func BalanceFiatPaginated(
 			httpMessage string
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -406,11 +390,7 @@ func BalanceFiatPaginated(
 //	@Failure		416				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Failure		500				{object}	models.HTTPError	"error message with any available details in payload"
 //	@Router			/fiat/info/transaction/all/{currencyCode}/ [get]
-func TxDetailsFiatPaginated(
-	logger *logger.Logger,
-	auth auth.Auth,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+func TxDetailsFiatPaginated(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			journalEntries *models.HTTPFiatTransactionsPaginated
@@ -429,8 +409,8 @@ func TxDetailsFiatPaginated(
 			}
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}

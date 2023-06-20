@@ -64,7 +64,7 @@ func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	//	@title						FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
-	//	@version					1.0.0
+	//	@version					1.1.0
 	//	@description				FTeX Fiat and Cryptocurrency Banking API.
 	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
 	//
@@ -99,41 +99,29 @@ func (s *Server) initialize() {
 	userGroup.POST("/login", restHandlers.LoginUser(s.logger, s.auth, s.db))
 	userGroup.
 		Use(authMiddleware).
-		POST("/refresh", restHandlers.LoginRefresh(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		POST("/refresh", restHandlers.LoginRefresh(s.logger, s.auth, s.db))
 	userGroup.
 		Use(authMiddleware).
-		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db))
 
 	fiatGroup := api.Group("/fiat").Use(authMiddleware)
-	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.POST("/exchange/offer",
-		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
-	fiatGroup.POST("/exchange/transfer",
-		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.GET("/info/balance/",
-		restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.GET("/info/transaction/:transactionID",
-		restHandlers.TxDetailsFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	fiatGroup.GET("/info/transaction/all/:currencyCode",
-		restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db))
+	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db))
+	fiatGroup.POST("/exchange/offer", restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes))
+	fiatGroup.POST("/exchange/transfer", restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db))
+	fiatGroup.GET("/info/balance/:ticker", restHandlers.BalanceFiat(s.logger, s.auth, s.db))
+	fiatGroup.GET("/info/balance/", restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db))
+	fiatGroup.GET("/info/transaction/:transactionID", restHandlers.TxDetailsFiat(s.logger, s.auth, s.db))
+	fiatGroup.GET("/info/transaction/all/:currencyCode", restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db))
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
-	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	cryptoGroup.POST("/offer",
-		restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
-	cryptoGroup.POST("/exchange",
-		restHandlers.ExchangeCrypto(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
-	cryptoGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	cryptoGroup.GET("/info/transaction/:transactionID",
-		restHandlers.TxDetailsCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	cryptoGroup.GET("/info/balance/",
-		restHandlers.BalanceCryptoPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
-	cryptoGroup.GET("/info/transaction/all/:ticker",
-		restHandlers.TxDetailsCryptoPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db))
+	cryptoGroup.POST("/offer", restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes))
+	cryptoGroup.POST("/exchange", restHandlers.ExchangeCrypto(s.logger, s.auth, s.cache, s.db))
+	cryptoGroup.GET("/info/balance/:ticker", restHandlers.BalanceCrypto(s.logger, s.auth, s.db))
+	cryptoGroup.GET("/info/transaction/:transactionID", restHandlers.TxDetailsCrypto(s.logger, s.auth, s.db))
+	cryptoGroup.GET("/info/balance/", restHandlers.BalanceCryptoPaginated(s.logger, s.auth, s.db))
+	cryptoGroup.GET("/info/transaction/all/:ticker", restHandlers.TxDetailsCryptoPaginated(s.logger, s.auth, s.db))
 }
 
 // Run brings the HTTP service up.

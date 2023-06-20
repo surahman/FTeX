@@ -7,6 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
+	gin "github.com/gin-gonic/gin"
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	models "github.com/surahman/FTeX/pkg/models"
@@ -136,6 +137,22 @@ func (m *MockAuth) RefreshThreshold() int64 {
 func (mr *MockAuthMockRecorder) RefreshThreshold() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshThreshold", reflect.TypeOf((*MockAuth)(nil).RefreshThreshold))
+}
+
+// TokenInfoFromGinCtx mocks base method.
+func (m *MockAuth) TokenInfoFromGinCtx(arg0 *gin.Context) (uuid.UUID, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TokenInfoFromGinCtx", arg0)
+	ret0, _ := ret[0].(uuid.UUID)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// TokenInfoFromGinCtx indicates an expected call of TokenInfoFromGinCtx.
+func (mr *MockAuthMockRecorder) TokenInfoFromGinCtx(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TokenInfoFromGinCtx", reflect.TypeOf((*MockAuth)(nil).TokenInfoFromGinCtx), arg0)
 }
 
 // ValidateJWT mocks base method.

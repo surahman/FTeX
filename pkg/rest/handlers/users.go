@@ -108,7 +108,7 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 //	@Failure		500	{object}	models.HTTPError		"error message with any available details in payload"
 //	@Failure		510	{object}	models.HTTPError		"error message with any available details in payload"
 //	@Router			/user/refresh [post]
-func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
+func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			err        error
@@ -119,8 +119,8 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 			httpStatus int
 		)
 
-		if clientID, expiresAt, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, expiresAt, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
@@ -151,7 +151,7 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, a
 //	@Failure		403		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError				"error message with any available details in payload"
 //	@Router			/user/delete [delete]
-func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
+func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			clientID      uuid.UUID
@@ -162,10 +162,8 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, aut
 			payload       any
 		)
 
-		// Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
-		// credentials.
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}
