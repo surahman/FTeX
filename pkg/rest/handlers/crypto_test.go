@@ -1138,8 +1138,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 		expectedMsg            string
 		expectedStatus         int
 		journalEntries         []postgres.CryptoJournal
-		authValidateJWTErr     error
-		authValidateTimes      int
+		authTokenInfoErr       error
+		authTokenInfoTimes     int
 		authDecryptCursorErr   error
 		authDecryptCursorTimes int
 		authEncryptCursorErr   error
@@ -1152,11 +1152,11 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			path:                   "auth-failure/",
 			ticker:                 "ETH",
 			querySegment:           "?pageCursor=page-cursor",
-			expectedMsg:            "auth failure",
+			expectedMsg:            "malformed authentication",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusForbidden,
-			authValidateJWTErr:     errors.New("auth failure"),
-			authValidateTimes:      1,
+			authTokenInfoErr:       errors.New("auth failure"),
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1171,8 +1171,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "missing required parameters",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusBadRequest,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1187,8 +1187,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "records not found",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusNotFound,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1203,8 +1203,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "retry",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusInternalServerError,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1219,8 +1219,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "no transactions",
 			journalEntries:         []postgres.CryptoJournal{},
 			expectedStatus:         http.StatusRequestedRangeNotSatisfiable,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1235,8 +1235,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "account transactions",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusOK,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1251,8 +1251,8 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			expectedMsg:            "account transactions",
 			journalEntries:         journalEntries,
 			expectedStatus:         http.StatusOK,
-			authValidateJWTErr:     nil,
-			authValidateTimes:      1,
+			authTokenInfoErr:       nil,
+			authTokenInfoTimes:     1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1262,7 +1262,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -1275,9 +1275,9 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte(decryptedCursor), test.authDecryptCursorErr).
@@ -1296,7 +1296,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path+":ticker",
-				TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+				TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
 				basePath+test.path+test.ticker+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
