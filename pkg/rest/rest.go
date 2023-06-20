@@ -99,10 +99,10 @@ func (s *Server) initialize() {
 	userGroup.POST("/login", restHandlers.LoginUser(s.logger, s.auth, s.db))
 	userGroup.
 		Use(authMiddleware).
-		POST("/refresh", restHandlers.LoginRefresh(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		POST("/refresh", restHandlers.LoginRefresh(s.logger, s.auth, s.db))
 	userGroup.
 		Use(authMiddleware).
-		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db))
 
 	fiatGroup := api.Group("/fiat").Use(authMiddleware)
 	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
