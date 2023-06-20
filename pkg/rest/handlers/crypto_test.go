@@ -1262,7 +1262,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {

@@ -112,8 +112,7 @@ func (s *Server) initialize() {
 	fiatGroup.GET("/info/balance/:ticker", restHandlers.BalanceFiat(s.logger, s.auth, s.db))
 	fiatGroup.GET("/info/balance/", restHandlers.BalanceFiatPaginated(s.logger, s.auth, s.db))
 	fiatGroup.GET("/info/transaction/:transactionID", restHandlers.TxDetailsFiat(s.logger, s.auth, s.db))
-	fiatGroup.GET("/info/transaction/all/:currencyCode",
-		restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.GET("/info/transaction/all/:currencyCode", restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db))
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
