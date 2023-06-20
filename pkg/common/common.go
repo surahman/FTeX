@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
@@ -328,30 +327,4 @@ func HTTPTxDetails(db postgres.Postgres, logger *logger.Logger, clientID uuid.UU
 	}
 
 	return journalEntries, 0, "", nil
-}
-
-// HTTPAuthFromCtx extracts the clientID and expiration deadline stored from a JWT in the Gin context.
-func HTTPAuthFromCtx(ctx *gin.Context) (uuid.UUID, int64, error) {
-	var (
-		expiresAt int64
-		clientID  uuid.UUID
-	)
-	// Extract clientID.
-	rawClientID, ok := ctx.Get(constants.ClientIDCtxKey())
-	if !ok {
-		return clientID, expiresAt, errors.New("unable to locate clientID")
-	}
-
-	clientID, ok = rawClientID.(uuid.UUID)
-	if !ok {
-		return clientID, expiresAt, errors.New("unable to parse clientID")
-	}
-
-	// Extract expiration deadline.
-	expiresAt = ctx.GetInt64(constants.ExpiresAtCtxKey())
-	if expiresAt == 0 {
-		return clientID, expiresAt, errors.New("failed to locate expiration deadline")
-	}
-
-	return clientID, expiresAt, nil
 }

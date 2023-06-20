@@ -10,9 +10,11 @@ import (
 	"io"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/afero"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
 	"github.com/surahman/FTeX/pkg/models"
 	"go.uber.org/zap"
@@ -50,6 +52,9 @@ type Auth interface {
 
 	// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
 	DecryptFromString(string) ([]byte, error)
+
+	// TokenInfoFromGinCtx extracts the clientID and expiration deadline stored from a JWT in the Gin context.
+	TokenInfoFromGinCtx(ctx *gin.Context) (uuid.UUID, int64, error)
 }
 
 // Check to ensure the Auth interface has been implemented.
@@ -222,7 +227,7 @@ func (a *authImpl) encryptAES256(data []byte) (cipherStr string, cipherBytes []b
 		return
 	}
 
-	// Encrypt to cipher text.
+	// Encrypt to a cipher text.
 	cipherBytes = gcm.Seal(nonce, nonce, data, nil)
 
 	// Convert to Base64 URL encoded string for use in URLs.
@@ -298,4 +303,30 @@ func testConfigurationImpl(zapLogger *logger.Logger, expDuration, refThreshold i
 // TestAuth is a basic test Auth struct to be used in test suites.
 func TestAuth(zapLogger *logger.Logger, expDuration, refThreshold int64) Auth {
 	return testConfigurationImpl(zapLogger, expDuration, refThreshold)
+}
+
+// TokenInfoFromGinCtx extracts the clientID and expiration deadline stored from a JWT in the Gin context.
+func (a *authImpl) TokenInfoFromGinCtx(ctx *gin.Context) (uuid.UUID, int64, error) {
+	var (
+		expiresAt int64
+		clientID  uuid.UUID
+	)
+	// Extract clientID.
+	rawClientID, ok := ctx.Get(constants.ClientIDCtxKey())
+	if !ok {
+		return clientID, expiresAt, errors.New("unable to locate clientID")
+	}
+
+	clientID, ok = rawClientID.(uuid.UUID)
+	if !ok {
+		return clientID, expiresAt, errors.New("unable to parse clientID")
+	}
+
+	// Extract expiration deadline.
+	expiresAt = ctx.GetInt64(constants.ExpiresAtCtxKey())
+	if expiresAt == 0 {
+		return clientID, expiresAt, errors.New("failed to locate expiration deadline")
+	}
+
+	return clientID, expiresAt, nil
 }
