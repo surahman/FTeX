@@ -139,8 +139,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 		expectedStatus     int
 		request            *models.HTTPCryptoOfferRequest
 		isPurchase         bool
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		quotesErr          error
 		quotesAmount       decimal.Decimal
 		quotesTimes        int
@@ -151,7 +151,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 	}{
 		{
 			name:           "invalid jwt",
-			expectedMsg:    "invalid jwt",
+			expectedMsg:    "malformed authentication",
 			path:           "/purchase-offer-crypto/invalid-jwt",
 			expectedStatus: http.StatusForbidden,
 			request: &models.HTTPCryptoOfferRequest{
@@ -163,8 +163,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -179,8 +179,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPCryptoOfferRequest{},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -202,8 +202,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -224,8 +224,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				},
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -247,8 +247,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -270,8 +270,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -293,8 +293,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          errors.New(""),
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -316,8 +316,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       decimal.NewFromFloat(0),
 			quotesTimes:        1,
@@ -339,8 +339,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -362,8 +362,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -385,8 +385,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isPurchase,
 			},
 			isPurchase:         isPurchase,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -408,8 +408,8 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 				IsPurchase: &isSale,
 			},
 			isPurchase:         isSale,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -437,9 +437,9 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), test.isPurchase, nil).
 					Return(amountValid, test.quotesAmount, test.quotesErr).
@@ -456,7 +456,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, OfferCrypto(zapLogger, mockAuth, mockCache, mockQuotes, "Authorization"))
+			router.POST(test.path, OfferCrypto(zapLogger, mockAuth, mockCache, mockQuotes))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

@@ -116,8 +116,7 @@ func (s *Server) initialize() {
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db))
-	cryptoGroup.POST("/offer",
-		restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
+	cryptoGroup.POST("/offer", restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes))
 	cryptoGroup.POST("/exchange",
 		restHandlers.ExchangeCrypto(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/balance/:ticker",
