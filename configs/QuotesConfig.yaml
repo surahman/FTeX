@@ -1,0 +1,11 @@
+fiatCurrency:
+  apiKey: some-api-key-for-fiat-currencies
+  headerKey: X-RapidAPI-Key
+  endpoint: https://currency-conversion-and-exchange-rates.p.rapidapi.com/convert?
+cryptoCurrency:
+  apiKey: some-api-key-for-crypto-currencies
+  headerKey: X-CoinAPI-Key
+  endpoint: https://rest.coinapi.io/v1/exchangerate/{base_symbol}/{quote_symbol}
+connection:
+  userAgent: ftex_inc
+  timeout: 1s

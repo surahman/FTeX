@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    restart: always
+    ports:
+      - '6432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./setup_scripts/01-create_test_db.sql:/docker-entrypoint-initdb.d/01-create_test_db.sql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ftex_db
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready', '-d', 'ftex_db']
+      start_period: 60s
+      interval: 60s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    container_name: redis
+    image: bitnami/redis:latest
+    restart: always
+    ports:
+      - '7379:6379'
+    environment:
+      - REDIS_PASSWORD=v7h0JZq8AZhVcF3NWz9u
+    volumes:
+      - ./setup_scripts/redis_users.acl:/opt/bitnami/redis/mounted-etc/users.acl
+      - ./setup_scripts/redis_overrides.conf:/opt/bitnami/redis/mounted-etc/overrides.conf
+      - redis_data:/bitnami/redis/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

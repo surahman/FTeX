@@ -1,0 +1,12 @@
+name: 'Schema Migration'
+description: 'Liquibase schema migration for Postgres.'
+runs:
+  using: "composite"
+  steps:
+    - name: Liquibase database migration
+      uses: liquibase-github-actions/update@v4.19.0
+      with:
+        changelogFile: "SQL/schema/migration.sql"
+        url: "jdbc:postgresql://postgres:5432/ftex_db_test"
+        password: "postgres"
+        username: "postgres"

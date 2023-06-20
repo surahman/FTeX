@@ -1,0 +1,28 @@
+version: 2
+sql:
+    - engine: postgresql
+      queries:
+        - queries/crypto.sql
+        - queries/fiat.sql
+        - queries/udf.sql
+        - queries/users.sql
+      schema: schema/migration.sql
+      gen:
+          go:
+              sql_package: pgx/v5
+              package: postgres
+              out: ../pkg/postgres
+              overrides:
+                - db_type: "uuid"
+                  go_type: "github.com/gofrs/uuid.UUID"
+                - db_type: "pg_catalog.numeric"
+                  go_type: "github.com/shopspring/decimal.Decimal"
+              emit_interface: true
+              emit_json_tags: true
+              emit_params_struct_pointers: true
+              emit_enum_valid_method: true
+              json_tags_case_style: camel
+              output_db_file_name: postgres_sqlc
+              output_models_file_name: models_sqlc
+              output_querier_file_name: querier_sqlc
+              output_files_suffix: c

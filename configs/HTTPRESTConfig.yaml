@@ -1,0 +1,10 @@
+server:
+  portNumber: 33723
+  basePath: api/rest/v1
+  swaggerPath: /swagger/*any
+  shutdownDelay: 5s
+  readTimeout: 3s
+  writeTimeout: 3s
+  readHeaderTimeout: 3s
+authorization:
+  headerKey: Authorization

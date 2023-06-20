@@ -1,0 +1,8 @@
+jwt:
+  key: CJa61NnAr8EwNDcTrZt2wmexYk642r44YHxGYQBNGK6UPEVwy3MARzaG
+  issuer: FTeX, Inc.
+  expirationDuration: 600
+  refreshThreshold: 60
+general:
+  bcryptCost: 8
+  cryptoSecret: ^Zt*.^Rzan_oy?bBwB,dc^XtPbBT_Pw5

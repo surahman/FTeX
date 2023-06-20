@@ -1,0 +1,87 @@
+# Crypto Account are the Crypto account details associated with a specific Client ID.
+type CryptoAccount {
+    ticker:   String!
+    balance:    Float!
+    lastTx:     Float!
+    lastTxTs:   String!
+    createdAt:  String!
+    clientID:   UUID!
+}
+
+# CryptoOpenAccountResponse is the response returned when opening a Cryptocurrency account.
+type CryptoOpenAccountResponse {
+    clientID: String!
+    ticker: String!
+}
+
+# CryptoJournal are the Crypto transactional records for a specific transaction.
+type CryptoJournal {
+    ticker:         String!
+    amount:         Float!
+    transactedAt:   String!
+    clientID:       UUID!
+    txID:           UUID!
+}
+
+# CryptoTransferResponse is the response to a successful Cryptocurrency purchase/sale request.
+type CryptoTransferResponse {
+    fiatTxReceipt:      FiatJournal
+    cryptoTxReceipt:    CryptoJournal
+}
+
+# CryptoBalancesPaginated are all of the Crypto account balances retrieved via pagination.
+type CryptoBalancesPaginated {
+    accountBalances:    [CryptoAccount!]!
+    links:              Links!
+}
+
+# CryptoBalancesPaginated are all of the Fiat account balances retrieved via pagination.
+type CryptoTransactionsPaginated {
+    transactions:   [CryptoJournal!]!
+    links:          Links!
+}
+
+# CryptoOfferRequest is the request parameters to purchase or sell a Cryptocurrency.
+input CryptoOfferRequest {
+    sourceCurrency:         String!
+    destinationCurrency:    String!
+    sourceAmount:           Float!
+    isPurchase:             Boolean!
+}
+
+# CryptoPaginatedTxDetailsRequest request input parameters for all transaction records for a specific currency.
+input CryptoPaginatedTxDetailsRequest{
+    ticker:     String!
+    pageSize:   String
+    pageCursor: String
+    timezone:   String
+    month:      String
+    year:       String
+}
+
+# Requests that might alter the state of data in the database.
+extend type Mutation {
+    # openFiat is a request to open an account if it does not already exist.
+    openCrypto(ticker: String!): CryptoOpenAccountResponse!
+
+    # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
+    offerCrypto(input: CryptoOfferRequest!): OfferResponse!
+
+    # offerCrypto is a request for a Cryptocurrency purchase/sale quote. The exchange quote provided will expire after a fixed period.
+    exchangeCrypto(offerID: String!): CryptoTransferResponse!
+}
+
+
+extend type Query {
+    # balanceCrypto is a request to retrieve the balance for a specific Cryptocurrency.
+    balanceCrypto(ticker: String!): CryptoAccount!
+
+    # balanceAllCrypto is a request to retrieve the balance for a specific Crypto currency.
+    balanceAllCrypto(pageCursor: String, pageSize: Int32): CryptoBalancesPaginated!
+
+    # transactionDetailsCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsCrypto(transactionID: String!): [Any!]!
+
+    # transactionDetailsAllCrypto is a request to retrieve the details for a specific transaction.
+    transactionDetailsAllCrypto(input: CryptoPaginatedTxDetailsRequest!): CryptoTransactionsPaginated!
+}

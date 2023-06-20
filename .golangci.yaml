@@ -1,0 +1,58 @@
+linters:
+  enable-all: true
+  disable:
+    - deadcode
+    - depguard
+    - exhaustivestruct
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - godox
+    - golint
+    - gofumpt
+    - goerr113
+    - ifshort
+    - interfacer
+    - ireturn
+    - maligned
+    - nonamedreturns
+    - nosnakecase
+    - structcheck
+    - scopelint
+    - testpackage
+    - varcheck
+linters-settings:
+  cyclop:
+    max-complexity: 12
+    skip-tests: true
+  gomnd:
+    ignored-functions:
+      - 'math.*'
+      - 'decimal.*'
+  paralleltest:
+    ignore-missing: true
+  varnamelen:
+    min-name-length: 2
+    ignore-type-assert-ok: true
+    ignore-map-index-ok: true
+    ignore-chan-recv-ok: true
+    ignore-names:
+      - err
+    ignore-decls:
+      - c echo.Context
+      - t testing.T
+      - f *foo.Bar
+      - e error
+      - i int
+      - const C
+      - T any
+      - K any
+      - V any
+      - m map[string]int
+issues:
+  exclude-rules:
+    # Exclude `lll` issues for long lines with `go:generate`.
+    - linters:
+        - lll
+      source: "^( |\t)*//(go:generate |( |\t)*@)"

@@ -1,0 +1,76 @@
+name: Pull Request Pipeline
+
+on:
+  push:
+    branches:
+      - development
+      - production
+  pull_request:
+    branches:
+      - development
+      - production
+  workflow_dispatch:
+
+jobs:
+
+  lint:
+    name: Code linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+
+      - name: Golang setup
+        uses: ./.github/actions/golang
+
+      - name: Code linting
+        uses: ./.github/actions/lint
+
+  test-suite:
+    name: Test suite
+    runs-on: ubuntu-latest
+    needs: [ lint ]
+    env:
+      GITHUB_ACTIONS_CI: true
+      GIN_MODE: test
+      QUOTES_FIATCURRENCY.APIKEY: ${{ secrets.FIATCURRENCY_APIKEY }}
+      QUOTES_CRYPTOCURRENCY.APIKEY: ${{ secrets.CRYPTOCURRENCY_APIKEY }}
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USERNAME: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: "ftex_db_test"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+
+      - name: Liquibase database migration
+        uses: ./.github/actions/liquibase
+
+      - name: Golang setup
+        uses: ./.github/actions/golang
+
+      - name: Run test suite
+        uses: ./.github/actions/test

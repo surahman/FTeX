@@ -1,0 +1,13 @@
+authentication:
+  username: postgres
+  password: postgres
+connection:
+  database: ftex_db
+  host: 127.0.0.1
+  maxConnectionAttempts: 5
+  port: 6432
+  Timeout: 5
+pool:
+  healthCheckPeriod: 30s
+  maxConns: 8
+  minConns: 4
