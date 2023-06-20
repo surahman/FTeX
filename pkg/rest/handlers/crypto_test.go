@@ -30,8 +30,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 		path                 string
 		expectedStatus       int
 		request              *models.HTTPOpenCurrencyAccountRequest
-		authValidateJWTErr   error
-		authValidateTimes    int
+		authTokenInfoErr     error
+		authTokenInfoTimes   int
 		cryptoCreateAccErr   error
 		cryptoCreateAccTimes int
 	}{
@@ -40,8 +40,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/invalid-jwt",
 			expectedStatus:       http.StatusForbidden,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
-			authValidateJWTErr:   errors.New("invalid jwt"),
-			authValidateTimes:    1,
+			authTokenInfoErr:     errors.New("invalid jwt"),
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 0,
 		}, {
@@ -49,8 +49,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/valid",
 			expectedStatus:       http.StatusCreated,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "BTC"},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 1,
 		}, {
@@ -58,8 +58,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/validation",
 			expectedStatus:       http.StatusBadRequest,
 			request:              &models.HTTPOpenCurrencyAccountRequest{},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 0,
 		}, {
@@ -67,8 +67,8 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/db-failure",
 			expectedStatus:       http.StatusConflict,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "ETH"},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   postgres.ErrCreateFiat,
 			cryptoCreateAccTimes: 1,
 		}, {
@@ -76,14 +76,14 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			path:                 "/open/db-failure-unknown",
 			expectedStatus:       http.StatusInternalServerError,
 			request:              &models.HTTPOpenCurrencyAccountRequest{Currency: "USDC"},
-			authValidateJWTErr:   nil,
-			authValidateTimes:    1,
+			authTokenInfoErr:     nil,
+			authTokenInfoTimes:   1,
 			cryptoCreateAccErr:   errors.New("unknown server error"),
 			cryptoCreateAccTimes: 1,
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:dupl
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -99,9 +99,9 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockPostgres.EXPECT().CryptoCreateAccount(gomock.Any(), gomock.Any()).
 					Return(test.cryptoCreateAccErr).
@@ -110,7 +110,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, OpenCrypto(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, OpenCrypto(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)

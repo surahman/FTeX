@@ -115,7 +115,7 @@ func (s *Server) initialize() {
 	fiatGroup.GET("/info/transaction/all/:currencyCode", restHandlers.TxDetailsFiatPaginated(s.logger, s.auth, s.db))
 
 	cryptoGroup := api.Group("/crypto").Use(authMiddleware)
-	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db))
 	cryptoGroup.POST("/offer",
 		restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 	cryptoGroup.POST("/exchange",
