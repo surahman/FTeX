@@ -191,8 +191,7 @@ func ExchangeTransferFiat(
 	logger *logger.Logger,
 	auth auth.Auth,
 	cache redis.Redis,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+	db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			err         error
@@ -204,8 +203,8 @@ func ExchangeTransferFiat(
 			payload     any
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}

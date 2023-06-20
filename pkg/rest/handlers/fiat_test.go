@@ -590,8 +590,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		expectedMsg        string
 		expectedStatus     int
 		request            models.HTTPTransferRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		authDecryptErr     error
 		authDecryptTimes   int
 		redisGetData       models.HTTPExchangeOfferResponse
@@ -605,11 +605,11 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		{
 			name:               "invalid JWT",
 			path:               "/exchange-xfer-fiat/invalid-jwt",
-			expectedMsg:        "bad auth",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: errors.New("bad auth"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("bad auth"),
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   0,
 			redisGetData:       validOffer,
@@ -625,8 +625,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        constants.ValidationString(),
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   0,
 			redisGetData:       validOffer,
@@ -642,8 +642,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     errors.New("decrypt offer id"),
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -659,8 +659,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -676,8 +676,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "expired",
 			expectedStatus:     http.StatusRequestTimeout,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -693,8 +693,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -710,8 +710,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "successful",
 			expectedStatus:     http.StatusOK,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -727,8 +727,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       invalidOfferClientID,
@@ -744,8 +744,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "invalid Fiat currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData: models.HTTPExchangeOfferResponse{
@@ -765,8 +765,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "invalid Fiat currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData: models.HTTPExchangeOfferResponse{
@@ -786,8 +786,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "invalid",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       invalidOfferSource,
@@ -803,8 +803,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "both currency accounts and enough funds",
 			expectedStatus:     http.StatusBadRequest,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -820,8 +820,8 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectedMsg:        "successful",
 			expectedStatus:     http.StatusOK,
 			request:            models.HTTPTransferRequest{OfferID: "VALID"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			authDecryptErr:     nil,
 			authDecryptTimes:   1,
 			redisGetData:       validOffer,
@@ -851,9 +851,9 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(validClientID, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(validClientID, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return(validOfferID, test.authDecryptErr).
@@ -875,7 +875,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ExchangeTransferFiat(zapLogger, mockAuth, mockCache, mockDB, "Authorization"))
+			router.POST(test.path, ExchangeTransferFiat(zapLogger, mockAuth, mockCache, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(xferReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

@@ -110,7 +110,7 @@ func (s *Server) initialize() {
 	fiatGroup.POST("/exchange/offer",
 		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes))
 	fiatGroup.POST("/exchange/transfer",
-		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db, s.conf.Authorization.HeaderKey))
+		restHandlers.ExchangeTransferFiat(s.logger, s.auth, s.cache, s.db))
 	fiatGroup.GET("/info/balance/:ticker",
 		restHandlers.BalanceFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.GET("/info/balance/",
