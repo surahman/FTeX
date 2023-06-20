@@ -811,8 +811,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 		name               string
 		expectedMsg        string
 		expectedStatus     int
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		fiatTxErr          error
 		fiatTxTimes        int
 		cryptoTxErr        error
@@ -820,10 +820,10 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 	}{
 		{
 			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        0,
 			cryptoTxErr:        nil,
@@ -832,8 +832,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			name:               "fiat db error",
 			expectedMsg:        "could not retrieve transaction details",
 			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          postgres.ErrTransactCryptoDetails,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -842,8 +842,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			name:               "crypto db error",
 			expectedMsg:        "could not retrieve transaction details",
 			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        1,
 			cryptoTxErr:        postgres.ErrTransactCryptoDetails,
@@ -852,8 +852,8 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			name:               "valid",
 			expectedMsg:        "transaction details",
 			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			fiatTxErr:          nil,
 			fiatTxTimes:        1,
 			cryptoTxErr:        nil,
@@ -874,9 +874,9 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockDB.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.FiatJournal{{}}, test.fiatTxErr).
@@ -889,7 +889,7 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":transactionID", TxDetailsCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":transactionID", TxDetailsCrypto(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+validTxID.String(), nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
