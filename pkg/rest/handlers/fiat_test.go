@@ -901,12 +901,12 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 	}
 }
 
-func TestHandler_BalanceFiat(t *testing.T) {
+func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/fiat/balance/currency/"
 
-	testCases := []struct { //nolint:dupl
+	testCases := []struct {
 		name             string
 		currency         string
 		expectedMsg      string

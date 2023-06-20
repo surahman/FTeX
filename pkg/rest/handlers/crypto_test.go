@@ -694,28 +694,28 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCrypto(t *testing.T) {
+func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/crypto/balance/currency/"
 
-	testCases := []struct { //nolint:dupl
+	testCases := []struct {
 		name               string
 		currency           string
 		expectedMsg        string
 		expectedStatus     int
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		cryptoBalanceErr   error
 		cryptoBalanceTimes int
 	}{
 		{
 			name:               "invalid JWT",
 			currency:           "USDT",
-			expectedMsg:        "invalid JWT",
+			expectedMsg:        "malformed authentication",
 			expectedStatus:     http.StatusForbidden,
-			authValidateJWTErr: errors.New("invalid JWT"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid JWT"),
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 0,
 		}, {
@@ -723,8 +723,8 @@ func TestHandler_BalanceCrypto(t *testing.T) {
 			currency:           "INVALID",
 			expectedMsg:        constants.InvalidCurrencyString(),
 			expectedStatus:     http.StatusBadRequest,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 0,
 		}, {
@@ -732,8 +732,8 @@ func TestHandler_BalanceCrypto(t *testing.T) {
 			currency:           "USDC",
 			expectedMsg:        "retry",
 			expectedStatus:     http.StatusInternalServerError,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   errors.New("unknown error"),
 			cryptoBalanceTimes: 1,
 		}, {
@@ -741,8 +741,8 @@ func TestHandler_BalanceCrypto(t *testing.T) {
 			currency:           "BTC",
 			expectedMsg:        "records not found",
 			expectedStatus:     http.StatusNotFound,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   postgres.ErrNotFound,
 			cryptoBalanceTimes: 1,
 		}, {
@@ -750,8 +750,8 @@ func TestHandler_BalanceCrypto(t *testing.T) {
 			currency:           "BTC",
 			expectedMsg:        "account balance",
 			expectedStatus:     http.StatusOK,
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			cryptoBalanceErr:   nil,
 			cryptoBalanceTimes: 1,
 		},
@@ -770,9 +770,9 @@ func TestHandler_BalanceCrypto(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockDB.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.CryptoAccount{}, test.cryptoBalanceErr).
@@ -781,7 +781,7 @@ func TestHandler_BalanceCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceCrypto(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+":ticker", BalanceCrypto(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

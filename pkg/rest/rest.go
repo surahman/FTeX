@@ -118,8 +118,7 @@ func (s *Server) initialize() {
 	cryptoGroup.POST("/open", restHandlers.OpenCrypto(s.logger, s.auth, s.db))
 	cryptoGroup.POST("/offer", restHandlers.OfferCrypto(s.logger, s.auth, s.cache, s.quotes))
 	cryptoGroup.POST("/exchange", restHandlers.ExchangeCrypto(s.logger, s.auth, s.cache, s.db))
-	cryptoGroup.GET("/info/balance/:ticker",
-		restHandlers.BalanceCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	cryptoGroup.GET("/info/balance/:ticker", restHandlers.BalanceCrypto(s.logger, s.auth, s.db))
 	cryptoGroup.GET("/info/transaction/:transactionID",
 		restHandlers.TxDetailsCrypto(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	cryptoGroup.GET("/info/balance/",
