@@ -154,12 +154,7 @@ func OfferCrypto(logger *logger.Logger, auth auth.Auth, cache redis.Redis, quote
 //	@Failure		408		{object}	models.HTTPError			"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError			"error message with any available details in payload"
 //	@Router			/crypto/exchange/ [post]
-func ExchangeCrypto(
-	logger *logger.Logger,
-	auth auth.Auth,
-	cache redis.Redis,
-	db postgres.Postgres,
-	authHeaderKey string) gin.HandlerFunc {
+func ExchangeCrypto(logger *logger.Logger, auth auth.Auth, cache redis.Redis, db postgres.Postgres) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (
 			err      error
@@ -167,8 +162,8 @@ func ExchangeCrypto(
 			request  models.HTTPTransferRequest
 		)
 
-		if clientID, _, err = auth.ValidateJWT(ginCtx.GetHeader(authHeaderKey)); err != nil {
-			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: err.Error()})
+		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
+			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
 			return
 		}

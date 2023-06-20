@@ -527,8 +527,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 		path               string
 		expectedStatus     int
 		request            *models.HTTPTransferRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		authEncryptTimes   int
 		authEncryptErr     error
 		redisGetData       models.HTTPExchangeOfferResponse
@@ -540,12 +540,12 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 	}{
 		{
 			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
+			expectedMsg:        "malformed authentication",
 			path:               "/exchange-crypto/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
 			authEncryptTimes:   0,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -560,8 +560,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPTransferRequest{},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   0,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -576,8 +576,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/transaction-failure",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   1,
 			authEncryptErr:     errors.New("transaction failure"),
 			redisGetData:       validPurchase,
@@ -592,8 +592,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/valid-purchase",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   1,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -608,8 +608,8 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			path:               "/exchange-crypto/valid-sale",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPTransferRequest{OfferID: "OFFER-ID"},
-			authValidateTimes:  1,
-			authValidateJWTErr: nil,
+			authTokenInfoTimes: 1,
+			authTokenInfoErr:   nil,
 			authEncryptTimes:   1,
 			authEncryptErr:     nil,
 			redisGetData:       validSale,
@@ -638,9 +638,9 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(validClientID, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(validClientID, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte("OFFER-ID"), test.authEncryptErr).
@@ -668,7 +668,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, ExchangeCrypto(zapLogger, mockAuth, mockCache, mockDB, "Authorization"))
+			router.POST(test.path, ExchangeCrypto(zapLogger, mockAuth, mockCache, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
