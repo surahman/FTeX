@@ -106,7 +106,7 @@ func (s *Server) initialize() {
 
 	fiatGroup := api.Group("/fiat").Use(authMiddleware)
 	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db))
-	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db))
 	fiatGroup.POST("/exchange/offer",
 		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
 	fiatGroup.POST("/exchange/transfer",

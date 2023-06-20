@@ -140,19 +140,19 @@ func TestHandlers_DepositFiat(t *testing.T) {
 		path               string
 		expectedStatus     int
 		request            *models.HTTPDepositCurrencyRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoTimes int
 		extTransferErr     error
 		extTransferTimes   int
 	}{
 		{
 			name:               "invalid jwt",
-			expectedMsg:        "invalid jwt",
+			expectedMsg:        "malformed authentication",
 			path:               "/fiat-deposit/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -161,8 +161,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/empty-request",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -171,8 +171,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "INVALID", Amount: decimal.NewFromFloat(1)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -181,8 +181,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/too-many-decimal-places",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1.234)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -191,8 +191,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/negative",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(-1)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   0,
 		}, {
@@ -201,8 +201,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/unknown-xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     errors.New("unknown error"),
 			extTransferTimes:   1,
 		}, {
@@ -211,8 +211,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/xfer-error",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     postgres.ErrTransactFiat,
 			extTransferTimes:   1,
 		}, {
@@ -221,8 +221,8 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			path:               "/fiat-deposit/valid",
 			expectedStatus:     http.StatusOK,
 			request:            &models.HTTPDepositCurrencyRequest{Currency: "USD", Amount: decimal.NewFromFloat(1337.89)},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoTimes: 1,
 			extTransferErr:     nil,
 			extTransferTimes:   1,
 		},
@@ -244,9 +244,9 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockPostgres.EXPECT().FiatExternalTransfer(gomock.Any(), gomock.Any()).
 					Return(&postgres.FiatAccountTransferResult{}, test.extTransferErr).
@@ -255,7 +255,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
