@@ -1158,14 +1158,14 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceFiatPaginated(t *testing.T) {
+func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/fiat/balances/details/paginated/"
 
 	accDetails := []postgres.FiatAccount{{}, {}, {}, {}}
 
-	testCases := []struct { //nolint:dupl
+	testCases := []struct {
 		name                string
 		path                string
 		querySegment        string

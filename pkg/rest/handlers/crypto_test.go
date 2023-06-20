@@ -907,22 +907,22 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 	}
 }
 
-func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
+func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 	t.Parallel()
 
 	const basePath = "/crypto/balance/details/paginated"
 
 	accDetails := []postgres.CryptoAccount{{}, {}, {}, {}}
 
-	testCases := []struct { //nolint:dupl
+	testCases := []struct {
 		name                string
 		path                string
 		querySegment        string
 		expectedMsg         string
 		expectedStatus      int
 		accBalances         []postgres.CryptoAccount
-		authValidateJWTErr  error
-		authValidateTimes   int
+		authTokenInfoErr    error
+		authTokenInfoTimes  int
 		authDecryptStrErr   error
 		authDecryptStrTimes int
 		cryptoBalanceErr    error
@@ -934,11 +934,11 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			name:                "invalid JWT",
 			path:                "invalid-jwt",
 			querySegment:        "?pageCursor=PaGeCuRs0R==&pageSize=3",
-			expectedMsg:         "invalid JWT",
+			expectedMsg:         "malformed authentication",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusForbidden,
-			authValidateJWTErr:  errors.New("invalid JWT"),
-			authValidateTimes:   1,
+			authTokenInfoErr:    errors.New("invalid JWT"),
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -952,8 +952,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "invalid page cursor or page size",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusBadRequest,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   errors.New("decrypt failure"),
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    nil,
@@ -967,8 +967,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "not found",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusNotFound,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    postgres.ErrNotFound,
@@ -982,8 +982,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "retry",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    errors.New("unknown db error"),
@@ -997,8 +997,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "retry",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusInternalServerError,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    nil,
@@ -1012,8 +1012,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "account balances",
 			accBalances:         []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -1027,8 +1027,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "account balances",
 			accBalances:         []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -1042,8 +1042,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "account balances",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 0,
 			cryptoBalanceErr:    nil,
@@ -1057,8 +1057,8 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			expectedMsg:         "account balances",
 			accBalances:         accDetails,
 			expectedStatus:      http.StatusOK,
-			authValidateJWTErr:  nil,
-			authValidateTimes:   1,
+			authTokenInfoErr:    nil,
+			authTokenInfoTimes:  1,
 			authDecryptStrErr:   nil,
 			authDecryptStrTimes: 1,
 			cryptoBalanceErr:    nil,
@@ -1081,9 +1081,9 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte{}, test.authDecryptStrErr).
@@ -1100,7 +1100,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path, BalanceCryptoPaginated(zapLogger, mockAuth, mockDB, "Authorization"))
+			router.GET(basePath+test.path, BalanceCryptoPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
