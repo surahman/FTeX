@@ -31,8 +31,6 @@ import (
 //	@Failure		403		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Failure		500		{object}	models.HTTPError						"error message with any available details in payload"
 //	@Router			/crypto/open [post]
-//
-//nolint:dupl
 func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres, authHeaderKey string) gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		var (

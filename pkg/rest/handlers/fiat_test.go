@@ -31,8 +31,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 		path               string
 		expectedStatus     int
 		request            *models.HTTPOpenCurrencyAccountRequest
-		authValidateJWTErr error
-		authValidateTimes  int
+		authTokenInfoErr   error
+		authTokenInfoExp   int
 		fiatCreateAccErr   error
 		fiatCreateAccTimes int
 	}{
@@ -41,8 +41,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/valid",
 			expectedStatus:     http.StatusCreated,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 1,
 		}, {
@@ -50,8 +50,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/invalid-jwt",
 			expectedStatus:     http.StatusForbidden,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: errors.New("invalid jwt"),
-			authValidateTimes:  1,
+			authTokenInfoErr:   errors.New("invalid jwt"),
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
@@ -59,8 +59,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/validation",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPOpenCurrencyAccountRequest{},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
@@ -68,8 +68,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/invalid-currency",
 			expectedStatus:     http.StatusBadRequest,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "UVW"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   nil,
 			fiatCreateAccTimes: 0,
 		}, {
@@ -77,8 +77,8 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/db-failure",
 			expectedStatus:     http.StatusConflict,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   postgres.ErrCreateFiat,
 			fiatCreateAccTimes: 1,
 		}, {
@@ -86,14 +86,14 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			path:               "/open/db-failure-unknown",
 			expectedStatus:     http.StatusInternalServerError,
 			request:            &models.HTTPOpenCurrencyAccountRequest{Currency: "USD"},
-			authValidateJWTErr: nil,
-			authValidateTimes:  1,
+			authTokenInfoErr:   nil,
+			authTokenInfoExp:   1,
 			fiatCreateAccErr:   errors.New("unknown server error"),
 			fiatCreateAccTimes: 1,
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -109,9 +109,9 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			require.NoErrorf(t, err, "failed to marshall JSON: %v", err)
 
 			gomock.InOrder(
-				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
-					Times(test.authValidateTimes),
+				mockAuth.EXPECT().TokenInfoFromGinCtx(gomock.Any()).
+					Return(uuid.UUID{}, int64(0), test.authTokenInfoErr).
+					Times(test.authTokenInfoExp),
 
 				mockPostgres.EXPECT().FiatCreateAccount(gomock.Any(), gomock.Any()).
 					Return(test.fiatCreateAccErr).
@@ -120,7 +120,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, OpenFiat(zapLogger, mockAuth, mockPostgres, "Authorization"))
+			router.POST(test.path, OpenFiat(zapLogger, mockAuth, mockPostgres))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)

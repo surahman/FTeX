@@ -64,7 +64,7 @@ func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	//	@title						FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
-	//	@version					1.0.0
+	//	@version					1.1.0
 	//	@description				FTeX Fiat and Cryptocurrency Banking API.
 	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
 	//
@@ -105,7 +105,7 @@ func (s *Server) initialize() {
 		DELETE("/delete", restHandlers.DeleteUser(s.logger, s.auth, s.db))
 
 	fiatGroup := api.Group("/fiat").Use(authMiddleware)
-	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
+	fiatGroup.POST("/open", restHandlers.OpenFiat(s.logger, s.auth, s.db))
 	fiatGroup.POST("/deposit", restHandlers.DepositFiat(s.logger, s.auth, s.db, s.conf.Authorization.HeaderKey))
 	fiatGroup.POST("/exchange/offer",
 		restHandlers.ExchangeOfferFiat(s.logger, s.auth, s.cache, s.quotes, s.conf.Authorization.HeaderKey))
