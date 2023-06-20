@@ -11,6 +11,7 @@ override the settings in the configuration files. The configuration files are al
 ## Table of contents
 
 - [Price Quote Providers](#price-quote-providers)
+    - [Proxy Recordings](#proxy-recordings)
     - [File Location(s)](#file-locations)
     - [Configuration File](#configuration-file)
         - [Example Configuration File](#example-configuration-file)
@@ -38,6 +39,19 @@ The GitHub Actions CI pipeline will need to have a secrets with the API keys con
 Free API Keys for data can be obtained [here for fiat currencies](https://rapidapi.com/principalapis/api/currency-conversion-and-exchange-rates), and
 [here for cryptocurrencies](https://www.coinapi.io/pricing?apikey). The endpoint URLs are public information and are thus included
 in the sample [`QuotesConfig.yaml`](../../configs/QuotesConfig.yaml) file.
+
+<br/>
+
+### Proxy Recordings
+
+The requests to the currency exchanges can be captured through a Proxy Recorder, such as `Gatling Recorder` or `go-vcr`,
+and then replayed for tests. This would necessitate frequent updates of the recordings to ensure that any changes to the
+API responses are captured. This way, the tests portray an accurate depiction of the interaction with the API.
+
+Since this project is a demonstration project and does not use a production-grade API endpoint, it is best to conduct
+the tests against the actual API endpoints. Paying customers of an API will be likely to receive advance notice of any
+fundamental changes. Running against the actual API endpoint will ensure that any changes to the API responses cause an
+immediate failure in the test suite.
 
 <br/>
 
