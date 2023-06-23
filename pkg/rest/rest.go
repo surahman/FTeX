@@ -64,7 +64,7 @@ func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	//	@title						FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
-	//	@version					1.1.0
+	//	@version					1.1.1
 	//	@description				FTeX Fiat and Cryptocurrency Banking API.
 	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
 	//

@@ -149,7 +149,7 @@ info:
     name: GPL-3.0
     url: https://opensource.org/licenses/GPL-3.0
   title: FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
-  version: 1.1.0
+  version: 1.1.1
 paths:
   /crypto/exchange/:
     post:
