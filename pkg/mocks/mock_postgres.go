@@ -337,6 +337,21 @@ func (mr *MockPostgresMockRecorder) UserGetInfo(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserGetInfo", reflect.TypeOf((*MockPostgres)(nil).UserGetInfo), arg0)
 }
 
+// UserIsDeleted mocks base method.
+func (m *MockPostgres) UserIsDeleted(arg0 uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserIsDeleted", arg0)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserIsDeleted indicates an expected call of UserIsDeleted.
+func (mr *MockPostgresMockRecorder) UserIsDeleted(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserIsDeleted", reflect.TypeOf((*MockPostgres)(nil).UserIsDeleted), arg0)
+}
+
 // UserRegister mocks base method.
 func (m *MockPostgres) UserRegister(arg0 *models.UserAccount) (uuid.UUID, error) {
 	m.ctrl.T.Helper()

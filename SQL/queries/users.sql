@@ -1,4 +1,3 @@
-
 -- name: userCreate :one
 -- userCreate will create a new user record.
 INSERT INTO users (username, password, first_name, last_name, email)
@@ -31,3 +30,10 @@ LIMIT 1;
 UPDATE users
 SET is_deleted=true
 WHERE client_id=$1 AND is_deleted=false;
+
+-- name: userIsDeleted :one
+-- userIsDeleted will return the soft delete status of a user account.
+SELECT is_deleted
+FROM users
+WHERE client_id=$1
+LIMIT 1;

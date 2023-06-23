@@ -50,6 +50,9 @@ type Postgres interface {
 	// UserDelete will delete the account information associated with a Client ID.
 	UserDelete(uuid.UUID) error
 
+	// UserIsDeleted is the interface through which external methods can check if a user account is soft-deleted.
+	UserIsDeleted(uuid.UUID) (bool, error)
+
 	// FiatCreateAccount will open an account associated with a Client ID for a specific currency.
 	FiatCreateAccount(uuid.UUID, Currency) error
 

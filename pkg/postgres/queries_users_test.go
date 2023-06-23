@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -103,4 +104,39 @@ func TestQueries_UserGetInfo(t *testing.T) {
 	require.NoError(t, err, "failed to generate invalid id.")
 	_, err = connection.UserGetInfo(invalidID)
 	require.Error(t, err, "retrieved an invalid id.")
+}
+
+func TestQueries_IsDeletedUser(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert an initial set of test users.
+	clientIDs := insertTestUsers(t)
+
+	// Non-existent user.
+	invalidID, err := uuid.NewV1()
+	require.NoError(t, err, "failed to generate invalid client id.")
+	isDeleted, err := connection.UserIsDeleted(invalidID)
+	require.Error(t, err, "failed to execute delete for non-existent user.")
+	require.False(t, isDeleted, "deleted status set on non-existent user.")
+
+	// Remove all inserted users.
+	for _, clientID := range clientIDs {
+		t.Run(fmt.Sprintf("Checking deleted status of user: %s", clientID.String()), func(t *testing.T) {
+			// Before deletion.
+			isDeleted, err = connection.UserIsDeleted(clientID)
+			require.NoError(t, err, "failed to retrieve a/c active status user.")
+			require.False(t, isDeleted, "incorrect a/c active status for user.")
+
+			// After deletion.
+			err := connection.UserDelete(clientID)
+			require.NoError(t, err, "failed to execute delete on user.")
+
+			isDeleted, err = connection.UserIsDeleted(clientID)
+			require.NoError(t, err, "failed to retrieve a/c inactive status user.")
+			require.True(t, isDeleted, "incorrect a/c inactive status for user.")
+		})
+	}
 }
