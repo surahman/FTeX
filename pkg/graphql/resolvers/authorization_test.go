@@ -70,6 +70,9 @@ func TestAuthorizationCheck(t *testing.T) {
 		ctx                  context.Context //nolint:containedctx
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 	}{
 		{
 			name:                 "no context",
@@ -78,6 +81,9 @@ func TestAuthorizationCheck(t *testing.T) {
 			ctx:                  context.TODO(),
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 0,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
 		}, {
 			name:                 "incorrect context",
 			expectedMsg:          "information malformed",
@@ -85,6 +91,9 @@ func TestAuthorizationCheck(t *testing.T) {
 			ctx:                  context.WithValue(context.TODO(), GinContextKey{}, context.TODO()),
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 0,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
 		}, {
 			name:                 "no token",
 			expectedMsg:          "does not contain",
@@ -92,19 +101,46 @@ func TestAuthorizationCheck(t *testing.T) {
 			ctx:                  context.WithValue(context.TODO(), GinContextKey{}, ginCtxNoAuth),
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 0,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
 		}, {
-			name:                 "no token",
+			name:                 "bad token",
 			expectedMsg:          "failed to authenticate token",
 			expectErr:            require.Error,
 			ctx:                  context.WithValue(context.TODO(), GinContextKey{}, ginCtxAuth),
 			authValidateJWTErr:   errors.New("failed to authenticate token"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+		}, {
+			name:                 "db failure",
+			expectErr:            require.Error,
+			ctx:                  context.WithValue(context.TODO(), GinContextKey{}, ginCtxAuth),
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       errors.New("db failure"),
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
+		}, {
+			name:                 "deleted user",
+			expectErr:            require.Error,
+			ctx:                  context.WithValue(context.TODO(), GinContextKey{}, ginCtxAuth),
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 		}, {
 			name:                 "success",
 			expectErr:            require.NoError,
 			ctx:                  context.WithValue(context.TODO(), GinContextKey{}, ginCtxAuth),
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 		},
 	}
 
@@ -116,12 +152,19 @@ func TestAuthorizationCheck(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
 
-			mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-				Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
-				Times(test.authValidateJWTTimes)
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
+					Times(test.authValidateJWTTimes),
 
-			_, _, err := AuthorizationCheck(test.ctx, mockAuth, zapLogger, testAuthHeaderKey)
+				mockDB.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
+			)
+
+			_, _, err := AuthorizationCheck(test.ctx, mockAuth, mockDB, zapLogger, testAuthHeaderKey)
 
 			test.expectErr(t, err, "error expectation failed")
 			if err != nil {

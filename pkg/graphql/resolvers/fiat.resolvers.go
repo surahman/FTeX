@@ -126,7 +126,7 @@ func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*mode
 		err        error
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -146,7 +146,7 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 		transferReceipt *postgres.FiatAccountTransferResult
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -169,7 +169,7 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 		offer       *models.HTTPExchangeOfferResponse
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -192,7 +192,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 		receipt     *models.HTTPFiatTransferResponse
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -214,7 +214,7 @@ func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*
 		payload     any
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -243,7 +243,7 @@ func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, 
 		pageCursor = new(string)
 	}
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -264,7 +264,7 @@ func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionI
 		httpMessage    string
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -311,7 +311,7 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 	}
 	params.YearStr = *input.Year
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
