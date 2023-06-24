@@ -77,7 +77,7 @@ func (r *mutationResolver) OpenCrypto(ctx context.Context, ticker string) (*mode
 		err        error
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -97,7 +97,7 @@ func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCry
 		statusMessage string
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -124,7 +124,7 @@ func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (
 		statusMessage string
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -145,7 +145,7 @@ func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*post
 		payload     any
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -174,7 +174,7 @@ func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string
 		pageCursor = new(string)
 	}
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -195,7 +195,7 @@ func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactio
 		httpMessage    string
 	)
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 
@@ -242,7 +242,7 @@ func (r *queryResolver) TransactionDetailsAllCrypto(ctx context.Context, input m
 	}
 	params.YearStr = *input.Year
 
-	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil {
+	if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil {
 		return nil, errors.New("authorization failure")
 	}
 

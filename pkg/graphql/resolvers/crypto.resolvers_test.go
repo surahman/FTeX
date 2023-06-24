@@ -36,6 +36,9 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 		authValidateJWTTimes int
 		cryptoCreateAccErr   error
 		cryptoCreateAccTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 	}{
 		{
 			name:                 "empty request",
@@ -44,6 +47,21 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("invalid token"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			cryptoCreateAccErr:   nil,
+			cryptoCreateAccTimes: 0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/open-crypto/deleted-account",
+			query:                fmt.Sprintf(testCryptoQuery["openCrypto"], "BTC"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 0,
 		}, {
@@ -53,6 +71,9 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			cryptoCreateAccErr:   postgres.ErrNotFound,
 			cryptoCreateAccTimes: 1,
 		}, {
@@ -62,6 +83,9 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			cryptoCreateAccErr:   nil,
 			cryptoCreateAccTimes: 1,
 		},
@@ -85,6 +109,10 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().CryptoCreateAccount(gomock.Any(), gomock.Any()).
 					Return(test.cryptoCreateAccErr).
@@ -136,7 +164,7 @@ func TestCryptoResolver_CryptoOfferRequestResolver(t *testing.T) {
 	})
 }
 
-func TestCryptoResolver_OfferCrypto(t *testing.T) {
+func TestCryptoResolver_OfferCrypto(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	var (
@@ -154,6 +182,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 		isPurchase         bool
 		authValidateJWTErr error
 		authValidateTimes  int
+		isDeletedError     error
+		isDeletedTimes     int
+		isDeletedValue     bool
 		quotesErr          error
 		quotesAmount       decimal.Decimal
 		quotesTimes        int
@@ -169,6 +200,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -183,6 +217,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -197,6 +234,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -211,6 +251,26 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: errors.New("invalid jwt"),
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     0,
+			isDeletedValue:     false,
+			quotesErr:          nil,
+			quotesAmount:       amountValid,
+			quotesTimes:        0,
+			authEncryptErr:     nil,
+			authEncryptTimes:   0,
+			redisErr:           nil,
+			redisTimes:         0,
+		}, {
+			name:               "deleted account",
+			path:               "/offer-crypto/deleted-account",
+			query:              fmt.Sprintf(testCryptoQuery["offerCrypto"], validFloat, "USD", "BTC", true),
+			isPurchase:         true,
+			authValidateJWTErr: nil,
+			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     true,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        0,
@@ -225,6 +285,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          errors.New(""),
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -239,6 +302,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       decimal.NewFromFloat(0),
 			quotesTimes:        1,
@@ -253,6 +319,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -267,6 +336,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -281,6 +353,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         true,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -295,6 +370,9 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 			isPurchase:         false,
 			authValidateJWTErr: nil,
 			authValidateTimes:  1,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			quotesErr:          nil,
 			quotesAmount:       amountValid,
 			quotesTimes:        1,
@@ -323,6 +401,10 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockQuotes.EXPECT().CryptoConversion(gomock.Any(), gomock.Any(), gomock.Any(), test.isPurchase, nil).
 					Return(amountValid, test.quotesAmount, test.quotesErr).
@@ -461,6 +543,9 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 		expectErr          bool
 		authValidateJWTErr error
 		authValidateTimes  int
+		isDeletedError     error
+		isDeletedTimes     int
+		isDeletedValue     bool
 		authEncryptTimes   int
 		authEncryptErr     error
 		redisGetData       models.HTTPExchangeOfferResponse
@@ -476,6 +561,26 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 			expectErr:          true,
 			authValidateTimes:  1,
 			authValidateJWTErr: errors.New("invalid jwt"),
+			isDeletedError:     nil,
+			isDeletedTimes:     0,
+			isDeletedValue:     false,
+			authEncryptTimes:   0,
+			authEncryptErr:     nil,
+			redisGetData:       validPurchase,
+			redisGetTimes:      0,
+			redisDelTimes:      0,
+			purchaseTimes:      0,
+			sellTimes:          0,
+		}, {
+			name:               "deleted account",
+			path:               "/exchange-crypto/deleted-account",
+			query:              fmt.Sprintf(testCryptoQuery["exchangeCrypto"], "OFFER-ID"),
+			expectErr:          true,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     true,
 			authEncryptTimes:   0,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -490,6 +595,9 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 			expectErr:          true,
 			authValidateTimes:  1,
 			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			authEncryptTimes:   1,
 			authEncryptErr:     errors.New("transaction failure"),
 			redisGetData:       validPurchase,
@@ -504,6 +612,9 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 			expectErr:          false,
 			authValidateTimes:  1,
 			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			authEncryptTimes:   1,
 			authEncryptErr:     nil,
 			redisGetData:       validPurchase,
@@ -518,6 +629,9 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 			expectErr:          false,
 			authValidateTimes:  1,
 			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			authEncryptTimes:   1,
 			authEncryptErr:     nil,
 			redisGetData:       validSale,
@@ -546,6 +660,10 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(validClientID, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte("OFFER-ID"), test.authEncryptErr).
@@ -673,6 +791,9 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 		expectErr          bool
 		authValidateJWTErr error
 		authValidateTimes  int
+		isDeletedError     error
+		isDeletedTimes     int
+		isDeletedValue     bool
 		balanceErr         error
 		balanceTimes       int
 	}{
@@ -683,6 +804,21 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 			expectErr:          true,
 			authValidateTimes:  1,
 			authValidateJWTErr: errors.New("invalid jwt"),
+			isDeletedError:     nil,
+			isDeletedTimes:     0,
+			isDeletedValue:     false,
+			balanceTimes:       0,
+			balanceErr:         nil,
+		}, {
+			name:               "deleted account",
+			path:               "/balance-crypto/deleted-account",
+			query:              fmt.Sprintf(testCryptoQuery["balanceCrypto"], "ETH"),
+			expectErr:          true,
+			authValidateTimes:  1,
+			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     true,
 			balanceTimes:       0,
 			balanceErr:         nil,
 		}, {
@@ -692,6 +828,9 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 			expectErr:          true,
 			authValidateTimes:  1,
 			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			balanceTimes:       0,
 			balanceErr:         nil,
 		}, {
@@ -701,6 +840,9 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 			expectErr:          false,
 			authValidateTimes:  1,
 			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			balanceTimes:       1,
 			balanceErr:         postgres.ErrNotFound,
 		}, {
@@ -710,6 +852,9 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 			expectErr:          false,
 			authValidateTimes:  1,
 			authValidateJWTErr: nil,
+			isDeletedError:     nil,
+			isDeletedTimes:     1,
+			isDeletedValue:     false,
 			balanceTimes:       1,
 			balanceErr:         nil,
 		},
@@ -733,6 +878,10 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.CryptoAccount{}, test.balanceErr).
@@ -778,6 +927,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 		accDetails           []postgres.CryptoAccount
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		authDecryptStrErr    error
 		authDecryptStrTimes  int
 		cryptoBalanceErr     error
@@ -793,6 +945,26 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   errors.New("invalid JWT"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			cryptoBalanceErr:     nil,
+			cryptoBalanceTimes:   0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/balance-all-crypto/deleted-account",
+			query:                fmt.Sprintf(testCryptoQuery["balanceAllCrypto"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			cryptoBalanceErr:     nil,
@@ -807,6 +979,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    errors.New("decrypt failure"),
 			authDecryptStrTimes:  1,
 			cryptoBalanceErr:     nil,
@@ -821,6 +996,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			cryptoBalanceErr:     postgres.ErrNotFound,
@@ -835,6 +1013,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			cryptoBalanceErr:     errors.New("unknown db error"),
@@ -849,6 +1030,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			cryptoBalanceErr:     nil,
@@ -863,6 +1047,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			cryptoBalanceErr:     nil,
@@ -877,6 +1064,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           []postgres.CryptoAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			cryptoBalanceErr:     nil,
@@ -891,6 +1081,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			cryptoBalanceErr:     nil,
@@ -905,6 +1098,9 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			cryptoBalanceErr:     nil,
@@ -932,6 +1128,10 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte{}, test.authDecryptStrErr).
@@ -990,6 +1190,9 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateTimes    int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		fiatTxDetailsErr     error
 		fiatTxDetailsTimes   int
 		cryptoTxDetailsErr   error
@@ -1002,6 +1205,23 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 			expectErr:            true,
 			authValidateTimes:    1,
 			authValidateJWTErr:   errors.New("invalid jwt"),
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+			cryptoTxDetailsErr:   nil,
+			cryptoTxDetailsTimes: 0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/transaction-details-crypto/deleted-account",
+			query:                fmt.Sprintf(testCryptoQuery["transactionDetailsCrypto"], txID),
+			expectErr:            true,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			fiatTxDetailsErr:     nil,
 			fiatTxDetailsTimes:   0,
 			cryptoTxDetailsErr:   nil,
@@ -1013,6 +1233,9 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 			expectErr:            false,
 			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     postgres.ErrTransactCryptoDetails,
 			cryptoTxDetailsTimes: 0,
@@ -1024,6 +1247,9 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 			expectErr:            false,
 			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     nil,
 			cryptoTxDetailsTimes: 1,
@@ -1035,6 +1261,9 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 			expectErr:            false,
 			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     nil,
 			cryptoTxDetailsTimes: 1,
@@ -1060,6 +1289,10 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(clientID, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.FiatJournal{{}}, test.fiatTxDetailsErr).
@@ -1126,6 +1359,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 		journalEntries         []postgres.CryptoJournal
 		authValidateJWTErr     error
 		authValidateJWTTimes   int
+		isDeletedError         error
+		isDeletedTimes         int
+		isDeletedValue         bool
 		authDecryptCursorErr   error
 		authDecryptCursorTimes int
 		authEncryptCursorErr   error
@@ -1142,6 +1378,27 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     errors.New("auth failure"),
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         0,
+			isDeletedValue:         false,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			cryptoTxPaginatedErr:   nil,
+			cryptoTxPaginatedTimes: 0,
+		}, {
+			name: "deleted account",
+			path: "/transaction-details-all-crypto/deleted-account",
+			query: fmt.Sprintf(testCryptoQuery["transactionDetailsAllCryptoSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         true,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1156,6 +1413,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			expectErr:              true,
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authValidateJWTTimes:   1,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
@@ -1172,6 +1432,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1187,6 +1450,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1202,6 +1468,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			journalEntries:         []postgres.CryptoJournal{},
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1217,6 +1486,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1232,6 +1504,9 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1259,6 +1534,10 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte(decryptedCursor), test.authDecryptCursorErr).

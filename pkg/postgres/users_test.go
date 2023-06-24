@@ -67,7 +67,7 @@ func TestPostgres_DeleteUser(t *testing.T) {
 
 	// Non-existent user.
 	invalidID, err := uuid.NewV1()
-	require.NoError(t, err, "dailed to generate invalid client id.")
+	require.NoError(t, err, "failed to generate invalid client id.")
 	rowsAffected, err := connection.Query.userDelete(ctx, invalidID)
 	require.NoError(t, err, "failed to execute delete for non-existent user.")
 	require.Equal(t, int64(0), rowsAffected, "deleted a non-existent user.")
@@ -179,6 +179,46 @@ func TestGetInfoUser(t *testing.T) {
 			require.Equal(t, expected.FirstName, result.FirstName, "first name mismatch.")
 			require.Equal(t, expected.LastName, result.LastName, "last name mismatch.")
 			require.Equal(t, expected.Email, result.Email, "email address mismatch.")
+		})
+	}
+}
+
+func TestPostgres_IsDeletedUser(t *testing.T) {
+	// Skip integration tests for short test runs.
+	if testing.Short() {
+		t.Skip()
+	}
+
+	// Insert an initial set of test users.
+	clientIDs := insertTestUsers(t)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+
+	defer cancel()
+
+	// Non-existent user.
+	invalidID, err := uuid.NewV1()
+	require.NoError(t, err, "failed to generate invalid client id.")
+	isDeleted, err := connection.Query.userIsDeleted(ctx, invalidID)
+	require.Error(t, err, "failed to execute delete for non-existent user.")
+	require.False(t, isDeleted, "deleted status set on non-existent user.")
+
+	// Remove all inserted users.
+	for _, clientID := range clientIDs {
+		t.Run(fmt.Sprintf("Checking deleted status of user: %s", clientID.String()), func(t *testing.T) {
+			// Before deletion.
+			isDeleted, err = connection.Query.userIsDeleted(ctx, clientID)
+			require.NoError(t, err, "failed to retrieve a/c active status user.")
+			require.False(t, isDeleted, "incorrect a/c active status for user.")
+
+			// After deletion.
+			rowsAffected, err := connection.Query.userDelete(ctx, clientID)
+			require.NoError(t, err, "failed to execute delete on user.")
+			require.Equal(t, int64(1), rowsAffected, "failed to execute delete on user.")
+
+			isDeleted, err = connection.Query.userIsDeleted(ctx, clientID)
+			require.NoError(t, err, "failed to retrieve a/c inactive status user.")
+			require.True(t, isDeleted, "incorrect a/c inactive status for user.")
 		})
 	}
 }

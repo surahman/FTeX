@@ -150,7 +150,7 @@ func TestUserResolver_RegisterUser(t *testing.T) {
 	}
 }
 
-func TestUserResolver_DeleteUser(t *testing.T) {
+func TestUserResolver_DeleteUser(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	validUserAccount := modelsPostgres.User{
@@ -188,6 +188,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		readUserErr          error
 		readUserTimes        int
 		readUserData         modelsPostgres.User
@@ -203,6 +206,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         modelsPostgres.User{},
 			readUserTimes:        0,
@@ -217,6 +223,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         validUserAccount,
 			readUserTimes:        1,
@@ -231,6 +240,26 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("JWT failed authorization check"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			readUserErr:          nil,
+			readUserData:         modelsPostgres.User{},
+			readUserTimes:        0,
+			authCheckPassErr:     nil,
+			authCheckPassTimes:   0,
+			deleteUserErr:        nil,
+			deleteUserTimes:      0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/delete/deleted-account",
+			query:                fmt.Sprintf(testUserQuery["delete"], "username1", "password", "username1"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			readUserErr:          nil,
 			readUserData:         modelsPostgres.User{},
 			readUserTimes:        0,
@@ -245,6 +274,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          postgres.ErrNotFound,
 			readUserData:         modelsPostgres.User{},
 			readUserTimes:        1,
@@ -259,6 +291,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         validUserAccount,
 			readUserTimes:        1,
@@ -273,6 +308,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         validUserAccount,
 			readUserTimes:        1,
@@ -288,6 +326,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         validUserAccount,
 			readUserTimes:        1,
@@ -302,6 +343,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         deletedUserAccount,
 			readUserTimes:        1,
@@ -316,6 +360,9 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			readUserErr:          nil,
 			readUserData:         validUserAccount,
 			readUserTimes:        1,
@@ -345,6 +392,10 @@ func TestUserResolver_DeleteUser(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(authToken).
 					Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).
 					Return(test.readUserData, test.readUserErr).
@@ -555,6 +606,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 		authValidateJWTErr    error
 		authValidateJWTExp    int64
 		authValidateJWTTimes  int
+		isDeletedError        error
+		isDeletedTimes        int
+		isDeletedValue        bool
 		userGetInfoErr        error
 		userGetInfoData       modelsPostgres.User
 		userGetInfoTimes      int
@@ -564,12 +618,32 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 		authGenJWTTimes       int
 	}{
 		{
-			name:                  "empty token",
-			path:                  "/refresh/empty-token",
+			name:                  "invalid jwt",
+			path:                  "/refresh/invalid-jwt",
 			expectErr:             true,
 			authValidateJWTErr:    errors.New("invalid token"),
 			authValidateJWTExp:    0,
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        0,
+			isDeletedValue:        false,
+			userGetInfoErr:        nil,
+			userGetInfoData:       modelsPostgres.User{},
+			userGetInfoTimes:      0,
+			authRefThresholdTimes: 0,
+			authRefThreshold:      60,
+			authGenJWTErr:         nil,
+			authGenJWTTimes:       0,
+		}, {
+			name:                  "deleted account",
+			path:                  "/refresh/deleted-account",
+			expectErr:             true,
+			authValidateJWTErr:    nil,
+			authValidateJWTExp:    0,
+			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        1,
+			isDeletedValue:        true,
 			userGetInfoErr:        nil,
 			userGetInfoData:       modelsPostgres.User{},
 			userGetInfoTimes:      0,
@@ -584,6 +658,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			authValidateJWTErr:    nil,
 			authValidateJWTExp:    time.Now().Add(-time.Duration(30) * time.Second).Unix(),
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        1,
+			isDeletedValue:        false,
 			userGetInfoErr:        nil,
 			userGetInfoData:       validUserAccount,
 			userGetInfoTimes:      1,
@@ -598,6 +675,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			authValidateJWTErr:    nil,
 			authValidateJWTExp:    time.Now().Add(time.Duration(3) * time.Minute).Unix(),
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        1,
+			isDeletedValue:        false,
 			userGetInfoErr:        nil,
 			userGetInfoData:       validUserAccount,
 			userGetInfoTimes:      1,
@@ -612,6 +692,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			authValidateJWTErr:    errors.New("validate JWT failure"),
 			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        0,
+			isDeletedValue:        false,
 			userGetInfoErr:        nil,
 			userGetInfoData:       validUserAccount,
 			userGetInfoTimes:      0,
@@ -626,6 +709,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			authValidateJWTErr:    nil,
 			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        1,
+			isDeletedValue:        false,
 			userGetInfoErr:        postgres.ErrNotFound,
 			userGetInfoData:       modelsPostgres.User{},
 			userGetInfoTimes:      1,
@@ -640,6 +726,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			authValidateJWTErr:    nil,
 			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        1,
+			isDeletedValue:        false,
 			userGetInfoErr:        nil,
 			userGetInfoData:       deletedUserAccount,
 			userGetInfoTimes:      1,
@@ -654,6 +743,9 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			authValidateJWTErr:    nil,
 			authValidateJWTExp:    time.Now().Add(time.Duration(30) * time.Second).Unix(),
 			authValidateJWTTimes:  1,
+			isDeletedError:        nil,
+			isDeletedTimes:        1,
+			isDeletedValue:        false,
 			userGetInfoErr:        nil,
 			userGetInfoData:       validUserAccount,
 			userGetInfoTimes:      1,
@@ -683,6 +775,10 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, test.authValidateJWTExp, test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				// Database call for user record.
 				mockPostgres.EXPECT().UserGetInfo(gomock.Any()).

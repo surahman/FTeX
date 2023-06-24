@@ -154,7 +154,7 @@ To build the Docker container using the `Dockerfile` run the following command f
 docker buildx build --file=docker/Dockerfile -t=ftex .
 ```
 
-You may then supply the configurations for the database host addresses, the API keys for the quotes services, and to
+You may then supply the configurations for the database host addresses, the API keys for the quote services, as well as
 publish ports using environment variables.
 
 #### Setting Environment Variables
@@ -163,8 +163,8 @@ Environment variables can be set using the Kubernetes deployment configurations 
 using the Docker CLI.
 
 To supply the environment variables using the Docker CLI, please use the `-e` flag. Below is an example of how to supply
-the API Keys for the Fiat and Cryptocurrency quotes, database host information, and port mappings. Please see the Docker
-`run` [documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
+the API Keys for the Fiat and Cryptocurrency quote services, database host information, and port mappings. Please see
+the Docker `run` [documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
 
 ```shell
 docker run -d \
@@ -181,7 +181,7 @@ ftex
 
 ### Data Tier Containers
 
-To spin-up the Postgres and Redis containers please use the commands below from the project root directory.
+To spin-up the Postgres and Redis containers, please use the commands below from the project root directory.
 
 Create containers:
 

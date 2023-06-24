@@ -41,7 +41,7 @@ func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, erro
 
 	credentials, err := p.Query.userGetCredentials(ctx, username)
 	if err != nil {
-		p.logger.Error("failed to register user", zap.Error(err))
+		p.logger.Error("failed to retrieve user account credentials", zap.Error(err))
 
 		return uuid.UUID{}, "", ErrLoginUser
 	}
@@ -57,7 +57,7 @@ func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, err
 
 	userAccount, err := p.Query.userGetInfo(ctx, clientID)
 	if err != nil {
-		p.logger.Error("failed to register user", zap.Error(err))
+		p.logger.Error("failed to retrieve user account info", zap.Error(err))
 
 		return modelsPostgres.User{}, ErrNotFoundUser
 	}
@@ -86,10 +86,26 @@ func (p *postgresImpl) UserDelete(clientID uuid.UUID) error {
 
 	rowsAffected, err := p.Query.userDelete(ctx, clientID)
 	if err != nil || rowsAffected != int64(1) {
-		p.logger.Error("failed to register user", zap.Error(err))
+		p.logger.Error("failed to delete user", zap.Error(err))
 
 		return ErrNotFoundUser
 	}
 
 	return nil
+}
+
+// UserIsDeleted is the interface through which external methods can check if a user account is soft-deleted.
+func (p *postgresImpl) UserIsDeleted(clientID uuid.UUID) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
+
+	defer cancel()
+
+	isDeleted, err := p.Query.userIsDeleted(ctx, clientID)
+	if err != nil {
+		p.logger.Error("failed to check deletion status of user", zap.Error(err))
+
+		return false, ErrNotFound
+	}
+
+	return isDeleted, nil
 }

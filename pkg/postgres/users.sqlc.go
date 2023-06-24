@@ -121,3 +121,18 @@ func (q *Queries) userGetInfo(ctx context.Context, clientID uuid.UUID) (userGetI
 	)
 	return i, err
 }
+
+const userIsDeleted = `-- name: userIsDeleted :one
+SELECT is_deleted
+FROM users
+WHERE client_id=$1
+LIMIT 1
+`
+
+// userIsDeleted will return the soft delete status of a user account.
+func (q *Queries) userIsDeleted(ctx context.Context, clientID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, userIsDeleted, clientID)
+	var is_deleted bool
+	err := row.Scan(&is_deleted)
+	return is_deleted, err
+}

@@ -121,13 +121,13 @@
 
 				<option value="file32">github.com/surahman/FTeX/pkg/postgres/postgres_sqlc.go (100.0%)</option>
 
-				<option value="file33">github.com/surahman/FTeX/pkg/postgres/querier_mocks.go (19.6%)</option>
+				<option value="file33">github.com/surahman/FTeX/pkg/postgres/querier_mocks.go (18.8%)</option>
 
 				<option value="file34">github.com/surahman/FTeX/pkg/postgres/queries_crypto.go (74.6%)</option>
 
 				<option value="file35">github.com/surahman/FTeX/pkg/postgres/queries_fiat.go (90.3%)</option>
 
-				<option value="file36">github.com/surahman/FTeX/pkg/postgres/queries_users.go (75.9%)</option>
+				<option value="file36">github.com/surahman/FTeX/pkg/postgres/queries_users.go (94.4%)</option>
 
 				<option value="file37">github.com/surahman/FTeX/pkg/postgres/test_data.go (100.0%)</option>
 
@@ -135,7 +135,7 @@
 
 				<option value="file39">github.com/surahman/FTeX/pkg/postgres/udf.sqlc.go (100.0%)</option>
 
-				<option value="file40">github.com/surahman/FTeX/pkg/postgres/users.sqlc.go (95.0%)</option>
+				<option value="file40">github.com/surahman/FTeX/pkg/postgres/users.sqlc.go (95.8%)</option>
 
 				<option value="file41">github.com/surahman/FTeX/pkg/quotes/config.go (100.0%)</option>
 
@@ -2671,13 +2671,16 @@ import (
         "github.com/gin-gonic/gin"
         "github.com/gofrs/uuid"
         "github.com/surahman/FTeX/pkg/auth"
+        "github.com/surahman/FTeX/pkg/constants"
         "github.com/surahman/FTeX/pkg/logger"
+        "github.com/surahman/FTeX/pkg/postgres"
+        "go.uber.org/zap"
 )
 
 type GinContextKey struct{}
 
 // GinContextFromContext will extract the Gin context from the context passed in.
-func GinContextFromContext(ctx context.Context, logger *logger.Logger) (*gin.Context, error) <span class="cov10" title="120">{
+func GinContextFromContext(ctx context.Context, logger *logger.Logger) (*gin.Context, error) <span class="cov10" title="139">{
         ctxValue := ctx.Value(GinContextKey{})
         if ctxValue == nil </span><span class="cov2" title="2">{
                 logger.Error("could not retrieve gin.Context")
@@ -2685,23 +2688,24 @@ func GinContextFromContext(ctx context.Context, logger *logger.Logger) (*gin.Con
                 return nil, errors.New("malformed request: authorization information not found")
         }</span>
 
-        <span class="cov9" title="118">ginContext, ok := ctxValue.(*gin.Context)
+        <span class="cov9" title="137">ginContext, ok := ctxValue.(*gin.Context)
         if !ok </span><span class="cov2" title="2">{
                 logger.Error("gin.Context has wrong type")
 
                 return nil, errors.New("malformed request: authorization information malformed")
         }</span>
 
-        <span class="cov9" title="116">return ginContext, nil</span>
+        <span class="cov9" title="135">return ginContext, nil</span>
 }
 
 // AuthorizationCheck will validate the JWT payload for valid authorization information.
-func AuthorizationCheck(ctx context.Context, auth auth.Auth, logger *logger.Logger, authHeaderKey string) (
-        uuid.UUID, int64, error) <span class="cov9" title="117">{
+func AuthorizationCheck(ctx context.Context, auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+        authHeaderKey string) (uuid.UUID, int64, error) <span class="cov9" title="136">{
         var (
                 clientID   uuid.UUID
                 expiresAt  int64
                 err        error
+                isDeleted  bool
                 ginContext *gin.Context
         )
 
@@ -2709,13 +2713,24 @@ func AuthorizationCheck(ctx context.Context, auth auth.Auth, logger *logger.Logg
                 return clientID, -1, err
         }</span>
 
-        <span class="cov9" title="115">tokenString := ginContext.GetHeader(authHeaderKey)
+        <span class="cov9" title="134">tokenString := ginContext.GetHeader(authHeaderKey)
         if tokenString == "" </span><span class="cov1" title="1">{
                 return clientID, -1, errors.New("request does not contain an access token")
         }</span>
 
-        <span class="cov9" title="114">if clientID, expiresAt, err = auth.ValidateJWT(tokenString); err != nil </span><span class="cov6" title="19">{
+        <span class="cov9" title="133">if clientID, expiresAt, err = auth.ValidateJWT(tokenString); err != nil </span><span class="cov6" title="19">{
                 return clientID, expiresAt, fmt.Errorf("failed to validate JWT %w", err)
+        }</span>
+
+        // Check for user deleted status.
+        <span class="cov9" title="114">if isDeleted, err = db.UserIsDeleted(clientID); err != nil </span><span class="cov1" title="1">{
+                logger.Error("unable to retrieve client account status", zap.Error(err))
+
+                return clientID, expiresAt, errors.New(constants.RetryMessageString())
+        }</span>
+
+        <span class="cov9" title="113">if isDeleted </span><span class="cov6" title="18">{
+                return clientID, expiresAt, errors.New("request contains invalid or expired authorization token")
         }</span>
 
         <span class="cov9" title="95">return clientID, expiresAt, nil</span>
@@ -2839,14 +2854,14 @@ func (r *cryptoTransactionsPaginatedResolver) Transactions(ctx context.Context, 
 }</span>
 
 // OpenCrypto is the resolver for the openCrypto field.
-func (r *mutationResolver) OpenCrypto(ctx context.Context, ticker string) (*models.CryptoOpenAccountResponse, error) <span class="cov3" title="3">{
+func (r *mutationResolver) OpenCrypto(ctx context.Context, ticker string) (*models.CryptoOpenAccountResponse, error) <span class="cov3" title="4">{
         var (
                 clientID   uuid.UUID
                 errMessage string
                 err        error
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -2858,7 +2873,7 @@ func (r *mutationResolver) OpenCrypto(ctx context.Context, ticker string) (*mode
 }
 
 // OfferCrypto is the resolver for the offerCrypto field.
-func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCryptoOfferRequest) (*models.HTTPExchangeOfferResponse, error) <span class="cov5" title="10">{
+func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCryptoOfferRequest) (*models.HTTPExchangeOfferResponse, error) <span class="cov5" title="11">{
         var (
                 clientID      uuid.UUID
                 err           error
@@ -2866,7 +2881,7 @@ func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCry
                 statusMessage string
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -2885,7 +2900,7 @@ func (r *mutationResolver) OfferCrypto(ctx context.Context, input models.HTTPCry
 }
 
 // ExchangeCrypto is the resolver for the exchangeCrypto field.
-func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (*models.HTTPCryptoTransferResponse, error) <span class="cov3" title="4">{
+func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (*models.HTTPCryptoTransferResponse, error) <span class="cov3" title="5">{
         var (
                 clientID      uuid.UUID
                 err           error
@@ -2893,7 +2908,7 @@ func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (
                 statusMessage string
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -2905,7 +2920,7 @@ func (r *mutationResolver) ExchangeCrypto(ctx context.Context, offerID string) (
 }
 
 // BalanceCrypto is the resolver for the balanceCrypto field.
-func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*postgres.CryptoAccount, error) <span class="cov3" title="4">{
+func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*postgres.CryptoAccount, error) <span class="cov3" title="5">{
         var (
                 accDetails  *postgres.CryptoAccount
                 clientID    uuid.UUID
@@ -2914,7 +2929,7 @@ func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*post
                 payload     any
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -2927,7 +2942,7 @@ func (r *queryResolver) BalanceCrypto(ctx context.Context, ticker string) (*post
 }
 
 // BalanceAllCrypto is the resolver for the balanceAllCrypto field.
-func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPCryptoDetailsPaginated, error) <span class="cov5" title="9">{
+func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPCryptoDetailsPaginated, error) <span class="cov5" title="10">{
         var (
                 accDetails  models.HTTPCryptoDetailsPaginated
                 clientID    uuid.UUID
@@ -2939,11 +2954,11 @@ func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string
                 pageSize = new(int32)
         }</span>
 
-        <span class="cov5" title="9">if pageCursor == nil </span><span class="cov3" title="3">{
+        <span class="cov5" title="10">if pageCursor == nil </span><span class="cov3" title="3">{
                 pageCursor = new(string)
         }</span>
 
-        <span class="cov5" title="9">if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        <span class="cov5" title="10">if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -2956,7 +2971,7 @@ func (r *queryResolver) BalanceAllCrypto(ctx context.Context, pageCursor *string
 }
 
 // TransactionDetailsCrypto is the resolver for the transactionDetailsCrypto field.
-func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactionID string) ([]interface{}, error) <span class="cov3" title="4">{
+func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactionID string) ([]interface{}, error) <span class="cov3" title="5">{
         var (
                 journalEntries []any
                 clientID       uuid.UUID
@@ -2964,7 +2979,7 @@ func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactio
                 httpMessage    string
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -2976,7 +2991,7 @@ func (r *queryResolver) TransactionDetailsCrypto(ctx context.Context, transactio
 }
 
 // TransactionDetailsAllCrypto is the resolver for the transactionDetailsAllCrypto field.
-func (r *queryResolver) TransactionDetailsAllCrypto(ctx context.Context, input models.CryptoPaginatedTxDetailsRequest) (*models.HTTPCryptoTransactionsPaginated, error) <span class="cov4" title="7">{
+func (r *queryResolver) TransactionDetailsAllCrypto(ctx context.Context, input models.CryptoPaginatedTxDetailsRequest) (*models.HTTPCryptoTransactionsPaginated, error) <span class="cov4" title="8">{
         var (
                 journalEntries models.HTTPCryptoTransactionsPaginated
                 clientID       uuid.UUID
@@ -2989,29 +3004,29 @@ func (r *queryResolver) TransactionDetailsAllCrypto(ctx context.Context, input m
         if input.PageSize == nil </span><span class="cov0" title="0">{
                 input.PageSize = new(string)
         }</span>
-        <span class="cov4" title="7">params.PageSizeStr = *input.PageSize
+        <span class="cov4" title="8">params.PageSizeStr = *input.PageSize
 
         if input.PageCursor == nil </span><span class="cov1" title="1">{
                 input.PageCursor = new(string)
         }</span>
-        <span class="cov4" title="7">params.PageCursorStr = *input.PageCursor
+        <span class="cov4" title="8">params.PageCursorStr = *input.PageCursor
 
-        if input.Timezone == nil </span><span class="cov4" title="6">{
+        if input.Timezone == nil </span><span class="cov4" title="7">{
                 input.Timezone = new(string)
         }</span>
-        <span class="cov4" title="7">params.TimezoneStr = *input.Timezone
+        <span class="cov4" title="8">params.TimezoneStr = *input.Timezone
 
-        if input.Month == nil </span><span class="cov4" title="6">{
+        if input.Month == nil </span><span class="cov4" title="7">{
                 input.Month = new(string)
         }</span>
-        <span class="cov4" title="7">params.MonthStr = *input.Month
+        <span class="cov4" title="8">params.MonthStr = *input.Month
 
-        if input.Year == nil </span><span class="cov4" title="6">{
+        if input.Year == nil </span><span class="cov4" title="7">{
                 input.Year = new(string)
         }</span>
-        <span class="cov4" title="7">params.YearStr = *input.Year
+        <span class="cov4" title="8">params.YearStr = *input.Year
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3025,7 +3040,7 @@ func (r *queryResolver) TransactionDetailsAllCrypto(ctx context.Context, input m
 }
 
 // SourceAmount is the resolver for the sourceAmount field.
-func (r *cryptoOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error <span class="cov5" title="11">{
+func (r *cryptoOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPCryptoOfferRequest, data float64) error <span class="cov5" title="12">{
         obj.SourceAmount = decimal.NewFromFloat(data)
 
         return nil
@@ -3047,7 +3062,7 @@ func (r *Resolver) CryptoTransactionsPaginated() graphql_generated.CryptoTransac
 }</span>
 
 // CryptoOfferRequest returns graphql_generated.CryptoOfferRequestResolver implementation.
-func (r *Resolver) CryptoOfferRequest() graphql_generated.CryptoOfferRequestResolver <span class="cov5" title="10">{
+func (r *Resolver) CryptoOfferRequest() graphql_generated.CryptoOfferRequestResolver <span class="cov5" title="11">{
         return &amp;cryptoOfferRequestResolver{r}
 }</span>
 
@@ -3178,14 +3193,14 @@ func (r *fiatTransactionsPaginatedResolver) Transactions(ctx context.Context, ob
 }</span>
 
 // OpenFiat is the resolver for the openFiat field.
-func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) <span class="cov3" title="4">{
+func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*models.FiatOpenAccountResponse, error) <span class="cov3" title="5">{
         var (
                 clientID   uuid.UUID
                 errMessage string
                 err        error
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3197,7 +3212,7 @@ func (r *mutationResolver) OpenFiat(ctx context.Context, currency string) (*mode
 }
 
 // DepositFiat is the resolver for the depositFiat field.
-func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDepositCurrencyRequest) (*postgres.FiatAccountTransferResult, error) <span class="cov3" title="5">{
+func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDepositCurrencyRequest) (*postgres.FiatAccountTransferResult, error) <span class="cov4" title="6">{
         var (
                 clientID        uuid.UUID
                 err             error
@@ -3205,7 +3220,7 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
                 transferReceipt *postgres.FiatAccountTransferResult
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3219,7 +3234,7 @@ func (r *mutationResolver) DepositFiat(ctx context.Context, input models.HTTPDep
 }
 
 // ExchangeOfferFiat is the resolver for the exchangeOfferFiat field.
-func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPExchangeOfferRequest) (*models.HTTPExchangeOfferResponse, error) <span class="cov5" title="10">{
+func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.HTTPExchangeOfferRequest) (*models.HTTPExchangeOfferResponse, error) <span class="cov5" title="11">{
         var (
                 clientID    uuid.UUID
                 err         error
@@ -3228,7 +3243,7 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
                 offer       *models.HTTPExchangeOfferResponse
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3242,7 +3257,7 @@ func (r *mutationResolver) ExchangeOfferFiat(ctx context.Context, input models.H
 }
 
 // ExchangeTransferFiat is the resolver for the exchangeTransferFiat field.
-func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.HTTPFiatTransferResponse, error) <span class="cov5" title="10">{
+func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID string) (*models.HTTPFiatTransferResponse, error) <span class="cov5" title="11">{
         var (
                 err         error
                 clientID    uuid.UUID
@@ -3251,7 +3266,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
                 receipt     *models.HTTPFiatTransferResponse
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3264,7 +3279,7 @@ func (r *mutationResolver) ExchangeTransferFiat(ctx context.Context, offerID str
 }
 
 // BalanceFiat is the resolver for the balanceFiat field.
-func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) <span class="cov3" title="5">{
+func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*postgres.FiatAccount, error) <span class="cov4" title="6">{
         var (
                 accDetails  *postgres.FiatAccount
                 clientID    uuid.UUID
@@ -3273,7 +3288,7 @@ func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*
                 payload     any
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3286,7 +3301,7 @@ func (r *queryResolver) BalanceFiat(ctx context.Context, currencyCode string) (*
 }
 
 // BalanceAllFiat is the resolver for the balanceAllFiat field.
-func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error) <span class="cov4" title="9">{
+func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, pageSize *int32) (*models.HTTPFiatDetailsPaginated, error) <span class="cov5" title="10">{
         var (
                 accDetails  *models.HTTPFiatDetailsPaginated
                 clientID    uuid.UUID
@@ -3298,11 +3313,11 @@ func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, 
                 pageSize = new(int32)
         }</span>
 
-        <span class="cov4" title="9">if pageCursor == nil </span><span class="cov2" title="3">{
+        <span class="cov5" title="10">if pageCursor == nil </span><span class="cov2" title="3">{
                 pageCursor = new(string)
         }</span>
 
-        <span class="cov4" title="9">if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        <span class="cov5" title="10">if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3315,7 +3330,7 @@ func (r *queryResolver) BalanceAllFiat(ctx context.Context, pageCursor *string, 
 }
 
 // TransactionDetailsFiat is the resolver for the transactionDetailsFiat field.
-func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]interface{}, error) <span class="cov3" title="4">{
+func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionID string) ([]interface{}, error) <span class="cov3" title="5">{
         var (
                 journalEntries []any
                 clientID       uuid.UUID
@@ -3323,7 +3338,7 @@ func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionI
                 httpMessage    string
         )
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3335,7 +3350,7 @@ func (r *queryResolver) TransactionDetailsFiat(ctx context.Context, transactionI
 }
 
 // TransactionDetailsAllFiat is the resolver for the transactionDetailsAllFiat field.
-func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.HTTPFiatTransactionsPaginated, error) <span class="cov4" title="8">{
+func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input models.FiatPaginatedTxDetailsRequest) (*models.HTTPFiatTransactionsPaginated, error) <span class="cov4" title="9">{
         var (
                 journalEntries *models.HTTPFiatTransactionsPaginated
                 clientID       uuid.UUID
@@ -3348,29 +3363,29 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
         if input.PageSize == nil </span><span class="cov0" title="0">{
                 input.PageSize = new(string)
         }</span>
-        <span class="cov4" title="8">params.PageSizeStr = *input.PageSize
+        <span class="cov4" title="9">params.PageSizeStr = *input.PageSize
 
         if input.PageCursor == nil </span><span class="cov1" title="1">{
                 input.PageCursor = new(string)
         }</span>
-        <span class="cov4" title="8">params.PageCursorStr = *input.PageCursor
+        <span class="cov4" title="9">params.PageCursorStr = *input.PageCursor
 
-        if input.Timezone == nil </span><span class="cov4" title="7">{
+        if input.Timezone == nil </span><span class="cov4" title="8">{
                 input.Timezone = new(string)
         }</span>
-        <span class="cov4" title="8">params.TimezoneStr = *input.Timezone
+        <span class="cov4" title="9">params.TimezoneStr = *input.Timezone
 
-        if input.Month == nil </span><span class="cov4" title="7">{
+        if input.Month == nil </span><span class="cov4" title="8">{
                 input.Month = new(string)
         }</span>
-        <span class="cov4" title="8">params.MonthStr = *input.Month
+        <span class="cov4" title="9">params.MonthStr = *input.Month
 
-        if input.Year == nil </span><span class="cov4" title="7">{
+        if input.Year == nil </span><span class="cov4" title="8">{
                 input.Year = new(string)
         }</span>
-        <span class="cov4" title="8">params.YearStr = *input.Year
+        <span class="cov4" title="9">params.YearStr = *input.Year
 
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return nil, errors.New("authorization failure")
         }</span>
 
@@ -3384,21 +3399,21 @@ func (r *queryResolver) TransactionDetailsAllFiat(ctx context.Context, input mod
 }
 
 // Amount is the resolver for the amount field.
-func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error <span class="cov3" title="5">{
+func (r *fiatDepositRequestResolver) Amount(ctx context.Context, obj *models.HTTPDepositCurrencyRequest, data float64) error <span class="cov4" title="6">{
         obj.Amount = decimal.NewFromFloat(data)
 
         return nil
 }</span>
 
 // SourceAmount is the resolver for the sourceAmount field.
-func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPExchangeOfferRequest, data float64) error <span class="cov5" title="11">{
+func (r *fiatExchangeOfferRequestResolver) SourceAmount(ctx context.Context, obj *models.HTTPExchangeOfferRequest, data float64) error <span class="cov5" title="12">{
         obj.SourceAmount = decimal.NewFromFloat(data)
 
         return nil
 }</span>
 
 // FiatAccount returns graphql_generated.FiatAccountResolver implementation.
-func (r *Resolver) FiatAccount() graphql_generated.FiatAccountResolver <span class="cov10" title="166">{
+func (r *Resolver) FiatAccount() graphql_generated.FiatAccountResolver <span class="cov10" title="168">{
         return &amp;fiatAccountResolver{r}
 }</span>
 
@@ -3423,12 +3438,12 @@ func (r *Resolver) FiatTransactionsPaginated() graphql_generated.FiatTransaction
 }</span>
 
 // FiatDepositRequest returns graphql_generated.FiatDepositRequestResolver implementation.
-func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver <span class="cov3" title="5">{
+func (r *Resolver) FiatDepositRequest() graphql_generated.FiatDepositRequestResolver <span class="cov4" title="6">{
         return &amp;fiatDepositRequestResolver{r}
 }</span>
 
 // FiatExchangeOfferRequest returns graphql_generated.FiatExchangeOfferRequestResolver implementation.
-func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOfferRequestResolver <span class="cov5" title="10">{
+func (r *Resolver) FiatExchangeOfferRequest() graphql_generated.FiatExchangeOfferRequestResolver <span class="cov5" title="11">{
         return &amp;fiatExchangeOfferRequestResolver{r}
 }</span>
 
@@ -3460,7 +3475,7 @@ import (
 
 // QueryHandler is the endpoint through which GraphQL can be accessed.
 func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db postgres.Postgres,
-        quotes quotes.Quotes, logger *logger.Logger) gin.HandlerFunc <span class="cov10" title="126">{
+        quotes quotes.Quotes, logger *logger.Logger) gin.HandlerFunc <span class="cov10" title="143">{
         gqlHandler := handler.NewDefaultServer(graphql_generated.NewExecutableSchema(
                 graphql_generated.Config{
                         Resolvers: &amp;Resolver{
@@ -3474,7 +3489,7 @@ func QueryHandler(authHeaderKey string, auth auth.Auth, cache redis.Redis, db po
                 },
         ))
 
-        return func(c *gin.Context) </span><span class="cov9" title="124">{
+        return func(c *gin.Context) </span><span class="cov9" title="142">{
                 gqlHandler.ServeHTTP(c.Writer, c.Request)
         }</span>
 }
@@ -3489,8 +3504,8 @@ func PlaygroundHandler(baseURL, queryURL string) gin.HandlerFunc <span class="co
 }
 
 // GinContextToContextMiddleware is middleware that will place the Gin context into a context for the GraphQL resolvers.
-func GinContextToContextMiddleware() gin.HandlerFunc <span class="cov9" title="113">{
-        return func(c *gin.Context) </span><span class="cov9" title="113">{
+func GinContextToContextMiddleware() gin.HandlerFunc <span class="cov9" title="130">{
+        return func(c *gin.Context) </span><span class="cov9" title="130">{
                 ctx := context.WithValue(c.Request.Context(), GinContextKey{}, c)
                 c.Request = c.Request.WithContext(ctx)
                 c.Next()
@@ -3519,7 +3534,7 @@ func (r *queryResolver) Healthcheck(ctx context.Context) (string, error) <span c
 }</span>
 
 // Query returns graphql_generated.QueryResolver implementation.
-func (r *Resolver) Query() graphql_generated.QueryResolver <span class="cov10" title="53">{ return &amp;queryResolver{r} }</span>
+func (r *Resolver) Query() graphql_generated.QueryResolver <span class="cov10" title="61">{ return &amp;queryResolver{r} }</span>
 
 type queryResolver struct{ *Resolver }
 </pre>
@@ -3683,7 +3698,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, input *modelsPostgr
 }
 
 // DeleteUser is the resolver for the deleteUser field.
-func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDeleteUserRequest) (string, error) <span class="cov5" title="9">{
+func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDeleteUserRequest) (string, error) <span class="cov5" title="10">{
         var (
                 clientID uuid.UUID
                 err      error
@@ -3693,11 +3708,11 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, input models.HTTPDele
 
         // Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
         // credentials.
-        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov1" title="1">{
+        if clientID, _, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
                 return "", errors.New("authorization failure")
         }</span>
 
-        <span class="cov5" title="8">if httpMsg, _, payload, err = common.HTTPDeleteUser(r.auth, r.db, r.logger, clientID, &amp;input); err != nil </span><span class="cov5" title="7">{
+        <span class="cov5" title="8">if httpMsg, _, payload, err = common.HTTPDeleteUser(r.auth, r.db, r.logger, clientID, &amp;input); err != nil </span><span class="cov4" title="7">{
                 return "", fmt.Errorf("%s: %v", httpMsg, payload)
         }</span>
 
@@ -3725,7 +3740,7 @@ func (r *mutationResolver) LoginUser(ctx context.Context, input modelsPostgres.U
 }
 
 // RefreshToken is the resolver for the refreshToken field.
-func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthResponse, error) <span class="cov5" title="7">{
+func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthResponse, error) <span class="cov5" title="8">{
         var (
                 err        error
                 freshToken *models.JWTAuthResponse
@@ -3736,7 +3751,7 @@ func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthRes
 
         // Validate the JWT and extract the clientID. Compare the clientID against the deletion request login
         // credentials.
-        if clientID, expiresAt, err = AuthorizationCheck(ctx, r.auth, r.logger, r.authHeaderKey); err != nil </span><span class="cov2" title="2">{
+        if clientID, expiresAt, err = AuthorizationCheck(ctx, r.auth, r.db, r.logger, r.authHeaderKey); err != nil </span><span class="cov3" title="3">{
                 return freshToken, errors.New("authorization failure")
         }</span>
 
@@ -3749,7 +3764,7 @@ func (r *mutationResolver) RefreshToken(ctx context.Context) (*models.JWTAuthRes
 }
 
 // Mutation returns graphql_generated.MutationResolver implementation.
-func (r *Resolver) Mutation() graphql_generated.MutationResolver <span class="cov10" title="72">{ return &amp;mutationResolver{r} }</span>
+func (r *Resolver) Mutation() graphql_generated.MutationResolver <span class="cov10" title="81">{ return &amp;mutationResolver{r} }</span>
 
 type mutationResolver struct{ *Resolver }
 </pre>
@@ -5495,6 +5510,9 @@ type Postgres interface {
         // UserDelete will delete the account information associated with a Client ID.
         UserDelete(uuid.UUID) error
 
+        // UserIsDeleted is the interface through which external methods can check if a user account is soft-deleted.
+        UserIsDeleted(uuid.UUID) (bool, error)
+
         // FiatCreateAccount will open an account associated with a Client ID for a specific currency.
         FiatCreateAccount(uuid.UUID, Currency) error
 
@@ -6103,6 +6121,21 @@ func (mr *MockQuerierMockRecorder) userGetInfo(arg0, arg1 interface{}) *gomock.C
         mr.mock.ctrl.T.Helper()
         return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userGetInfo", reflect.TypeOf((*MockQuerier)(nil).userGetInfo), arg0, arg1)
 }</span>
+
+// userIsDeleted mocks base method.
+func (m *MockQuerier) userIsDeleted(arg0 context.Context, arg1 uuid.UUID) (bool, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "userIsDeleted", arg0, arg1)
+        ret0, _ := ret[0].(bool)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// userIsDeleted indicates an expected call of userIsDeleted.
+func (mr *MockQuerierMockRecorder) userIsDeleted(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userIsDeleted", reflect.TypeOf((*MockQuerier)(nil).userIsDeleted), arg0, arg1)
+}</span>
 </pre>
 
 		<pre class="file" id="file34" style="display: none">package postgres
@@ -6438,7 +6471,7 @@ import (
 )
 
 // UserRegister is the interface through which external methods can create a user.
-func (p *postgresImpl) UserRegister(userDetails *modelsPostgres.UserAccount) (uuid.UUID, error) <span class="cov6" title="2">{
+func (p *postgresImpl) UserRegister(userDetails *modelsPostgres.UserAccount) (uuid.UUID, error) <span class="cov3" title="2">{
         params := userCreateParams{
                 Username:  userDetails.Username,
                 Password:  userDetails.Password,
@@ -6462,14 +6495,14 @@ func (p *postgresImpl) UserRegister(userDetails *modelsPostgres.UserAccount) (uu
 }
 
 // UserCredentials is the interface through which external methods can retrieve user credentials.
-func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, error) <span class="cov10" title="3">{
+func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, error) <span class="cov5" title="3">{
         ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
         defer cancel()
 
         credentials, err := p.Query.userGetCredentials(ctx, username)
-        if err != nil </span><span class="cov6" title="2">{
-                p.logger.Error("failed to register user", zap.Error(err))
+        if err != nil </span><span class="cov3" title="2">{
+                p.logger.Error("failed to retrieve user account credentials", zap.Error(err))
 
                 return uuid.UUID{}, "", ErrLoginUser
         }</span>
@@ -6478,14 +6511,14 @@ func (p *postgresImpl) UserCredentials(username string) (uuid.UUID, string, erro
 }
 
 // UserGetInfo is the interface through which external methods can retrieve user account information.
-func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, error) <span class="cov6" title="2">{
+func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, error) <span class="cov3" title="2">{
         ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
         defer cancel()
 
         userAccount, err := p.Query.userGetInfo(ctx, clientID)
         if err != nil </span><span class="cov1" title="1">{
-                p.logger.Error("failed to register user", zap.Error(err))
+                p.logger.Error("failed to retrieve user account info", zap.Error(err))
 
                 return modelsPostgres.User{}, ErrNotFoundUser
         }</span>
@@ -6507,19 +6540,35 @@ func (p *postgresImpl) UserGetInfo(clientID uuid.UUID) (modelsPostgres.User, err
 }
 
 // UserDelete is the interface through which external methods can soft-delete a user account.
-func (p *postgresImpl) UserDelete(clientID uuid.UUID) error <span class="cov0" title="0">{
+func (p *postgresImpl) UserDelete(clientID uuid.UUID) error <span class="cov6" title="4">{
         ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
 
         defer cancel()
 
         rowsAffected, err := p.Query.userDelete(ctx, clientID)
         if err != nil || rowsAffected != int64(1) </span><span class="cov0" title="0">{
-                p.logger.Error("failed to register user", zap.Error(err))
+                p.logger.Error("failed to delete user", zap.Error(err))
 
                 return ErrNotFoundUser
         }</span>
 
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov6" title="4">return nil</span>
+}
+
+// UserIsDeleted is the interface through which external methods can check if a user account is soft-deleted.
+func (p *postgresImpl) UserIsDeleted(clientID uuid.UUID) (bool, error) <span class="cov10" title="9">{
+        ctx, cancel := context.WithTimeout(context.Background(), constants.ThreeSeconds())
+
+        defer cancel()
+
+        isDeleted, err := p.Query.userIsDeleted(ctx, clientID)
+        if err != nil </span><span class="cov1" title="1">{
+                p.logger.Error("failed to check deletion status of user", zap.Error(err))
+
+                return false, ErrNotFound
+        }</span>
+
+        <span class="cov9" title="8">return isDeleted, nil</span>
 }
 </pre>
 
@@ -6645,7 +6694,7 @@ pool:
 }</span>
 
 // getTestUsers will generate a number of test users for testing.
-func getTestUsers() map[string]userCreateParams <span class="cov7" title="41">{
+func getTestUsers() map[string]userCreateParams <span class="cov7" title="43">{
         users := make(map[string]userCreateParams)
         username := "username%d"
         password := "user-password-%d"
@@ -6653,7 +6702,7 @@ func getTestUsers() map[string]userCreateParams <span class="cov7" title="41">{
         lastname := "lastname-%d"
         email := "user%d@email-address.com"
 
-        for idx := 1; idx &lt; 5; idx++ </span><span class="cov10" title="164">{
+        for idx := 1; idx &lt; 5; idx++ </span><span class="cov10" title="172">{
                 uname := fmt.Sprintf(username, idx)
                 users[uname] = userCreateParams{
                         Username:  fmt.Sprintf(username, idx),
@@ -6664,7 +6713,7 @@ func getTestUsers() map[string]userCreateParams <span class="cov7" title="41">{
                 }
         }</span>
 
-        <span class="cov7" title="41">return users</span>
+        <span class="cov7" title="43">return users</span>
 }
 
 // getTestFiatAccounts generates a number of test fiat accounts.
@@ -7293,7 +7342,7 @@ type userCreateParams struct {
 }
 
 // userCreate will create a new user record.
-func (q *Queries) userCreate(ctx context.Context, arg *userCreateParams) (uuid.UUID, error) <span class="cov10" title="151">{
+func (q *Queries) userCreate(ctx context.Context, arg *userCreateParams) (uuid.UUID, error) <span class="cov10" title="159">{
         row := q.db.QueryRow(ctx, userCreate,
                 arg.Username,
                 arg.Password,
@@ -7313,12 +7362,12 @@ WHERE client_id=$1 AND is_deleted=false
 `
 
 // userDelete will soft delete a users account.
-func (q *Queries) userDelete(ctx context.Context, clientID uuid.UUID) (int64, error) <span class="cov4" title="6">{
+func (q *Queries) userDelete(ctx context.Context, clientID uuid.UUID) (int64, error) <span class="cov5" title="14">{
         result, err := q.db.Exec(ctx, userDelete, clientID)
         if err != nil </span><span class="cov0" title="0">{
                 return 0, err
         }</span>
-        <span class="cov4" title="6">return result.RowsAffected(), nil</span>
+        <span class="cov5" title="14">return result.RowsAffected(), nil</span>
 }
 
 const userGetClientId = `-- name: userGetClientId :one
@@ -7387,6 +7436,21 @@ func (q *Queries) userGetInfo(ctx context.Context, clientID uuid.UUID) (userGetI
                 &amp;i.IsDeleted,
         )
         return i, err
+}</span>
+
+const userIsDeleted = `-- name: userIsDeleted :one
+SELECT is_deleted
+FROM users
+WHERE client_id=$1
+LIMIT 1
+`
+
+// userIsDeleted will return the soft delete status of a user account.
+func (q *Queries) userIsDeleted(ctx context.Context, clientID uuid.UUID) (bool, error) <span class="cov6" title="18">{
+        row := q.db.QueryRow(ctx, userIsDeleted, clientID)
+        var is_deleted bool
+        err := row.Scan(&amp;is_deleted)
+        return is_deleted, err
 }</span>
 </pre>
 
@@ -7808,7 +7872,7 @@ func (m *MockQuotes) cryptoQuote(arg0, arg1 string) (models.CryptoQuote, error) 
 }</span>
 
 // cryptoQuote indicates an expected call of cryptoQuote.
-func (mr *MockQuotesMockRecorder) cryptoQuote(arg0, arg1 interface{}) *gomock.Call <span class="cov8" title="12">{
+func (mr *MockQuotesMockRecorder) cryptoQuote(arg0, arg1 interface{}) *gomock.Call <span class="cov8" title="13">{
         mr.mock.ctrl.T.Helper()
         return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "cryptoQuote", reflect.TypeOf((*MockQuotes)(nil).cryptoQuote), arg0, arg1)
 }</span>
@@ -8586,15 +8650,19 @@ import (
         "github.com/gofrs/uuid"
         "github.com/surahman/FTeX/pkg/auth"
         "github.com/surahman/FTeX/pkg/constants"
+        "github.com/surahman/FTeX/pkg/logger"
+        "github.com/surahman/FTeX/pkg/postgres"
+        "go.uber.org/zap"
 )
 
 // AuthMiddleware is the middleware that checks whether a JWT is valid and can access an endpoint.
-func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc <span class="cov10" title="4">{
-        handler := func(context *gin.Context) </span><span class="cov8" title="3">{
+func AuthMiddleware(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, authHeaderKey string) gin.HandlerFunc <span class="cov10" title="6">{
+        handler := func(context *gin.Context) </span><span class="cov9" title="5">{
                 var (
                         err         error
                         clientID    uuid.UUID
                         expiresAt   int64
+                        isDeleted   bool
                         tokenString = context.GetHeader(authHeaderKey)
                 )
 
@@ -8605,7 +8673,24 @@ func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc <span 
                         return
                 }</span>
 
-                <span class="cov5" title="2">if clientID, expiresAt, err = auth.ValidateJWT(tokenString); err != nil </span><span class="cov1" title="1">{
+                <span class="cov7" title="4">if clientID, expiresAt, err = auth.ValidateJWT(tokenString); err != nil </span><span class="cov1" title="1">{
+                        context.JSON(http.StatusForbidden, "request contains invalid or expired authorization token")
+                        context.Abort()
+
+                        return
+                }</span>
+
+                // Check for user deleted status.
+                <span class="cov6" title="3">if isDeleted, err = db.UserIsDeleted(clientID); err != nil </span><span class="cov1" title="1">{
+                        logger.Error("unable to retrieve client account status", zap.Error(err))
+
+                        context.JSON(http.StatusInternalServerError, constants.RetryMessageString())
+                        context.Abort()
+
+                        return
+                }</span>
+
+                <span class="cov4" title="2">if isDeleted </span><span class="cov1" title="1">{
                         context.JSON(http.StatusForbidden, "request contains invalid or expired authorization token")
                         context.Abort()
 
@@ -8619,7 +8704,7 @@ func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc <span 
                 context.Next()</span>
         }
 
-        <span class="cov10" title="4">return handler</span>
+        <span class="cov10" title="6">return handler</span>
 }
 </pre>
 
@@ -9730,7 +9815,7 @@ func (s *Server) initialize() <span class="cov0" title="0">{
         s.router = gin.Default()
 
         //        @title                                                FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
-        //        @version                                        1.1.0
+        //        @version                                        1.1.1
         //        @description                                FTeX Fiat and Cryptocurrency Banking API.
         //        @description                                Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
         //
@@ -9755,7 +9840,7 @@ func (s *Server) initialize() <span class="cov0" title="0">{
         s.router.GET(s.conf.Server.SwaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 
         // Endpoint configurations
-        authMiddleware := restHandlers.AuthMiddleware(s.auth, s.conf.Authorization.HeaderKey)
+        authMiddleware := restHandlers.AuthMiddleware(s.auth, s.db, s.logger, s.conf.Authorization.HeaderKey)
         api := s.router.Group(s.conf.Server.BasePath)
 
         api.GET("/health", restHandlers.Healthcheck(s.logger, s.db, s.cache))
