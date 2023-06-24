@@ -35,16 +35,34 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		fiatCreateAccErr     error
 		fiatCreateAccTimes   int
 	}{
 		{
-			name:                 "empty request",
-			path:                 "/open-fiat/empty-request",
+			name:                 "invalid jwt",
+			path:                 "/open-fiat/invalid-jwt",
 			query:                fmt.Sprintf(testFiatQuery["openFiat"], ""),
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("invalid token"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			fiatCreateAccErr:     nil,
+			fiatCreateAccTimes:   0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/open-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["openFiat"], ""),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			fiatCreateAccErr:     nil,
 			fiatCreateAccTimes:   0,
 		}, {
@@ -54,6 +72,9 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatCreateAccErr:     nil,
 			fiatCreateAccTimes:   0,
 		}, {
@@ -63,6 +84,9 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatCreateAccErr:     postgres.ErrNotFound,
 			fiatCreateAccTimes:   1,
 		}, {
@@ -72,6 +96,9 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatCreateAccErr:     nil,
 			fiatCreateAccTimes:   1,
 		},
@@ -95,6 +122,10 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().FiatCreateAccount(gomock.Any(), gomock.Any()).
 					Return(test.fiatCreateAccErr).
@@ -215,6 +246,9 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		fiatDepositAccErr    error
 		fiatDepositAccTimes  int
 	}{
@@ -225,6 +259,21 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("authorization failure"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			fiatDepositAccErr:    nil,
+			fiatDepositAccTimes:  0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/deposit-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["depositFiat"], 1234.56, "USD"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -234,6 +283,9 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -243,6 +295,9 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -252,6 +307,9 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  0,
 		}, {
@@ -261,6 +319,9 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatDepositAccErr:    nil,
 			fiatDepositAccTimes:  1,
 		},
@@ -284,6 +345,10 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(-1), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().FiatExternalTransfer(gomock.Any(), gomock.Any()).
 					Return(&postgres.FiatAccountTransferResult{}, test.fiatDepositAccErr).
@@ -360,7 +425,7 @@ func TestFiatResolver_OfferResponseResolver(t *testing.T) {
 	})
 }
 
-func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
+func TestFiatResolver_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 	t.Parallel()
 
 	amountValid, err := decimal.NewFromString("999")
@@ -373,6 +438,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		quotesErr            error
 		quotesTimes          int
 		authEncryptErr       error
@@ -387,6 +455,25 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("invalid jwt"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			quotesErr:            nil,
+			quotesTimes:          0,
+			authEncryptErr:       nil,
+			authEncryptTimes:     0,
+			redisErr:             nil,
+			redisTimes:           0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/exchange-offer-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["exchangeOfferFiat"], "USD", "CAD", 101.11),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -400,6 +487,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -413,6 +503,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -426,6 +519,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -439,6 +535,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -452,6 +551,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          0,
 			authEncryptErr:       nil,
@@ -465,6 +567,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            errors.New(""),
 			quotesTimes:          1,
 			authEncryptErr:       nil,
@@ -478,6 +583,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          1,
 			authEncryptErr:       errors.New(""),
@@ -491,6 +599,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          1,
 			authEncryptErr:       nil,
@@ -504,6 +615,9 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			quotesErr:            nil,
 			quotesTimes:          1,
 			authEncryptErr:       nil,
@@ -531,6 +645,10 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockQuotes.EXPECT().FiatConversion(gomock.Any(), gomock.Any(), gomock.Any(), nil).
 					Return(amountValid, amountValid, test.quotesErr).
@@ -654,6 +772,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		authDecryptErr       error
 		authDecryptTimes     int
 		redisGetData         models.HTTPExchangeOfferResponse
@@ -671,6 +792,28 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   errors.New("bad auth"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			authDecryptErr:       nil,
+			authDecryptTimes:     0,
+			redisGetData:         validOffer,
+			redisGetErr:          nil,
+			redisGetTimes:        0,
+			redisDelErr:          nil,
+			redisDelTimes:        0,
+			internalXferErr:      nil,
+			internalXferTimes:    0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/exchange-xfer-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["exchangeTransferFiat"], "some-encrypted-offer-id"),
+			expectErr:            true,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			authDecryptErr:       nil,
 			authDecryptTimes:     0,
 			redisGetData:         validOffer,
@@ -687,6 +830,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       errors.New("decrypt offer id"),
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -703,6 +849,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -719,6 +868,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -735,6 +887,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -751,6 +906,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -767,6 +925,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         invalidOfferClientID,
@@ -783,6 +944,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         invalidOfferSource,
@@ -799,6 +963,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -815,6 +982,9 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptErr:       nil,
 			authDecryptTimes:     1,
 			redisGetData:         validOffer,
@@ -845,6 +1015,10 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(validClientID, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return(validOfferID, test.authDecryptErr).
@@ -969,6 +1143,9 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		fiatBalanceErr       error
 		fiatBalanceTimes     int
 	}{
@@ -978,6 +1155,20 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
 			authValidateJWTErr:   errors.New("invalid JWT"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/balance-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			fiatBalanceErr:       nil,
 			fiatBalanceTimes:     0,
 		}, {
@@ -987,6 +1178,9 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			expectErr:            true,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatBalanceErr:       nil,
 			fiatBalanceTimes:     0,
 		}, {
@@ -995,6 +1189,9 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatBalanceErr:       errors.New("unknown error"),
 			fiatBalanceTimes:     1,
 		}, {
@@ -1003,6 +1200,9 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			query:                fmt.Sprintf(testFiatQuery["balanceFiat"], "USD"),
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatBalanceErr:       postgres.ErrNotFound,
 			fiatBalanceTimes:     1,
 		}, {
@@ -1012,6 +1212,9 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			expectErr:            false,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatBalanceErr:       nil,
 			fiatBalanceTimes:     1,
 		},
@@ -1035,6 +1238,10 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
 					Return(postgres.FiatAccount{}, test.fiatBalanceErr).
@@ -1080,6 +1287,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 		accDetails           []postgres.FiatAccount
 		authValidateJWTErr   error
 		authValidateJWTTimes int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		authDecryptStrErr    error
 		authDecryptStrTimes  int
 		fiatBalanceErr       error
@@ -1095,6 +1305,26 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   errors.New("invalid JWT"),
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			authDecryptStrErr:    nil,
+			authDecryptStrTimes:  0,
+			fiatBalanceErr:       nil,
+			fiatBalanceTimes:     0,
+			authEncryptStrErr:    nil,
+			authEncryptStrTimes:  0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/balance-all-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["balanceAllFiat"], "page-cursor", 3),
+			expectErr:            true,
+			accDetails:           accDetails,
+			authValidateJWTErr:   nil,
+			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			fiatBalanceErr:       nil,
@@ -1109,6 +1339,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    errors.New("decrypt failure"),
 			authDecryptStrTimes:  1,
 			fiatBalanceErr:       nil,
@@ -1123,6 +1356,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			fiatBalanceErr:       postgres.ErrNotFound,
@@ -1137,6 +1373,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			fiatBalanceErr:       errors.New("unknown db error"),
@@ -1151,6 +1390,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			fiatBalanceErr:       nil,
@@ -1165,6 +1407,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			fiatBalanceErr:       nil,
@@ -1179,6 +1424,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           []postgres.FiatAccount{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			fiatBalanceErr:       nil,
@@ -1193,6 +1441,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  0,
 			fiatBalanceErr:       nil,
@@ -1207,6 +1458,9 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			accDetails:           accDetails,
 			authValidateJWTErr:   nil,
 			authValidateJWTTimes: 1,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			authDecryptStrErr:    nil,
 			authDecryptStrTimes:  1,
 			fiatBalanceErr:       nil,
@@ -1234,6 +1488,10 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte{}, test.authDecryptStrErr).
@@ -1358,6 +1616,9 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 		expectErr            bool
 		authValidateJWTErr   error
 		authValidateTimes    int
+		isDeletedError       error
+		isDeletedTimes       int
+		isDeletedValue       bool
 		fiatTxDetailsErr     error
 		fiatTxDetailsTimes   int
 		cryptoTxDetailsErr   error
@@ -1370,6 +1631,23 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 			expectErr:            true,
 			authValidateTimes:    1,
 			authValidateJWTErr:   errors.New("invalid jwt"),
+			isDeletedError:       nil,
+			isDeletedTimes:       0,
+			isDeletedValue:       false,
+			fiatTxDetailsErr:     nil,
+			fiatTxDetailsTimes:   0,
+			cryptoTxDetailsErr:   nil,
+			cryptoTxDetailsTimes: 0,
+		}, {
+			name:                 "deleted account",
+			path:                 "/transaction-details-fiat/deleted-account",
+			query:                fmt.Sprintf(testFiatQuery["transactionDetailsFiat"], txID),
+			expectErr:            true,
+			authValidateTimes:    1,
+			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       true,
 			fiatTxDetailsErr:     nil,
 			fiatTxDetailsTimes:   0,
 			cryptoTxDetailsErr:   nil,
@@ -1381,6 +1659,9 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 			expectErr:            false,
 			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     postgres.ErrTransactCryptoDetails,
 			cryptoTxDetailsTimes: 0,
@@ -1392,6 +1673,9 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 			expectErr:            false,
 			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     nil,
 			cryptoTxDetailsTimes: 1,
@@ -1403,6 +1687,9 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 			expectErr:            false,
 			authValidateTimes:    1,
 			authValidateJWTErr:   nil,
+			isDeletedError:       nil,
+			isDeletedTimes:       1,
+			isDeletedValue:       false,
 			fiatTxDetailsTimes:   1,
 			fiatTxDetailsErr:     nil,
 			cryptoTxDetailsTimes: 1,
@@ -1428,6 +1715,10 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(clientID, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockPostgres.EXPECT().FiatTxDetails(gomock.Any(), gomock.Any()).
 					Return([]postgres.FiatJournal{{}}, test.fiatTxDetailsErr).
@@ -1482,6 +1773,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 		journalEntries         []postgres.FiatJournal
 		authValidateJWTErr     error
 		authValidateJWTTimes   int
+		isDeletedError         error
+		isDeletedTimes         int
+		isDeletedValue         bool
 		authDecryptCursorErr   error
 		authDecryptCursorTimes int
 		authEncryptCursorErr   error
@@ -1490,14 +1784,35 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 		fiatTxPaginatedTimes   int
 	}{
 		{
-			name: "auth failure",
-			path: "/transaction-details-all-fiat/auth-failure",
+			name: "invalid jwt",
+			path: "/transaction-details-all-fiat/invalid-jwt",
 			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
 				"USD", 3, "page-cusror"),
 			expectErr:              true,
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     errors.New("auth failure"),
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         0,
+			isDeletedValue:         false,
+			authDecryptCursorErr:   nil,
+			authDecryptCursorTimes: 0,
+			authEncryptCursorErr:   nil,
+			authEncryptCursorTimes: 0,
+			fiatTxPaginatedErr:     nil,
+			fiatTxPaginatedTimes:   0,
+		}, {
+			name: "account deleted",
+			path: "/transaction-details-all-fiat/account-deleted",
+			query: fmt.Sprintf(testFiatQuery["transactionDetailsAllFiatSubsequent"],
+				"USD", 3, "page-cusror"),
+			expectErr:              true,
+			journalEntries:         journalEntries,
+			authValidateJWTErr:     nil,
+			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         true,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1513,6 +1828,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1528,6 +1846,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1543,6 +1864,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1558,6 +1882,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1573,6 +1900,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         []postgres.FiatJournal{},
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1588,6 +1918,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 1,
 			authEncryptCursorErr:   nil,
@@ -1603,6 +1936,9 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			journalEntries:         journalEntries,
 			authValidateJWTErr:     nil,
 			authValidateJWTTimes:   1,
+			isDeletedError:         nil,
+			isDeletedTimes:         1,
+			isDeletedValue:         false,
 			authDecryptCursorErr:   nil,
 			authDecryptCursorTimes: 0,
 			authEncryptCursorErr:   nil,
@@ -1630,6 +1966,10 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
 					Return(uuid.UUID{}, int64(0), test.authValidateJWTErr).
 					Times(test.authValidateJWTTimes),
+
+				mockPostgres.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
 
 				mockAuth.EXPECT().DecryptFromString(gomock.Any()).
 					Return([]byte(decryptedCursor), test.authDecryptCursorErr).

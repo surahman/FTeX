@@ -378,3 +378,18 @@ func (mr *MockQuerierMockRecorder) userGetInfo(arg0, arg1 interface{}) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userGetInfo", reflect.TypeOf((*MockQuerier)(nil).userGetInfo), arg0, arg1)
 }
+
+// userIsDeleted mocks base method.
+func (m *MockQuerier) userIsDeleted(arg0 context.Context, arg1 uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "userIsDeleted", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// userIsDeleted indicates an expected call of userIsDeleted.
+func (mr *MockQuerierMockRecorder) userIsDeleted(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "userIsDeleted", reflect.TypeOf((*MockQuerier)(nil).userIsDeleted), arg0, arg1)
+}

@@ -60,6 +60,8 @@ type Querier interface {
 	userGetCredentials(ctx context.Context, username string) (userGetCredentialsRow, error)
 	// userGetInfo will retrieve a single users account information.
 	userGetInfo(ctx context.Context, clientID uuid.UUID) (userGetInfoRow, error)
+	// userIsDeleted will return the soft delete status of a user account.
+	userIsDeleted(ctx context.Context, clientID uuid.UUID) (bool, error)
 }
 
 var _ Querier = (*Queries)(nil)

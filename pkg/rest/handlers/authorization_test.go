@@ -20,8 +20,9 @@ func TestAuthMiddleware(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockAuth := mocks.NewMockAuth(mockCtrl)
+	mockDB := mocks.NewMockPostgres(mockCtrl)
 
-	handler := AuthMiddleware(mockAuth, "Authorization")
+	handler := AuthMiddleware(mockAuth, mockDB, zapLogger, "Authorization")
 	require.NotNil(t, handler)
 }
 
@@ -36,6 +37,9 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 		authJWTError      error
 		authJWTExpiration int64
 		authJWTTimes      int
+		isDeletedError    error
+		isDeletedTimes    int
+		isDeletedValue    bool
 		expectedStatus    int
 	}{
 		{
@@ -47,6 +51,9 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			authJWTExpiration: -1,
 			authJWTError:      nil,
 			authJWTTimes:      0,
+			isDeletedError:    nil,
+			isDeletedTimes:    0,
+			isDeletedValue:    false,
 		}, {
 			name:              "invalid token",
 			path:              "/auth-middleware/invalid-token",
@@ -56,6 +63,33 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			authJWTExpiration: -1,
 			authJWTError:      errors.New("JWT validation failure"),
 			authJWTTimes:      1,
+			isDeletedError:    nil,
+			isDeletedTimes:    0,
+			isDeletedValue:    false,
+		}, {
+			name:              "db failure",
+			path:              "/auth-middleware/db-failure",
+			token:             "valid-token",
+			expectedStatus:    http.StatusInternalServerError,
+			authJWTUUID:       uuid.UUID{},
+			authJWTExpiration: -1,
+			authJWTError:      nil,
+			authJWTTimes:      1,
+			isDeletedError:    errors.New("db failure"),
+			isDeletedTimes:    1,
+			isDeletedValue:    false,
+		}, {
+			name:              "deleted account",
+			path:              "/auth-middleware/deleted-account",
+			token:             "valid-token",
+			expectedStatus:    http.StatusForbidden,
+			authJWTUUID:       uuid.UUID{},
+			authJWTExpiration: -1,
+			authJWTError:      nil,
+			authJWTTimes:      1,
+			isDeletedError:    nil,
+			isDeletedTimes:    1,
+			isDeletedValue:    true,
 		}, {
 			name:              "valid token",
 			path:              "/auth-middleware/valid-token",
@@ -65,6 +99,9 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			authJWTExpiration: -1,
 			authJWTError:      nil,
 			authJWTTimes:      1,
+			isDeletedError:    nil,
+			isDeletedTimes:    1,
+			isDeletedValue:    false,
 		},
 	}
 
@@ -78,17 +115,24 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
 			mockAuth := mocks.NewMockAuth(mockCtrl)
+			mockDB := mocks.NewMockPostgres(mockCtrl)
 
-			mockAuth.EXPECT().ValidateJWT(gomock.Any()).
-				Return(
-					test.authJWTUUID,
-					test.authJWTExpiration,
-					test.authJWTError,
-				).Times(test.authJWTTimes)
+			gomock.InOrder(
+				mockAuth.EXPECT().ValidateJWT(gomock.Any()).
+					Return(
+						test.authJWTUUID,
+						test.authJWTExpiration,
+						test.authJWTError,
+					).Times(test.authJWTTimes),
+
+				mockDB.EXPECT().UserIsDeleted(gomock.Any()).
+					Return(test.isDeletedValue, test.isDeletedError).
+					Times(test.isDeletedTimes),
+			)
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.POST(test.path, AuthMiddleware(mockAuth, "Authorization"))
+			router.POST(test.path, AuthMiddleware(mockAuth, mockDB, zapLogger, "Authorization"))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
 			req.Header.Set("Authorization", test.token)
 			w := httptest.NewRecorder()

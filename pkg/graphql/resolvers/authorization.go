@@ -8,7 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
+	"github.com/surahman/FTeX/pkg/constants"
 	"github.com/surahman/FTeX/pkg/logger"
+	"github.com/surahman/FTeX/pkg/postgres"
+	"go.uber.org/zap"
 )
 
 type GinContextKey struct{}
@@ -33,12 +36,13 @@ func GinContextFromContext(ctx context.Context, logger *logger.Logger) (*gin.Con
 }
 
 // AuthorizationCheck will validate the JWT payload for valid authorization information.
-func AuthorizationCheck(ctx context.Context, auth auth.Auth, logger *logger.Logger, authHeaderKey string) (
-	uuid.UUID, int64, error) {
+func AuthorizationCheck(ctx context.Context, auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
+	authHeaderKey string) (uuid.UUID, int64, error) {
 	var (
 		clientID   uuid.UUID
 		expiresAt  int64
 		err        error
+		isDeleted  bool
 		ginContext *gin.Context
 	)
 
@@ -53,6 +57,17 @@ func AuthorizationCheck(ctx context.Context, auth auth.Auth, logger *logger.Logg
 
 	if clientID, expiresAt, err = auth.ValidateJWT(tokenString); err != nil {
 		return clientID, expiresAt, fmt.Errorf("failed to validate JWT %w", err)
+	}
+
+	// Check for user deleted status.
+	if isDeleted, err = db.UserIsDeleted(clientID); err != nil {
+		logger.Error("unable to retrieve client account status", zap.Error(err))
+
+		return clientID, expiresAt, errors.New(constants.RetryMessageString())
+	}
+
+	if isDeleted {
+		return clientID, expiresAt, errors.New("request contains invalid or expired authorization token")
 	}
 
 	return clientID, expiresAt, nil

@@ -7,15 +7,19 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/surahman/FTeX/pkg/auth"
 	"github.com/surahman/FTeX/pkg/constants"
+	"github.com/surahman/FTeX/pkg/logger"
+	"github.com/surahman/FTeX/pkg/postgres"
+	"go.uber.org/zap"
 )
 
 // AuthMiddleware is the middleware that checks whether a JWT is valid and can access an endpoint.
-func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc {
+func AuthMiddleware(auth auth.Auth, db postgres.Postgres, logger *logger.Logger, authHeaderKey string) gin.HandlerFunc {
 	handler := func(context *gin.Context) {
 		var (
 			err         error
 			clientID    uuid.UUID
 			expiresAt   int64
+			isDeleted   bool
 			tokenString = context.GetHeader(authHeaderKey)
 		)
 
@@ -27,6 +31,23 @@ func AuthMiddleware(auth auth.Auth, authHeaderKey string) gin.HandlerFunc {
 		}
 
 		if clientID, expiresAt, err = auth.ValidateJWT(tokenString); err != nil {
+			context.JSON(http.StatusForbidden, "request contains invalid or expired authorization token")
+			context.Abort()
+
+			return
+		}
+
+		// Check for user deleted status.
+		if isDeleted, err = db.UserIsDeleted(clientID); err != nil {
+			logger.Error("unable to retrieve client account status", zap.Error(err))
+
+			context.JSON(http.StatusInternalServerError, constants.RetryMessageString())
+			context.Abort()
+
+			return
+		}
+
+		if isDeleted {
 			context.JSON(http.StatusForbidden, "request contains invalid or expired authorization token")
 			context.Abort()
 
