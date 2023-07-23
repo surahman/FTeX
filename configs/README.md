@@ -7,10 +7,18 @@ directory and are written in the YAML format.
 
 ## Table of contents
 
+- [Security](#security)
+- [age Encryption](#age-encryption)
+    - [Installation](#installation)
+    - [Key File](#key-file)
+- [Mozilla Secret OPerationS (SOPS)](#mozilla-secret-operations-sops)
+    - [Installation](#installation)
+    - [Encrypting](#encrypting)
+    - [Decrypting](#decrypting)
 
 <br/>
 
-### Security Note
+### Security
 
 Configuration files are provided in this directory in both their plaintext and `age` encrypted Mozilla Secret OPerationS
 (`SOPS`) format.
@@ -113,6 +121,6 @@ docker run -d \
 -e REDIS_CONNECTION.ADDR=192.168.0.211:7379 \
 -e QUOTES_FIATCURRENCY.APIKEY='some-api-key' \
 -e QUOTES_CRYPTOCURRENCY.APIKEY='some-api-key' \
--e SOPS_AGE_KEY=AGE-SECRET-KEY-1727NPT5T8X5VVTSHRP26U7SEKTV64YJ4CQX6VVQ8DN2R6LGDLYJQPHYJXA \
+-e SOPS_AGE_KEY='AGE-SECRET-KEY-1727NPT5T8X5VVTSHRP26U7SEKTV64YJ4CQX6VVQ8DN2R6LGDLYJQPHYJXA' \
 ftex
 ```
