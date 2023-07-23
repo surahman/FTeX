@@ -52,4 +52,4 @@ EXPOSE 33723 47130
 ENV GIN_MODE=release
 
 # Launch application.
-ENTRYPOINT ./bootstrap.sh" "$sopsDir" "$execName"
+ENTRYPOINT ./bootstrap.sh "$sopsDir" "$execName"
