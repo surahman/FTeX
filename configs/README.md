@@ -59,3 +59,60 @@ AGE-SECRET-KEY-1727NPT5T8X5VVTSHRP26U7SEKTV64YJ4CQX6VVQ8DN2R6LGDLYJQPHYJXA
 ```
 
 <br/>
+
+### Mozilla Secret OPerationS (SOPS)
+
+A description of [`SOPS`](https://github.com/getsops/sops#encrypting-using-age), taken directly from their GitHub
+repository, describes the project most adequately.
+
+> sops is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats and encrypts with AWS KMS,
+> GCP KMS, Azure Key Vault, age, and PGP.
+
+Please consult the `SOPS` documentation on working with the format during development.
+
+#### Installation
+
+The installers will need to be downloaded from the [releases](https://github.com/getsops/sops/releases) `SOPS`
+GitHub project page. The Docker container will require the `rpm` package manager to be installed during the Alpine build
+process.
+
+#### Encrypting
+
+The `age` encryption key must be supplied to the `SOPS` cli tool during the encryption process.
+
+```bash
+sops --encrypt --age age17qltwhv4zxxc8n4rpku8jqpy3mzq37hd02dwtqyp889d23dl7sfskk342t configs/AuthConfig.yaml > configs/AuthConfig.sops
+```
+
+#### Decrypting
+
+Environment variables need to set that either supply the `age` private/secret key or the path to the actual key file.
+
+```bash
+export SOPS_AGE_KEY_FILE=path/to/keyfile/keys.txt
+```
+
+```bash
+export SOPS_AGE_KEY=AGE-SECRET-KEY-1727NPT5T8X5VVTSHRP26U7SEKTV64YJ4CQX6VVQ8DN2R6LGDLYJQPHYJXA
+```
+
+Decrypting the `SOPS` files to plaintext can be achieved using the example command below after the environment variables
+above have been configured:
+
+```bash
+sops -d --input-type yaml --output-type yaml configs/AuthConfig.sops > configs/AuthConfig.yaml
+```
+
+To test the Docker image locally, the `age` key information can be supplied using the `-e` cli flag.
+
+```bash
+docker run -d \
+-p 33723:33723 \
+-p 47130:47130 \
+-e POSTGRES_CONNECTION.HOST=192.168.0.211 \
+-e REDIS_CONNECTION.ADDR=192.168.0.211:7379 \
+-e QUOTES_FIATCURRENCY.APIKEY='some-api-key' \
+-e QUOTES_CRYPTOCURRENCY.APIKEY='some-api-key' \
+-e SOPS_AGE_KEY=AGE-SECRET-KEY-1727NPT5T8X5VVTSHRP26U7SEKTV64YJ4CQX6VVQ8DN2R6LGDLYJQPHYJXA \
+ftex
+```

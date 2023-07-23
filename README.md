@@ -166,7 +166,7 @@ To supply the environment variables using the Docker CLI, please use the `-e` fl
 the API Keys for the Fiat and Cryptocurrency quote services, database host information, and port mappings. Please see
 the Docker `run` [documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
 
-```shell
+```bash
 docker run -d \
 -p 33723:33723 \
 -p 47130:47130 \
@@ -174,8 +174,9 @@ docker run -d \
 -e REDIS_CONNECTION.ADDR=192.168.0.211:7379 \
 -e QUOTES_FIATCURRENCY.APIKEY='some-api-key' \
 -e QUOTES_CRYPTOCURRENCY.APIKEY='some-api-key' \
+-e SOPS_AGE_KEY='some-SOPS-secret-key' \
 ftex
-```
+````
 
 <br/>
 
