@@ -10,7 +10,7 @@ decryptExt=yaml
 
 echo 'Decrypting Secret OperationS configuration files...'
 
-for item in "$configFilePath"/*."$encryptExt"; do
+for item in "$configFilePath"*."$encryptExt"; do
   filename=$(basename "$item" ."$encryptExt")
 
   sops -d --input-type yaml --output-type yaml "$item" > "$configFilePath"/"$filename"."$decryptExt" ||
@@ -20,3 +20,9 @@ for item in "$configFilePath"/*."$encryptExt"; do
 done
 
 echo 'Decryption completed successfully.'
+
+###############################################################################
+#                    Start FTeX, Inc. Transaction Service                     #
+###############################################################################
+
+./"$2"

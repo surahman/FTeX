@@ -19,13 +19,28 @@ RUN make build ARCH=linux
 ## Deploy
 FROM alpine:latest
 
+# Variables
+ENV execName=FTeX-linux
+ENV sopsDir=/etc/FTeX.conf/
+
+# Install required packages.
+RUN apk --no-cache --update add age rpm bash
+
+# Manually install SOpS and perfom cleanup.
+RUN wget https://github.com/getsops/sops/releases/download/v3.7.3/sops-3.7.3-1.x86_64.rpm
+RUN rpm -i sops-3.7.3-1.x86_64.rpm && rm sops-3.7.3-1.x86_64.rpm
+
 WORKDIR /
 
 # Compiled binary.
-COPY --from=build /build/FTeX-linux /FTeX-linux
+COPY --from=build /build/$execName /$execName
 
 # Service Configurations.
-COPY --from=build /build/configs /etc/FTeX.conf/
+COPY --from=build /build/configs/*.sops $sopsDir
+
+# Copy over decryption script.
+COPY --from=build /build/docker/bootstrap.sh bootstrap.sh
+RUN chmod +x bootstrap.sh
 
 # Port list:
 # Please set these ports according to the configurations in the YAML files in /configs directory.
@@ -37,4 +52,4 @@ EXPOSE 33723 47130
 ENV GIN_MODE=release
 
 # Launch application.
-ENTRYPOINT ["./FTeX-linux"]
+ENTRYPOINT ./bootstrap.sh" "$sopsDir" "$execName"

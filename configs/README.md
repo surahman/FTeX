@@ -37,7 +37,7 @@ A number of packages for different Operating Systems from various package manage
 
 The Alpine `apk`manager is required and is used to install the package used to decrypt the `SOPS` in the Docker
 container.
-This is achieved using a bash script located in the [D-ocker](../docker/sops_decryption.sh) directory.
+This is achieved using a bash script located in the [Docker](../docker/bootstrap.sh) directory.
 
 #### Key File
 
