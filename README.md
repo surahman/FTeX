@@ -39,6 +39,9 @@ employed to make testing and deployment of this demonstration application easier
 credentials would be stored in a secure credential store and mounted as environment variables or files in the container.
 Yet another option would be to encrypt the configuration files as Mozilla Secret OPerationS (SOPS).
 
+The Docker container build script leverages `SOPS` and will decrypt the secrets when the application is launched. Please
+see the [configs](configs/README.md) readme file for details.
+
 <br/>
 
 :warning: **_Protocols_** :warning:
@@ -163,10 +166,11 @@ Environment variables can be set using the Kubernetes deployment configurations 
 using the Docker CLI.
 
 To supply the environment variables using the Docker CLI, please use the `-e` flag. Below is an example of how to supply
-the API Keys for the Fiat and Cryptocurrency quote services, database host information, and port mappings. Please see
-the Docker `run` [documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
+the API Keys for the Fiat and Cryptocurrency quote services, database host information, port mappings, and `age`
+secret/private key for `SOPS` decryption. Please see the Docker `run`
+[documentation](https://docs.docker.com/engine/reference/commandline/run/#env) for more details.
 
-```shell
+```bash
 docker run -d \
 -p 33723:33723 \
 -p 47130:47130 \
@@ -174,8 +178,9 @@ docker run -d \
 -e REDIS_CONNECTION.ADDR=192.168.0.211:7379 \
 -e QUOTES_FIATCURRENCY.APIKEY='some-api-key' \
 -e QUOTES_CRYPTOCURRENCY.APIKEY='some-api-key' \
+-e SOPS_AGE_KEY='some-SOPS-secret-key' \
 ftex
-```
+````
 
 <br/>
 
