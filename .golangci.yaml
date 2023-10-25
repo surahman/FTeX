@@ -30,6 +30,8 @@ linters-settings:
     ignored-functions:
       - 'math.*'
       - 'decimal.*'
+    goconst:
+      min-len: 4
   paralleltest:
     ignore-missing: true
   varnamelen:

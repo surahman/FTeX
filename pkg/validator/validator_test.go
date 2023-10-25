@@ -140,7 +140,7 @@ func TestValidateStruct(t *testing.T) {
 
 			validationErr := &ValidationError{}
 			if errors.As(err, &validationErr) {
-				require.Equal(t, testCase.expectedLen, len(validationErr.Errors))
+				require.Len(t, validationErr.Errors, testCase.expectedLen, "expected error count mismatched.")
 			}
 		})
 	}
