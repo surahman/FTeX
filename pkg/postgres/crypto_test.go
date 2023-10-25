@@ -210,7 +210,7 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 		// Check Fiat Journal entries.
 		fiatJournal, err := connection.FiatTxDetails(clientID1, txIDValid1)
 		require.NoError(t, err, "failed to retrieve Fiat journal for first valid purchase.")
-		require.Equal(t, 1, len(fiatJournal), "invalid Fiat journal count for first purchase.")
+		require.Equal(t, len(fiatJournal), 1, "invalid Fiat journal count for first purchase.")
 		require.Equal(t, testCases[0].params.FiatDebitAmount.Mul(negOne), fiatJournal[0].Amount,
 			"first Fiat debit amount mismatched.")
 
@@ -234,15 +234,15 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Fiat journal for PKR purchase.")
-		require.Equal(t, 0, len(fiatJournal), "Fiat journal entry for PKR purchase found.")
+		require.Empty(t, len(fiatJournal), "Fiat journal entry for PKR purchase found.")
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDBAD)
 		require.NoError(t, err, "failed to retrieve Fiat journal for invalid crypto ticker purchase.")
-		require.Equal(t, 0, len(fiatJournal), "Fiat journal entry for invalid crypto ticker purchase found.")
+		require.Empty(t, len(fiatJournal), "Fiat journal entry for invalid crypto ticker purchase found.")
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDNoFunds)
 		require.NoError(t, err, "failed to retrieve Fiat journal for insufficient funds purchase.")
-		require.Equal(t, 0, len(fiatJournal), "Fiat journal entry for insufficient funds purchase found.")
+		require.Empty(t, len(fiatJournal), "Fiat journal entry for insufficient funds purchase found.")
 
 		// Check Crypto Journal entries.
 		cryptoJournal, err := connection.CryptoTxDetails(clientID1, txIDValid1)
