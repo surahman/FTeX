@@ -776,8 +776,9 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		parameters := testCase.parameters
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
-			rows, err := connection.Query.cryptoGetAllJournalTransactionsPaginated(ctx, &testCase.parameters)
+			rows, err := connection.Query.cryptoGetAllJournalTransactionsPaginated(ctx, &parameters)
 			require.NoError(t, err, "error expectation failed.")
 			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
 		})
