@@ -179,15 +179,15 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 
 	authResponse, err := testAuth.GenerateJWT(clientID)
 	require.NoError(t, err, "JWT creation failed")
-	require.True(t, authResponse.Expires > time.Now().Unix(), "JWT expires before current time.")
-	require.True(t, authResponse.Expires < time.Now().Add(time.Duration(expirationDuration+1)*time.Second).Unix(),
+	require.Greater(t, authResponse.Expires, time.Now().Unix(), "JWT expires before current time.")
+	require.Less(t, authResponse.Expires, time.Now().Add(time.Duration(expirationDuration+1)*time.Second).Unix(),
 		"JWT expires after deadline.")
 
 	// Check validate token and check for username in claim.
 	actualUUID, expiresAt, err := testAuth.ValidateJWT(authResponse.Token)
 	require.NoError(t, err, "failed to extract information from JWT.")
 	require.Equal(t, actualUUID, clientID, "incorrect clientID retrieved from JWT.")
-	require.True(t, expiresAt > 0, "invalid expiration time")
+	require.Greater(t, expiresAt, int64(0), "invalid expiration time")
 }
 
 func TestAuthImpl_ValidateJWT(t *testing.T) {
@@ -269,7 +269,7 @@ func TestAuthImpl_ValidateJWT(t *testing.T) {
 			}
 
 			require.Equal(t, clientID, actualClientID, "clientId failed to match the expected")
-			require.True(t, expiresAt > time.Now().Unix(), "invalid expiration time")
+			require.Greater(t, expiresAt, time.Now().Unix(), "invalid expiration time")
 		})
 	}
 }
@@ -316,7 +316,7 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 			actualClientID, expiresAt, err := testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoError(t, err, "failed to validate original test token")
 			require.Equal(t, clientID, actualClientID, "failed to extract correct clientID from original JWT")
-			require.True(t, expiresAt > 0, "invalid expiration time of original token")
+			require.Greater(t, expiresAt, int64(0), "invalid expiration time of original token")
 
 			time.Sleep(time.Duration(test.sleepTime) * time.Second)
 			refreshedToken, err := testAuthImpl.RefreshJWT(testJWT.Token)
@@ -326,15 +326,15 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 				return
 			}
 
-			require.True(t,
-				refreshedToken.Expires > time.Now().Add(
+			require.Greater(t,
+				refreshedToken.Expires, time.Now().Add(
 					time.Duration(testAuthImpl.conf.JWTConfig.ExpirationDuration-1)*time.Second).Unix(),
 				"token expires before the required deadline")
 
 			actualClientID, expiresAt, err = testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoErrorf(t, err, "failed to validate refreshed JWT")
 			require.Equal(t, clientID, actualClientID, "failed to extract correct clientID from refreshed JWT")
-			require.True(t, expiresAt > 0, "invalid expiration time of refreshed token")
+			require.Greater(t, expiresAt, int64(0), "invalid expiration time of refreshed token")
 		})
 	}
 }
@@ -389,7 +389,7 @@ func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
 
 	ciphertext, err := testAuth.EncryptToString([]byte(toEncrypt))
 	require.NoError(t, err, "encrypt to string failed")
-	require.True(t, len(ciphertext) > 0, "encrypted string is empty")
+	require.Greater(t, len(ciphertext), 0, "encrypted string is empty")
 
 	plaintext, err := testAuth.DecryptFromString(ciphertext)
 	require.NoError(t, err, "encrypt from string failed")
@@ -476,8 +476,8 @@ func TestAuth_AuthFromGinCtx(t *testing.T) {
 
 			clientID, expiresAt, err := testAuth.TokenInfoFromGinCtx(test.ctx)
 			test.expectErr(t, err, "error expectation failed.")
-			require.Equal(t, clientID, test.expectedUUID, "clientID mismatched.")
-			require.Equal(t, expiresAt, test.expectedTime, "expiration deadline mismatched.")
+			require.Equal(t, test.expectedUUID, clientID, "clientID mismatched.")
+			require.Equal(t, test.expectedTime, expiresAt, "expiration deadline mismatched.")
 
 			if err != nil {
 				require.Contains(t, err.Error(), test.expectErrMsg, "error message mismatch.")
