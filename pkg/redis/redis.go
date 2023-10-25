@@ -33,13 +33,13 @@ type Redis interface {
 	Healthcheck() error
 
 	// Set will place a key with a given value in the cache with a TTL, if specified in the configurations.
-	Set(string, any, time.Duration) error
+	Set(key string, value any, ttl time.Duration) error
 
 	// Get will retrieve a value associated with a provided key.
-	Get(string, any) error
+	Get(key string, value any) error
 
 	// Del will remove all keys provided as a set of keys.
-	Del(...string) error
+	Del(key ...string) error
 }
 
 // Check to ensure the Redis interface has been implemented.
