@@ -159,7 +159,7 @@ func TestCommon_HTTPTransactionGeneratePageCursor(t *testing.T) {
 		t.Parallel()
 		encrypted, err := HTTPTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
 		require.NoError(t, err, "failed to encrypt cursor.")
-		require.True(t, len(encrypted) > 0, "empty encrypted cursor returned.")
+		require.NotEmpty(t, len(encrypted), "empty encrypted cursor returned.")
 
 		actualStart, actualStartStr, actualEnd, actualEndStr, actualOffset, err :=
 			HTTPTransactionUnpackPageCursor(testAuth, encrypted)
@@ -281,7 +281,7 @@ func TestCommon_HTTPTransactionInfoPaginatedRequest(t *testing.T) {
 				return
 			}
 
-			require.True(t, len(pageCursor) > 100, "empty page cursor returned.")
+			require.Greater(t, len(pageCursor), 100, "empty page cursor returned.")
 
 			// Check start timestamp.
 			expectedStartTS, err := time.Parse(time.RFC3339, test.expectStart)
@@ -414,7 +414,7 @@ func TestCommon_HTTPTxParseQueryParams(t *testing.T) {
 			require.Equal(t, test.expectPageSize, test.params.PageSize, "page size mismatched.")
 			require.Equal(t, pgStart, test.params.PeriodStart, "start timestamp mismatched.")
 			require.Equal(t, pgEnd, test.params.PeriodEnd, "end timestamp mismatched.")
-			require.True(t, len(test.params.NextPage) > 100, "next page cursor is incorrect.")
+			require.Greater(t, len(test.params.NextPage), 100, "next page cursor is incorrect.")
 		})
 	}
 }

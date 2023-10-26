@@ -27,7 +27,6 @@ func TestZapConfig_Load(t *testing.T) {
 		expectNil require.ValueAssertionFunc
 		expectLen int
 	}{
-		// ----- test cases start ----- //
 		{
 			name:      "invalid - empty",
 			input:     loggerConfigTestData["empty"],
@@ -69,7 +68,6 @@ func TestZapConfig_Load(t *testing.T) {
 			expectNil: require.NotNil,
 			expectLen: 0,
 		},
-		// ----- test cases end ----- //
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -86,7 +84,7 @@ func TestZapConfig_Load(t *testing.T) {
 
 			validationError := &validator.ValidationError{}
 			if errors.As(err, &validationError) {
-				require.Equalf(t, testCase.expectLen, len(validationError.Errors), "Expected errors count is incorrect: %v", err)
+				require.Lenf(t, validationError.Errors, testCase.expectLen, "Expected errors count is incorrect: %v", err)
 
 				return
 			}

@@ -27,31 +27,31 @@ import (
 // Auth is the interface through which the authorization operations can be accessed. Created to support mock testing.
 type Auth interface {
 	// HashPassword will take a plaintext string and generate a hashed representation of it.
-	HashPassword(string) (string, error)
+	HashPassword(plaintext string) (string, error)
 
 	// CheckPassword will take the plaintext and hashed passwords as input, in that order, and verify if they match.
-	CheckPassword(string, string) error
+	CheckPassword(plaintext string, hashed string) error
 
 	// GenerateJWT will create a valid JSON Web Token and return it in a JWT Authorization Response structure.
-	GenerateJWT(uuid.UUID) (*models.JWTAuthResponse, error)
+	GenerateJWT(clientID uuid.UUID) (*models.JWTAuthResponse, error)
 
 	// ValidateJWT will take the JSON Web Token and validate it. It will extract and return the username and expiration
 	// time (Unix timestamp) or an error if validation fails.
-	ValidateJWT(string) (uuid.UUID, int64, error)
+	ValidateJWT(token string) (uuid.UUID, int64, error)
 
 	// RefreshJWT will take a valid JSON Web Token, and if valid and expiring soon, issue a fresh valid JWT with the time
 	// extended in JWT Authorization Response structure.
-	RefreshJWT(string) (*models.JWTAuthResponse, error)
+	RefreshJWT(token string) (*models.JWTAuthResponse, error)
 
 	// RefreshThreshold returns the time before the end of the JSON Web Tokens validity interval that a JWT can be
 	// refreshed in.
 	RefreshThreshold() int64
 
 	// EncryptToString will generate an encrypted base64 encoded character from the plaintext.
-	EncryptToString([]byte) (string, error)
+	EncryptToString(plaintext []byte) (string, error)
 
 	// DecryptFromString will decrypt an encrypted base64 encoded character from the ciphertext.
-	DecryptFromString(string) ([]byte, error)
+	DecryptFromString(encoded string) ([]byte, error)
 
 	// TokenInfoFromGinCtx extracts the clientID and expiration deadline stored from a JWT in the Gin context.
 	TokenInfoFromGinCtx(ctx *gin.Context) (uuid.UUID, int64, error)
@@ -137,7 +137,7 @@ func (a *authImpl) GenerateJWT(clientID uuid.UUID) (*models.JWTAuthResponse, err
 		msg := "failed to generate signed jwt"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	authResponse := &models.JWTAuthResponse{
@@ -158,7 +158,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (uuid.UUID, int64, error) {
 		msg := "failed to parse token"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return uuid.UUID{}, -1, fmt.Errorf(msg+" %w", err)
+		return uuid.UUID{}, -1, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Cast token claim to JWT.
@@ -167,7 +167,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (uuid.UUID, int64, error) {
 		msg := "failed to extract jwt data"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return uuid.UUID{}, -1, fmt.Errorf(msg+" %w", err)
+		return uuid.UUID{}, -1, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Check for errors and compare the expiration time in Unix format.

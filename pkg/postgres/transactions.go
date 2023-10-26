@@ -134,7 +134,7 @@ func fiatExternalTransfer(
 		msg := "failed to get row lock on destination Fiat account"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Make General Journal ledger entries.
@@ -146,7 +146,7 @@ func fiatExternalTransfer(
 		msg := "failed to post Fiat account Journal entries"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Update the account balance.
@@ -159,7 +159,7 @@ func fiatExternalTransfer(
 		msg := "failed to update Fiat account balance"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	return &FiatAccountTransferResult{
@@ -240,7 +240,7 @@ func (p *postgresImpl) FiatInternalTransfer(
 		msg := "internal transfer Fiat transaction block setup failed"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Set rollback in case of failure.
@@ -261,7 +261,7 @@ func (p *postgresImpl) FiatInternalTransfer(
 		msg := "failed to complete internal Fiat transfer transaction"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Commit transaction.
@@ -269,7 +269,7 @@ func (p *postgresImpl) FiatInternalTransfer(
 		msg := "failed to commit internal Fiat account transfer"
 		p.logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	return srcTxReceipt, dstTxReceipt, nil
@@ -306,7 +306,7 @@ func fiatInternalTransfer(
 		msg := "failed to get row lock on Fiat accounts and verify balance of debit account"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Make General Journal ledger entries.
@@ -321,7 +321,7 @@ func fiatInternalTransfer(
 		msg := "failed to post Fiat account Journal entries for internal transfer"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Update the destination and then source account balances.
@@ -334,7 +334,7 @@ func fiatInternalTransfer(
 		msg := "failed to credit Fiat account balance for internal transfer"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	if postDebitRow, err = queryTx.fiatUpdateAccountBalance(ctx, &fiatUpdateAccountBalanceParams{
@@ -346,7 +346,7 @@ func fiatInternalTransfer(
 		msg := "failed to debit Fiat account balance for internal transfer"
 		logger.Warn(msg, zap.Error(err))
 
-		return nil, nil, fmt.Errorf(msg+" %w", err)
+		return nil, nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	return &FiatAccountTransferResult{

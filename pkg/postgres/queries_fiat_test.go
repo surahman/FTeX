@@ -144,7 +144,7 @@ func TestQueries_FiatBalanceCurrencyPaginated(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			balances, err := connection.FiatBalancePaginated(clientID1, testCase.baseCurrency, testCase.limit)
 			require.NoError(t, err, "failed to retrieve results.")
-			require.Equal(t, testCase.expectLen, len(balances), "incorrect number of records returned.")
+			require.Len(t, balances, testCase.expectLen, "incorrect number of records returned.")
 		})
 	}
 }
@@ -286,7 +286,7 @@ func TestFiat_FiatTransactionsCurrencyPaginated(t *testing.T) {
 			rows, err := connection.FiatTransactionsPaginated(testCase.clientID, testCase.currency,
 				testCase.limit, testCase.offset, testCase.startTime, testCase.endTime)
 			require.NoError(t, err, "error expectation failed.")
-			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
+			require.Len(t, rows, testCase.expectedCont, "expected row count mismatch.")
 		})
 	}
 }

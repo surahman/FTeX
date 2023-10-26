@@ -8,7 +8,7 @@ runs:
       with:
         version: latest
         # Only track changes in the PR that the CI is running for.
-        only-new-issues: true
+#        only-new-issues: true
 
         # Increase timeout to alleviate intermittent GHA timeouts.
-        args: --timeout=5m
+        args: --timeout=5m --out-format=colored-line-number

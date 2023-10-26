@@ -196,6 +196,11 @@ func TestThreeSeconds(t *testing.T) {
 func TestClientIDCtxKey(t *testing.T) {
 	require.Equal(t, clientIDCtxKey, ClientIDCtxKey(), "Incorrect clientID context key.")
 }
+
 func TestExpiresAtCtxKey(t *testing.T) {
 	require.Equal(t, expiresAtCtxKey, ExpiresAtCtxKey(), "Incorrect expiration deadline context key.")
+}
+
+func TestErrorFormatMessage(t *testing.T) {
+	require.Equal(t, errorFormatMessage, ErrorFormatMessage(), "Incorrect error format string.")
 }

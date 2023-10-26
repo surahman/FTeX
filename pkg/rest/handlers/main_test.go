@@ -16,6 +16,9 @@ var zapLogger *logger.Logger
 // testUserData is the test user account data.
 var testUserData = common.HTTPGenerateTestUsers()
 
+// tickerPathVar is the path variable that resolves to the currency ticker.
+const tickerPathVar = ":ticker"
+
 func TestMain(m *testing.M) {
 	var err error
 	// Configure logger.
