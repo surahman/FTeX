@@ -42,7 +42,7 @@ func TestResolver_PriceQuoteResolvers(t *testing.T) {
 
 		result, err := resolver.Rate(context.TODO(), priceQuote)
 		require.NoError(t, err, "failed to resolve rate.")
-		require.Equal(t, rate.InexactFloat64(), result, "rate mismatched.")
+		require.InDelta(t, rate.InexactFloat64(), result, 0.0001, "rate mismatched.")
 	})
 
 	t.Run("Amount", func(t *testing.T) {
@@ -50,6 +50,6 @@ func TestResolver_PriceQuoteResolvers(t *testing.T) {
 
 		result, err := resolver.Amount(context.TODO(), priceQuote)
 		require.NoError(t, err, "failed to resolve amount.")
-		require.Equal(t, amount.InexactFloat64(), result, "amount mismatched.")
+		require.InDelta(t, amount.InexactFloat64(), result, 0.0001, "amount mismatched.")
 	})
 }

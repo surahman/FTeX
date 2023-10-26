@@ -113,9 +113,9 @@ func TestQuotesImpl_FiatQuote(t *testing.T) {
 			test.successExpectation(t, result.Success, "success code incorrectly set.")
 
 			if err != nil {
-				require.False(t, result.Error.Code == 200, "received valid response code on error.")
-				require.True(t, len(result.Error.Type) > 0, "received no type on error.")
-				require.True(t, len(result.Error.Info) > 0, "received no info on error.")
+				require.NotEqual(t, 200, result.Error.Code, "received valid response code on error.")
+				require.NotEmpty(t, len(result.Error.Type), "received no type on error.")
+				require.NotEmpty(t, len(result.Error.Info), "received no info on error.")
 
 				return
 			}
@@ -124,9 +124,9 @@ func TestQuotesImpl_FiatQuote(t *testing.T) {
 			require.Equal(t, test.destination, result.Query.To, "destination currency mismatched in query parameters.")
 			require.True(t, amount.Equal(result.Query.Amount), "transfer amount mismatched in query parameters.")
 			require.True(t, result.Info.Rate.IsPositive() && !result.Info.Rate.IsZero(), "invalid rate.")
-			require.True(t, result.Info.Timestamp > 0, "invalid timestamp.")
+			require.Greater(t, result.Info.Timestamp, int64(0), "invalid timestamp.")
 			require.True(t, result.Result.IsPositive() && !result.Result.IsZero(), "invalid result.")
-			require.True(t, len(result.Date) > 0, "invalid date.")
+			require.NotEmpty(t, len(result.Date), "invalid date.")
 		})
 	}
 }
@@ -276,7 +276,7 @@ func TestQuotesImpl_CryptoQuote(t *testing.T) {
 
 			require.Equal(t, test.source, result.BaseCurrency, "source mismatched base currency.")
 			require.Equal(t, test.destination, result.QuoteCurrency, "destination mismatched quote currency.")
-			require.True(t, len(result.Time) > 0, "no time stamp returned.")
+			require.NotEmpty(t, len(result.Time), "no time stamp returned.")
 			require.True(t, result.Rate.IsPositive() && !result.Rate.IsZero(), "invalid rate.")
 		})
 	}

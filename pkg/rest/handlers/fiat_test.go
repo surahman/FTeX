@@ -988,7 +988,7 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceFiat(zapLogger, mockAuth, mockDB))
+			router.GET(basePath+tickerPathVar, BalanceFiat(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1529,7 +1529,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {

@@ -47,6 +47,7 @@ const (
 	retryMessageString            = "please retry your request later"
 	clientIDCtxKey                = "ftex-client-id-context-key"
 	expiresAtCtxKey               = "ftex-expires-at-context-key"
+	errorFormatMessage            = "%s + %w"
 )
 
 var (
@@ -237,4 +238,9 @@ func ClientIDCtxKey() string {
 // ExpiresAtCtxKey is the key used to store an expiration deadline in a context.
 func ExpiresAtCtxKey() string {
 	return expiresAtCtxKey
+}
+
+// ErrorFormatMessage will return a format string to be used for error message creation.
+func ErrorFormatMessage() string {
+	return errorFormatMessage
 }

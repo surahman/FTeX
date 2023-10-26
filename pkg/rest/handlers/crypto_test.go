@@ -781,7 +781,7 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+":ticker", BalanceCrypto(zapLogger, mockAuth, mockDB))
+			router.GET(basePath+tickerPathVar, BalanceCrypto(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
@@ -1262,7 +1262,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases { //nolint:dupl
+	for _, testCase := range testCases {
 		test := testCase
 
 		t.Run(test.name, func(t *testing.T) {
@@ -1295,8 +1295,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 
 			// Endpoint setup for test.
 			router := gin.Default()
-			router.GET(basePath+test.path+":ticker",
-				TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB))
+			router.GET(basePath+test.path+tickerPathVar, TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB))
 			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
 				basePath+test.path+test.ticker+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
