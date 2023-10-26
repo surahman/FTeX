@@ -389,7 +389,7 @@ func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
 
 	ciphertext, err := testAuth.EncryptToString([]byte(toEncrypt))
 	require.NoError(t, err, "encrypt to string failed")
-	require.Greater(t, len(ciphertext), 0, "encrypted string is empty")
+	require.NotEmpty(t, len(ciphertext), "encrypted string is empty")
 
 	plaintext, err := testAuth.DecryptFromString(ciphertext)
 	require.NoError(t, err, "encrypt from string failed")

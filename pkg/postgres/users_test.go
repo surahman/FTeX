@@ -70,7 +70,7 @@ func TestPostgres_DeleteUser(t *testing.T) {
 	require.NoError(t, err, "failed to generate invalid client id.")
 	rowsAffected, err := connection.Query.userDelete(ctx, invalidID)
 	require.NoError(t, err, "failed to execute delete for non-existent user.")
-	require.Equal(t, int64(0), rowsAffected, "deleted a non-existent user.")
+	require.Zero(t, rowsAffected, "deleted a non-existent user.")
 
 	// Remove all inserted users.
 	for _, clientID := range clientIDs {
@@ -127,7 +127,7 @@ func TestGetCredentialsUser(t *testing.T) {
 	result, err := connection.Query.userGetCredentials(ctx, "non-existent-user")
 	require.Error(t, err, "got credentials for non-existent user.")
 	require.True(t, result.ClientID.IsNil(), "client id for a non-existent user is valid.")
-	require.Equal(t, 0, len(result.Password), "got password for a non-existent user.")
+	require.Zero(t, len(result.Password), "got password for a non-existent user.")
 
 	// Get Client IDs for all inserted users.
 	for key, testCase := range getTestUsers() {
@@ -159,11 +159,11 @@ func TestGetInfoUser(t *testing.T) {
 	// Non-existent user.
 	result, err := connection.Query.userGetInfo(ctx, invalidID)
 	require.Error(t, err, "got credentials for non-existent user.")
-	require.Equal(t, 0, len(result.Username), "got username for a non-existent user.")
+	require.Zero(t, len(result.Username), "got username for a non-existent user.")
 	require.True(t, result.ClientID.IsNil(), "client id for a non-existent user is valid.")
-	require.Equal(t, 0, len(result.FirstName), "got first name for a non-existent user.")
-	require.Equal(t, 0, len(result.LastName), "got last name for a non-existent user.")
-	require.Equal(t, 0, len(result.Email), "got email address for a non-existent user.")
+	require.Zero(t, len(result.FirstName), "got first name for a non-existent user.")
+	require.Zero(t, len(result.LastName), "got last name for a non-existent user.")
+	require.Zero(t, len(result.Email), "got email address for a non-existent user.")
 	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
 
 	// Get Client IDs for all inserted users.

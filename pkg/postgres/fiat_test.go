@@ -568,7 +568,7 @@ func TestFiat_FiatGetAllAccounts(t *testing.T) {
 				Limit:    testCase.limitCnt,
 			})
 			require.NoError(t, err, "error expectation failed.")
-			require.Equal(t, testCase.expectedRowCnt, len(rows), "expected row count mismatch.")
+			require.Len(t, rows, testCase.expectedRowCnt, "expected row count mismatch.")
 		})
 	}
 }
@@ -721,7 +721,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 		t.Run(fmt.Sprintf("Retrieving %s", testCase.name), func(t *testing.T) {
 			rows, err := connection.Query.fiatGetAllJournalTransactionsPaginated(ctx, &parameters)
 			require.NoError(t, err, "error expectation failed.")
-			require.Equal(t, testCase.expectedCont, len(rows), "expected row count mismatch.")
+			require.Len(t, rows, testCase.expectedCont, "expected row count mismatch.")
 		})
 	}
 }

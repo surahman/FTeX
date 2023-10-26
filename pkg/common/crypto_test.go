@@ -1211,7 +1211,7 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			require.Contains(t, actualDetails.Links.NextPage, test.expectNextPageSize, "expected page size mismatch.")
 			test.expectNextPage(t, len(actualDetails.Links.NextPage) > 0, "next page link not set.")
 			test.expectPageCursor(t, len(actualDetails.Links.PageCursor) > 0, "page cursor set.")
-			require.Equal(t, test.expectedRecordsLen, len(actualDetails.AccountBalances),
+			require.Len(t, actualDetails.AccountBalances, test.expectedRecordsLen,
 				"number of returned records mismatched")
 		})
 	}

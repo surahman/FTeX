@@ -104,7 +104,7 @@ func (r *redisImpl) createSessionRetry() error {
 	msg := "unable to establish connection to Redis server"
 	r.logger.Error(msg, zap.Error(err))
 
-	return fmt.Errorf(msg+" %w", err)
+	return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 }
 
 // Open will establish a connection to the Redis cache server.
@@ -114,7 +114,7 @@ func (r *redisImpl) Open() error {
 		msg := "session to Redis server is already established"
 		r.logger.Warn(msg)
 
-		return fmt.Errorf(msg+" %w", err)
+		return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Compile Redis connection configurations.
@@ -146,14 +146,14 @@ func (r *redisImpl) Close() error {
 		msg := "no session to Redis server established to close"
 		r.logger.Warn(msg)
 
-		return fmt.Errorf(msg+" %w", err)
+		return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	if err = r.redisDB.Close(); err != nil {
 		msg := "failed to close Redis server connection"
 		r.logger.Warn(msg)
 
-		return fmt.Errorf(msg+" %w", err)
+		return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	return nil
@@ -169,7 +169,7 @@ func (r *redisImpl) Healthcheck() error {
 		msg := "redis health check ping failed"
 		r.logger.Info(msg)
 
-		return fmt.Errorf(msg+" %w", err)
+		return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	return nil

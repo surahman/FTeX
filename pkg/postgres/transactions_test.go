@@ -233,14 +233,14 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 					TxID:     transferResult.TxID,
 				})
 				require.NoError(t, err, "failed to retrieve journal entries for deposit.")
-				require.Equal(t, len(journalEntry), 1, "incorrect journal entry for deposit.")
+				require.Len(t, journalEntry, 1, "incorrect journal entry for deposit.")
 
 				journalEntry, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
 					ClientID: ftexID,
 					TxID:     transferResult.TxID,
 				})
 				require.NoError(t, err, "failed to retrieve internal journal entries for internal.")
-				require.Equal(t, len(journalEntry), 1, "incorrect journal entry for internal.")
+				require.Len(t, journalEntry, 1, "incorrect journal entry for internal.")
 			})
 		}()
 	}
@@ -861,14 +861,14 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 					TxID:     dstResult.TxID,
 				})
 				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
-				require.Equal(t, len(journalEntry), 1, "incorrect row count retrieved for source.")
+				require.Len(t, journalEntry, 1, "incorrect row count retrieved for source.")
 
 				journalEntry, err = connection.Query.fiatGetJournalTransaction(ctx, &fiatGetJournalTransactionParams{
 					ClientID: test.destination.ClientID,
 					TxID:     dstResult.TxID,
 				})
 				require.NoError(t, err, "failed to retrieve journal entries for transaction.")
-				require.Equal(t, len(journalEntry), 1, "incorrect row count retrieved for destination.")
+				require.Len(t, journalEntry, 1, "incorrect row count retrieved for destination.")
 			})
 		}()
 	}

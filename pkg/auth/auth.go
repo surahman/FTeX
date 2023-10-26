@@ -137,7 +137,7 @@ func (a *authImpl) GenerateJWT(clientID uuid.UUID) (*models.JWTAuthResponse, err
 		msg := "failed to generate signed jwt"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return nil, fmt.Errorf(msg+" %w", err)
+		return nil, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	authResponse := &models.JWTAuthResponse{
@@ -158,7 +158,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (uuid.UUID, int64, error) {
 		msg := "failed to parse token"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return uuid.UUID{}, -1, fmt.Errorf(msg+" %w", err)
+		return uuid.UUID{}, -1, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Cast token claim to JWT.
@@ -167,7 +167,7 @@ func (a *authImpl) ValidateJWT(signedToken string) (uuid.UUID, int64, error) {
 		msg := "failed to extract jwt data"
 		a.logger.Warn(msg, zap.Error(err))
 
-		return uuid.UUID{}, -1, fmt.Errorf(msg+" %w", err)
+		return uuid.UUID{}, -1, fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 	}
 
 	// Check for errors and compare the expiration time in Unix format.
