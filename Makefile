@@ -40,6 +40,9 @@ clean:
 test:
 	go test ./...
 
+test_ci:
+	go test -parallel=1 ./...
+
 test_short:
 	go test -short ./...
 
