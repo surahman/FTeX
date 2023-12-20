@@ -5,4 +5,4 @@ runs:
   steps:
     - name: Test Suite
       shell: bash
-      run: make test
+      run: make test_ci
