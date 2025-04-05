@@ -4,11 +4,11 @@ runs:
   using: "composite"
   steps:
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v7
       with:
         version: latest
         # Only track changes in the PR that the CI is running for.
-#        only-new-issues: true
+        only-new-issues: true
 
         # Increase timeout to alleviate intermittent GHA timeouts.
-        args: --timeout=5m --out-format=colored-line-number
+        args: --timeout=5m
