@@ -105,7 +105,7 @@ func HTTPCryptoOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, q
 		return offer, http.StatusBadRequest, msg, errors.New(msg)
 	}
 
-	offer.PriceQuote.ClientID = clientID
+	offer.ClientID = clientID
 	offer.SourceAcc = source
 	offer.DestinationAcc = destination
 	offer.DebitAmount = sourceAmount
@@ -175,7 +175,7 @@ func HTTPExchangeCrypto(auth auth.Auth, cache redis.Redis, db postgres.Postgres,
 	}
 
 	// Verify that offer is a Crypto offer.
-	if !(offer.IsCryptoSale || offer.IsCryptoPurchase) {
+	if !offer.IsCryptoSale && !offer.IsCryptoPurchase {
 		msg := "invalid Cryptocurrency exchange offer"
 
 		return receipt, http.StatusBadRequest, msg, errors.New(msg)
