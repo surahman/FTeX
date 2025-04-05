@@ -55,7 +55,7 @@ func TestQueries_UserCredentials(t *testing.T) {
 	clientID, hashedPass, err := connection.UserCredentials(uname)
 	require.NoError(t, err, "failed to retrieve user credentials.")
 	require.False(t, clientID.IsNil(), "retrieved an invalid clientID.")
-	require.NotEmpty(t, len(hashedPass), "retrieved an invalid password.")
+	require.NotEmpty(t, hashedPass, "retrieved an invalid password.")
 
 	// Deleted account.
 	rowsAffected, err := connection.Query.userDelete(context.TODO(), clientID)
@@ -65,13 +65,13 @@ func TestQueries_UserCredentials(t *testing.T) {
 	clientID, hashedPass, err = connection.UserCredentials(uname)
 	require.Error(t, err, "retrieved deleted user credentials.")
 	require.True(t, clientID.IsNil(), "retrieved an valid clientID for a deleted account.")
-	require.Zero(t, len(hashedPass), "retrieved a password for a deleted account.")
+	require.Empty(t, hashedPass, "retrieved a password for a deleted account.")
 
 	// Non-existent user.
 	clientID, hashedPass, err = connection.UserCredentials("invalid-username")
 	require.Error(t, err, "retrieved invalid users' credentials.")
 	require.True(t, clientID.IsNil(), "retrieved an invalid users' clientID.")
-	require.Zero(t, len(hashedPass), "retrieved a password for an invalid user.")
+	require.Empty(t, hashedPass, "retrieved a password for an invalid user.")
 }
 
 func TestQueries_UserGetInfo(t *testing.T) {

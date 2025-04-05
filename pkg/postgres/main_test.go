@@ -131,7 +131,7 @@ func insertTestUsers(t *testing.T) []uuid.UUID {
 		user := testCase
 
 		clientID, err := connection.Query.userCreate(ctx, &user)
-		require.NoErrorf(t, err, "failed to insert test user account: %w", err)
+		require.NoErrorf(t, err, "failed to insert test user account: %v", err)
 		require.False(t, clientID.IsNil(), "failed to retrieve client id from response")
 
 		clientIDs = append(clientIDs, clientID)

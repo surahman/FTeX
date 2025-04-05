@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -350,7 +349,7 @@ func TestTransactions_FiatExternalTransfer_Mock(t *testing.T) {
 			// Check for error.
 			_, err := fiatExternalTransfer(context.TODO(), connection.logger, mockQuerier, &txDetails)
 			require.Error(t, err, "failed to get error.")
-			require.True(t, strings.Contains(err.Error(), test.expectedErrMsg), "error messages mismatched.")
+			require.Contains(t, err.Error(), test.expectedErrMsg, "error messages mismatched.")
 		})
 	}
 }
@@ -619,7 +618,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck_mock(t *testing.T) {
 			// Check for error.
 			err := fiatTransactionRowLockAndBalanceCheck(context.TODO(), mockQuerier, test.srcAccount, test.dstAccount)
 			require.Error(t, err, "failed to get error.")
-			require.True(t, strings.Contains(err.Error(), test.expectedErrMsg), "error messages mismatched.")
+			require.Contains(t, err.Error(), test.expectedErrMsg, "error messages mismatched.")
 		})
 	}
 }
@@ -1006,7 +1005,7 @@ func TestTransactions_FiatInternalTransfer_Mock(t *testing.T) {
 			// Check for error.
 			_, _, err := fiatInternalTransfer(context.TODO(), connection.logger, mockQuerier, &txDetails, &txDetails)
 			require.Error(t, err, "failed to get error.")
-			require.True(t, strings.Contains(err.Error(), test.expectedErrMsg), "error messages mismatched.")
+			require.Contains(t, err.Error(), test.expectedErrMsg, "error messages mismatched.")
 		})
 	}
 }

@@ -215,6 +215,7 @@ func (p *postgresImpl) createSessionRetry() (err error) {
 			return nil
 		}
 	}
+
 	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
 
 	return

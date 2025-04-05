@@ -5,7 +5,11 @@
 
 # FTeX
 
-> _This project's name aims to poke lighthearted fun at Blockchain and Cryptocurrency enthusiasts. I neither support nor endorse the use of Blockchain technologies as a store of wealth._
+> _This project's name aims to poke lighthearted fun at Blockchain and Cryptocurrency enthusiasts._
+>
+> Fiat currencies are not backed by tangible assets but by government guarantees, making them vulnerable to devaluation through excessive issuance. In this sense, fiat currency lacks inherent value.
+>
+> Most cryptocurrencies are high-risk and speculative, with many being fraudulent. Only a few have legitimate use cases. Investment is risky and should not be undertaken without due diligence.
 >
 > **_Blockchains are an impressive and interesting technology that encompasses some potentially useful applications._**
 

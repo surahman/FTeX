@@ -126,7 +126,7 @@ func TestGetCredentialsUser(t *testing.T) {
 	result, err := connection.Query.userGetCredentials(ctx, "non-existent-user")
 	require.Error(t, err, "got credentials for non-existent user.")
 	require.True(t, result.ClientID.IsNil(), "client id for a non-existent user is valid.")
-	require.Zero(t, len(result.Password), "got password for a non-existent user.")
+	require.Empty(t, result.Password, "got password for a non-existent user.")
 
 	// Get Client IDs for all inserted users.
 	for key, testCase := range getTestUsers() {
@@ -158,11 +158,11 @@ func TestGetInfoUser(t *testing.T) {
 	// Non-existent user.
 	result, err := connection.Query.userGetInfo(ctx, invalidID)
 	require.Error(t, err, "got credentials for non-existent user.")
-	require.Zero(t, len(result.Username), "got username for a non-existent user.")
+	require.Empty(t, result.Username, "got username for a non-existent user.")
 	require.True(t, result.ClientID.IsNil(), "client id for a non-existent user is valid.")
-	require.Zero(t, len(result.FirstName), "got first name for a non-existent user.")
-	require.Zero(t, len(result.LastName), "got last name for a non-existent user.")
-	require.Zero(t, len(result.Email), "got email address for a non-existent user.")
+	require.Empty(t, result.FirstName, "got first name for a non-existent user.")
+	require.Empty(t, result.LastName, "got last name for a non-existent user.")
+	require.Empty(t, result.Email, "got email address for a non-existent user.")
 	require.False(t, result.IsDeleted, "deleted flag for a non-existent user is set.")
 
 	// Get Client IDs for all inserted users.

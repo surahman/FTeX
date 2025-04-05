@@ -295,6 +295,7 @@ func HTTPFiatBalancePaginatedRequest(auth auth.Auth, currencyStr, limitStr strin
 		limit = 10
 	}
 
+	//nolint:gosec
 	return currency, int32(limit), nil
 }
 

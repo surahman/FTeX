@@ -161,7 +161,7 @@ func TestCommon_HTTPTransactionGeneratePageCursor(t *testing.T) {
 		encrypted, err := HTTPTransactionGeneratePageCursor(testAuth, startStr, endStr, 10)
 
 		require.NoError(t, err, "failed to encrypt cursor.")
-		require.NotEmpty(t, len(encrypted), "empty encrypted cursor returned.")
+		require.NotEmpty(t, encrypted, "empty encrypted cursor returned.")
 
 		actualStart, actualStartStr, actualEnd, actualEndStr, actualOffset, err :=
 			HTTPTransactionUnpackPageCursor(testAuth, encrypted)
@@ -492,7 +492,7 @@ func TestCommon_HTTPValidateOfferRequest(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, len(test.currencies), len(parsedCurrencies), "incorrect number of parsed currencies returned.")
+			require.Len(t, test.currencies, len(parsedCurrencies), "incorrect number of parsed currencies returned.")
 
 			for idx, actualCurrency := range parsedCurrencies {
 				var expectedCurrency postgres.Currency

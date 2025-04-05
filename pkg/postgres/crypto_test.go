@@ -233,15 +233,15 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Fiat journal for PKR purchase.")
-		require.Zero(t, len(fiatJournal), "Fiat journal entry for PKR purchase found.")
+		require.Empty(t, fiatJournal, "Fiat journal entry for PKR purchase found.")
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDBAD)
 		require.NoError(t, err, "failed to retrieve Fiat journal for invalid crypto ticker purchase.")
-		require.Zero(t, len(fiatJournal), "Fiat journal entry for invalid crypto ticker purchase found.")
+		require.Empty(t, fiatJournal, "Fiat journal entry for invalid crypto ticker purchase found.")
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDNoFunds)
 		require.NoError(t, err, "failed to retrieve Fiat journal for insufficient funds purchase.")
-		require.Zero(t, len(fiatJournal), "Fiat journal entry for insufficient funds purchase found.")
+		require.Empty(t, fiatJournal, "Fiat journal entry for insufficient funds purchase found.")
 
 		// Check Crypto Journal entries.
 		cryptoJournal, err := connection.CryptoTxDetails(clientID1, txIDValid1)
@@ -270,15 +270,15 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 
 		cryptoJournal, err = connection.CryptoTxDetails(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Crypto journal for PKR purchase.")
-		require.Zero(t, len(cryptoJournal), "Crypto journal entry for PKR purchase found.")
+		require.Empty(t, cryptoJournal, "Crypto journal entry for PKR purchase found.")
 
 		cryptoJournal, err = connection.CryptoTxDetails(clientID1, txIDBAD)
 		require.NoError(t, err, "failed to retrieve Crypto journal for invalid crypto ticker purchase.")
-		require.Zero(t, len(cryptoJournal), "Crypto journal entry for invalid crypto ticker purchase found.")
+		require.Empty(t, cryptoJournal, "Crypto journal entry for invalid crypto ticker purchase found.")
 
 		cryptoJournal, err = connection.CryptoTxDetails(clientID1, txIDNoFunds)
 		require.NoError(t, err, "failed to retrieve Crypto journal for insufficient funds purchase.")
-		require.Zero(t, len(cryptoJournal), "Crypto journal entry for insufficient funds purchase found.")
+		require.Empty(t, cryptoJournal, "Crypto journal entry for insufficient funds purchase found.")
 	})
 }
 
@@ -473,15 +473,15 @@ func TestCrypto_CryptoSell(t *testing.T) {
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Fiat journal for PKR sale.")
-		require.Zero(t, len(fiatJournal), "Fiat journal entry for PKR sale found.")
+		require.Empty(t, fiatJournal, "Fiat journal entry for PKR sale found.")
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDBAD)
 		require.NoError(t, err, "failed to retrieve Fiat journal for invalid crypto ticker sale.")
-		require.Zero(t, len(fiatJournal), "Fiat journal entry for invalid crypto ticker sale found.")
+		require.Empty(t, fiatJournal, "Fiat journal entry for invalid crypto ticker sale found.")
 
 		fiatJournal, err = connection.FiatTxDetails(clientID1, txIDNoFunds)
 		require.NoError(t, err, "failed to retrieve Fiat journal for insufficient funds sale.")
-		require.Zero(t, len(fiatJournal), "Fiat journal entry for insufficient funds sale found.")
+		require.Empty(t, fiatJournal, "Fiat journal entry for insufficient funds sale found.")
 
 		// Check Crypto Journal entries.
 		cryptoJournal, err := connection.CryptoTxDetails(clientID1, txIDValid1)
@@ -510,15 +510,15 @@ func TestCrypto_CryptoSell(t *testing.T) {
 
 		cryptoJournal, err = connection.CryptoTxDetails(clientID1, txIDPKR)
 		require.NoError(t, err, "failed to retrieve Crypto journal for PKR sale.")
-		require.Zero(t, len(cryptoJournal), "Crypto journal entry for PKR sale found.")
+		require.Empty(t, cryptoJournal, "Crypto journal entry for PKR sale found.")
 
 		cryptoJournal, err = connection.CryptoTxDetails(clientID1, txIDBAD)
 		require.NoError(t, err, "failed to retrieve Crypto journal for invalid crypto ticker sale.")
-		require.Zero(t, len(cryptoJournal), "Crypto journal entry for invalid crypto ticker purchase sale.")
+		require.Empty(t, cryptoJournal, "Crypto journal entry for invalid crypto ticker purchase sale.")
 
 		cryptoJournal, err = connection.CryptoTxDetails(clientID1, txIDNoFunds)
 		require.NoError(t, err, "failed to retrieve Crypto journal for insufficient funds sale.")
-		require.Zero(t, len(cryptoJournal), "Crypto journal entry for insufficient funds sale found.")
+		require.Empty(t, cryptoJournal, "Crypto journal entry for insufficient funds sale found.")
 	})
 }
 func TestCrypto_CryptoGetAllAccounts(t *testing.T) {

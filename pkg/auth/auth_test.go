@@ -189,7 +189,7 @@ func TestAuthImpl_GenerateJWT(t *testing.T) {
 	actualUUID, expiresAt, err := testAuth.ValidateJWT(authResponse.Token)
 	require.NoError(t, err, "failed to extract information from JWT.")
 	require.Equal(t, actualUUID, clientID, "incorrect clientID retrieved from JWT.")
-	require.Greater(t, expiresAt, int64(0), "invalid expiration time")
+	require.Positive(t, expiresAt, "invalid expiration time")
 }
 
 func TestAuthImpl_ValidateJWT(t *testing.T) {
@@ -319,7 +319,7 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 			actualClientID, expiresAt, err := testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoError(t, err, "failed to validate original test token")
 			require.Equal(t, clientID, actualClientID, "failed to extract correct clientID from original JWT")
-			require.Greater(t, expiresAt, int64(0), "invalid expiration time of original token")
+			require.Positive(t, expiresAt, "invalid expiration time of original token")
 
 			time.Sleep(time.Duration(test.sleepTime) * time.Second)
 
@@ -339,7 +339,7 @@ func TestAuthImpl_RefreshJWT(t *testing.T) {
 			actualClientID, expiresAt, err = testAuthImpl.ValidateJWT(testJWT.Token)
 			require.NoErrorf(t, err, "failed to validate refreshed JWT")
 			require.Equal(t, clientID, actualClientID, "failed to extract correct clientID from refreshed JWT")
-			require.Greater(t, expiresAt, int64(0), "invalid expiration time of refreshed token")
+			require.Positive(t, expiresAt, "invalid expiration time of refreshed token")
 		})
 	}
 }
@@ -394,7 +394,7 @@ func TestAuthImpl_Encrypt_Decrypt_String(t *testing.T) {
 
 	ciphertext, err := testAuth.EncryptToString([]byte(toEncrypt))
 	require.NoError(t, err, "encrypt to string failed")
-	require.NotEmpty(t, len(ciphertext), "encrypted string is empty")
+	require.NotEmpty(t, ciphertext, "encrypted string is empty")
 
 	plaintext, err := testAuth.DecryptFromString(ciphertext)
 	require.NoError(t, err, "encrypt from string failed")
