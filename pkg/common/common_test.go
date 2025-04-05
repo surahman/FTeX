@@ -492,7 +492,7 @@ func TestCommon_HTTPValidateOfferRequest(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, len(test.currencies), len(parsedCurrencies), "incorrect number of parsed currencies returned.")
+			require.Len(t, test.currencies, len(parsedCurrencies), "incorrect number of parsed currencies returned.")
 
 			for idx, actualCurrency := range parsedCurrencies {
 				var expectedCurrency postgres.Currency

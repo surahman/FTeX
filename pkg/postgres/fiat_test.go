@@ -223,9 +223,14 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 	// Totals check.
 	result, err := connection.Query.fiatGetAccount(ctx, &fiatGetAccountParams{ClientID: clientID1, Currency: CurrencyUSD})
 	require.NoError(t, err, "failed to retrieve updated balance.")
+
 	driverValue, err := result.Balance.Value()
 	require.NoError(t, err, "failed to get driver value for total.")
-	finalBalance, err := strconv.ParseFloat(driverValue.(string), 64)
+
+	driverValueStr, ok := driverValue.(string)
+	require.True(t, ok, "driver value is not a string.")
+
+	finalBalance, err := strconv.ParseFloat(driverValueStr, 64)
 	require.NoError(t, err, "failed to convert final balance value to float from diver.")
 
 	require.InDelta(t, expectedBalance, finalBalance, 0.01, "expected and actual balance mismatch.")

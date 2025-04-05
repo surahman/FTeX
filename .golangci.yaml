@@ -1,48 +1,76 @@
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
     - depguard
+    - err113
     - exhaustruct
     - funlen
     - gochecknoglobals
     - gochecknoinits
     - godox
-    - gofumpt
-    - goerr113
     - ireturn
     - nonamedreturns
     - testpackage
-linters-settings:
-  cyclop:
-    max-complexity: 12
-    skip-tests: true
-  mnd:
-    ignored-functions:
-      - 'math.*'
-      - 'decimal.*'
-  paralleltest:
-    ignore-missing: true
-  varnamelen:
-    min-name-length: 2
-    ignore-type-assert-ok: true
-    ignore-map-index-ok: true
-    ignore-chan-recv-ok: true
-    ignore-names:
-      - err
-    ignore-decls:
-      - c echo.Context
-      - t testing.T
-      - f *foo.Bar
-      - e error
-      - i int
-      - const C
-      - T any
-      - K any
-      - V any
-      - m map[string]int
-issues:
-  exclude-rules:
-    # Exclude `lll` issues for long lines with `go:generate`.
-    - linters:
-        - lll
-      source: "^( |\t)*//(go:generate |( |\t)*@)"
+  settings:
+    cyclop:
+      max-complexity: 12
+    mnd:
+      ignored-functions:
+        - math.*
+        - decimal.*
+    paralleltest:
+      ignore-missing: true
+    varnamelen:
+      min-name-length: 2
+      ignore-names:
+        - err
+      ignore-type-assert-ok: true
+      ignore-map-index-ok: true
+      ignore-chan-recv-ok: true
+      ignore-decls:
+        - c echo.Context
+        - t testing.T
+        - f *foo.Bar
+        - e error
+        - i int
+        - const C
+        - T any
+        - K any
+        - V any
+        - m map[string]int
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Exclude `lll` issues for long lines with `go:generate`.
+      - linters:
+          - lll
+        source: "^( |\t)*//(go:generate |( |\t)*@)"
+      - linters:
+          - cyclop
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+output:
+  formats:
+    text:
+      path: stdout
+      colors: true
