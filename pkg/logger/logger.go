@@ -22,6 +22,25 @@ func NewLogger() *Logger {
 	return &Logger{}
 }
 
+// NewTestLogger will create a new development logger to be used in test suites.
+func NewTestLogger() (*Logger, error) {
+	baseConfig := zap.NewDevelopmentConfig()
+	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
+
+	var (
+		err       error
+		zapLogger *zap.Logger
+	)
+
+	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
+		log.Printf("failure configuring logger: %v\n", err)
+
+		return nil, fmt.Errorf("zap logger base config builing failed: %w", err)
+	}
+
+	return &Logger{zapLogger: zapLogger}, nil
+}
+
 // Init will initialize the logger with configurations and start it.
 func (l *Logger) Init(fs *afero.Fs) error {
 	if l.zapLogger != nil {
@@ -137,23 +156,4 @@ func mergeConfig[DST *zap.Config | *zapcore.EncoderConfig, SRC *generalConfig | 
 // setTestLogger is a utility method that sets a logger base for testing.
 func (l *Logger) setTestLogger(testLogger *zap.Logger) {
 	l.zapLogger = testLogger
-}
-
-// NewTestLogger will create a new development logger to be used in test suites.
-func NewTestLogger() (*Logger, error) {
-	baseConfig := zap.NewDevelopmentConfig()
-	baseConfig.EncoderConfig = zap.NewDevelopmentEncoderConfig()
-
-	var (
-		err       error
-		zapLogger *zap.Logger
-	)
-
-	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
-		log.Printf("failure configuring logger: %v\n", err)
-
-		return nil, fmt.Errorf("zap logger base config builing failed: %w", err)
-	}
-
-	return &Logger{zapLogger: zapLogger}, nil
 }

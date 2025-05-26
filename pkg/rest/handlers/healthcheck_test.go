@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -86,7 +85,7 @@ func TestHealthcheck(t *testing.T) {
 			router := gin.Default()
 			router.GET(test.path, Healthcheck(zapLogger, mockPostgres, mockRedis))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, test.path, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, test.path, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 

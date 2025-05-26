@@ -22,6 +22,11 @@ type Error struct {
 // Check to ensure the error interface is implemented.
 var _ error = &Error{}
 
+// NewError is a base error message with no special code.
+func NewError(message string) *Error {
+	return &Error{Message: message, Code: ErrorUnknown}
+}
+
 // Error get human readable error message.
 func (e *Error) Error() string {
 	return e.Message
@@ -35,11 +40,6 @@ func (e *Error) Is(err error) bool {
 	}
 
 	return e.Code == target.Code
-}
-
-// NewError is a base error message with no special code.
-func NewError(message string) *Error {
-	return &Error{Message: message, Code: ErrorUnknown}
 }
 
 // errorCacheMiss will specialize the error as a cache miss.

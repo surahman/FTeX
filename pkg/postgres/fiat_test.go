@@ -24,7 +24,7 @@ func TestFiat_FiatCreateAccount(t *testing.T) {
 	// Insert initial set of test fiat accounts.
 	clientID1, clientID2 := resetTestFiatAccounts(t)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -113,7 +113,7 @@ func TestFiat_FiatRowLockAccount(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -203,7 +203,7 @@ func TestFiat_FiatUpdateAccountBalance(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -291,7 +291,7 @@ func TestFiat_FiatGetJournalTransaction(t *testing.T) {
 
 	negOne := decimal.NewFromFloat(-1)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -398,7 +398,7 @@ func TestFiat_FiatGetJournalTransactionForAccount(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -477,7 +477,7 @@ func TestFiat_GetFiatAccount(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -561,7 +561,7 @@ func TestFiat_FiatGetAllAccounts(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -594,7 +594,7 @@ func TestFiat_FiatGetAllJournalTransactionPaginated(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Context setup for no hold-and-wait.
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
 
 	defer cancel()
 

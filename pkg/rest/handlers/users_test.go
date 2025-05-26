@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -140,7 +139,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, RegisterUser(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -256,7 +255,7 @@ func TestHandlers_UserLogin(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, LoginUser(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(userJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -427,7 +426,7 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, LoginRefresh(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -687,7 +686,7 @@ func TestHandlers_DeleteUser(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.DELETE(test.path, DeleteUser(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodDelete, test.path, bytes.NewBuffer(requestJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodDelete, test.path, bytes.NewBuffer(requestJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 

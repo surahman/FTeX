@@ -115,7 +115,7 @@ func insertTestUsers(t *testing.T) []uuid.UUID {
 
 	// Reset the user's table.
 	query := "DELETE FROM users WHERE first_name != 'Internal';"
-	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
+	ctx, cancel := context.WithTimeout(t.Context(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -146,7 +146,7 @@ func resetTestFiatAccounts(t *testing.T) (uuid.UUID, uuid.UUID) {
 
 	// Reset the fiat accounts table.
 	query := "TRUNCATE TABLE fiat_accounts CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
+	ctx, cancel := context.WithTimeout(t.Context(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -182,7 +182,7 @@ func resetTestFiatJournal(t *testing.T, clientID1, clientID2 uuid.UUID) {
 
 	// Reset the fiat journal table.
 	query := "TRUNCATE TABLE fiat_journal CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
+	ctx, cancel := context.WithTimeout(t.Context(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -210,7 +210,7 @@ func insertTestInternalFiatGeneralLedger(t *testing.T, clientID1, clientID2 uuid
 	map[string]fiatInternalTransferJournalEntryParams, map[string]fiatInternalTransferJournalEntryRow) {
 	t.Helper()
 
-	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
+	ctx, cancel := context.WithTimeout(t.Context(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -239,7 +239,7 @@ func resetTestCryptoAccounts(t *testing.T, clientID1, clientID2 uuid.UUID) {
 
 	// Reset the crypto accounts table.
 	query := "TRUNCATE TABLE crypto_accounts CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
+	ctx, cancel := context.WithTimeout(t.Context(), constants.TwoSeconds())
 
 	defer cancel()
 
@@ -267,7 +267,7 @@ func resetTestCryptoJournal(t *testing.T) {
 
 	// Reset the fiat accounts table.
 	query := "TRUNCATE TABLE crypto_journal CASCADE;"
-	ctx, cancel := context.WithTimeout(context.TODO(), constants.TwoSeconds())
+	ctx, cancel := context.WithTimeout(t.Context(), constants.TwoSeconds())
 
 	defer cancel()
 

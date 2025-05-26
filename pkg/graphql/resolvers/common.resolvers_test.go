@@ -1,7 +1,6 @@
 package graphql
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -32,7 +31,7 @@ func TestResolver_PriceQuoteResolvers(t *testing.T) {
 	t.Run("Client ID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.ClientID(context.TODO(), priceQuote)
+		result, err := resolver.ClientID(t.Context(), priceQuote)
 		require.NoError(t, err, "failed to resolve client id.")
 		require.Equal(t, clientID.String(), result, "client id mismatched.")
 	})
@@ -40,7 +39,7 @@ func TestResolver_PriceQuoteResolvers(t *testing.T) {
 	t.Run("Rate", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Rate(context.TODO(), priceQuote)
+		result, err := resolver.Rate(t.Context(), priceQuote)
 		require.NoError(t, err, "failed to resolve rate.")
 		require.InDelta(t, rate.InexactFloat64(), result, 0.0001, "rate mismatched.")
 	})
@@ -48,7 +47,7 @@ func TestResolver_PriceQuoteResolvers(t *testing.T) {
 	t.Run("Amount", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Amount(context.TODO(), priceQuote)
+		result, err := resolver.Amount(t.Context(), priceQuote)
 		require.NoError(t, err, "failed to resolve amount.")
 		require.InDelta(t, amount.InexactFloat64(), result, 0.0001, "amount mismatched.")
 	})

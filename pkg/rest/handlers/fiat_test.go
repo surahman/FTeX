@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -121,7 +120,7 @@ func TestHandlers_OpenFiat(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, OpenFiat(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -256,7 +255,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, DepositFiat(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(depositReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -517,7 +516,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, ExchangeOfferFiat(zapLogger, mockAuth, mockCache, mockQuotes))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -878,7 +877,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, ExchangeTransferFiat(zapLogger, mockAuth, mockCache, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(xferReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(xferReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -992,7 +991,7 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+tickerPathVar, BalanceFiat(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -1145,7 +1144,7 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+":transactionID", TxDetailsFiat(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.transactionID, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, basePath+test.transactionID, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -1357,7 +1356,7 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path, BalanceFiatPaginated(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -1569,7 +1568,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path+":currencyCode", TxDetailsFiatPaginated(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet,
 				basePath+test.path+test.currency+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

@@ -39,7 +39,7 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (any, error) {
+func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v any) (any, error) {
 	res, err := graphql.UnmarshalAny(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -51,6 +51,7 @@ func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.S
 		}
 		return graphql.Null
 	}
+	_ = sel
 	res := graphql.MarshalAny(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -60,11 +61,9 @@ func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNAny2ᚕinterfaceᚄ(ctx context.Context, v interface{}) ([]any, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
+func (ec *executionContext) unmarshalNAny2ᚕinterfaceᚄ(ctx context.Context, v any) ([]any, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
 	var err error
 	res := make([]any, len(vSlice))
 	for i := range vSlice {
@@ -92,12 +91,13 @@ func (ec *executionContext) marshalNAny2ᚕinterfaceᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v interface{}) (int64, error) {
+func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v any) (int64, error) {
 	res, err := graphql.UnmarshalInt64(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.SelectionSet, v int64) graphql.Marshaler {
+	_ = sel
 	res := graphql.MarshalInt64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -107,12 +107,13 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 	return res
 }
 
-func (ec *executionContext) unmarshalNUUID2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNUUID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUUID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -122,7 +123,7 @@ func (ec *executionContext) marshalNUUID2string(ctx context.Context, sel ast.Sel
 	return res
 }
 
-func (ec *executionContext) unmarshalOInt322ᚖint32(ctx context.Context, v interface{}) (*int32, error) {
+func (ec *executionContext) unmarshalOInt322ᚖint32(ctx context.Context, v any) (*int32, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134,6 +135,8 @@ func (ec *executionContext) marshalOInt322ᚖint32(ctx context.Context, sel ast.
 	if v == nil {
 		return graphql.Null
 	}
+	_ = sel
+	_ = ctx
 	res := graphql.MarshalInt32(*v)
 	return res
 }

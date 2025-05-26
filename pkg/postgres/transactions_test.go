@@ -198,7 +198,7 @@ func TestTransactions_FiatExternalTransfer(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(testCases))
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	defer cancel()
 
@@ -347,7 +347,7 @@ func TestTransactions_FiatExternalTransfer_Mock(t *testing.T) {
 			)
 
 			// Check for error.
-			_, err := fiatExternalTransfer(context.TODO(), connection.logger, mockQuerier, &txDetails)
+			_, err := fiatExternalTransfer(t.Context(), connection.logger, mockQuerier, &txDetails)
 			require.Error(t, err, "failed to get error.")
 			require.Contains(t, err.Error(), test.expectedErrMsg, "error messages mismatched.")
 		})
@@ -384,7 +384,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck(t *testing.T) {
 	require.NoError(t, txTimestamp.Scan(time.Now().UTC()), "failed to create current timestamp.")
 
 	// Configure context for test suite.
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	t.Cleanup(func() {
 		cancel()
@@ -616,7 +616,7 @@ func TestTransactions_FiatTransactionRowLockAndBalanceCheck_mock(t *testing.T) {
 			)
 
 			// Check for error.
-			err := fiatTransactionRowLockAndBalanceCheck(context.TODO(), mockQuerier, test.srcAccount, test.dstAccount)
+			err := fiatTransactionRowLockAndBalanceCheck(t.Context(), mockQuerier, test.srcAccount, test.dstAccount)
 			require.Error(t, err, "failed to get error.")
 			require.Contains(t, err.Error(), test.expectedErrMsg, "error messages mismatched.")
 		})
@@ -649,7 +649,7 @@ func TestTransactions_FiatInternalTransfer(t *testing.T) { //nolint:maintidx
 	require.NoError(t, txTimestamp.Scan(time.Now().UTC()), "failed to create current timestamp.")
 
 	// Configure context for test suite.
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	defer cancel()
 
@@ -1003,7 +1003,7 @@ func TestTransactions_FiatInternalTransfer_Mock(t *testing.T) {
 			)
 
 			// Check for error.
-			_, _, err := fiatInternalTransfer(context.TODO(), connection.logger, mockQuerier, &txDetails, &txDetails)
+			_, _, err := fiatInternalTransfer(t.Context(), connection.logger, mockQuerier, &txDetails, &txDetails)
 			require.Error(t, err, "failed to get error.")
 			require.Contains(t, err.Error(), test.expectedErrMsg, "error messages mismatched.")
 		})

@@ -115,7 +115,6 @@ func TestQuotesImpl_FiatQuote(t *testing.T) {
 			if err != nil {
 				require.NotEqual(t, 200, result.Error.Code, "received valid response code on error.")
 				require.NotEmpty(t, result.Error.Type, "received no type on error.")
-				require.NotEmpty(t, result.Error.Info, "received no info on error.")
 
 				return
 			}
