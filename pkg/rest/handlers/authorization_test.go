@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -133,7 +132,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, AuthMiddleware(mockAuth, mockDB, zapLogger, "Authorization"))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, nil)
 			req.Header.Set("Authorization", test.token)
 
 			w := httptest.NewRecorder()

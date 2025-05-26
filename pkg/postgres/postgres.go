@@ -193,34 +193,6 @@ func (p *postgresImpl) Open() error {
 	return nil
 }
 
-// verifySession will check to see if a session is established.
-func (p *postgresImpl) verifySession() error {
-	if p.pool == nil || p.pool.Ping(context.Background()) != nil {
-		return errors.New("no session established")
-	}
-
-	return nil
-}
-
-// createSessionRetry will attempt to open the connection using binary exponential back-off.
-// Stop on the first success or fail after the last one.
-func (p *postgresImpl) createSessionRetry() (err error) {
-	for attempt := 1; attempt <= p.conf.Connection.MaxConnAttempts; attempt++ {
-		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
-		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime),
-			zap.String("attempt", strconv.Itoa(attempt)))
-		time.Sleep(waitTime)
-
-		if err = p.pool.Ping(context.Background()); err == nil {
-			return nil
-		}
-	}
-
-	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
-
-	return
-}
-
 // Close will close the database connection pool.
 func (p *postgresImpl) Close() (err error) {
 	if err = p.verifySession(); err != nil {
@@ -247,4 +219,32 @@ func (p *postgresImpl) Healthcheck() error {
 	}
 
 	return nil
+}
+
+// verifySession will check to see if a session is established.
+func (p *postgresImpl) verifySession() error {
+	if p.pool == nil || p.pool.Ping(context.Background()) != nil {
+		return errors.New("no session established")
+	}
+
+	return nil
+}
+
+// createSessionRetry will attempt to open the connection using binary exponential back-off.
+// Stop on the first success or fail after the last one.
+func (p *postgresImpl) createSessionRetry() (err error) {
+	for attempt := 1; attempt <= p.conf.Connection.MaxConnAttempts; attempt++ {
+		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+		p.logger.Info(fmt.Sprintf("Attempting connection to Postgres database in %s...", waitTime),
+			zap.String("attempt", strconv.Itoa(attempt)))
+		time.Sleep(waitTime)
+
+		if err = p.pool.Ping(context.Background()); err == nil {
+			return nil
+		}
+	}
+
+	p.logger.Error("unable to establish connection to Postgres database", zap.Error(err))
+
+	return
 }

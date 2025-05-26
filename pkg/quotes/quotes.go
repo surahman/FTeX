@@ -110,32 +110,6 @@ func configCryptoClient(conf *config) (*req.Client, error) {
 		nil
 }
 
-// FiatQuote will access the Fiat currency price quote service and get the latest exchange rate.
-func (q *quotesImpl) fiatQuote(source, destination string, sourceAmount decimal.Decimal) (models.FiatQuote, error) {
-	result := models.FiatQuote{}
-
-	_, err := q.clientFiat.R().
-		SetQueryParam("from", source).
-		SetQueryParam("to", destination).
-		SetQueryParam("amount", sourceAmount.String()).
-		SetSuccessResult(&result).
-		Get(q.conf.FiatCurrency.Endpoint)
-
-	// Failed to query endpoint for price.
-	if err != nil {
-		q.logger.Warn("failed to get Fiat currency price quote", zap.Error(err))
-
-		return result, NewError(constants.RetryMessageString()).SetStatus(http.StatusServiceUnavailable)
-	}
-
-	// Check for a successful rate retrieval.
-	if !result.Success {
-		return result, NewError("invalid Fiat currency code").SetStatus(http.StatusBadRequest)
-	}
-
-	return result, nil
-}
-
 // FiatConversion will convert a source currency, of a given amount, to the destination currency.
 func (q *quotesImpl) FiatConversion(
 	source,
@@ -167,38 +141,6 @@ func (q *quotesImpl) FiatConversion(
 		RoundBank(constants.DecimalPlacesFiat())
 
 	return rawQuote.Info.Rate, convertedAmount, nil
-}
-
-// CryptoQuote will access the Fiat currency price quote service and get the latest exchange rate.
-func (q *quotesImpl) cryptoQuote(source, destination string) (models.CryptoQuote, error) {
-	result := models.CryptoQuote{}
-
-	resp, err := q.clientCrypto.R().
-		SetPathParam("base_symbol", source).
-		SetPathParam("quote_symbol", destination).
-		SetSuccessResult(&result).
-		Get(q.conf.CryptoCurrency.Endpoint)
-
-	// Failed to query endpoint for price.
-	if err != nil {
-		q.logger.Warn("failed to get Fiat currency price quote", zap.Error(err))
-
-		return result, NewError("crypto price service unreachable").SetStatus(http.StatusInternalServerError)
-	}
-
-	if !resp.IsSuccessState() {
-		// Invalid cryptocurrency codes.
-		if resp.StatusCode == 550 { //nolint:mnd,gomnd
-			return result, NewError("invalid Crypto currency code").SetStatus(http.StatusBadRequest)
-		}
-
-		// Log and other API related errors and return an internal server error to user.
-		q.logger.Error("API error", zap.String("Response", resp.String()))
-
-		return result, NewError(constants.RetryMessageString()).SetStatus(http.StatusInternalServerError)
-	}
-
-	return result, nil
 }
 
 // CryptoConversion will convert Fiat to Crypto and Crypto to Fiat currencies, for a given amount.
@@ -238,4 +180,62 @@ func (q *quotesImpl) CryptoConversion(
 		RoundBank(precision)
 
 	return rawQuote.Rate, convertedAmount, nil
+}
+
+// FiatQuote will access the Fiat currency price quote service and get the latest exchange rate.
+func (q *quotesImpl) fiatQuote(source, destination string, sourceAmount decimal.Decimal) (models.FiatQuote, error) {
+	result := models.FiatQuote{}
+
+	_, err := q.clientFiat.R().
+		SetQueryParam("from", source).
+		SetQueryParam("to", destination).
+		SetQueryParam("amount", sourceAmount.String()).
+		SetSuccessResult(&result).
+		Get(q.conf.FiatCurrency.Endpoint)
+
+	// Failed to query endpoint for price.
+	if err != nil {
+		q.logger.Warn("failed to get Fiat currency price quote", zap.Error(err))
+
+		return result, NewError(constants.RetryMessageString()).SetStatus(http.StatusServiceUnavailable)
+	}
+
+	// Check for a successful rate retrieval.
+	if !result.Success {
+		return result, NewError("invalid Fiat currency code").SetStatus(http.StatusBadRequest)
+	}
+
+	return result, nil
+}
+
+// CryptoQuote will access the Fiat currency price quote service and get the latest exchange rate.
+func (q *quotesImpl) cryptoQuote(source, destination string) (models.CryptoQuote, error) {
+	result := models.CryptoQuote{}
+
+	resp, err := q.clientCrypto.R().
+		SetPathParam("base_symbol", source).
+		SetPathParam("quote_symbol", destination).
+		SetSuccessResult(&result).
+		Get(q.conf.CryptoCurrency.Endpoint)
+
+	// Failed to query endpoint for price.
+	if err != nil {
+		q.logger.Warn("failed to get Fiat currency price quote", zap.Error(err))
+
+		return result, NewError("crypto price service unreachable").SetStatus(http.StatusInternalServerError)
+	}
+
+	if !resp.IsSuccessState() {
+		// Invalid cryptocurrency codes.
+		if resp.StatusCode == 550 { //nolint:mnd,gomnd
+			return result, NewError("invalid Crypto currency code").SetStatus(http.StatusBadRequest)
+		}
+
+		// Log and other API related errors and return an internal server error to user.
+		q.logger.Error("API error", zap.String("Response", resp.String()))
+
+		return result, NewError(constants.RetryMessageString()).SetStatus(http.StatusInternalServerError)
+	}
+
+	return result, nil
 }

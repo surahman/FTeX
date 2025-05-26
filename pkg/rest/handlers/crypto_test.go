@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -111,7 +110,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, OpenCrypto(zapLogger, mockAuth, mockPostgres))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(openReqJSON))
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
 
@@ -457,7 +456,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, OfferCrypto(zapLogger, mockAuth, mockCache, mockQuotes))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -670,7 +669,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.POST(test.path, ExchangeCrypto(zapLogger, mockAuth, mockCache, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBuffer(offerReqJSON))
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -784,7 +783,7 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+tickerPathVar, BalanceCrypto(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.currency, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, basePath+test.currency, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -893,7 +892,7 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+":transactionID", TxDetailsCrypto(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+validTxID.String(), nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, basePath+validTxID.String(), nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -1105,7 +1104,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path, BalanceCryptoPaginated(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, basePath+test.path+test.querySegment, nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, basePath+test.path+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)
 
@@ -1301,7 +1300,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			// Endpoint setup for test.
 			router := gin.Default()
 			router.GET(basePath+test.path+tickerPathVar, TxDetailsCryptoPaginated(zapLogger, mockAuth, mockDB))
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet,
 				basePath+test.path+test.ticker+test.querySegment, nil)
 			recorder := httptest.NewRecorder()
 			router.ServeHTTP(recorder, req)

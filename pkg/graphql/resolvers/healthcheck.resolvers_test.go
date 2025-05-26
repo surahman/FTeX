@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -90,7 +89,7 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 			router := gin.Default()
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(query))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBufferString(query))
 			req.Header.Set("Content-Type", "application/json")
 
 			recorder := httptest.NewRecorder()

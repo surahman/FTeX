@@ -63,7 +63,7 @@ func (ec *executionContext) _CryptoAccount_ticker(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Ticker, nil
 	})
@@ -107,7 +107,7 @@ func (ec *executionContext) _CryptoAccount_balance(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoAccount().Balance(rctx, obj)
 	})
@@ -151,7 +151,7 @@ func (ec *executionContext) _CryptoAccount_lastTx(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoAccount().LastTx(rctx, obj)
 	})
@@ -195,7 +195,7 @@ func (ec *executionContext) _CryptoAccount_lastTxTs(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoAccount().LastTxTs(rctx, obj)
 	})
@@ -239,7 +239,7 @@ func (ec *executionContext) _CryptoAccount_createdAt(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoAccount().CreatedAt(rctx, obj)
 	})
@@ -283,7 +283,7 @@ func (ec *executionContext) _CryptoAccount_clientID(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoAccount().ClientID(rctx, obj)
 	})
@@ -327,7 +327,7 @@ func (ec *executionContext) _CryptoBalancesPaginated_accountBalances(ctx context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AccountBalances, nil
 	})
@@ -385,7 +385,7 @@ func (ec *executionContext) _CryptoBalancesPaginated_links(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Links, nil
 	})
@@ -435,7 +435,7 @@ func (ec *executionContext) _CryptoJournal_ticker(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Ticker, nil
 	})
@@ -479,7 +479,7 @@ func (ec *executionContext) _CryptoJournal_amount(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoJournal().Amount(rctx, obj)
 	})
@@ -523,7 +523,7 @@ func (ec *executionContext) _CryptoJournal_transactedAt(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoJournal().TransactedAt(rctx, obj)
 	})
@@ -567,7 +567,7 @@ func (ec *executionContext) _CryptoJournal_clientID(ctx context.Context, field g
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoJournal().ClientID(rctx, obj)
 	})
@@ -611,7 +611,7 @@ func (ec *executionContext) _CryptoJournal_txID(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoJournal().TxID(rctx, obj)
 	})
@@ -655,7 +655,7 @@ func (ec *executionContext) _CryptoOpenAccountResponse_clientID(ctx context.Cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ClientID, nil
 	})
@@ -699,7 +699,7 @@ func (ec *executionContext) _CryptoOpenAccountResponse_ticker(ctx context.Contex
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Ticker, nil
 	})
@@ -743,7 +743,7 @@ func (ec *executionContext) _CryptoTransactionsPaginated_transactions(ctx contex
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.CryptoTransactionsPaginated().Transactions(rctx, obj)
 	})
@@ -799,7 +799,7 @@ func (ec *executionContext) _CryptoTransactionsPaginated_links(ctx context.Conte
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Links, nil
 	})
@@ -849,7 +849,7 @@ func (ec *executionContext) _CryptoTransferResponse_fiatTxReceipt(ctx context.Co
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.FiatTxReceipt, nil
 	})
@@ -902,7 +902,7 @@ func (ec *executionContext) _CryptoTransferResponse_cryptoTxReceipt(ctx context.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CryptoTxReceipt, nil
 	})
@@ -947,10 +947,10 @@ func (ec *executionContext) fieldContext_CryptoTransferResponse_cryptoTxReceipt(
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputCryptoOfferRequest(ctx context.Context, obj interface{}) (models.HTTPCryptoOfferRequest, error) {
+func (ec *executionContext) unmarshalInputCryptoOfferRequest(ctx context.Context, obj any) (models.HTTPCryptoOfferRequest, error) {
 	var it models.HTTPCryptoOfferRequest
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -997,10 +997,10 @@ func (ec *executionContext) unmarshalInputCryptoOfferRequest(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCryptoPaginatedTxDetailsRequest(ctx context.Context, obj interface{}) (models.CryptoPaginatedTxDetailsRequest, error) {
+func (ec *executionContext) unmarshalInputCryptoPaginatedTxDetailsRequest(ctx context.Context, obj any) (models.CryptoPaginatedTxDetailsRequest, error) {
 	var it models.CryptoPaginatedTxDetailsRequest
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -1794,7 +1794,7 @@ func (ec *executionContext) marshalNCryptoJournal2ᚕgithubᚗcomᚋsurahmanᚋF
 	return ret
 }
 
-func (ec *executionContext) unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx context.Context, v interface{}) (models.HTTPCryptoOfferRequest, error) {
+func (ec *executionContext) unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx context.Context, v any) (models.HTTPCryptoOfferRequest, error) {
 	res, err := ec.unmarshalInputCryptoOfferRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -1813,7 +1813,7 @@ func (ec *executionContext) marshalNCryptoOpenAccountResponse2ᚖgithubᚗcomᚋ
 	return ec._CryptoOpenAccountResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCryptoPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (models.CryptoPaginatedTxDetailsRequest, error) {
+func (ec *executionContext) unmarshalNCryptoPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoPaginatedTxDetailsRequest(ctx context.Context, v any) (models.CryptoPaginatedTxDetailsRequest, error) {
 	res, err := ec.unmarshalInputCryptoPaginatedTxDetailsRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }

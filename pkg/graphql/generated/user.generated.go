@@ -36,154 +36,284 @@ type MutationResolver interface {
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 models1.HTTPDeleteUserRequest
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNDeleteUserRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDeleteUserRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_deleteUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_deleteUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (models1.HTTPDeleteUserRequest, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal models1.HTTPDeleteUserRequest
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_depositFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 models1.HTTPDepositCurrencyRequest
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNFiatDepositRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDepositCurrencyRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNDeleteUserRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDeleteUserRequest(ctx, tmp)
+	}
+
+	var zeroVal models1.HTTPDeleteUserRequest
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_depositFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_depositFiat_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_depositFiat_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (models1.HTTPDepositCurrencyRequest, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal models1.HTTPDepositCurrencyRequest
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_exchangeCrypto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNFiatDepositRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDepositCurrencyRequest(ctx, tmp)
+	}
+
+	var zeroVal models1.HTTPDepositCurrencyRequest
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_exchangeCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["offerID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offerID"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_exchangeCrypto_argsOfferID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["offerID"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_exchangeCrypto_argsOfferID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["offerID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_exchangeOfferFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("offerID"))
+	if tmp, ok := rawArgs["offerID"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_exchangeOfferFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 models1.HTTPExchangeOfferRequest
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_exchangeOfferFiat_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_exchangeOfferFiat_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (models1.HTTPExchangeOfferRequest, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal models1.HTTPExchangeOfferRequest
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_exchangeTransferFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferRequest(ctx, tmp)
+	}
+
+	var zeroVal models1.HTTPExchangeOfferRequest
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_exchangeTransferFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["offerID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offerID"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_exchangeTransferFiat_argsOfferID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["offerID"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_exchangeTransferFiat_argsOfferID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["offerID"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_loginUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("offerID"))
+	if tmp, ok := rawArgs["offerID"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_loginUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 models.UserLoginCredentials
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUserLoginCredentials2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserLoginCredentials(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_loginUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_loginUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (models.UserLoginCredentials, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal models.UserLoginCredentials
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_offerCrypto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 models1.HTTPCryptoOfferRequest
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+		return ec.unmarshalNUserLoginCredentials2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserLoginCredentials(ctx, tmp)
+	}
+
+	var zeroVal models.UserLoginCredentials
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_offerCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_offerCrypto_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_offerCrypto_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (models1.HTTPCryptoOfferRequest, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal models1.HTTPCryptoOfferRequest
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_openCrypto_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNCryptoOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoOfferRequest(ctx, tmp)
+	}
+
+	var zeroVal models1.HTTPCryptoOfferRequest
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_openCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["ticker"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ticker"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_openCrypto_argsTicker(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["ticker"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_openCrypto_argsTicker(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["ticker"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_openFiat_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ticker"))
+	if tmp, ok := rawArgs["ticker"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_openFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["currency"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_openFiat_argsCurrency(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["currency"] = arg0
 	return args, nil
 }
+func (ec *executionContext) field_Mutation_openFiat_argsCurrency(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["currency"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
 
-func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+	if tmp, ok := rawArgs["currency"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
-	args := map[string]interface{}{}
-	var arg0 *models.UserAccount
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOUserAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserAccount(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_registerUser_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
+}
+func (ec *executionContext) field_Mutation_registerUser_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*models.UserAccount, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal *models.UserAccount
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalOUserAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserAccount(ctx, tmp)
+	}
+
+	var zeroVal *models.UserAccount
+	return zeroVal, nil
 }
 
 // endregion ***************************** args.gotpl *****************************
@@ -206,7 +336,7 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().RegisterUser(rctx, fc.Args["input"].(*models.UserAccount))
 	})
@@ -269,7 +399,7 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeleteUser(rctx, fc.Args["input"].(models1.HTTPDeleteUserRequest))
 	})
@@ -324,7 +454,7 @@ func (ec *executionContext) _Mutation_loginUser(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().LoginUser(rctx, fc.Args["input"].(models.UserLoginCredentials))
 	})
@@ -387,7 +517,7 @@ func (ec *executionContext) _Mutation_refreshToken(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().RefreshToken(rctx)
 	})
@@ -439,7 +569,7 @@ func (ec *executionContext) _Mutation_openCrypto(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().OpenCrypto(rctx, fc.Args["ticker"].(string))
 	})
@@ -500,7 +630,7 @@ func (ec *executionContext) _Mutation_offerCrypto(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().OfferCrypto(rctx, fc.Args["input"].(models1.HTTPCryptoOfferRequest))
 	})
@@ -565,7 +695,7 @@ func (ec *executionContext) _Mutation_exchangeCrypto(ctx context.Context, field 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().ExchangeCrypto(rctx, fc.Args["offerID"].(string))
 	})
@@ -626,7 +756,7 @@ func (ec *executionContext) _Mutation_openFiat(ctx context.Context, field graphq
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().OpenFiat(rctx, fc.Args["currency"].(string))
 	})
@@ -687,7 +817,7 @@ func (ec *executionContext) _Mutation_depositFiat(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DepositFiat(rctx, fc.Args["input"].(models1.HTTPDepositCurrencyRequest))
 	})
@@ -756,7 +886,7 @@ func (ec *executionContext) _Mutation_exchangeOfferFiat(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().ExchangeOfferFiat(rctx, fc.Args["input"].(models1.HTTPExchangeOfferRequest))
 	})
@@ -821,7 +951,7 @@ func (ec *executionContext) _Mutation_exchangeTransferFiat(ctx context.Context, 
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().ExchangeTransferFiat(rctx, fc.Args["offerID"].(string))
 	})
@@ -874,10 +1004,10 @@ func (ec *executionContext) fieldContext_Mutation_exchangeTransferFiat(ctx conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputDeleteUserRequest(ctx context.Context, obj interface{}) (models1.HTTPDeleteUserRequest, error) {
+func (ec *executionContext) unmarshalInputDeleteUserRequest(ctx context.Context, obj any) (models1.HTTPDeleteUserRequest, error) {
 	var it models1.HTTPDeleteUserRequest
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -915,10 +1045,10 @@ func (ec *executionContext) unmarshalInputDeleteUserRequest(ctx context.Context,
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUserAccount(ctx context.Context, obj interface{}) (models.UserAccount, error) {
+func (ec *executionContext) unmarshalInputUserAccount(ctx context.Context, obj any) (models.UserAccount, error) {
 	var it models.UserAccount
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -963,10 +1093,10 @@ func (ec *executionContext) unmarshalInputUserAccount(ctx context.Context, obj i
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUserLoginCredentials(ctx context.Context, obj interface{}) (models.UserLoginCredentials, error) {
+func (ec *executionContext) unmarshalInputUserLoginCredentials(ctx context.Context, obj any) (models.UserLoginCredentials, error) {
 	var it models.UserLoginCredentials
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -1128,17 +1258,17 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNDeleteUserRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDeleteUserRequest(ctx context.Context, v interface{}) (models1.HTTPDeleteUserRequest, error) {
+func (ec *executionContext) unmarshalNDeleteUserRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDeleteUserRequest(ctx context.Context, v any) (models1.HTTPDeleteUserRequest, error) {
 	res, err := ec.unmarshalInputDeleteUserRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUserLoginCredentials2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserLoginCredentials(ctx context.Context, v interface{}) (models.UserLoginCredentials, error) {
+func (ec *executionContext) unmarshalNUserLoginCredentials2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserLoginCredentials(ctx context.Context, v any) (models.UserLoginCredentials, error) {
 	res, err := ec.unmarshalInputUserLoginCredentials(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUserAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserAccount(ctx context.Context, v interface{}) (*models.UserAccount, error) {
+func (ec *executionContext) unmarshalOUserAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚋpostgresᚐUserAccount(ctx context.Context, v any) (*models.UserAccount, error) {
 	if v == nil {
 		return nil, nil
 	}

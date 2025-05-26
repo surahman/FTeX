@@ -150,7 +150,7 @@ func TestQueries_CryptoPurchase(t *testing.T) {
 	}
 
 	// Configure context.
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	t.Cleanup(func() {
 		cancel()
@@ -275,7 +275,7 @@ func TestQueries_CryptoSell(t *testing.T) {
 	}
 
 	// Configure context.
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	t.Cleanup(func() {
 		cancel()
@@ -435,7 +435,7 @@ func TestCrypto_CryptoTransactionsPaginated(t *testing.T) {
 	resetTestCryptoJournal(t)
 
 	// Context setup for no hold-and-wait.
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
 
 	defer cancel()
 

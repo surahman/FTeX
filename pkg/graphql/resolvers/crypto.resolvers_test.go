@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -124,7 +123,7 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -160,7 +159,7 @@ func TestCryptoResolver_CryptoOfferRequestResolver(t *testing.T) {
 	t.Run("SourceAmount", func(t *testing.T) {
 		t.Parallel()
 
-		err := resolver.SourceAmount(context.TODO(), &input, sourceFloat)
+		err := resolver.SourceAmount(t.Context(), &input, sourceFloat)
 		require.NoError(t, err, "source amount should always return a nil error.")
 		require.Equal(t, sourceAmount, input.SourceAmount, "source amounts mismatched.")
 	})
@@ -426,7 +425,7 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) { //nolint:maintidx
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -471,7 +470,7 @@ func TestCryptoResolver_CryptoJournalResolver(t *testing.T) {
 	t.Run("Amount", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Amount(context.TODO(), obj)
+		result, err := resolver.Amount(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve amount.")
 		require.InDelta(t, obj.Amount.InexactFloat64(), result, 0.01, "amount mismatched.")
 	})
@@ -479,7 +478,7 @@ func TestCryptoResolver_CryptoJournalResolver(t *testing.T) {
 	t.Run("TransactedAt", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.TransactedAt(context.TODO(), obj)
+		result, err := resolver.TransactedAt(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve transacted at.")
 		require.Equal(t, obj.TransactedAt.Time.String(), result, "transacted at mismatched.")
 	})
@@ -487,7 +486,7 @@ func TestCryptoResolver_CryptoJournalResolver(t *testing.T) {
 	t.Run("ClientID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.ClientID(context.TODO(), obj)
+		result, err := resolver.ClientID(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve client id")
 		require.Equal(t, obj.ClientID.String(), result, "client id mismatched.")
 	})
@@ -495,7 +494,7 @@ func TestCryptoResolver_CryptoJournalResolver(t *testing.T) {
 	t.Run("TxID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.TxID(context.TODO(), obj)
+		result, err := resolver.TxID(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve tx id")
 		require.Equal(t, obj.TxID.String(), result, "client tx mismatched.")
 	})
@@ -698,7 +697,7 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -749,7 +748,7 @@ func TestCryptoResolver_CryptoAccountResolver(t *testing.T) {
 	t.Run("Balance", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Balance(context.TODO(), obj)
+		result, err := resolver.Balance(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve balance.")
 		require.InDelta(t, obj.Balance.InexactFloat64(), result, 0.01, "balance mismatched.")
 	})
@@ -757,7 +756,7 @@ func TestCryptoResolver_CryptoAccountResolver(t *testing.T) {
 	t.Run("LastTx", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.LastTx(context.TODO(), obj)
+		result, err := resolver.LastTx(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve last tx.")
 		require.InDelta(t, obj.LastTx.InexactFloat64(), result, 0.01, "last tx mismatched.")
 	})
@@ -765,7 +764,7 @@ func TestCryptoResolver_CryptoAccountResolver(t *testing.T) {
 	t.Run("LastTxTs", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.LastTxTs(context.TODO(), obj)
+		result, err := resolver.LastTxTs(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve LastTxTs.")
 		require.Equal(t, obj.LastTxTs.Time.String(), result, "LastTxTs mismatched.")
 	})
@@ -773,7 +772,7 @@ func TestCryptoResolver_CryptoAccountResolver(t *testing.T) {
 	t.Run("CreatedAt", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.CreatedAt(context.TODO(), obj)
+		result, err := resolver.CreatedAt(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve CreatedAt.")
 		require.Equal(t, obj.CreatedAt.Time.String(), result, "CreatedAt mismatched.")
 	})
@@ -781,7 +780,7 @@ func TestCryptoResolver_CryptoAccountResolver(t *testing.T) {
 	t.Run("ClientID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.ClientID(context.TODO(), obj)
+		result, err := resolver.ClientID(t.Context(), obj)
 		require.NoError(t, err, "failed to resolve client id")
 		require.Equal(t, obj.ClientID.String(), result, "client id mismatched.")
 	})
@@ -899,7 +898,7 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -1159,7 +1158,7 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -1318,7 +1317,7 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -1348,7 +1347,7 @@ func TestFiatResolver_CryptoTransactionsPaginatedResolver(t *testing.T) {
 
 	transactions := &models.HTTPCryptoTransactionsPaginated{}
 
-	actual, err := resolver.Transactions(context.TODO(), transactions)
+	actual, err := resolver.Transactions(t.Context(), transactions)
 	require.NoError(t, err, "error should always be nil.")
 	require.Equal(t, transactions.TransactionDetails, actual, "actual and returned addresses do not match.")
 }
@@ -1570,7 +1569,7 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")

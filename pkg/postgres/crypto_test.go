@@ -27,7 +27,7 @@ func TestCrypto_CryptoCreateAccount(t *testing.T) {
 	// Insert an initial set of test crypto accounts.
 	resetTestCryptoAccounts(t, clientID1, clientID2)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -147,7 +147,7 @@ func TestCrypto_CryptoPurchase(t *testing.T) {
 	}
 
 	// Configure context.
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	t.Cleanup(func() {
 		cancel()
@@ -383,7 +383,7 @@ func TestCrypto_CryptoSell(t *testing.T) {
 	}
 
 	// Configure context.
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	t.Cleanup(func() {
 		cancel()
@@ -589,7 +589,7 @@ func TestCrypto_CryptoGetAllAccounts(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -628,7 +628,7 @@ func TestCrypto_CryptoGetAllJournalTransactionPaginated(t *testing.T) {
 	resetTestCryptoJournal(t)
 
 	// Context setup for no hold-and-wait.
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
 
 	defer cancel()
 
