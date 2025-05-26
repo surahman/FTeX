@@ -102,7 +102,7 @@ func TestUDF_RoundHalfEven(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 
 	t.Cleanup(func() {
 		cancel()

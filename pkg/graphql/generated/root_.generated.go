@@ -205,7 +205,7 @@ func (e *executableSchema) Schema() *ast.Schema {
 	return parsedSchema
 }
 
-func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
+func (e *executableSchema) Complexity(ctx context.Context, typeName, field string, childComplexity int, rawArgs map[string]any) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
@@ -558,7 +558,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -570,7 +570,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_depositFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_depositFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -582,7 +582,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_exchangeCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_exchangeCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -594,7 +594,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_exchangeOfferFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_exchangeOfferFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -606,7 +606,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_exchangeTransferFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_exchangeTransferFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -618,7 +618,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_loginUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_loginUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -630,7 +630,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_offerCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_offerCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -642,7 +642,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_openCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_openCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -654,7 +654,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_openFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_openFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -673,7 +673,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Mutation_registerUser_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_registerUser_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -748,7 +748,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_balanceAllCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_balanceAllCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -760,7 +760,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_balanceAllFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_balanceAllFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -772,7 +772,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_balanceCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_balanceCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -784,7 +784,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_balanceFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_balanceFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -803,7 +803,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_transactionDetailsAllCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_transactionDetailsAllCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -815,7 +815,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_transactionDetailsAllFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_transactionDetailsAllFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -827,7 +827,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_transactionDetailsCrypto_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_transactionDetailsCrypto_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -839,7 +839,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_transactionDetailsFiat_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_transactionDetailsFiat_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -851,8 +851,8 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 }
 
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
-	rc := graphql.GetOperationContext(ctx)
-	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
+	opCtx := graphql.GetOperationContext(ctx)
+	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputCryptoOfferRequest,
 		ec.unmarshalInputCryptoPaginatedTxDetailsRequest,
@@ -865,7 +865,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	)
 	first := true
 
-	switch rc.Operation.Operation {
+	switch opCtx.Operation.Operation {
 	case ast.Query:
 		return func(ctx context.Context) *graphql.Response {
 			var response graphql.Response
@@ -873,7 +873,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			if first {
 				first = false
 				ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-				data = ec._Query(ctx, rc.Operation.SelectionSet)
+				data = ec._Query(ctx, opCtx.Operation.SelectionSet)
 			} else {
 				if atomic.LoadInt32(&ec.pendingDeferred) > 0 {
 					result := <-ec.deferredResults
@@ -903,7 +903,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			}
 			first = false
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
-			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			data := ec._Mutation(ctx, opCtx.Operation.SelectionSet)
 			var buf bytes.Buffer
 			data.MarshalGQL(&buf)
 

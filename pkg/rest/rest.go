@@ -59,12 +59,66 @@ func NewServer(fs *afero.Fs, auth auth.Auth, postgres postgres.Postgres, redis r
 		err
 }
 
+// Run brings the HTTP service up.
+func (s *Server) Run() {
+	// Indicate to bootstrapping thread to wait for completion.
+	defer s.wg.Done()
+
+	// Configure routes.
+	s.initialize()
+
+	// Create server.
+	srv := &http.Server{
+		ReadTimeout:       s.conf.Server.ReadTimeout,
+		WriteTimeout:      s.conf.Server.WriteTimeout,
+		ReadHeaderTimeout: s.conf.Server.ReadHeaderTimeout,
+		Addr:              fmt.Sprintf(":%d", s.conf.Server.PortNumber),
+		Handler:           s.router,
+	}
+
+	// Error channel for failed server start.
+	serverErr := make(chan error, 1)
+
+	// Wait for interrupt signal to gracefully shut down the server.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start HTTP listener.
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+		}
+	}()
+
+	// Check for server start failure or shutdown signal.
+	select {
+	case err := <-serverErr:
+		s.logger.Error(fmt.Sprintf("REST server failed to listen on port %d", s.conf.Server.PortNumber), zap.Error(err))
+
+		return
+	case <-quit:
+		s.logger.Info("Shutting down REST server...", zap.Duration("waiting", s.conf.Server.ShutdownDelay))
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), s.conf.Server.ShutdownDelay)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
+	}
+
+	// 5 second wait to exit.
+	<-ctx.Done()
+
+	s.logger.Info("REST server exited")
+}
+
 // initialize will configure the HTTP server routes.
 func (s *Server) initialize() {
 	s.router = gin.Default()
 
 	//	@title						FTeX, Inc. (Formerly Crypto-Bro's Bank, Inc.)
-	//	@version					1.2.7
+	//	@version					1.2.8
 	//	@description				FTeX Fiat and Cryptocurrency Banking API.
 	//	@description				Bank, buy, and sell Fiat and Cryptocurrencies. Prices for all currencies are retrieved from real-time quote providers.
 	//
@@ -122,58 +176,4 @@ func (s *Server) initialize() {
 	cryptoGroup.GET("/info/transaction/:transactionID", restHandlers.TxDetailsCrypto(s.logger, s.auth, s.db))
 	cryptoGroup.GET("/info/balance/", restHandlers.BalanceCryptoPaginated(s.logger, s.auth, s.db))
 	cryptoGroup.GET("/info/transaction/all/:ticker", restHandlers.TxDetailsCryptoPaginated(s.logger, s.auth, s.db))
-}
-
-// Run brings the HTTP service up.
-func (s *Server) Run() {
-	// Indicate to bootstrapping thread to wait for completion.
-	defer s.wg.Done()
-
-	// Configure routes.
-	s.initialize()
-
-	// Create server.
-	srv := &http.Server{
-		ReadTimeout:       s.conf.Server.ReadTimeout,
-		WriteTimeout:      s.conf.Server.WriteTimeout,
-		ReadHeaderTimeout: s.conf.Server.ReadHeaderTimeout,
-		Addr:              fmt.Sprintf(":%d", s.conf.Server.PortNumber),
-		Handler:           s.router,
-	}
-
-	// Error channel for failed server start.
-	serverErr := make(chan error, 1)
-
-	// Wait for interrupt signal to gracefully shut down the server.
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-	// Start HTTP listener.
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			serverErr <- err
-		}
-	}()
-
-	// Check for server start failure or shutdown signal.
-	select {
-	case err := <-serverErr:
-		s.logger.Error(fmt.Sprintf("REST server failed to listen on port %d", s.conf.Server.PortNumber), zap.Error(err))
-
-		return
-	case <-quit:
-		s.logger.Info("Shutting down REST server...", zap.Duration("waiting", s.conf.Server.ShutdownDelay))
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), s.conf.Server.ShutdownDelay)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		s.logger.Panic("Failed to shutdown REST server", zap.Error(err))
-	}
-
-	// 5 second wait to exit.
-	<-ctx.Done()
-
-	s.logger.Info("REST server exited")
 }

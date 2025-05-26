@@ -80,7 +80,7 @@ func (ec *executionContext) _FiatAccount_currency(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatAccount().Currency(rctx, obj)
 	})
@@ -124,7 +124,7 @@ func (ec *executionContext) _FiatAccount_balance(ctx context.Context, field grap
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatAccount().Balance(rctx, obj)
 	})
@@ -168,7 +168,7 @@ func (ec *executionContext) _FiatAccount_lastTx(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatAccount().LastTx(rctx, obj)
 	})
@@ -212,7 +212,7 @@ func (ec *executionContext) _FiatAccount_lastTxTs(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatAccount().LastTxTs(rctx, obj)
 	})
@@ -256,7 +256,7 @@ func (ec *executionContext) _FiatAccount_createdAt(ctx context.Context, field gr
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatAccount().CreatedAt(rctx, obj)
 	})
@@ -300,7 +300,7 @@ func (ec *executionContext) _FiatAccount_clientID(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatAccount().ClientID(rctx, obj)
 	})
@@ -344,7 +344,7 @@ func (ec *executionContext) _FiatBalancesPaginated_accountBalances(ctx context.C
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AccountBalances, nil
 	})
@@ -402,7 +402,7 @@ func (ec *executionContext) _FiatBalancesPaginated_links(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Links, nil
 	})
@@ -452,7 +452,7 @@ func (ec *executionContext) _FiatDepositResponse_txId(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatDepositResponse().TxID(rctx, obj)
 	})
@@ -496,7 +496,7 @@ func (ec *executionContext) _FiatDepositResponse_clientId(ctx context.Context, f
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatDepositResponse().ClientID(rctx, obj)
 	})
@@ -540,7 +540,7 @@ func (ec *executionContext) _FiatDepositResponse_txTimestamp(ctx context.Context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatDepositResponse().TxTimestamp(rctx, obj)
 	})
@@ -584,7 +584,7 @@ func (ec *executionContext) _FiatDepositResponse_balance(ctx context.Context, fi
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatDepositResponse().Balance(rctx, obj)
 	})
@@ -628,7 +628,7 @@ func (ec *executionContext) _FiatDepositResponse_lastTx(ctx context.Context, fie
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatDepositResponse().LastTx(rctx, obj)
 	})
@@ -672,7 +672,7 @@ func (ec *executionContext) _FiatDepositResponse_currency(ctx context.Context, f
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatDepositResponse().Currency(rctx, obj)
 	})
@@ -716,7 +716,7 @@ func (ec *executionContext) _FiatExchangeTransferResponse_sourceReceipt(ctx cont
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatExchangeTransferResponse().SourceReceipt(rctx, obj)
 	})
@@ -774,7 +774,7 @@ func (ec *executionContext) _FiatExchangeTransferResponse_destinationReceipt(ctx
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatExchangeTransferResponse().DestinationReceipt(rctx, obj)
 	})
@@ -832,7 +832,7 @@ func (ec *executionContext) _FiatJournal_currency(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatJournal().Currency(rctx, obj)
 	})
@@ -876,7 +876,7 @@ func (ec *executionContext) _FiatJournal_amount(ctx context.Context, field graph
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatJournal().Amount(rctx, obj)
 	})
@@ -920,7 +920,7 @@ func (ec *executionContext) _FiatJournal_transactedAt(ctx context.Context, field
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatJournal().TransactedAt(rctx, obj)
 	})
@@ -964,7 +964,7 @@ func (ec *executionContext) _FiatJournal_clientID(ctx context.Context, field gra
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatJournal().ClientID(rctx, obj)
 	})
@@ -1008,7 +1008,7 @@ func (ec *executionContext) _FiatJournal_txID(ctx context.Context, field graphql
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatJournal().TxID(rctx, obj)
 	})
@@ -1052,7 +1052,7 @@ func (ec *executionContext) _FiatOpenAccountResponse_clientID(ctx context.Contex
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ClientID, nil
 	})
@@ -1096,7 +1096,7 @@ func (ec *executionContext) _FiatOpenAccountResponse_currency(ctx context.Contex
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Currency, nil
 	})
@@ -1140,7 +1140,7 @@ func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.FiatTransactionsPaginated().Transactions(rctx, obj)
 	})
@@ -1196,7 +1196,7 @@ func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context
 			ret = graphql.Null
 		}
 	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Links, nil
 	})
@@ -1238,10 +1238,10 @@ func (ec *executionContext) fieldContext_FiatTransactionsPaginated_links(_ conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputFiatDepositRequest(ctx context.Context, obj interface{}) (models.HTTPDepositCurrencyRequest, error) {
+func (ec *executionContext) unmarshalInputFiatDepositRequest(ctx context.Context, obj any) (models.HTTPDepositCurrencyRequest, error) {
 	var it models.HTTPDepositCurrencyRequest
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -1274,10 +1274,10 @@ func (ec *executionContext) unmarshalInputFiatDepositRequest(ctx context.Context
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.Context, obj interface{}) (models.HTTPExchangeOfferRequest, error) {
+func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.Context, obj any) (models.HTTPExchangeOfferRequest, error) {
 	var it models.HTTPExchangeOfferRequest
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -1317,10 +1317,10 @@ func (ec *executionContext) unmarshalInputFiatExchangeOfferRequest(ctx context.C
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputFiatPaginatedTxDetailsRequest(ctx context.Context, obj interface{}) (models.FiatPaginatedTxDetailsRequest, error) {
+func (ec *executionContext) unmarshalInputFiatPaginatedTxDetailsRequest(ctx context.Context, obj any) (models.FiatPaginatedTxDetailsRequest, error) {
 	var it models.FiatPaginatedTxDetailsRequest
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
@@ -2446,7 +2446,7 @@ func (ec *executionContext) marshalNFiatBalancesPaginated2ᚖgithubᚗcomᚋsura
 	return ec._FiatBalancesPaginated(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFiatDepositRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDepositCurrencyRequest(ctx context.Context, v interface{}) (models.HTTPDepositCurrencyRequest, error) {
+func (ec *executionContext) unmarshalNFiatDepositRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPDepositCurrencyRequest(ctx context.Context, v any) (models.HTTPDepositCurrencyRequest, error) {
 	res, err := ec.unmarshalInputFiatDepositRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -2465,7 +2465,7 @@ func (ec *executionContext) marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahm
 	return ec._FiatDepositResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferRequest(ctx context.Context, v interface{}) (models.HTTPExchangeOfferRequest, error) {
+func (ec *executionContext) unmarshalNFiatExchangeOfferRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferRequest(ctx context.Context, v any) (models.HTTPExchangeOfferRequest, error) {
 	res, err := ec.unmarshalInputFiatExchangeOfferRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -2546,7 +2546,7 @@ func (ec *executionContext) marshalNFiatOpenAccountResponse2ᚖgithubᚗcomᚋsu
 	return ec._FiatOpenAccountResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx context.Context, v interface{}) (models.FiatPaginatedTxDetailsRequest, error) {
+func (ec *executionContext) unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx context.Context, v any) (models.FiatPaginatedTxDetailsRequest, error) {
 	res, err := ec.unmarshalInputFiatPaginatedTxDetailsRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }

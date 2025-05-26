@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -137,7 +136,7 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -192,7 +191,7 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Run("TxID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.TxID(context.TODO(), input)
+		result, err := resolver.TxID(t.Context(), input)
 		require.NoError(t, err, "failed to resolve tx id.")
 		require.Equal(t, txID.String(), result, "tx id mismatched.")
 	})
@@ -200,7 +199,7 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Run("ClientID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.ClientID(context.TODO(), input)
+		result, err := resolver.ClientID(t.Context(), input)
 		require.NoError(t, err, "failed to resolve client id.")
 		require.Equal(t, clientID.String(), result, "client id mismatched.")
 	})
@@ -208,7 +207,7 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Run("TxTimestamp", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.TxTimestamp(context.TODO(), input)
+		result, err := resolver.TxTimestamp(t.Context(), input)
 		require.NoError(t, err, "failed to resolve tx timestamp.")
 		require.Equal(t, txTS.Time.String(), result, "tx timestamp mismatched.")
 	})
@@ -216,7 +215,7 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Run("Balance", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Balance(context.TODO(), input)
+		result, err := resolver.Balance(t.Context(), input)
 		require.NoError(t, err, "failed to resolve balance")
 		require.Equal(t, balance.String(), result, "balance mismatched.")
 	})
@@ -224,7 +223,7 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Run("LastTx", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.LastTx(context.TODO(), input)
+		result, err := resolver.LastTx(t.Context(), input)
 		require.NoError(t, err, "failed to resolve lastTx")
 		require.Equal(t, lastTx.String(), result, "lastTx mismatched.")
 	})
@@ -232,7 +231,7 @@ func TestFiatResolver_FiatDepositResponseResolvers(t *testing.T) {
 	t.Run("Currency", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Currency(context.TODO(), input)
+		result, err := resolver.Currency(t.Context(), input)
 		require.NoError(t, err, "failed to resolve currency")
 		require.Equal(t, "USD", result, "currency mismatched.")
 	})
@@ -362,7 +361,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -400,7 +399,7 @@ func TestFiatResolver_FiatExchangeOfferRequestResolver(t *testing.T) {
 	t.Run("SourceAmount", func(t *testing.T) {
 		t.Parallel()
 
-		err := resolver.SourceAmount(context.TODO(), exchangeOfferRequest, expected)
+		err := resolver.SourceAmount(t.Context(), exchangeOfferRequest, expected)
 		require.NoError(t, err, "failed to resolve debit amount")
 		require.InDelta(t, expected, exchangeOfferRequest.SourceAmount.InexactFloat64(), 0.01, "debit amount mismatched.")
 	})
@@ -423,7 +422,7 @@ func TestFiatResolver_OfferResponseResolver(t *testing.T) {
 	t.Run("DebitAmount", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.DebitAmount(context.TODO(), exchangeOfferResponse)
+		result, err := resolver.DebitAmount(t.Context(), exchangeOfferResponse)
 		require.NoError(t, err, "failed to resolve debit amount")
 		require.InDelta(t, debitAmount.InexactFloat64(), result, 0.01, "debit amount mismatched.")
 	})
@@ -672,7 +671,7 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -719,11 +718,11 @@ func TestFiatResolver_FiatExchangeTransferResponseResolver(t *testing.T) {
 		},
 	}
 
-	source, err := resolver.SourceReceipt(context.TODO(), response)
+	source, err := resolver.SourceReceipt(t.Context(), response)
 	require.NoError(t, err, "source should always return a nil error.")
 	require.Equal(t, response.SrcTxReceipt, source, "source and returned struct addresses mismatched.")
 
-	destination, err := resolver.SourceReceipt(context.TODO(), response)
+	destination, err := resolver.SourceReceipt(t.Context(), response)
 	require.NoError(t, err, "destinations should always return a nil error.")
 	require.Equal(t, response.DstTxReceipt, destination, "destination and returned struct addresses mismatched.")
 }
@@ -1049,7 +1048,7 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -1103,7 +1102,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 	t.Run("Currency", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Currency(context.TODO(), fiatAccount)
+		result, err := resolver.Currency(t.Context(), fiatAccount)
 		require.NoError(t, err, "failed to resolve currency")
 		require.Equal(t, "USD", result, "currency mismatched.")
 	})
@@ -1111,7 +1110,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 	t.Run("BalanceAmount", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Balance(context.TODO(), fiatAccount)
+		result, err := resolver.Balance(t.Context(), fiatAccount)
 		require.NoError(t, err, "failed to resolve balance amount")
 		require.InDelta(t, balanceAmount.InexactFloat64(), result, 0.01, "balance amount mismatched.")
 	})
@@ -1119,7 +1118,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 	t.Run("LastTxAmount", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.LastTx(context.TODO(), fiatAccount)
+		result, err := resolver.LastTx(t.Context(), fiatAccount)
 		require.NoError(t, err, "failed to resolve lastTx amount")
 		require.InDelta(t, lastTxAmount.InexactFloat64(), result, 0.01, "lastTx amount mismatched.")
 	})
@@ -1127,7 +1126,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 	t.Run("LastTxTS", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.LastTxTs(context.TODO(), fiatAccount)
+		result, err := resolver.LastTxTs(t.Context(), fiatAccount)
 		require.NoError(t, err, "failed to resolve lastTx timestamp")
 		require.Equal(t, lastTxTS.String(), result, "lastTx timestamp mismatched.")
 	})
@@ -1135,7 +1134,7 @@ func TestFiatResolver_FiatAccountResolvers(t *testing.T) {
 	t.Run("CreatedAtTS", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.CreatedAt(context.TODO(), fiatAccount)
+		result, err := resolver.CreatedAt(t.Context(), fiatAccount)
 		require.NoError(t, err, "failed to resolve created at timestamp.")
 		require.Equal(t, createdAt.String(), result, "created at timestamp mismatched.")
 	})
@@ -1261,7 +1260,7 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -1521,7 +1520,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -1572,7 +1571,7 @@ func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	t.Run("Currency", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Currency(context.TODO(), fiatJournal)
+		result, err := resolver.Currency(t.Context(), fiatJournal)
 		require.NoError(t, err, "failed to resolve currency")
 		require.Equal(t, string(postgres.CurrencyUSD), result, "currency mismatched.")
 	})
@@ -1580,7 +1579,7 @@ func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	t.Run("Amount", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.Amount(context.TODO(), fiatJournal)
+		result, err := resolver.Amount(t.Context(), fiatJournal)
 		require.NoError(t, err, "failed to resolve amount")
 		require.InDeltaf(t, amount.InexactFloat64(), result, 0.01, "amount mismatched.")
 	})
@@ -1588,7 +1587,7 @@ func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	t.Run("TransactedAt", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.TransactedAt(context.TODO(), fiatJournal)
+		result, err := resolver.TransactedAt(t.Context(), fiatJournal)
 		require.NoError(t, err, "failed to resolve transacted at timestamp.")
 		require.Equal(t, timestamp.String(), result, "transacted at timestamp mismatched.")
 	})
@@ -1596,7 +1595,7 @@ func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	t.Run("ClientID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.ClientID(context.TODO(), fiatJournal)
+		result, err := resolver.ClientID(t.Context(), fiatJournal)
 		require.NoError(t, err, "failed to resolve client id.")
 		require.Equal(t, clientID.String(), result, "client id mismatched.")
 	})
@@ -1604,7 +1603,7 @@ func TestFiatResolver_FiatJournalResolvers(t *testing.T) {
 	t.Run("TxID", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := resolver.TxID(context.TODO(), fiatJournal)
+		result, err := resolver.TxID(t.Context(), fiatJournal)
 		require.NoError(t, err, "failed to resolve tx id.")
 		require.Equal(t, txID.String(), result, "tx id mismatched.")
 	})
@@ -1746,7 +1745,7 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -2004,7 +2003,7 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")
@@ -2034,7 +2033,7 @@ func TestFiatResolver_FiatTransactionsPaginatedResolver(t *testing.T) {
 
 	transactions := &models.HTTPFiatTransactionsPaginated{}
 
-	actual, err := resolver.Transactions(context.TODO(), transactions)
+	actual, err := resolver.Transactions(t.Context(), transactions)
 	require.NoError(t, err, "error should always be nil.")
 	require.Equal(t, transactions.TransactionDetails, actual, "actual and returned addresses do not match.")
 }

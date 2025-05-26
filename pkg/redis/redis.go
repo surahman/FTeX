@@ -73,40 +73,6 @@ func newRedisImpl(fs *afero.Fs, logger *logger.Logger) (c *redisImpl, err error)
 	return
 }
 
-// verifySession will check to see if a session is established.
-func (r *redisImpl) verifySession() error {
-	if r.redisDB == nil || r.redisDB.Ping(context.Background()).Err() != nil {
-		return errors.New("no session established")
-	}
-
-	return nil
-}
-
-// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first
-// success or fail after the last one.
-func (r *redisImpl) createSessionRetry() error {
-	var err error
-
-	for attempt := 1; attempt <= r.conf.Connection.MaxConnAttempts; attempt++ {
-		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
-		r.logger.Info(fmt.Sprintf("Attempting connection to Redis server in %s...", waitTime),
-			zap.String("attempt", strconv.Itoa(attempt)))
-
-		time.Sleep(waitTime)
-
-		// Successfully opened lazy connection with a ping.
-		if err = r.redisDB.Ping(context.Background()).Err(); err == nil {
-			return nil
-		}
-	}
-
-	// Unable to ping Redis server and establish lazy connection.
-	msg := "unable to establish connection to Redis server"
-	r.logger.Error(msg, zap.Error(err))
-
-	return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
-}
-
 // Open will establish a connection to the Redis cache server.
 func (r *redisImpl) Open() error {
 	// Stop connection leaks.
@@ -233,4 +199,38 @@ func (r *redisImpl) Del(keys ...string) error {
 	}
 
 	return nil
+}
+
+// verifySession will check to see if a session is established.
+func (r *redisImpl) verifySession() error {
+	if r.redisDB == nil || r.redisDB.Ping(context.Background()).Err() != nil {
+		return errors.New("no session established")
+	}
+
+	return nil
+}
+
+// createSessionRetry will attempt to open the connection using binary exponential back-off and stop on the first
+// success or fail after the last one.
+func (r *redisImpl) createSessionRetry() error {
+	var err error
+
+	for attempt := 1; attempt <= r.conf.Connection.MaxConnAttempts; attempt++ {
+		waitTime := time.Duration(math.Pow(2, float64(attempt))) * time.Second
+		r.logger.Info(fmt.Sprintf("Attempting connection to Redis server in %s...", waitTime),
+			zap.String("attempt", strconv.Itoa(attempt)))
+
+		time.Sleep(waitTime)
+
+		// Successfully opened lazy connection with a ping.
+		if err = r.redisDB.Ping(context.Background()).Err(); err == nil {
+			return nil
+		}
+	}
+
+	// Unable to ping Redis server and establish lazy connection.
+	msg := "unable to establish connection to Redis server"
+	r.logger.Error(msg, zap.Error(err))
+
+	return fmt.Errorf(constants.ErrorFormatMessage(), msg, err)
 }

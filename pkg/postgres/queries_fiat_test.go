@@ -164,7 +164,7 @@ func TestFiat_FiatTransactionsCurrencyPaginated(t *testing.T) {
 	resetTestFiatJournal(t, clientID1, clientID2)
 
 	// Context setup for no hold-and-wait.
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
 
 	defer cancel()
 

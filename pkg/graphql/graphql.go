@@ -56,18 +56,6 @@ func NewServer(fs *afero.Fs, auth auth.Auth, postgres postgres.Postgres, redis r
 		err
 }
 
-// initialize will configure the HTTP server routes.
-func (s *Server) initialize() {
-	s.router = gin.Default()
-
-	// Endpoint configurations
-	api := s.router.Group(s.conf.Server.BasePath)
-	api.Use(graphql.GinContextToContextMiddleware())
-	api.POST(s.conf.Server.QueryPath,
-		graphql.QueryHandler(s.conf.Authorization.HeaderKey, s.auth, s.cache, s.db, s.quotes, s.logger))
-	api.GET(s.conf.Server.PlaygroundPath, graphql.PlaygroundHandler(s.conf.Server.BasePath, s.conf.Server.QueryPath))
-}
-
 // Run brings the HTTP GraphQL service up.
 func (s *Server) Run() {
 	// Indicate to bootstrapping thread to wait for completion.
@@ -120,4 +108,16 @@ func (s *Server) Run() {
 	<-ctx.Done()
 
 	s.logger.Info("GraphQL server exited")
+}
+
+// initialize will configure the HTTP server routes.
+func (s *Server) initialize() {
+	s.router = gin.Default()
+
+	// Endpoint configurations
+	api := s.router.Group(s.conf.Server.BasePath)
+	api.Use(graphql.GinContextToContextMiddleware())
+	api.POST(s.conf.Server.QueryPath,
+		graphql.QueryHandler(s.conf.Authorization.HeaderKey, s.auth, s.cache, s.db, s.quotes, s.logger))
+	api.GET(s.conf.Server.PlaygroundPath, graphql.PlaygroundHandler(s.conf.Server.BasePath, s.conf.Server.QueryPath))
 }

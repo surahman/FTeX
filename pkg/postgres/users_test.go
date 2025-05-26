@@ -23,7 +23,7 @@ func TestCreateUser(t *testing.T) {
 		user := testCase
 
 		t.Run("Test case "+key, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+			ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 			defer cancel()
 
@@ -42,7 +42,7 @@ func TestCreateUser(t *testing.T) {
 		Email:     "user1@email-address.com",
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -60,7 +60,7 @@ func TestPostgres_DeleteUser(t *testing.T) {
 	// Insert an initial set of test users.
 	clientIDs := insertTestUsers(t)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -90,7 +90,7 @@ func TestGetClientIdUser(t *testing.T) {
 	// Insert an initial set of test users.
 	insertTestUsers(t)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -118,7 +118,7 @@ func TestGetCredentialsUser(t *testing.T) {
 	// Insert an initial set of test users.
 	insertTestUsers(t)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -148,7 +148,7 @@ func TestGetInfoUser(t *testing.T) {
 	// Insert an initial set of test users.
 	clientIDs := insertTestUsers(t)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 
@@ -193,7 +193,7 @@ func TestPostgres_IsDeletedUser(t *testing.T) {
 	// Insert an initial set of test users.
 	clientIDs := insertTestUsers(t)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 
 	defer cancel()
 

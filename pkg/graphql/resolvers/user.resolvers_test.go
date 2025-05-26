@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -131,7 +130,7 @@ func TestUserResolver_RegisterUser(t *testing.T) {
 			router := gin.Default()
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(test.user))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBufferString(test.user))
 			req.Header.Set("Content-Type", "application/json")
 
 			recorder := httptest.NewRecorder()
@@ -417,7 +416,7 @@ func TestUserResolver_DeleteUser(t *testing.T) { //nolint:maintidx
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(test.query))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBufferString(test.query))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", authToken)
 
@@ -553,7 +552,7 @@ func TestUserResolver_LoginUser(t *testing.T) {
 			router := gin.Default()
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path, bytes.NewBufferString(test.user))
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path, bytes.NewBufferString(test.user))
 			req.Header.Set("Content-Type", "application/json")
 
 			recorder := httptest.NewRecorder()
@@ -807,7 +806,7 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			router.Use(GinContextToContextMiddleware())
 			router.POST(test.path, QueryHandler(testAuthHeaderKey, mockAuth, mockRedis, mockPostgres, mockQuotes, zapLogger))
 
-			req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, test.path,
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, test.path,
 				bytes.NewBufferString(testUserQuery["refresh"]))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", "some valid auth token goes here")

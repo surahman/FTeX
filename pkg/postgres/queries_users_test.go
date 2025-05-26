@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -58,7 +57,7 @@ func TestQueries_UserCredentials(t *testing.T) {
 	require.NotEmpty(t, hashedPass, "retrieved an invalid password.")
 
 	// Deleted account.
-	rowsAffected, err := connection.Query.userDelete(context.TODO(), clientID)
+	rowsAffected, err := connection.Query.userDelete(t.Context(), clientID)
 	require.NoError(t, err, "errored whilst trying to delete user.")
 	require.Equal(t, int64(1), rowsAffected, "no users were deleted.")
 
@@ -87,7 +86,7 @@ func TestQueries_UserGetInfo(t *testing.T) {
 	const uname = "username1"
 	expectedAccount := getTestUsers()[uname]
 
-	clientID, err := connection.queries.userGetClientId(context.TODO(), uname)
+	clientID, err := connection.queries.userGetClientId(t.Context(), uname)
 	require.NoError(t, err, "failed to retrieve client id for username1.")
 	actualAccount, err := connection.UserGetInfo(clientID)
 	require.NoError(t, err, "failed to retrieve account info for username1.")

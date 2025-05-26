@@ -1,7 +1,6 @@
 package graphql
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -36,7 +35,7 @@ func TestGinContextToContextMiddleware(t *testing.T) {
 	router := gin.Default()
 	router.POST("/middleware-test", GinContextToContextMiddleware())
 
-	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, "/middleware-test", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, "/middleware-test", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
