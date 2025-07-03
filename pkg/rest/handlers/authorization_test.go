@@ -18,6 +18,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	mockAuth := mocks.NewMockAuth(mockCtrl)
 	mockDB := mocks.NewMockPostgres(mockCtrl)
 
@@ -113,6 +114,7 @@ func TestAuthMiddleware_Handler(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 

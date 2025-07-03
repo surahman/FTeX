@@ -99,6 +99,7 @@ func TestCryptoResolver_OpenCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -393,6 +394,7 @@ func TestCryptoResolver_OfferCrypto(t *testing.T) { //nolint:maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl) // Not called.
 			mockRedis := mocks.NewMockRedis(mockCtrl)
@@ -654,6 +656,7 @@ func TestCryptoResolver_ExchangeCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)
@@ -874,6 +877,7 @@ func TestCryptoResolver_BalanceCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -1126,6 +1130,7 @@ func TestCryptoResolver_BalanceAllCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
@@ -1289,6 +1294,7 @@ func TestCryptoResolver_TransactionDetailsCrypto(t *testing.T) { //nolint:dupl
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -1536,6 +1542,7 @@ func TestCryptoResolver_TransactionDetailsAllCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.

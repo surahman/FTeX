@@ -166,7 +166,6 @@ func (r *redisImpl) Get(key string, value any) error {
 		err     error
 		rawData []byte
 	)
-
 	if rawData, err = r.redisDB.Get(context.Background(), key).Bytes(); err != nil {
 		return NewError(err.Error()).errorCacheMiss()
 	}

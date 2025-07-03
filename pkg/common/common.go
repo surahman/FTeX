@@ -145,7 +145,6 @@ func HTTPTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 		buffer    []byte
 		err       error
 	)
-
 	if buffer, err = auth.DecryptFromString(pageCursor); err != nil {
 		return startPGTS, "", endPGTS, "", -1, fmt.Errorf("failed to decrypt page cursor %w", err)
 	}

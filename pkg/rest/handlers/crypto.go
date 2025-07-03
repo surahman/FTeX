@@ -42,7 +42,6 @@ func OpenCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin
 			httpStatus  int
 			httpMessage string
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -98,7 +97,6 @@ func OfferCrypto(logger *logger.Logger, auth auth.Auth, cache redis.Redis, quote
 			status        int
 			statusMessage string
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -161,7 +159,6 @@ func ExchangeCrypto(logger *logger.Logger, auth auth.Auth, cache redis.Redis, db
 			clientID uuid.UUID
 			request  models.HTTPTransferRequest
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -220,7 +217,6 @@ func BalanceCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) 
 			httpMessage string
 			payload     any
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -261,7 +257,6 @@ func TxDetailsCrypto(logger *logger.Logger, auth auth.Auth, db postgres.Postgres
 			transactionID = ginCtx.Param("transactionID")
 			err           error
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -310,7 +305,6 @@ func BalanceCryptoPaginated(logger *logger.Logger, auth auth.Auth, db postgres.P
 			clientID    uuid.UUID
 			err         error
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -372,7 +366,6 @@ func TxDetailsCryptoPaginated(logger *logger.Logger, auth auth.Auth, db postgres
 				YearStr:       ginCtx.Query("year"),
 			}
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 

@@ -57,7 +57,6 @@ func HTTPFiatDeposit(db postgres.Postgres, logger *logger.Logger, clientID uuid.
 		err             error
 		transferReceipt *postgres.FiatAccountTransferResult
 	)
-
 	if err = validator.ValidateStruct(request); err != nil {
 		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
@@ -98,7 +97,6 @@ func HTTPFiatOffer(auth auth.Auth, cache redis.Redis, logger *logger.Logger, quo
 		offer   models.HTTPExchangeOfferResponse
 		offerID = xid.New().String()
 	)
-
 	if err = validator.ValidateStruct(request); err != nil {
 		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}
@@ -157,7 +155,6 @@ func HTTPFiatTransfer(auth auth.Auth, cache redis.Redis, db postgres.Postgres, l
 		offerID          string
 		parsedCurrencies []postgres.Currency
 	)
-
 	if err = validator.ValidateStruct(request); err != nil {
 		return nil, http.StatusBadRequest, constants.ValidationString(), err.Error(), fmt.Errorf("%w", err)
 	}

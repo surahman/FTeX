@@ -112,6 +112,7 @@ func TestFiatResolver_OpenFiat(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -337,6 +338,7 @@ func TestFiatResolver_DepositFiat(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -639,6 +641,7 @@ func TestFiatResolver_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl) // Not called.
 			mockRedis := mocks.NewMockRedis(mockCtrl)
@@ -1011,6 +1014,7 @@ func TestFiatResolver_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)
@@ -1236,6 +1240,7 @@ func TestFiatResolver_BalanceFiat(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
@@ -1488,6 +1493,7 @@ func TestFiatResolver_BalanceAllFiat(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.
@@ -1717,6 +1723,7 @@ func TestFiatResolver_TransactionDetailsFiat(t *testing.T) { //nolint:dupl
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -1970,6 +1977,7 @@ func TestFiatResolver_TransactionDetailsAllFiat(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // not called.

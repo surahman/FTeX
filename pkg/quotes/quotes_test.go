@@ -217,6 +217,7 @@ func TestQuotesImpl_FiatConversion_Mock(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockQuotes := NewMockQuotes(mockCtrl)
 
 			quote := models.FiatQuote{Info: models.FiatInfo{Rate: test.rate}}
@@ -428,6 +429,7 @@ func TestQuotesImpl_CryptoConversion_Mock(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockQuotes := NewMockQuotes(mockCtrl)
 
 			quote := models.CryptoQuote{Rate: test.rate}

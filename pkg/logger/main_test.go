@@ -14,6 +14,7 @@ var loggerConfigTestData = configTestData()
 // testLogSpy is a testing.TB that captures logged messages.
 type testLogSpy struct {
 	testing.TB
+
 	failed   bool
 	Messages []string
 }

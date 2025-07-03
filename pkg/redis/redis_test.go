@@ -236,6 +236,7 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 
 			// Check to see if data has been removed.
 			var deleted *string
+
 			err = connection.Get(test.key, deleted)
 			require.Nil(t, deleted, "returned data from a deleted record should be nil")
 			require.Error(t, err, "deleted record should not be found on redis Redis server")
@@ -253,6 +254,7 @@ func TestRedisImpl_Set_Get_Del(t *testing.T) {
 
 		t.Run("Expiration check: "+test.name, func(t *testing.T) {
 			var deleted *string
+
 			err := connection.Get(test.key, deleted)
 			require.Nil(t, deleted, "returned data from a deleted record should be nil")
 			require.Error(t, err, "deleted record should not be found on redis Redis server")

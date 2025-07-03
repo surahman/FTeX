@@ -84,6 +84,7 @@ func TestQueries_UserGetInfo(t *testing.T) {
 
 	// Get valid account information.
 	const uname = "username1"
+
 	expectedAccount := getTestUsers()[uname]
 
 	clientID, err := connection.queries.userGetClientId(t.Context(), uname)

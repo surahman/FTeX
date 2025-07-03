@@ -114,8 +114,9 @@ func (a *authImpl) CheckPassword(hashed, plaintext string) (err error) {
 
 // jwtClaim is used internally by the JWT generation and validation routines.
 type jwtClaim struct {
-	ClientID uuid.UUID `json:"clientId" yaml:"clientId"`
 	jwt.RegisteredClaims
+
+	ClientID uuid.UUID `json:"clientId" yaml:"clientId"`
 }
 
 // GenerateJWT creates a payload consisting of the JWT with the Client ID and expiration time.
@@ -150,8 +151,6 @@ func (a *authImpl) GenerateJWT(clientID uuid.UUID) (*models.JWTAuthResponse, err
 }
 
 // ValidateJWT will validate a signed JWT and extracts the Client ID and unix expiration timestamp from it.
-//
-//nolint:revive
 func (a *authImpl) ValidateJWT(signedToken string) (uuid.UUID, int64, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &jwtClaim{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.conf.JWTConfig.Key), nil

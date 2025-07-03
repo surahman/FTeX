@@ -9,24 +9,28 @@ import (
 func TestModels_CurrencyScan(t *testing.T) {
 	t.Run("Byte Array", func(t *testing.T) {
 		var curr Currency
+
 		err := curr.Scan([]byte(CurrencyUSD))
 		require.NoError(t, err, "valid byte array")
 	})
 
 	t.Run("String", func(t *testing.T) {
 		var curr Currency
+
 		err := curr.Scan("USD")
 		require.NoError(t, err, "valid string")
 	})
 
 	t.Run("Valid string, invalid currency", func(t *testing.T) {
 		var curr Currency
+
 		err := curr.Scan("UVW")
 		require.NoError(t, err, "valid string")
 	})
 
 	t.Run("Invalid Type", func(t *testing.T) {
 		var curr Currency
+
 		err := curr.Scan(123)
 		require.Error(t, err, "invalid type")
 	})

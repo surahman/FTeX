@@ -11,6 +11,7 @@ import (
 
 func TestErrorField_Error(t *testing.T) {
 	const errorStr = "Field: %s, Tag: %s, Value: %s\n"
+
 	testCases := []struct {
 		name     string
 		input    *FieldError

@@ -60,6 +60,7 @@ func TestCommon_HTTPCryptoOpen(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			mockDB.EXPECT().CryptoCreateAccount(gomock.Any(), gomock.Any()).
@@ -135,6 +136,7 @@ func TestCommon_HTTPCryptoBalance(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			mockDB.EXPECT().CryptoBalance(gomock.Any(), gomock.Any()).
@@ -327,6 +329,7 @@ func TestCommon_HTTPCryptoTxPaginated(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
@@ -585,6 +588,7 @@ func TestCommon_HTTPCryptoOffer(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockQuotes := quotes.NewMockQuotes(mockCtrl)
@@ -875,6 +879,7 @@ func TestCommon_HTTPExchangeCrypto(t *testing.T) { //nolint: maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
@@ -1180,6 +1185,7 @@ func TestCommon_HTTPCryptoBalancePaginated(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 

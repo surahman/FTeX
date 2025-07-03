@@ -32,6 +32,7 @@ type HTTPSuccess struct {
 // as well as a confirmation message.
 type HTTPDeleteUserRequest struct {
 	modelsPostgres.UserLoginCredentials
+
 	Confirmation string `json:"confirmation" validate:"required" yaml:"confirmation"`
 }
 
@@ -55,13 +56,15 @@ type HTTPExchangeOfferRequest struct {
 
 // HTTPCryptoOfferRequest is a request to convert a source to destination currency in the source currency amount.
 type HTTPCryptoOfferRequest struct {
-	HTTPExchangeOfferRequest `json:"request"    validate:"required" yaml:"request"`
-	IsPurchase               *bool `json:"isPurchase" validate:"required" yaml:"isPurchase"`
+	HTTPExchangeOfferRequest `json:"request" validate:"required" yaml:"request"`
+
+	IsPurchase *bool `json:"isPurchase" validate:"required" yaml:"isPurchase"`
 }
 
 // HTTPExchangeOfferResponse is an offer to convert a source to destination currency in the source currency amount.
 type HTTPExchangeOfferResponse struct {
-	PriceQuote       `json:"offer"                      yaml:"offer"`
+	PriceQuote `json:"offer" yaml:"offer"`
+
 	DebitAmount      decimal.Decimal `json:"debitAmount"                yaml:"debitAmount"`
 	OfferID          string          `json:"offerId"                    yaml:"offerId"`
 	Expires          int64           `json:"expires"                    yaml:"expires"`
