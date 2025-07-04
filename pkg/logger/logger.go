@@ -31,7 +31,6 @@ func NewTestLogger() (*Logger, error) {
 		err       error
 		zapLogger *zap.Logger
 	)
-
 	if zapLogger, err = baseConfig.Build(zap.AddCallerSkip(1)); err != nil {
 		log.Printf("failure configuring logger: %v\n", err)
 

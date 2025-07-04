@@ -12,6 +12,8 @@ linters:
     - ireturn
     - nonamedreturns
     - testpackage
+    - wsl
+    - noinlineerr
   settings:
     cyclop:
       max-complexity: 12
@@ -39,6 +41,18 @@ linters:
         - K any
         - V any
         - m map[string]int
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+    revive:
+      severity: warning
+      rules:
+        - name: var-naming
+          arguments:
+            - [ ] # AllowList
+            - [ ] # DenyList
+            - - skip-package-name-checks: true
   exclusions:
     generated: lax
     presets:

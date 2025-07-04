@@ -50,7 +50,6 @@ func HTTPRegisterUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logge
 		clientID  uuid.UUID
 		err       error
 	)
-
 	if err = validator.ValidateStruct(user); err != nil {
 		return nil, constants.ValidationString(), http.StatusBadRequest, fmt.Errorf("%w", err), fmt.Errorf("%w", err)
 	}
@@ -90,7 +89,6 @@ func HTTPLoginUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
 		clientID       uuid.UUID
 		hashedPassword string
 	)
-
 	if err = validator.ValidateStruct(loginRequest); err != nil {
 		return nil, constants.ValidationString(), http.StatusBadRequest, fmt.Errorf("%w", err), fmt.Errorf("%w", err)
 	}
@@ -120,7 +118,6 @@ func HTTPRefreshLogin(auth auth.Auth, db postgres.Postgres, logger *logger.Logge
 		freshToken  *models.JWTAuthResponse
 		accountInfo modelsPostgres.User
 	)
-
 	if accountInfo, err = db.UserGetInfo(clientID); err != nil {
 		logger.Warn("failed to read user record for a valid JWT",
 			zap.String("username", accountInfo.Username), zap.Error(err))
@@ -158,7 +155,6 @@ func HTTPDeleteUser(auth auth.Auth, db postgres.Postgres, logger *logger.Logger,
 		err         error
 		userAccount modelsPostgres.User
 	)
-
 	if err = validator.ValidateStruct(deleteRequest); err != nil {
 		return constants.ValidationString(), http.StatusBadRequest, fmt.Errorf("%w", err), fmt.Errorf("%w", err)
 	}

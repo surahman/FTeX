@@ -152,6 +152,7 @@ func TestAuthorizationCheck(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 

@@ -24,7 +24,6 @@ import (
 func HTTPCryptoOpen(db postgres.Postgres, logger *logger.Logger, clientID uuid.UUID, ticker string) (
 	int, string, error) {
 	var err error
-
 	if err = db.CryptoCreateAccount(clientID, ticker); err != nil {
 		var createErr *postgres.Error
 		if !errors.As(err, &createErr) {

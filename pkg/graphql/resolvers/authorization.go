@@ -45,7 +45,6 @@ func AuthorizationCheck(ctx context.Context, auth auth.Auth, db postgres.Postgre
 		isDeleted  bool
 		ginContext *gin.Context
 	)
-
 	if ginContext, err = GinContextFromContext(ctx, logger); err != nil {
 		return clientID, -1, err
 	}

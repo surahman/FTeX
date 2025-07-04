@@ -7,6 +7,7 @@ import (
 // User represents a user's account and is a row in the user table.
 type User struct {
 	*UserAccount
+
 	ClientID  uuid.UUID `json:"clientId,omitempty"`
 	IsDeleted bool      `json:"isDeleted"`
 }
@@ -14,6 +15,7 @@ type User struct {
 // UserAccount is the core user account information.
 type UserAccount struct {
 	UserLoginCredentials
+
 	FirstName string `json:"firstName,omitempty" validate:"required,max=64"`
 	LastName  string `json:"lastName,omitempty"  validate:"required,max=64"`
 	Email     string `json:"email,omitempty"     validate:"required,email,max=64"`

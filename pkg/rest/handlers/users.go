@@ -37,7 +37,6 @@ func RegisterUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 			httpStatus int
 			payload    any
 		)
-
 		if err = ginCtx.ShouldBindJSON(&user); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
@@ -78,7 +77,6 @@ func LoginUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.
 			httpStatus   int
 			payload      any
 		)
-
 		if err = ginCtx.ShouldBindJSON(&loginRequest); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusBadRequest, &models.HTTPError{Message: err.Error()})
 
@@ -118,7 +116,6 @@ func LoginRefresh(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) g
 			httpMsg    string
 			httpStatus int
 		)
-
 		if clientID, expiresAt, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -161,7 +158,6 @@ func DeleteUser(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin
 			httpStatus    int
 			payload       any
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 

@@ -91,6 +91,7 @@ func TestHandlers_OpenCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
@@ -428,6 +429,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockQuotes := quotes.NewMockQuotes(mockCtrl)
@@ -630,6 +632,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
@@ -767,6 +770,7 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
@@ -872,6 +876,7 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
@@ -1080,6 +1085,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
@@ -1275,6 +1281,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
