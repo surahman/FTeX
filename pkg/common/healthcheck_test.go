@@ -61,6 +61,7 @@ func TestCommon_HTTPHealthcheck(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 

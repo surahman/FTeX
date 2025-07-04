@@ -115,6 +115,7 @@ func TestCommon_HTTPGetCachedOffer(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockCache := mocks.NewMockRedis(mockCtrl)
 
 			gomock.InOrder(
@@ -621,6 +622,7 @@ func TestCommon_HTTPTxDetails(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
 			gomock.InOrder(

@@ -69,6 +69,7 @@ func TestCommon_HTTPFiatOpen(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			mockDB.EXPECT().FiatCreateAccount(gomock.Any(), gomock.Any()).
@@ -185,6 +186,7 @@ func TestCommon_HTTPFiatDeposit(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			mockDB.EXPECT().FiatExternalTransfer(gomock.Any(), gomock.Any()).
@@ -336,6 +338,7 @@ func TestCommon_HTTPFiatOffer(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockQuotes := quotes.NewMockQuotes(mockCtrl)
@@ -658,6 +661,7 @@ func TestCommon_HTTPFiatTransfer(t *testing.T) { //nolint:maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockCache := mocks.NewMockRedis(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
@@ -754,6 +758,7 @@ func TestCommon_HTTPFiatBalance(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
 			mockDB.EXPECT().FiatBalance(gomock.Any(), gomock.Any()).
@@ -999,6 +1004,7 @@ func TestCommon_HTTPFiatBalancePaginated(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 
@@ -1180,6 +1186,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockDB := mocks.NewMockPostgres(mockCtrl)
 

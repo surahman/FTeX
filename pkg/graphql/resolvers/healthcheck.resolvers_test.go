@@ -70,6 +70,7 @@ func TestQueryResolver_Healthcheck(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl) // Not called.
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)

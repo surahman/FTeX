@@ -42,7 +42,6 @@ func OpenFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gin.H
 			httpStatus  int
 			httpMessage string
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -99,7 +98,6 @@ func DepositFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gi
 			request         models.HTTPDepositCurrencyRequest
 			transferReceipt *postgres.FiatAccountTransferResult
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -149,7 +147,6 @@ func ExchangeOfferFiat(logger *logger.Logger, auth auth.Auth, cache redis.Redis,
 			request     models.HTTPExchangeOfferRequest
 			offer       *models.HTTPExchangeOfferResponse
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -204,7 +201,6 @@ func ExchangeTransferFiat(
 			httpMessage string
 			payload     any
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -256,7 +252,6 @@ func BalanceFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) gi
 			httpMessage string
 			payload     any
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -297,7 +292,6 @@ func TxDetailsFiat(logger *logger.Logger, auth auth.Auth, db postgres.Postgres) 
 			transactionID = ginCtx.Param("transactionID")
 			err           error
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -346,7 +340,6 @@ func BalanceFiatPaginated(logger *logger.Logger, auth auth.Auth, db postgres.Pos
 			httpStatus  int
 			httpMessage string
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 
@@ -408,7 +401,6 @@ func TxDetailsFiatPaginated(logger *logger.Logger, auth auth.Auth, db postgres.P
 				YearStr:       ginCtx.Query("year"),
 			}
 		)
-
 		if clientID, _, err = auth.TokenInfoFromGinCtx(ginCtx); err != nil {
 			ginCtx.AbortWithStatusJSON(http.StatusForbidden, &models.HTTPError{Message: "malformed authentication token"})
 

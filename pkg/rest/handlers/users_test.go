@@ -115,6 +115,7 @@ func TestHandlers_UserRegister(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
@@ -231,6 +232,7 @@ func TestHandlers_UserLogin(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
@@ -402,6 +404,7 @@ func TestHandlers_LoginRefresh(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 
@@ -659,6 +662,7 @@ func TestHandlers_DeleteUser(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 

@@ -20,10 +20,10 @@ func ValidateStruct(body any) error {
 		validationErr ValidationError
 		errs          validator.ValidationErrors
 	)
-
 	if errors.As(structValidator.Struct(body), &errs) {
 		for _, issue := range errs {
 			var ev FieldError
+
 			ev.Field = issue.Field()
 			ev.Tag = issue.Tag()
 			ev.Value = issue.Value()

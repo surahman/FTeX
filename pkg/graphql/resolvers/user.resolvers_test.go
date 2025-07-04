@@ -107,6 +107,7 @@ func TestUserResolver_RegisterUser(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -382,6 +383,7 @@ func TestUserResolver_DeleteUser(t *testing.T) { //nolint:maintidx
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -529,6 +531,7 @@ func TestUserResolver_LoginUser(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
@@ -770,6 +773,7 @@ func TestUserResolver_RefreshToken(t *testing.T) {
 			// Mock configurations.
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			mockAuth := mocks.NewMockAuth(mockCtrl)
 			mockPostgres := mocks.NewMockPostgres(mockCtrl)
 			mockRedis := mocks.NewMockRedis(mockCtrl)    // Not called.
