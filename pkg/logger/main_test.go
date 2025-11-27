@@ -38,7 +38,7 @@ func (t *testLogSpy) FailNow() {
 	t.TB.FailNow()
 }
 
-func (t *testLogSpy) Logf(format string, args ...interface{}) {
+func (t *testLogSpy) Logf(format string, args ...any) {
 	// Log messages are in the format,
 	//
 	//   2017-10-27T13:03:01.000-0700	DEBUG	your message here	{data here}

@@ -96,7 +96,7 @@ func HTTPTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, time
 	endYear = startYear
 	endMonth = startMonth + 1
 
-	if endMonth == 13 { //nolint:mnd,gomnd
+	if endMonth == 13 { //nolint:mnd
 		endMonth = 1
 		endYear++
 	}
@@ -133,7 +133,7 @@ func HTTPTransactionInfoPaginatedRequest(auth auth.Auth, monthStr, yearStr, time
 //nolint:wrapcheck
 func HTTPTransactionGeneratePageCursor(auth auth.Auth, periodStartStr, periodEndStr string, offset int32) (
 	string, error) {
-	return auth.EncryptToString([]byte(fmt.Sprintf("%s,%s,%d", periodStartStr, periodEndStr, offset)))
+	return auth.EncryptToString(fmt.Appendf([]byte{}, "%s,%s,%d", periodStartStr, periodEndStr, offset))
 }
 
 // HTTPTransactionUnpackPageCursor will unpack an encrypted page cursor to its component parts.
@@ -150,7 +150,7 @@ func HTTPTransactionUnpackPageCursor(auth auth.Auth, pageCursor string) (
 	}
 
 	components := strings.Split(string(buffer), ",")
-	if len(components) != 3 { //nolint:mnd,gomnd
+	if len(components) != 3 { //nolint:mnd
 		return startPGTS, "", endPGTS, "", -1, errors.New("decrypted page curror is invalid")
 	}
 

@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/surahman/FTeX/pkg/models"
 	"github.com/surahman/FTeX/pkg/postgres"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -37,299 +36,110 @@ type QueryResolver interface {
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query___type_argsName(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
 	args["name"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query___type_argsName(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["name"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-	if tmp, ok := rawArgs["name"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
 
 func (ec *executionContext) field_Query_balanceAllCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_balanceAllCrypto_argsPageCursor(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "pageCursor", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
 	args["pageCursor"] = arg0
-	arg1, err := ec.field_Query_balanceAllCrypto_argsPageSize(ctx, rawArgs)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "pageSize", ec.unmarshalOInt322ᚖint32)
 	if err != nil {
 		return nil, err
 	}
 	args["pageSize"] = arg1
 	return args, nil
-}
-func (ec *executionContext) field_Query_balanceAllCrypto_argsPageCursor(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["pageCursor"]; !ok {
-		var zeroVal *string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageCursor"))
-	if tmp, ok := rawArgs["pageCursor"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_balanceAllCrypto_argsPageSize(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int32, error) {
-	if _, ok := rawArgs["pageSize"]; !ok {
-		var zeroVal *int32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
-	if tmp, ok := rawArgs["pageSize"]; ok {
-		return ec.unmarshalOInt322ᚖint32(ctx, tmp)
-	}
-
-	var zeroVal *int32
-	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_balanceAllFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_balanceAllFiat_argsPageCursor(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "pageCursor", ec.unmarshalOString2ᚖstring)
 	if err != nil {
 		return nil, err
 	}
 	args["pageCursor"] = arg0
-	arg1, err := ec.field_Query_balanceAllFiat_argsPageSize(ctx, rawArgs)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "pageSize", ec.unmarshalOInt322ᚖint32)
 	if err != nil {
 		return nil, err
 	}
 	args["pageSize"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Query_balanceAllFiat_argsPageCursor(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["pageCursor"]; !ok {
-		var zeroVal *string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageCursor"))
-	if tmp, ok := rawArgs["pageCursor"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_balanceAllFiat_argsPageSize(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*int32, error) {
-	if _, ok := rawArgs["pageSize"]; !ok {
-		var zeroVal *int32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
-	if tmp, ok := rawArgs["pageSize"]; ok {
-		return ec.unmarshalOInt322ᚖint32(ctx, tmp)
-	}
-
-	var zeroVal *int32
-	return zeroVal, nil
-}
 
 func (ec *executionContext) field_Query_balanceCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_balanceCrypto_argsTicker(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "ticker", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
 	args["ticker"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_balanceCrypto_argsTicker(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["ticker"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ticker"))
-	if tmp, ok := rawArgs["ticker"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
 
 func (ec *executionContext) field_Query_balanceFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_balanceFiat_argsCurrencyCode(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "currencyCode", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
 	args["currencyCode"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_balanceFiat_argsCurrencyCode(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["currencyCode"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyCode"))
-	if tmp, ok := rawArgs["currencyCode"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
 
 func (ec *executionContext) field_Query_transactionDetailsAllCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_transactionDetailsAllCrypto_argsInput(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCryptoPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoPaginatedTxDetailsRequest)
 	if err != nil {
 		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
-}
-func (ec *executionContext) field_Query_transactionDetailsAllCrypto_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (models.CryptoPaginatedTxDetailsRequest, error) {
-	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal models.CryptoPaginatedTxDetailsRequest
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCryptoPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐCryptoPaginatedTxDetailsRequest(ctx, tmp)
-	}
-
-	var zeroVal models.CryptoPaginatedTxDetailsRequest
-	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_transactionDetailsAllFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_transactionDetailsAllFiat_argsInput(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest)
 	if err != nil {
 		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_transactionDetailsAllFiat_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (models.FiatPaginatedTxDetailsRequest, error) {
-	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal models.FiatPaginatedTxDetailsRequest
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNFiatPaginatedTxDetailsRequest2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatPaginatedTxDetailsRequest(ctx, tmp)
-	}
-
-	var zeroVal models.FiatPaginatedTxDetailsRequest
-	return zeroVal, nil
-}
 
 func (ec *executionContext) field_Query_transactionDetailsCrypto_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_transactionDetailsCrypto_argsTransactionID(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "transactionID", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
 	args["transactionID"] = arg0
 	return args, nil
-}
-func (ec *executionContext) field_Query_transactionDetailsCrypto_argsTransactionID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["transactionID"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("transactionID"))
-	if tmp, ok := rawArgs["transactionID"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_transactionDetailsFiat_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_transactionDetailsFiat_argsTransactionID(ctx, rawArgs)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "transactionID", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
 	args["transactionID"] = arg0
 	return args, nil
-}
-func (ec *executionContext) field_Query_transactionDetailsFiat_argsTransactionID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["transactionID"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("transactionID"))
-	if tmp, ok := rawArgs["transactionID"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
 }
 
 // endregion ***************************** args.gotpl *****************************
@@ -341,34 +151,19 @@ func (ec *executionContext) field_Query_transactionDetailsFiat_argsTransactionID
 // region    **************************** field.gotpl *****************************
 
 func (ec *executionContext) _Query_healthcheck(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_healthcheck(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Healthcheck(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_healthcheck,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.Query().Healthcheck(ctx)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_healthcheck(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -385,34 +180,20 @@ func (ec *executionContext) fieldContext_Query_healthcheck(_ context.Context, fi
 }
 
 func (ec *executionContext) _Query_balanceCrypto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_balanceCrypto(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().BalanceCrypto(rctx, fc.Args["ticker"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*postgres.CryptoAccount)
-	fc.Result = res
-	return ec.marshalNCryptoAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoAccount(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_balanceCrypto,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BalanceCrypto(ctx, fc.Args["ticker"].(string))
+		},
+		nil,
+		ec.marshalNCryptoAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐCryptoAccount,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_balanceCrypto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -454,34 +235,20 @@ func (ec *executionContext) fieldContext_Query_balanceCrypto(ctx context.Context
 }
 
 func (ec *executionContext) _Query_balanceAllCrypto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_balanceAllCrypto(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().BalanceAllCrypto(rctx, fc.Args["pageCursor"].(*string), fc.Args["pageSize"].(*int32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.HTTPCryptoDetailsPaginated)
-	fc.Result = res
-	return ec.marshalNCryptoBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoDetailsPaginated(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_balanceAllCrypto,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BalanceAllCrypto(ctx, fc.Args["pageCursor"].(*string), fc.Args["pageSize"].(*int32))
+		},
+		nil,
+		ec.marshalNCryptoBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoDetailsPaginated,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_balanceAllCrypto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -515,34 +282,20 @@ func (ec *executionContext) fieldContext_Query_balanceAllCrypto(ctx context.Cont
 }
 
 func (ec *executionContext) _Query_transactionDetailsCrypto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_transactionDetailsCrypto(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TransactionDetailsCrypto(rctx, fc.Args["transactionID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]any)
-	fc.Result = res
-	return ec.marshalNAny2ᚕinterfaceᚄ(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_transactionDetailsCrypto,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().TransactionDetailsCrypto(ctx, fc.Args["transactionID"].(string))
+		},
+		nil,
+		ec.marshalNAny2ᚕinterfaceᚄ,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_transactionDetailsCrypto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -570,34 +323,20 @@ func (ec *executionContext) fieldContext_Query_transactionDetailsCrypto(ctx cont
 }
 
 func (ec *executionContext) _Query_transactionDetailsAllCrypto(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_transactionDetailsAllCrypto(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TransactionDetailsAllCrypto(rctx, fc.Args["input"].(models.CryptoPaginatedTxDetailsRequest))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.HTTPCryptoTransactionsPaginated)
-	fc.Result = res
-	return ec.marshalNCryptoTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransactionsPaginated(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_transactionDetailsAllCrypto,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().TransactionDetailsAllCrypto(ctx, fc.Args["input"].(models.CryptoPaginatedTxDetailsRequest))
+		},
+		nil,
+		ec.marshalNCryptoTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPCryptoTransactionsPaginated,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_transactionDetailsAllCrypto(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -631,34 +370,20 @@ func (ec *executionContext) fieldContext_Query_transactionDetailsAllCrypto(ctx c
 }
 
 func (ec *executionContext) _Query_balanceFiat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_balanceFiat(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().BalanceFiat(rctx, fc.Args["currencyCode"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*postgres.FiatAccount)
-	fc.Result = res
-	return ec.marshalNFiatAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccount(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_balanceFiat,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BalanceFiat(ctx, fc.Args["currencyCode"].(string))
+		},
+		nil,
+		ec.marshalNFiatAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccount,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_balanceFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -700,34 +425,20 @@ func (ec *executionContext) fieldContext_Query_balanceFiat(ctx context.Context, 
 }
 
 func (ec *executionContext) _Query_balanceAllFiat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_balanceAllFiat(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().BalanceAllFiat(rctx, fc.Args["pageCursor"].(*string), fc.Args["pageSize"].(*int32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.HTTPFiatDetailsPaginated)
-	fc.Result = res
-	return ec.marshalNFiatBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatDetailsPaginated(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_balanceAllFiat,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().BalanceAllFiat(ctx, fc.Args["pageCursor"].(*string), fc.Args["pageSize"].(*int32))
+		},
+		nil,
+		ec.marshalNFiatBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatDetailsPaginated,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_balanceAllFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -761,34 +472,20 @@ func (ec *executionContext) fieldContext_Query_balanceAllFiat(ctx context.Contex
 }
 
 func (ec *executionContext) _Query_transactionDetailsFiat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_transactionDetailsFiat(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TransactionDetailsFiat(rctx, fc.Args["transactionID"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]any)
-	fc.Result = res
-	return ec.marshalNAny2ᚕinterfaceᚄ(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_transactionDetailsFiat,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().TransactionDetailsFiat(ctx, fc.Args["transactionID"].(string))
+		},
+		nil,
+		ec.marshalNAny2ᚕinterfaceᚄ,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_transactionDetailsFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -816,34 +513,20 @@ func (ec *executionContext) fieldContext_Query_transactionDetailsFiat(ctx contex
 }
 
 func (ec *executionContext) _Query_transactionDetailsAllFiat(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_transactionDetailsAllFiat(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TransactionDetailsAllFiat(rctx, fc.Args["input"].(models.FiatPaginatedTxDetailsRequest))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.HTTPFiatTransactionsPaginated)
-	fc.Result = res
-	return ec.marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransactionsPaginated(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_transactionDetailsAllFiat,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().TransactionDetailsAllFiat(ctx, fc.Args["input"].(models.FiatPaginatedTxDetailsRequest))
+		},
+		nil,
+		ec.marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransactionsPaginated,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query_transactionDetailsAllFiat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -877,31 +560,20 @@ func (ec *executionContext) fieldContext_Query_transactionDetailsAllFiat(ctx con
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query___type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.introspectType(fc.Args["name"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*introspection.Type)
-	fc.Result = res
-	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query___type,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.introspectType(fc.Args["name"].(string))
+		},
+		nil,
+		ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType,
+		true,
+		false,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -953,31 +625,19 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 }
 
 func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query___schema(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.introspectSchema()
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*introspection.Schema)
-	fc.Result = res
-	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query___schema,
+		func(ctx context.Context) (any, error) {
+			return ec.introspectSchema()
+		},
+		nil,
+		ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema,
+		true,
+		false,
+	)
 }
 
 func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {

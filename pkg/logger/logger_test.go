@@ -14,13 +14,14 @@ import (
 )
 
 func TestNewLogger(t *testing.T) {
-	require.Equal(t, reflect.TypeOf(NewLogger()), reflect.TypeOf(&Logger{}), "creates new logger successfully")
+	require.Equal(t, reflect.TypeFor[*Logger](), reflect.TypeOf(NewLogger()), "creates new logger successfully")
 }
 
 func TestNewTestLogger(t *testing.T) {
 	testLogger, err := NewTestLogger()
 	require.NoError(t, err, "failed to create new logger for use in test suites")
-	require.Equal(t, reflect.TypeOf(testLogger), reflect.TypeOf(&Logger{}), "creates new logger successfully")
+	//nolint:modernize
+	require.Equal(t, reflect.TypeFor[*Logger](), reflect.TypeOf(testLogger), "creates new logger successfully")
 }
 
 func TestMergeConfig_General(t *testing.T) {

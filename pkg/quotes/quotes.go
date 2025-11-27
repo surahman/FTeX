@@ -227,7 +227,7 @@ func (q *quotesImpl) cryptoQuote(source, destination string) (models.CryptoQuote
 
 	if !resp.IsSuccessState() {
 		// Invalid cryptocurrency codes.
-		if resp.StatusCode == 550 { //nolint:mnd,gomnd
+		if resp.StatusCode == 550 { //nolint:mnd
 			return result, NewError("invalid Crypto currency code").SetStatus(http.StatusBadRequest)
 		}
 

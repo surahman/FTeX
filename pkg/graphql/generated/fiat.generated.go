@@ -69,34 +69,19 @@ type FiatExchangeOfferRequestResolver interface {
 // region    **************************** field.gotpl *****************************
 
 func (ec *executionContext) _FiatAccount_currency(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccount) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatAccount_currency(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatAccount().Currency(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatAccount_currency,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatAccount().Currency(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatAccount_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -113,34 +98,19 @@ func (ec *executionContext) fieldContext_FiatAccount_currency(_ context.Context,
 }
 
 func (ec *executionContext) _FiatAccount_balance(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccount) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatAccount_balance(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatAccount().Balance(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatAccount_balance,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatAccount().Balance(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatAccount_balance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -157,34 +127,19 @@ func (ec *executionContext) fieldContext_FiatAccount_balance(_ context.Context, 
 }
 
 func (ec *executionContext) _FiatAccount_lastTx(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccount) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatAccount_lastTx(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatAccount().LastTx(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatAccount_lastTx,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatAccount().LastTx(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatAccount_lastTx(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -201,34 +156,19 @@ func (ec *executionContext) fieldContext_FiatAccount_lastTx(_ context.Context, f
 }
 
 func (ec *executionContext) _FiatAccount_lastTxTs(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccount) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatAccount_lastTxTs(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatAccount().LastTxTs(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatAccount_lastTxTs,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatAccount().LastTxTs(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatAccount_lastTxTs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -245,34 +185,19 @@ func (ec *executionContext) fieldContext_FiatAccount_lastTxTs(_ context.Context,
 }
 
 func (ec *executionContext) _FiatAccount_createdAt(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccount) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatAccount_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatAccount().CreatedAt(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatAccount_createdAt,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatAccount().CreatedAt(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatAccount_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -289,34 +214,19 @@ func (ec *executionContext) fieldContext_FiatAccount_createdAt(_ context.Context
 }
 
 func (ec *executionContext) _FiatAccount_clientID(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccount) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatAccount_clientID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatAccount().ClientID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNUUID2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatAccount_clientID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatAccount().ClientID(ctx, obj)
+		},
+		nil,
+		ec.marshalNUUID2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatAccount_clientID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -333,34 +243,19 @@ func (ec *executionContext) fieldContext_FiatAccount_clientID(_ context.Context,
 }
 
 func (ec *executionContext) _FiatBalancesPaginated_accountBalances(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatDetailsPaginated) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatBalancesPaginated_accountBalances(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AccountBalances, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]postgres.FiatAccount)
-	fc.Result = res
-	return ec.marshalNFiatAccount2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountᚄ(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatBalancesPaginated_accountBalances,
+		func(ctx context.Context) (any, error) {
+			return obj.AccountBalances, nil
+		},
+		nil,
+		ec.marshalNFiatAccount2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountᚄ,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatBalancesPaginated_accountBalances(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -391,34 +286,19 @@ func (ec *executionContext) fieldContext_FiatBalancesPaginated_accountBalances(_
 }
 
 func (ec *executionContext) _FiatBalancesPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatDetailsPaginated) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatBalancesPaginated_links(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Links, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.HTTPLinks)
-	fc.Result = res
-	return ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatBalancesPaginated_links,
+		func(ctx context.Context) (any, error) {
+			return obj.Links, nil
+		},
+		nil,
+		ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatBalancesPaginated_links(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -441,34 +321,19 @@ func (ec *executionContext) fieldContext_FiatBalancesPaginated_links(_ context.C
 }
 
 func (ec *executionContext) _FiatDepositResponse_txId(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccountTransferResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatDepositResponse_txId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatDepositResponse().TxID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatDepositResponse_txId,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatDepositResponse().TxID(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatDepositResponse_txId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -485,34 +350,19 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_txId(_ context.Cont
 }
 
 func (ec *executionContext) _FiatDepositResponse_clientId(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccountTransferResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatDepositResponse_clientId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatDepositResponse().ClientID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatDepositResponse_clientId,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatDepositResponse().ClientID(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatDepositResponse_clientId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -529,34 +379,19 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_clientId(_ context.
 }
 
 func (ec *executionContext) _FiatDepositResponse_txTimestamp(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccountTransferResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatDepositResponse_txTimestamp(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatDepositResponse().TxTimestamp(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatDepositResponse_txTimestamp,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatDepositResponse().TxTimestamp(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatDepositResponse_txTimestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -573,34 +408,19 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_txTimestamp(_ conte
 }
 
 func (ec *executionContext) _FiatDepositResponse_balance(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccountTransferResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatDepositResponse_balance(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatDepositResponse().Balance(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatDepositResponse_balance,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatDepositResponse().Balance(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatDepositResponse_balance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -617,34 +437,19 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_balance(_ context.C
 }
 
 func (ec *executionContext) _FiatDepositResponse_lastTx(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccountTransferResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatDepositResponse_lastTx(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatDepositResponse().LastTx(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatDepositResponse_lastTx,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatDepositResponse().LastTx(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatDepositResponse_lastTx(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -661,34 +466,19 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_lastTx(_ context.Co
 }
 
 func (ec *executionContext) _FiatDepositResponse_currency(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatAccountTransferResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatDepositResponse_currency(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatDepositResponse().Currency(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatDepositResponse_currency,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatDepositResponse().Currency(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatDepositResponse_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -705,34 +495,19 @@ func (ec *executionContext) fieldContext_FiatDepositResponse_currency(_ context.
 }
 
 func (ec *executionContext) _FiatExchangeTransferResponse_sourceReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatExchangeTransferResponse_sourceReceipt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatExchangeTransferResponse().SourceReceipt(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*postgres.FiatAccountTransferResult)
-	fc.Result = res
-	return ec.marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountTransferResult(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatExchangeTransferResponse_sourceReceipt,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatExchangeTransferResponse().SourceReceipt(ctx, obj)
+		},
+		nil,
+		ec.marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountTransferResult,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_sourceReceipt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -763,34 +538,19 @@ func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_sourceRece
 }
 
 func (ec *executionContext) _FiatExchangeTransferResponse_destinationReceipt(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatExchangeTransferResponse_destinationReceipt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatExchangeTransferResponse().DestinationReceipt(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*postgres.FiatAccountTransferResult)
-	fc.Result = res
-	return ec.marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountTransferResult(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatExchangeTransferResponse_destinationReceipt,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatExchangeTransferResponse().DestinationReceipt(ctx, obj)
+		},
+		nil,
+		ec.marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountTransferResult,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_destinationReceipt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -821,34 +581,19 @@ func (ec *executionContext) fieldContext_FiatExchangeTransferResponse_destinatio
 }
 
 func (ec *executionContext) _FiatJournal_currency(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatJournal_currency(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatJournal().Currency(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatJournal_currency,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatJournal().Currency(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatJournal_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -865,34 +610,19 @@ func (ec *executionContext) fieldContext_FiatJournal_currency(_ context.Context,
 }
 
 func (ec *executionContext) _FiatJournal_amount(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatJournal_amount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatJournal().Amount(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatJournal_amount,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatJournal().Amount(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatJournal_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -909,34 +639,19 @@ func (ec *executionContext) fieldContext_FiatJournal_amount(_ context.Context, f
 }
 
 func (ec *executionContext) _FiatJournal_transactedAt(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatJournal_transactedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatJournal().TransactedAt(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatJournal_transactedAt,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatJournal().TransactedAt(ctx, obj)
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatJournal_transactedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -953,34 +668,19 @@ func (ec *executionContext) fieldContext_FiatJournal_transactedAt(_ context.Cont
 }
 
 func (ec *executionContext) _FiatJournal_clientID(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatJournal_clientID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatJournal().ClientID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNUUID2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatJournal_clientID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatJournal().ClientID(ctx, obj)
+		},
+		nil,
+		ec.marshalNUUID2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatJournal_clientID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -997,34 +697,19 @@ func (ec *executionContext) fieldContext_FiatJournal_clientID(_ context.Context,
 }
 
 func (ec *executionContext) _FiatJournal_txID(ctx context.Context, field graphql.CollectedField, obj *postgres.FiatJournal) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatJournal_txID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatJournal().TxID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNUUID2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatJournal_txID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatJournal().TxID(ctx, obj)
+		},
+		nil,
+		ec.marshalNUUID2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatJournal_txID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1041,34 +726,19 @@ func (ec *executionContext) fieldContext_FiatJournal_txID(_ context.Context, fie
 }
 
 func (ec *executionContext) _FiatOpenAccountResponse_clientID(ctx context.Context, field graphql.CollectedField, obj *models.FiatOpenAccountResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatOpenAccountResponse_clientID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ClientID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatOpenAccountResponse_clientID,
+		func(ctx context.Context) (any, error) {
+			return obj.ClientID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatOpenAccountResponse_clientID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1085,34 +755,19 @@ func (ec *executionContext) fieldContext_FiatOpenAccountResponse_clientID(_ cont
 }
 
 func (ec *executionContext) _FiatOpenAccountResponse_currency(ctx context.Context, field graphql.CollectedField, obj *models.FiatOpenAccountResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatOpenAccountResponse_currency(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Currency, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatOpenAccountResponse_currency,
+		func(ctx context.Context) (any, error) {
+			return obj.Currency, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatOpenAccountResponse_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1129,34 +784,19 @@ func (ec *executionContext) fieldContext_FiatOpenAccountResponse_currency(_ cont
 }
 
 func (ec *executionContext) _FiatTransactionsPaginated_transactions(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransactionsPaginated) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatTransactionsPaginated_transactions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FiatTransactionsPaginated().Transactions(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]postgres.FiatJournal)
-	fc.Result = res
-	return ec.marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatTransactionsPaginated_transactions,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.FiatTransactionsPaginated().Transactions(ctx, obj)
+		},
+		nil,
+		ec.marshalNFiatJournal2ᚕgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatJournalᚄ,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatTransactionsPaginated_transactions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1185,34 +825,19 @@ func (ec *executionContext) fieldContext_FiatTransactionsPaginated_transactions(
 }
 
 func (ec *executionContext) _FiatTransactionsPaginated_links(ctx context.Context, field graphql.CollectedField, obj *models.HTTPFiatTransactionsPaginated) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FiatTransactionsPaginated_links(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Links, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.HTTPLinks)
-	fc.Result = res
-	return ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_FiatTransactionsPaginated_links,
+		func(ctx context.Context) (any, error) {
+			return obj.Links, nil
+		},
+		nil,
+		ec.marshalNLinks2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPLinks,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_FiatTransactionsPaginated_links(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2425,7 +2050,7 @@ func (ec *executionContext) marshalNFiatAccount2ᚕgithubᚗcomᚋsurahmanᚋFTe
 func (ec *executionContext) marshalNFiatAccount2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccount(ctx context.Context, sel ast.SelectionSet, v *postgres.FiatAccount) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -2439,7 +2064,7 @@ func (ec *executionContext) marshalNFiatBalancesPaginated2githubᚗcomᚋsurahma
 func (ec *executionContext) marshalNFiatBalancesPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatDetailsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatDetailsPaginated) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -2458,7 +2083,7 @@ func (ec *executionContext) marshalNFiatDepositResponse2githubᚗcomᚋsurahman�
 func (ec *executionContext) marshalNFiatDepositResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋpostgresᚐFiatAccountTransferResult(ctx context.Context, sel ast.SelectionSet, v *postgres.FiatAccountTransferResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -2477,7 +2102,7 @@ func (ec *executionContext) marshalNFiatExchangeTransferResponse2githubᚗcomᚋ
 func (ec *executionContext) marshalNFiatExchangeTransferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatTransferResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -2539,7 +2164,7 @@ func (ec *executionContext) marshalNFiatOpenAccountResponse2githubᚗcomᚋsurah
 func (ec *executionContext) marshalNFiatOpenAccountResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐFiatOpenAccountResponse(ctx context.Context, sel ast.SelectionSet, v *models.FiatOpenAccountResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
@@ -2558,7 +2183,7 @@ func (ec *executionContext) marshalNFiatTransactionsPaginated2githubᚗcomᚋsur
 func (ec *executionContext) marshalNFiatTransactionsPaginated2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPFiatTransactionsPaginated(ctx context.Context, sel ast.SelectionSet, v *models.HTTPFiatTransactionsPaginated) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}

@@ -13,9 +13,9 @@ import (
 //
 //nolint:lll
 type config struct {
-	FiatCurrency   apiConfig        `json:"fiatCurrency,omitempty"   mapstructure:"fiatCurrency"   validate:"required"         yaml:"fiatCurrency,omitempty"`
-	CryptoCurrency apiConfig        `json:"cryptoCurrency,omitempty" mapstructure:"cryptoCurrency" validate:"required"         yaml:"cryptoCurrency,omitempty"`
-	Connection     connectionConfig `json:"connection,omitempty"     mapstructure:"connection"     yaml:"connection,omitempty"`
+	FiatCurrency   apiConfig        `json:"fiatCurrency"   mapstructure:"fiatCurrency"   validate:"required" yaml:"fiatCurrency"`
+	CryptoCurrency apiConfig        `json:"cryptoCurrency" mapstructure:"cryptoCurrency" validate:"required" yaml:"cryptoCurrency"`
+	Connection     connectionConfig `json:"connection"     mapstructure:"connection"     yaml:"connection"`
 }
 
 // apiConfig contains the API Key and URL information for a currency exchange endpoint.

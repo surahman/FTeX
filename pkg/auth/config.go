@@ -10,8 +10,8 @@ import (
 
 // Config contains all the configurations for authentication.
 type config struct {
-	JWTConfig jwtConfig     `json:"jwt,omitempty"     mapstructure:"jwt"     validate:"required" yaml:"jwt,omitempty"`
-	General   generalConfig `json:"general,omitempty" mapstructure:"general" validate:"required" yaml:"general,omitempty"`
+	JWTConfig jwtConfig     `json:"jwt"     mapstructure:"jwt"     validate:"required" yaml:"jwt"`
+	General   generalConfig `json:"general" mapstructure:"general" validate:"required" yaml:"general"`
 }
 
 // jwtConfig contains the configurations for JWT creation and verification.

@@ -13,8 +13,8 @@ import (
 //
 //nolint:lll
 type config struct {
-	Server        serverConfig        `json:"server,omitempty"        mapstructure:"server"        validate:"required" yaml:"server,omitempty"`
-	Authorization authorizationConfig `json:"authorization,omitempty" mapstructure:"authorization" validate:"required" yaml:"authorization,omitempty"`
+	Server        serverConfig        `json:"server"        mapstructure:"server"        validate:"required" yaml:"server"`
+	Authorization authorizationConfig `json:"authorization" mapstructure:"authorization" validate:"required" yaml:"authorization"`
 }
 
 // serverConfig contains the configurations for the HTTP REST server.
