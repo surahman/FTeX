@@ -39,31 +39,19 @@ type PriceQuoteResolver interface {
 // region    **************************** field.gotpl *****************************
 
 func (ec *executionContext) _Links_nextPage(ctx context.Context, field graphql.CollectedField, obj *models.HTTPLinks) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Links_nextPage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.NextPage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Links_nextPage,
+		func(ctx context.Context) (any, error) {
+			return obj.NextPage, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
 }
 
 func (ec *executionContext) fieldContext_Links_nextPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80,31 +68,19 @@ func (ec *executionContext) fieldContext_Links_nextPage(_ context.Context, field
 }
 
 func (ec *executionContext) _Links_pageCursor(ctx context.Context, field graphql.CollectedField, obj *models.HTTPLinks) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Links_pageCursor(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PageCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalOString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Links_pageCursor,
+		func(ctx context.Context) (any, error) {
+			return obj.PageCursor, nil
+		},
+		nil,
+		ec.marshalOString2string,
+		true,
+		false,
+	)
 }
 
 func (ec *executionContext) fieldContext_Links_pageCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -121,34 +97,19 @@ func (ec *executionContext) fieldContext_Links_pageCursor(_ context.Context, fie
 }
 
 func (ec *executionContext) _OfferResponse_priceQuote(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OfferResponse_priceQuote(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.PriceQuote, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.PriceQuote)
-	fc.Result = res
-	return ec.marshalNPriceQuote2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐPriceQuote(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_OfferResponse_priceQuote,
+		func(ctx context.Context) (any, error) {
+			return obj.PriceQuote, nil
+		},
+		nil,
+		ec.marshalNPriceQuote2githubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐPriceQuote,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_OfferResponse_priceQuote(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -177,34 +138,19 @@ func (ec *executionContext) fieldContext_OfferResponse_priceQuote(_ context.Cont
 }
 
 func (ec *executionContext) _OfferResponse_debitAmount(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OfferResponse_debitAmount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OfferResponse().DebitAmount(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_OfferResponse_debitAmount,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.OfferResponse().DebitAmount(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_OfferResponse_debitAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -221,34 +167,19 @@ func (ec *executionContext) fieldContext_OfferResponse_debitAmount(_ context.Con
 }
 
 func (ec *executionContext) _OfferResponse_offerID(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OfferResponse_offerID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OfferID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_OfferResponse_offerID,
+		func(ctx context.Context) (any, error) {
+			return obj.OfferID, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_OfferResponse_offerID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -265,34 +196,19 @@ func (ec *executionContext) fieldContext_OfferResponse_offerID(_ context.Context
 }
 
 func (ec *executionContext) _OfferResponse_expires(ctx context.Context, field graphql.CollectedField, obj *models.HTTPExchangeOfferResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OfferResponse_expires(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Expires, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_OfferResponse_expires,
+		func(ctx context.Context) (any, error) {
+			return obj.Expires, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_OfferResponse_expires(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -309,34 +225,19 @@ func (ec *executionContext) fieldContext_OfferResponse_expires(_ context.Context
 }
 
 func (ec *executionContext) _PriceQuote_clientID(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_clientID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PriceQuote().ClientID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNUUID2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PriceQuote_clientID,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PriceQuote().ClientID(ctx, obj)
+		},
+		nil,
+		ec.marshalNUUID2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_PriceQuote_clientID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -353,34 +254,19 @@ func (ec *executionContext) fieldContext_PriceQuote_clientID(_ context.Context, 
 }
 
 func (ec *executionContext) _PriceQuote_sourceAcc(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_sourceAcc(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SourceAcc, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PriceQuote_sourceAcc,
+		func(ctx context.Context) (any, error) {
+			return obj.SourceAcc, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_PriceQuote_sourceAcc(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -397,34 +283,19 @@ func (ec *executionContext) fieldContext_PriceQuote_sourceAcc(_ context.Context,
 }
 
 func (ec *executionContext) _PriceQuote_destinationAcc(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_destinationAcc(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DestinationAcc, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PriceQuote_destinationAcc,
+		func(ctx context.Context) (any, error) {
+			return obj.DestinationAcc, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_PriceQuote_destinationAcc(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -441,34 +312,19 @@ func (ec *executionContext) fieldContext_PriceQuote_destinationAcc(_ context.Con
 }
 
 func (ec *executionContext) _PriceQuote_rate(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_rate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PriceQuote().Rate(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PriceQuote_rate,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PriceQuote().Rate(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_PriceQuote_rate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -485,34 +341,19 @@ func (ec *executionContext) fieldContext_PriceQuote_rate(_ context.Context, fiel
 }
 
 func (ec *executionContext) _PriceQuote_amount(ctx context.Context, field graphql.CollectedField, obj *models.PriceQuote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PriceQuote_amount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PriceQuote().Amount(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_PriceQuote_amount,
+		func(ctx context.Context) (any, error) {
+			return ec.resolvers.PriceQuote().Amount(ctx, obj)
+		},
+		nil,
+		ec.marshalNFloat2float64,
+		true,
+		true,
+	)
 }
 
 func (ec *executionContext) fieldContext_PriceQuote_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -830,7 +671,7 @@ func (ec *executionContext) marshalNOfferResponse2githubᚗcomᚋsurahmanᚋFTeX
 func (ec *executionContext) marshalNOfferResponse2ᚖgithubᚗcomᚋsurahmanᚋFTeXᚋpkgᚋmodelsᚐHTTPExchangeOfferResponse(ctx context.Context, sel ast.SelectionSet, v *models.HTTPExchangeOfferResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
