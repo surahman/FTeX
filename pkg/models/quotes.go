@@ -8,7 +8,7 @@ import (
 type FiatQuote struct {
 	Info    FiatInfo        `json:"info"`
 	Query   FiatQuery       `json:"query"`
-	Error   FiatError       `json:"error,omitempty"`
+	Error   FiatError       `json:"error"`
 	Date    string          `json:"date"`
 	Result  decimal.Decimal `json:"result"`
 	Success bool            `json:"success"`

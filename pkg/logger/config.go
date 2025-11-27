@@ -14,8 +14,8 @@ import (
 type config struct {
 	BuiltinConfig        string         `json:"builtinConfig,omitempty"        mapstructure:"builtinConfig"        validate:"oneof='Production' 'production' 'Development' 'development'" yaml:"builtinConfig,omitempty"`
 	BuiltinEncoderConfig string         `json:"builtinEncoderConfig,omitempty" mapstructure:"builtinEncoderConfig" validate:"oneof='Production' 'production' 'Development' 'development'" yaml:"builtinEncoderConfig,omitempty"`
-	GeneralConfig        *generalConfig `json:"generalConfig,omitempty"        mapstructure:"generalConfig"        yaml:"generalConfig,omitempty"`
-	EncoderConfig        *encoderConfig `json:"encoderConfig,omitempty"        mapstructure:"encoderConfig"        yaml:"encoderConfig,omitempty"`
+	GeneralConfig        *generalConfig `json:"generalConfig,omitempty"        mapstructure:"generalConfig"        yaml:"generalConfig"`
+	EncoderConfig        *encoderConfig `json:"encoderConfig,omitempty"        mapstructure:"encoderConfig"        yaml:"encoderConfig"`
 }
 
 // generalConfig contains all the general logger configurations.
