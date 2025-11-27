@@ -264,7 +264,7 @@ func TestHandlers_DepositFiat(t *testing.T) {
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack success response.")
 
@@ -526,7 +526,7 @@ func TestHandlers_ExchangeOfferFiat(t *testing.T) { //nolint:maintidx
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -888,7 +888,7 @@ func TestHandler_ExchangeTransferFiat(t *testing.T) { //nolint:maintidx
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -1003,7 +1003,7 @@ func TestHandler_BalanceFiat(t *testing.T) { //nolint:dupl
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -1157,7 +1157,7 @@ func TestHandler_TxDetailsFiat(t *testing.T) {
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -1370,7 +1370,7 @@ func TestHandler_BalanceFiatPaginated(t *testing.T) { //nolint:dupl
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -1584,7 +1584,7 @@ func TestHandler_TxDetailsFiatPaginated(t *testing.T) {
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 

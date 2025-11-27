@@ -465,7 +465,7 @@ func TestHandlers_OfferCrypto(t *testing.T) { //nolint:maintidx
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -679,7 +679,7 @@ func TestHandlers_ExchangeCrypto(t *testing.T) {
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -794,7 +794,7 @@ func TestHandler_BalanceCrypto(t *testing.T) { //nolint:dupl
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -904,7 +904,7 @@ func TestHandler_TxDetailsCrypto(t *testing.T) {
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -1117,7 +1117,7 @@ func TestHandler_BalanceCurrencyCryptoPaginated(t *testing.T) { //nolint:dupl
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
@@ -1315,7 +1315,7 @@ func TestHandler_TxDetailsCryptoPaginated(t *testing.T) {
 			// Verify responses
 			require.Equal(t, test.expectedStatus, recorder.Code, "expected status codes do not match")
 
-			var resp map[string]interface{}
+			var resp map[string]any
 
 			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp), "failed to unpack response.")
 
