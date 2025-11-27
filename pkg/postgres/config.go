@@ -10,12 +10,10 @@ import (
 )
 
 // config contains the configurations loaded from the configuration file.
-//
-//nolint:lll
 type config struct {
-	Authentication authenticationConfig `json:"authentication,omitempty" mapstructure:"authentication" yaml:"authentication,omitempty"`
-	Connection     connectionConfig     `json:"connection,omitempty"     mapstructure:"connection"     yaml:"connection,omitempty"`
-	Pool           poolConfig           `json:"pool,omitempty"           mapstructure:"pool"           yaml:"pool,omitempty"`
+	Authentication authenticationConfig `json:"authentication" mapstructure:"authentication" yaml:"authentication"`
+	Connection     connectionConfig     `json:"connection"     mapstructure:"connection"     yaml:"connection"`
+	Pool           poolConfig           `json:"pool"           mapstructure:"pool"           yaml:"pool"`
 }
 
 // authenticationConfig contains the Postgres session authentication information.

@@ -9,11 +9,9 @@ import (
 )
 
 // config is the configuration container for connecting to the Redis database.
-//
-//nolint:lll
 type config struct {
-	Authentication authenticationConfig `json:"authentication,omitempty" mapstructure:"authentication" yaml:"authentication,omitempty"`
-	Connection     connectionConfig     `json:"connection,omitempty"     mapstructure:"connection"     yaml:"connection,omitempty"`
+	Authentication authenticationConfig `json:"authentication" mapstructure:"authentication" yaml:"authentication"`
+	Connection     connectionConfig     `json:"connection"     mapstructure:"connection"     yaml:"connection"`
 }
 
 // authenticationConfig contains the Redis session authentication information.
